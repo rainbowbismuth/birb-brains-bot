@@ -1,19 +1,20 @@
+import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
 from pathlib import Path
-import logging
+from typing import List
+
 import pandas
-import json
 
 from config import TOURNAMENTS_ROOT
 
 LOG = logging.getLogger(__name__)
 
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
-CATEGORICAL = ['Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill', 'Mainhand',
-               'Offhand', 'Head', 'Armor', 'Accessory', 'Color', 'Side', 'Map']
-SKILL_TAG = 'Skill - '
+CATEGORICAL = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
+               'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory', 'Color', 'Side', 'Map']
+SKILL_TAG = '⭒ '
 
 
 @dataclass
@@ -130,8 +131,8 @@ def parse_all_units() -> pandas.DataFrame:
     for tournament in parse_tournaments():
         data.extend(tournament.to_units())
     df = pandas.DataFrame(data)
-    df['Name'] = df['Name'].astype('string')
     for category in CATEGORICAL:
+        df[category].replace('', None, inplace=True)
         df[category] = df[category].astype('category')
     for column in df.keys():
         if not column.startswith(SKILL_TAG):

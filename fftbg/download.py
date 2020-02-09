@@ -1,6 +1,6 @@
-from datetime import datetime
-import logging
 import json
+import logging
+from datetime import datetime
 
 import requests
 
@@ -21,6 +21,7 @@ def get_tournament(tid):
 def tournament_sync():
     LOG.info('Beginning tournament sync')
     TOURNAMENTS_ROOT.mkdir(exist_ok=True)
+    changed = False
 
     for (tid, last_mod) in get_tournament_list():
         t_path = TOURNAMENTS_ROOT / f'{tid}.json'
@@ -30,5 +31,8 @@ def tournament_sync():
             modified = datetime.fromisoformat(tournament_json['LastMod'])
             if last_mod <= modified:
                 continue
-        LOG.info(f'Downloading tournament {tid} {last_mod.isoformat()}')
+        LOG.info(f'Downloading tournament {tid} modified {last_mod.isoformat()}')
         t_path.write_text(get_tournament(tid))
+        changed = True
+
+    return changed
