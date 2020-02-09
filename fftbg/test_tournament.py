@@ -1,15 +1,15 @@
+import config
 import tournament
-from pathlib import Path
 
 
 def test_to_units():
-    t = tournament.parse_tournament(Path('tournaments/1580897292273.json'))
+    t = tournament.parse_tournament(config.TOURNAMENTS_ROOT / '1580897292273.json')
     assert len(t.to_units()) == 4 * 2 * 8
 
 
-def test_parse_tournaments():
-    assert len(tournament.parse_tournaments()) > 100
-
-
-def test_parse_all_units():
-    assert len(tournament.parse_all_units()) > 1000
+def test_tournament_conversions():
+    tournaments = tournament.parse_tournaments()
+    units = tournament.tournaments_to_units(tournaments)
+    assert len(units) >= 70 * 8
+    matches = tournament.units_to_matches(units)
+    assert len(matches) >= 70

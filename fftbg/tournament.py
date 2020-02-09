@@ -12,8 +12,9 @@ from config import TOURNAMENTS_ROOT
 LOG = logging.getLogger(__name__)
 
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
-CATEGORICAL = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
-               'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory', 'Color', 'Side', 'Map']
+PER_UNIT = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
+            'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
+CATEGORICAL = PER_UNIT + ['Color', 'Side', 'Map']
 SKILL_TAG = '⭒ '
 
 
@@ -30,7 +31,7 @@ class Team:
                 skills[SKILL_TAG + skill] = True
             for skill in unit['ExtraSkills']:
                 skills[SKILL_TAG + skill] = True
-            new_unit = {**unit, **skills, 'Color': self.color}
+            new_unit = {**unit, **skills}
             del new_unit['ClassSkills']
             del new_unit['ExtraSkills']
             units.append(new_unit)
@@ -45,14 +46,18 @@ class MatchUp:
     game_map: str
 
     def to_units(self):
-        left = {'Side': 'Left', 'Winner': self.left_wins, 'Map': self.game_map}
-        right = {'Side': 'Right', 'Winner': not self.left_wins, 'Map': self.game_map}
+        left = {'Side': 'Left', 'Color': self.left.color, 'LeftWins': self.left_wins, 'Winner': self.left_wins,
+                'Map': self.game_map}
+        right = {'Side': 'Right', 'Color': self.right.color, 'LeftWins': self.left_wins, 'Winner': not self.left_wins,
+                 'Map': self.game_map}
         out = []
-        for unit in self.left.to_units():
+        for i, unit in enumerate(self.left.to_units()):
             unit.update(left)
+            unit['UIDX'] = i
             out.append(unit)
-        for unit in self.right.to_units():
+        for i, unit in enumerate(self.right.to_units()):
             unit.update(right)
+            unit['UIDX'] = i + 4
             out.append(unit)
         return out
 
@@ -125,14 +130,14 @@ def parse_tournaments() -> List[Tournament]:
     return [parse_tournament(p) for p in TOURNAMENTS_ROOT.glob('*.json')]
 
 
-def parse_all_units() -> pandas.DataFrame:
-    LOG.info('Parsing all units')
+def tournaments_to_units(tournaments: List[Tournament]) -> pandas.DataFrame:
+    LOG.info('Converting tournaments to by-unit DataFrame')
     data = []
-    for tournament in parse_tournaments():
+    for tournament in tournaments:
         data.extend(tournament.to_units())
 
-    add_composite_id(data, 'UID', lambda unit: f"{unit['TID']}{unit['Color']}{unit['Name']}")
-    add_composite_id(data, 'MID', lambda unit: f"{unit['TID']}{unit['MatchUp']}")
+    _add_composite_id(data, 'UID', lambda unit: f"{unit['TID']}{unit['Color']}{unit['Name']}")
+    _add_composite_id(data, 'MID', lambda unit: f"{unit['TID']}{unit['MatchUp']}")
 
     df = pandas.DataFrame(data)
     for category in CATEGORICAL:
@@ -143,10 +148,11 @@ def parse_all_units() -> pandas.DataFrame:
             continue
         df[column].fillna(False, inplace=True)
         df[column] = df[column].astype(bool)
+    df.set_index('MID')
     return df
 
 
-def add_composite_id(data, name, f):
+def _add_composite_id(data, name, f):
     unit_id = 0
     unit_ids = {}
     for unit in data:
@@ -155,3 +161,13 @@ def add_composite_id(data, name, f):
             unit_ids[composite_id] = unit_id
             unit_id += 1
         unit[name] = unit_ids[composite_id]
+
+
+def units_to_matches(df: pandas.DataFrame) -> pandas.DataFrame:
+    unstacked = df.set_index(['MID', 'UIDX']).unstack().reset_index()
+    out = pandas.DataFrame()
+    out['MID'] = unstacked['MID']
+    columns = list(unstacked.keys())[1:]
+    for (col, i) in columns:
+        out[f'{col}/{i}'] = unstacked[col, i]
+    return out

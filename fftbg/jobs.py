@@ -1,13 +1,16 @@
-import tournament
-import download
 import data
+import download
+import tournament
 
 
-def update_unit_data():
+def update_data():
     download.tournament_sync()
-    df = tournament.parse_all_units()
+    tournaments = tournament.parse_tournaments()
+    df = tournament.tournaments_to_units(tournaments)
     data.write_units(df)
+    df = tournament.units_to_matches(df)
+    data.write_matches(df)
 
 
 if __name__ == '__main__':
-    update_unit_data()
+    update_data()
