@@ -37,7 +37,7 @@ def main():
     ])
 
     LOG.info('Pre-processing data')
-    prepared = pipeline.fit_transform(dfs)
+    prepared = pipeline.fit_transform(dfs).astype('float32')
 
     train_X, test_X, train_y, test_y = train_test_split(prepared, df['LeftWins/1'], test_size=0.2)
     LOG.info(f'Training data shapes X:{str(train_X.shape):>14} y:{str(train_y.shape):>9}')
