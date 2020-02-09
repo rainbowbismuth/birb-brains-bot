@@ -48,23 +48,23 @@ def main():
          'penalty': ['l2', 'l1', 'elasticnet']}
     ]
     clf = SGDClassifier()
-    grid_search = GridSearchCV(clf, param_grid, cv=5, scoring='accuracy', return_train_score=True, n_jobs=-1)
+    grid_search = GridSearchCV(clf, param_grid, cv=5, n_jobs=-1)
 
     LOG.info(f'Beginning GridSearchCV')
     grid_search.fit(train_X, train_y)
 
     LOG.info(f'Best parameters found {grid_search.best_params_}')
-    best = grid_search.best_estimator_
+    best_clf = grid_search.best_estimator_
 
-    train_pred_y = cross_val_predict(best, train_X, train_y, cv=5)
+    train_pred_y = cross_val_predict(best_clf, train_X, train_y, cv=5)
     LOG.info(f'training precision  {precision_score(train_y, train_pred_y):.1%}')
     LOG.info(f'training recall     {recall_score(train_y, train_pred_y):.1%}')
 
-    # test_pred_y = best.predict(test_X)
+    # test_pred_y = best_clf.predict(test_X)
     # LOG.info(f'test precision      {precision_score(test_y, test_pred_y):.1%}')
     # LOG.info(f'test recall         {recall_score(test_y, test_pred_y):.1%}')
 
-    train_y_scores = cross_val_predict(best, train_X, train_y, cv=5, method='decision_function')
+    train_y_scores = cross_val_predict(best_clf, train_X, train_y, cv=5, method='decision_function')
     LOG.info(f'training roc auc    {roc_auc_score(train_y, train_y_scores):.1%}')
 
     fpr, tpr, thresholds = roc_curve(train_y, train_y_scores)
