@@ -2,6 +2,7 @@ import logging
 
 import matplotlib.pyplot as plt
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import precision_score, recall_score
 from sklearn.metrics import roc_curve, roc_auc_score
@@ -42,6 +43,11 @@ def main():
     train_X, test_X, train_y, test_y = train_test_split(prepared, df['LeftWins/1'], test_size=0.2)
     LOG.info(f'Training data shapes X:{str(train_X.shape):>14} y:{str(train_y.shape):>9}')
     LOG.info(f'Testing data shapes  X:{str(test_X.shape):>14} y:{str(test_y.shape):>9}')
+
+    pca = PCA(n_components=0.95)
+    train_X = pca.fit_transform(train_X)
+    test_X = pca.transform(test_X)
+    LOG.info(f'Features after PCA: {train_X.shape[1]}')
 
     param_grid = [
         {'loss': ['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron'],
