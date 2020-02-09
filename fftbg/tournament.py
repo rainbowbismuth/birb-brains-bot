@@ -130,6 +130,16 @@ def parse_all_units() -> pandas.DataFrame:
     data = []
     for tournament in parse_tournaments():
         data.extend(tournament.to_units())
+
+    unit_id = 0
+    unit_ids = {}
+    for unit in data:
+        composite_id = f"{unit['TID']}{unit['Color']}{unit['Name']}"
+        if composite_id not in unit_ids:
+            unit_ids[composite_id] = unit_id
+            unit_id += 1
+        unit['UID'] = unit_ids[composite_id]
+
     df = pandas.DataFrame(data)
     for category in CATEGORICAL:
         df[category].replace('', None, inplace=True)
