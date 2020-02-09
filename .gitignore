@@ -1,0 +1,8 @@
+__pycache__
+*.iml
+.idea
+.pytest_cache
+.ipynb_checkpoints
+data
+logs
+venv

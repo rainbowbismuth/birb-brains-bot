@@ -1,0 +1,21 @@
+version = 1
+
+[formatters.simple]
+format = '%(asctime)s - %(name)-12s - %(levelname)-5s - %(message)s'
+
+[handlers.console]
+class = 'logging.StreamHandler'
+level = 'INFO'
+formatter = 'simple'
+stream = 'ext://sys.stdout'
+
+[handlers.file]
+class = 'logging.handlers.TimedRotatingFileHandler'
+level = 'INFO'
+formatter = 'simple'
+filename = 'logs/log'
+when = 'D'
+
+[root]
+level = 'DEBUG'
+handlers = ['console', 'file']
