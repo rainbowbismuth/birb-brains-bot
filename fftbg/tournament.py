@@ -131,14 +131,8 @@ def parse_all_units() -> pandas.DataFrame:
     for tournament in parse_tournaments():
         data.extend(tournament.to_units())
 
-    unit_id = 0
-    unit_ids = {}
-    for unit in data:
-        composite_id = f"{unit['TID']}{unit['Color']}{unit['Name']}"
-        if composite_id not in unit_ids:
-            unit_ids[composite_id] = unit_id
-            unit_id += 1
-        unit['UID'] = unit_ids[composite_id]
+    add_composite_id(data, 'UID', lambda unit: f"{unit['TID']}{unit['Color']}{unit['Name']}")
+    add_composite_id(data, 'MID', lambda unit: f"{unit['TID']}{unit['MatchUp']}")
 
     df = pandas.DataFrame(data)
     for category in CATEGORICAL:
@@ -150,3 +144,14 @@ def parse_all_units() -> pandas.DataFrame:
         df[column].fillna(False, inplace=True)
         df[column] = df[column].astype(bool)
     return df
+
+
+def add_composite_id(data, name, f):
+    unit_id = 0
+    unit_ids = {}
+    for unit in data:
+        composite_id = f(unit)
+        if composite_id not in unit_ids:
+            unit_ids[composite_id] = unit_id
+            unit_id += 1
+        unit[name] = unit_ids[composite_id]
