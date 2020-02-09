@@ -10,12 +10,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 import data
+import tournament
 
 LOG = logging.getLogger(__name__)
 
 
 def main():
-    LOG.info("Going to compute tournament model")
+    LOG.info('Going to compute tournament model')
     df = data.read_matches()
 
     num_columns = ['Brave', 'Faith']
@@ -24,21 +25,23 @@ def main():
 
     num_columns = [f'{c}/{i}' for c in num_columns for i in range(8)]
     cat_columns = [f'{c}/{i}' for c in cat_columns for i in range(8)] + ['Map/1']
+    skill_columns = [c for c in df.keys() if c.startswith(tournament.SKILL_TAG)]
 
-    all_columns = num_columns + cat_columns
+    all_columns = num_columns + cat_columns + skill_columns
     dfs = df[all_columns]
 
     pipeline = ColumnTransformer([
-        ("num", StandardScaler(), num_columns),
-        ("cat", OneHotEncoder(), cat_columns)
+        ('num', StandardScaler(), num_columns),
+        ('cat', OneHotEncoder(), cat_columns),
+        ('none', 'passthrough', skill_columns),
     ])
 
-    LOG.info("Pre-processing data")
+    LOG.info('Pre-processing data')
     prepared = pipeline.fit_transform(dfs)
 
     train_X, test_X, train_y, test_y = train_test_split(prepared, df['LeftWins/1'], test_size=0.2)
-    LOG.info(f"Training data shapes X:{str(train_X.shape):>14} y:{str(train_y.shape):>9}")
-    LOG.info(f"Testing data shapes  X:{str(test_X.shape):>14} y:{str(test_y.shape):>9}")
+    LOG.info(f'Training data shapes X:{str(train_X.shape):>14} y:{str(train_y.shape):>9}')
+    LOG.info(f'Testing data shapes  X:{str(test_X.shape):>14} y:{str(test_y.shape):>9}')
 
     param_grid = [
         {'loss': ['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron'],
@@ -47,7 +50,7 @@ def main():
     clf = SGDClassifier()
     grid_search = GridSearchCV(clf, param_grid, cv=5, scoring='accuracy', return_train_score=True, n_jobs=-1)
 
-    LOG.info(f"Beginning GridSearchCV")
+    LOG.info(f'Beginning GridSearchCV')
     grid_search.fit(train_X, train_y)
 
     LOG.info(f'Best parameters found {grid_search.best_params_}')
