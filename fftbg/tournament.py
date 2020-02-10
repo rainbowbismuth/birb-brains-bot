@@ -164,6 +164,7 @@ def _add_composite_id(data, name, f):
 
 
 def units_to_matches(df: pandas.DataFrame) -> pandas.DataFrame:
+    LOG.info('Converting tournaments to by-match DataFrame')
     unstacked = df.set_index(['MID', 'UIDX']).unstack().reset_index()
     out = pandas.DataFrame()
     out['MID'] = unstacked['MID']
