@@ -23,9 +23,9 @@ def main():
     cat_columns = ['Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
                    'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 
-    num_columns = [f'{c}/{i}' for c in num_columns for i in range(8)]
-    cat_columns = [f'{c}/{i}' for c in cat_columns for i in range(8)] + ['Map/1']
-    skill_columns = [c for c in df.keys() if c.startswith(tournament.SKILL_TAG)]
+    num_columns = [f'{i + 1}/{c}' for c in num_columns for i in range(8)]
+    cat_columns = [f'{i + 1}/{c}' for c in cat_columns for i in range(8)] + ['1/Map']
+    skill_columns = [c for c in df.keys() if tournament.SKILL_TAG in c]
 
     all_columns = num_columns + cat_columns + skill_columns
     dfs = df[all_columns]
@@ -39,21 +39,27 @@ def main():
     LOG.info('Pre-processing data')
     prepared = pipeline.fit_transform(dfs).astype('float32')
 
-    train_X, test_X, train_y, test_y = train_test_split(prepared, df['LeftWins/1'].to_numpy(), test_size=0.2)
+    train_X, test_X, train_y, test_y = train_test_split(prepared, df['1/LeftWins'].to_numpy(), test_size=0.2)
     LOG.info(f'Training data shapes X:{str(train_X.shape):>14} y:{str(train_y.shape):>9}')
     LOG.info(f'Testing data shapes  X:{str(test_X.shape):>14} y:{str(test_y.shape):>9}')
 
-    N = 2000
+    N = 1000
 
     model = keras.Sequential(
         [
-            keras.layers.Dropout(0.50),
-            keras.layers.Dense(N, activation='relu'),
-            keras.layers.Dropout(0.50),
-            keras.layers.Dense(N, activation='relu'),
-            keras.layers.Dropout(0.50),
-            keras.layers.Dense(N, activation='relu'),
-            keras.layers.Dropout(0.50),
+            keras.layers.Dropout(0.75),
+            keras.layers.Dense(N, kernel_initializer='he_normal', use_bias=False),
+            keras.layers.BatchNormalization(),
+            keras.layers.LeakyReLU(alpha=0.01),
+            keras.layers.Dropout(0.75),
+            keras.layers.Dense(N, kernel_initializer='he_normal', use_bias=False),
+            keras.layers.BatchNormalization(),
+            keras.layers.LeakyReLU(alpha=0.01),
+            keras.layers.Dropout(0.75),
+            keras.layers.Dense(N, kernel_initializer='he_normal', use_bias=False),
+            keras.layers.BatchNormalization(),
+            keras.layers.LeakyReLU(alpha=0.01),
+            keras.layers.Dropout(0.75),
             keras.layers.Dense(2, activation='softmax'),
         ]
     )

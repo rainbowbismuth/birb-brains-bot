@@ -170,5 +170,5 @@ def units_to_matches(df: pandas.DataFrame) -> pandas.DataFrame:
     out['MID'] = unstacked['MID']
     columns = list(unstacked.keys())[1:]
     for (col, i) in columns:
-        out[f'{col}/{i}'] = unstacked[col, i]
+        out[f'{i + 1}/{col}'] = unstacked[col, i]
     return out
