@@ -10,11 +10,12 @@ formatter = 'simple'
 stream = 'ext://sys.stdout'
 
 [handlers.file]
-class = 'logging.handlers.TimedRotatingFileHandler'
+class = 'logging.handlers.RotatingFileHandler'
+backupCount = 10
+maxBytes = 32768
 level = 'INFO'
 formatter = 'simple'
 filename = 'logs/log'
-when = 'D'
 
 [root]
 level = 'DEBUG'
