@@ -2,11 +2,12 @@ import logging
 
 import matplotlib.pyplot as plt
 from sklearn.compose import ColumnTransformer
-from sklearn.decomposition import PCA
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
 from sklearn.metrics import precision_score, recall_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
 
 import data
@@ -31,7 +32,7 @@ def main():
     dfs = df[all_columns]
 
     pipeline = ColumnTransformer([
-        ('num', StandardScaler(), num_columns),
+        ('num', MaxAbsScaler(), num_columns),
         ('cat', OneHotEncoder(), cat_columns),
         ('none', 'passthrough', skill_columns),
     ])
@@ -43,26 +44,26 @@ def main():
     LOG.info(f'Training data shapes X:{str(train_X.shape):>14} y:{str(train_y.shape):>9}')
     LOG.info(f'Testing data shapes  X:{str(test_X.shape):>14} y:{str(test_y.shape):>9}')
 
-    pca = PCA(n_components=0.95)
-    train_X = pca.fit_transform(train_X)
-    test_X = pca.transform(test_X)
-    LOG.info(f'Features after PCA: {train_X.shape[1]}')
+    N = 1000
 
-    N = 2000
+    sel = SelectKBest(chi2, k=N)
+    train_X = sel.fit_transform(train_X, train_y)
+    test_X = sel.transform(test_X)
+
     model = keras.Sequential(
         [
+            keras.layers.Dropout(0.50),
             keras.layers.Dense(N, activation="relu"),
-            keras.layers.Dropout(0.2),
+            keras.layers.Dropout(0.10),
             keras.layers.Dense(N, activation="relu"),
-            keras.layers.Dropout(0.2),
+            keras.layers.Dropout(0.10),
             keras.layers.Dense(N, activation="relu"),
+            keras.layers.Dropout(0.50),
             keras.layers.Dense(2, activation="softmax"),
         ]
     )
 
-    model.compile(
-        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
-    )
+    model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     early_stopping_cb = keras.callbacks.EarlyStopping(patience=10, monitor='val_loss', restore_best_weights=True)
     model.fit(train_X, train_y, epochs=100, verbose=1, validation_split=0.1, callbacks=[early_stopping_cb])
 
