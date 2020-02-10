@@ -3,12 +3,11 @@ import logging
 import matplotlib.pyplot as plt
 from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import PCA
-from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import precision_score, recall_score
 from sklearn.metrics import roc_curve, roc_auc_score
-from sklearn.model_selection import GridSearchCV, cross_val_predict
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from tensorflow import keras
 
 import data
 import tournament
@@ -40,7 +39,7 @@ def main():
     LOG.info('Pre-processing data')
     prepared = pipeline.fit_transform(dfs).astype('float32')
 
-    train_X, test_X, train_y, test_y = train_test_split(prepared, df['LeftWins/1'], test_size=0.2)
+    train_X, test_X, train_y, test_y = train_test_split(prepared, df['LeftWins/1'].to_numpy(), test_size=0.2)
     LOG.info(f'Training data shapes X:{str(train_X.shape):>14} y:{str(train_y.shape):>9}')
     LOG.info(f'Testing data shapes  X:{str(test_X.shape):>14} y:{str(test_y.shape):>9}')
 
@@ -49,36 +48,46 @@ def main():
     test_X = pca.transform(test_X)
     LOG.info(f'Features after PCA: {train_X.shape[1]}')
 
-    param_grid = [
-        {'loss': ['hinge', 'log', 'modified_huber', 'squared_hinge', 'perceptron'],
-         'penalty': ['l2', 'l1', 'elasticnet']}
-    ]
-    clf = SGDClassifier()
-    grid_search = GridSearchCV(clf, param_grid, cv=5, n_jobs=-1)
+    N = 2000
+    model = keras.Sequential(
+        [
+            keras.layers.Dense(N, activation="relu"),
+            keras.layers.Dropout(0.2),
+            keras.layers.Dense(N, activation="relu"),
+            keras.layers.Dropout(0.2),
+            keras.layers.Dense(N, activation="relu"),
+            keras.layers.Dense(2, activation="softmax"),
+        ]
+    )
 
-    LOG.info(f'Beginning GridSearchCV')
-    grid_search.fit(train_X, train_y)
+    model.compile(
+        optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+    )
+    early_stopping_cb = keras.callbacks.EarlyStopping(patience=10, monitor='val_loss', restore_best_weights=True)
+    model.fit(train_X, train_y, epochs=100, verbose=1, validation_split=0.1, callbacks=[early_stopping_cb])
 
-    LOG.info(f'Best parameters found {grid_search.best_params_}')
-    best_clf = grid_search.best_estimator_
-
-    train_pred_y = cross_val_predict(best_clf, train_X, train_y, cv=5)
+    train_pred_y = model.predict_classes(train_X)
     LOG.info(f'training precision  {precision_score(train_y, train_pred_y):.1%}')
     LOG.info(f'training recall     {recall_score(train_y, train_pred_y):.1%}')
-
-    # test_pred_y = best_clf.predict(test_X)
-    # LOG.info(f'test precision      {precision_score(test_y, test_pred_y):.1%}')
-    # LOG.info(f'test recall         {recall_score(test_y, test_pred_y):.1%}')
-
-    train_y_scores = cross_val_predict(best_clf, train_X, train_y, cv=5, method='decision_function')
+    train_y_scores = model.predict(train_X)[:, 1]
     LOG.info(f'training roc auc    {roc_auc_score(train_y, train_y_scores):.1%}')
 
+    test_pred_y = model.predict_classes(test_X)
+    LOG.info(f'test precision      {precision_score(test_y, test_pred_y):.1%}')
+    LOG.info(f'test recall         {recall_score(test_y, test_pred_y):.1%}')
+    test_y_scores = model.predict(test_X)[:, 1]
+    LOG.info(f'test roc auc        {roc_auc_score(test_y, test_y_scores):.1%}')
+
     fpr, tpr, thresholds = roc_curve(train_y, train_y_scores)
-    plt.plot(fpr, tpr, linewidth=2)
+    plt.plot(fpr, tpr, linewidth=2, label='training')
+
+    fpr, tpr, thresholds = roc_curve(test_y, test_y_scores)
+    plt.plot(fpr, tpr, linewidth=2, c='c', label='test')
     plt.plot([0, 1], [0, 1], 'k--')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate (Recall)')
     plt.grid()
+    plt.legend()
     plt.show()
 
 
