@@ -53,17 +53,17 @@ def main():
     model = keras.Sequential(
         [
             keras.layers.Dropout(0.50),
-            keras.layers.Dense(N, activation="relu"),
+            keras.layers.Dense(N, activation='relu'),
             keras.layers.Dropout(0.10),
-            keras.layers.Dense(N, activation="relu"),
+            keras.layers.Dense(N, activation='relu'),
             keras.layers.Dropout(0.10),
-            keras.layers.Dense(N, activation="relu"),
+            keras.layers.Dense(N, activation='relu'),
             keras.layers.Dropout(0.50),
-            keras.layers.Dense(2, activation="softmax"),
+            keras.layers.Dense(2, activation='softmax'),
         ]
     )
 
-    model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     early_stopping_cb = keras.callbacks.EarlyStopping(patience=10, monitor='val_loss', restore_best_weights=True)
     model.fit(train_X, train_y, epochs=100, verbose=1, validation_split=0.1, callbacks=[early_stopping_cb])
 
