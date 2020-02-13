@@ -4,6 +4,8 @@ __pycache__
 .pytest_cache
 .ipynb_checkpoints
 *.ipynb
-data
+data/tournaments
+data/*.feather
+data/*.h5
 logs
 venv

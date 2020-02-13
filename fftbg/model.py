@@ -9,9 +9,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
 
+import combatant
 import config
 import data
-import tournament
 
 LOG = logging.getLogger(__name__)
 
@@ -27,15 +27,15 @@ def split(xs, y, size):
 
 def main():
     LOG.info('Going to compute tournament model')
-    df = data.read_units()
+    df = data.read_combatants()
 
-    num_columns = ['Brave', 'Faith']
+    num_columns = combatant.NUMERIC
     cat_columns = ['Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
                    'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory', 'Map']
-    skill_columns = [c for c in df.keys() if tournament.SKILL_TAG in c]
+    skill_columns = [c for c in df.keys() if combatant.SKILL_TAG in c]
     all_columns = num_columns + cat_columns + skill_columns
     dfs = df[all_columns]
-    unit_dfs = [df[df['UIDX'] == i][all_columns] for i in range(8)]
+    combatant_dfs = [df[df['UIDX'] == i][all_columns] for i in range(8)]
 
     pipeline = ColumnTransformer([
         ('num', MaxAbsScaler(), num_columns),
@@ -45,10 +45,11 @@ def main():
 
     LOG.info('Pre-processing data')
     pipeline.fit(dfs)
-    unit_dfs = [pipeline.transform(unit_df).astype('float32') for unit_df in unit_dfs]
+    combatant_dfs = [pipeline.transform(combatant_df).astype('float32')
+                     for combatant_df in combatant_dfs]
     winner = df[df['UIDX'] == 0]['LeftWins']
 
-    train_X, test_X, train_y, test_y = split(unit_dfs, winner, size=0.3)
+    train_X, test_X, train_y, test_y = split(combatant_dfs, winner, size=0.3)
     test_X, valid_X, test_y, valid_y = split(test_X, test_y, size=0.2)
 
     # Augment tests:
@@ -62,8 +63,8 @@ def main():
     LOG.info(f'Testing data shapes     X:{str(test_X[0].shape):>14} y:{str(test_y.shape):>9}')
     LOG.info(f'Validation data shapes  X:{str(valid_X[0].shape):>14} y:{str(valid_y.shape):>9}')
 
-    UNIT_SIZE = train_X[0].shape[1]
-    N = UNIT_SIZE / 2
+    COMBATANT_SIZE = train_X[0].shape[1]
+    N = COMBATANT_SIZE / 2
 
     def dense(n):
         layer = keras.layers.Dense(
@@ -74,35 +75,35 @@ def main():
         dropout = keras.layers.Dropout(0.25)
         return lambda x: dropout(layer(x))
 
-    unit_inputs = [keras.layers.Input(shape=(UNIT_SIZE,)) for _ in range(8)]
-    unit_layer = dense(N)
-    unit_nodes = [unit_layer(unit_input) for unit_input in unit_inputs]
+    inputs = [keras.layers.Input(shape=(COMBATANT_SIZE,)) for _ in range(8)]
+    combatant_layer = dense(N)
+    combatant_nodes = [combatant_layer(input) for input in inputs]
 
     ally_layer = dense(N / 20)
     foe_layer = dense(N / 5)
     pair_layers = []
 
-    for unit_node in unit_nodes[:4]:
-        for ally_node in unit_nodes[:4]:
-            if unit_node is ally_node:
+    for combatant_node in combatant_nodes[:4]:
+        for ally_node in combatant_nodes[:4]:
+            if combatant_node is ally_node:
                 continue
-            pair_layers.append(ally_layer(keras.layers.concatenate([unit_node, ally_node])))
-        for foe_node in unit_nodes[4:]:
-            pair_layers.append(foe_layer(keras.layers.concatenate([unit_node, foe_node])))
+            pair_layers.append(ally_layer(keras.layers.concatenate([combatant_node, ally_node])))
+        for foe_node in combatant_nodes[4:]:
+            pair_layers.append(foe_layer(keras.layers.concatenate([combatant_node, foe_node])))
 
-    for unit_node in unit_nodes[4:]:
-        for ally_node in unit_nodes[4:]:
-            if unit_node is ally_node:
+    for combatant_node in combatant_nodes[4:]:
+        for ally_node in combatant_nodes[4:]:
+            if combatant_node is ally_node:
                 continue
-            pair_layers.append(ally_layer(keras.layers.concatenate([unit_node, ally_node])))
-        for foe_node in unit_nodes[:4]:
-            pair_layers.append(foe_layer(keras.layers.concatenate([unit_node, foe_node])))
+            pair_layers.append(ally_layer(keras.layers.concatenate([combatant_node, ally_node])))
+        for foe_node in combatant_nodes[:4]:
+            pair_layers.append(foe_layer(keras.layers.concatenate([combatant_node, foe_node])))
 
     concat_all = keras.layers.concatenate(pair_layers)
     combined = dense(N)(concat_all)
     predictions = keras.layers.Dense(2, activation='softmax')(combined)
 
-    model = keras.Model(inputs=unit_inputs, outputs=predictions)
+    model = keras.Model(inputs=inputs, outputs=predictions)
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     early_stopping_cb = keras.callbacks.EarlyStopping(patience=10, monitor='val_loss', restore_best_weights=True)
     model.fit(train_X,

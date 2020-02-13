@@ -7,35 +7,21 @@ from typing import List
 
 import pandas
 
+from combatant import CATEGORICAL, SKILL_TAG, combatant_to_dict
 from config import TOURNAMENTS_ROOT
 
 LOG = logging.getLogger(__name__)
 
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
-PER_UNIT = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
-            'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
-CATEGORICAL = PER_UNIT + ['Color', 'Side', 'Map']
-SKILL_TAG = '⭒ '
 
 
 @dataclass
 class Team:
     color: str
-    units: List[dict]
+    combatants: List[dict]
 
-    def to_units(self):
-        units = []
-        for unit in self.units:
-            skills = {}
-            for skill in unit['ClassSkills']:
-                skills[SKILL_TAG + skill] = True
-            for skill in unit['ExtraSkills']:
-                skills[SKILL_TAG + skill] = True
-            new_unit = {**unit, **skills}
-            del new_unit['ClassSkills']
-            del new_unit['ExtraSkills']
-            units.append(new_unit)
-        return units
+    def to_combatants(self):
+        return [combatant_to_dict(combatant) for combatant in self.combatants]
 
 
 @dataclass
@@ -45,20 +31,20 @@ class MatchUp:
     left_wins: bool
     game_map: str
 
-    def to_units(self):
+    def to_combatants(self):
         left = {'Side': 'Left', 'Color': self.left.color, 'LeftWins': self.left_wins, 'Winner': self.left_wins,
                 'Map': self.game_map}
         right = {'Side': 'Right', 'Color': self.right.color, 'LeftWins': self.left_wins, 'Winner': not self.left_wins,
                  'Map': self.game_map}
         out = []
-        for i, unit in enumerate(self.left.to_units()):
-            unit.update(left)
-            unit['UIDX'] = i
-            out.append(unit)
-        for i, unit in enumerate(self.right.to_units()):
-            unit.update(right)
-            unit['UIDX'] = i + 4
-            out.append(unit)
+        for i, combatant in enumerate(self.left.to_combatants()):
+            combatant.update(left)
+            combatant['UIDX'] = i
+            out.append(combatant)
+        for i, combatant in enumerate(self.right.to_combatants()):
+            combatant.update(right)
+            combatant['UIDX'] = i + 4
+            out.append(combatant)
         return out
 
 
@@ -69,14 +55,14 @@ class Tournament:
     teams: {str: Team}
     match_ups: List[MatchUp]
 
-    def to_units(self):
+    def to_combatants(self):
         tournament = {'TID': self.id, 'Modified': self.modified}
         out = []
         for i, match_up in enumerate(self.match_ups):
-            for unit in match_up.to_units():
-                unit.update(tournament)
-                unit['MatchUp'] = i
-                out.append(unit)
+            for combatant in match_up.to_combatants():
+                combatant.update(tournament)
+                combatant['MatchUp'] = i
+                out.append(combatant)
         return out
 
 
@@ -130,14 +116,14 @@ def parse_tournaments() -> List[Tournament]:
     return [parse_tournament(p) for p in TOURNAMENTS_ROOT.glob('*.json')]
 
 
-def tournaments_to_units(tournaments: List[Tournament]) -> pandas.DataFrame:
-    LOG.info('Converting tournaments to by-unit DataFrame')
+def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
+    LOG.info('Converting tournaments to by-combatant DataFrame')
     data = []
     for tournament in tournaments:
-        data.extend(tournament.to_units())
+        data.extend(tournament.to_combatants())
 
-    _add_composite_id(data, 'UID', lambda unit: f"{unit['TID']}{unit['Color']}{unit['Name']}")
-    _add_composite_id(data, 'MID', lambda unit: f"{unit['TID']}{unit['MatchUp']}")
+    _add_composite_id(data, 'UID', lambda c: f"{c['TID']}{c['Color']}{c['Name']}")
+    _add_composite_id(data, 'MID', lambda c: f"{c['TID']}{c['MatchUp']}")
 
     df = pandas.DataFrame(data)
     for category in CATEGORICAL:
@@ -153,11 +139,11 @@ def tournaments_to_units(tournaments: List[Tournament]) -> pandas.DataFrame:
 
 
 def _add_composite_id(data, name, f):
-    unit_id = 0
-    unit_ids = {}
-    for unit in data:
-        composite_id = f(unit)
-        if composite_id not in unit_ids:
-            unit_ids[composite_id] = unit_id
-            unit_id += 1
-        unit[name] = unit_ids[composite_id]
+    combatant_id = 0
+    combatant_ids = {}
+    for combatant in data:
+        composite_id = f(combatant)
+        if composite_id not in combatant_ids:
+            combatant_ids[composite_id] = combatant_id
+            combatant_id += 1
+        combatant[name] = combatant_ids[composite_id]

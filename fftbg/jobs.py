@@ -6,8 +6,8 @@ import tournament
 def update_data():
     download.tournament_sync()
     tournaments = tournament.parse_tournaments()
-    df = tournament.tournaments_to_units(tournaments)
-    data.write_units(df)
+    df = tournament.tournament_to_combatants(tournaments)
+    data.write_combatants(df)
 
 
 if __name__ == '__main__':
