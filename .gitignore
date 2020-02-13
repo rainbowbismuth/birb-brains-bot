@@ -3,6 +3,7 @@ __pycache__
 .idea
 .pytest_cache
 .ipynb_checkpoints
+*.ipynb
 data
 logs
 venv
