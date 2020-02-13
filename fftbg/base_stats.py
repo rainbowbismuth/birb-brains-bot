@@ -13,8 +13,8 @@ MP_RE = re.compile(r"(\d+) MP")
 MOVE_RE = re.compile(r"(\d+) Move")
 JUMP_RE = re.compile(r"(\d+) Jump")
 SPEED_RE = re.compile(r"(\d+) Speed")
-PA_RE = re.compile(r"(\d)+ PA")
-MA_RE = re.compile(r"(\d)+ MA")
+PA_RE = re.compile(r"(\d+) PA")
+MA_RE = re.compile(r"(\d+) MA")
 CEV_RE = re.compile(r"(\d+)% C-EV")
 
 
@@ -29,7 +29,7 @@ class BaseStats:
     speed: int
     pa: int
     ma: int
-    cev: int
+    c_ev: int
 
 
 def parse_base_stats():
@@ -53,10 +53,10 @@ def parse_base_stats():
         speed = int(SPEED_RE.findall(class_job)[0])
         pa = int(PA_RE.findall(class_job)[0])
         ma = int(MA_RE.findall(class_job)[0])
-        cev = int(CEV_RE.findall(class_job)[0])
+        c_ev = int(CEV_RE.findall(class_job)[0])
 
         BASE_STATS_MAP[(job, gender)] = BaseStats(
-            job, gender, hp, mp, move, jump, speed, pa, ma, cev)
+            job, gender, hp, mp, move, jump, speed, pa, ma, c_ev)
 
 
 def get_base_stats(job: str, gender: str) -> BaseStats:

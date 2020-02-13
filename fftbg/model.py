@@ -6,7 +6,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from tensorflow import keras
 
 import combatant
@@ -38,9 +38,12 @@ def main():
     combatant_dfs = [df[df['UIDX'] == i][all_columns] for i in range(8)]
 
     pipeline = ColumnTransformer([
-        ('num', MaxAbsScaler(), num_columns),
-        ('cat', OneHotEncoder(), cat_columns),
-        ('none', 'passthrough', skill_columns),
+        ('cat',
+         OneHotEncoder(),
+         cat_columns),
+        ('none',
+         'passthrough',
+         num_columns + skill_columns),
     ])
 
     LOG.info('Pre-processing data')
@@ -51,6 +54,11 @@ def main():
 
     train_X, test_X, train_y, test_y = split(combatant_dfs, winner, size=0.3)
     test_X, valid_X, test_y, valid_y = split(test_X, test_y, size=0.2)
+
+    scalers = [StandardScaler() for _ in range(len(train_X))]
+    train_X = [scaler.fit_transform(train_xi) for (scaler, train_xi) in zip(scalers, train_X)]
+    test_X = [scaler.fit_transform(test_xi) for (scaler, test_xi) in zip(scalers, test_X)]
+    valid_X = [scaler.fit_transform(valid_xi) for (scaler, valid_xi) in zip(scalers, valid_X)]
 
     # Augment tests:
     train_X2 = train_X[4:] + train_X[:4]
@@ -64,7 +72,7 @@ def main():
     LOG.info(f'Validation data shapes  X:{str(valid_X[0].shape):>14} y:{str(valid_y.shape):>9}')
 
     COMBATANT_SIZE = train_X[0].shape[1]
-    N = COMBATANT_SIZE / 2
+    N = COMBATANT_SIZE
 
     def dense(n):
         layer = keras.layers.Dense(

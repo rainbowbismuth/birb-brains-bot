@@ -37,11 +37,14 @@ class MatchUp:
         right = {'Side': 'Right', 'Color': self.right.color, 'LeftWins': self.left_wins, 'Winner': not self.left_wins,
                  'Map': self.game_map}
         out = []
-        for i, combatant in enumerate(self.left.to_combatants()):
+        left_combatants = self.left.to_combatants()
+        right_combatants = self.right.to_combatants()
+        for i, combatant in enumerate(left_combatants):
             combatant.update(left)
             combatant['UIDX'] = i
             out.append(combatant)
-        for i, combatant in enumerate(self.right.to_combatants()):
+
+        for i, combatant in enumerate(right_combatants):
             combatant.update(right)
             combatant['UIDX'] = i + 4
             out.append(combatant)
