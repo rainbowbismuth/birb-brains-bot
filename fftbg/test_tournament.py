@@ -11,5 +11,3 @@ def test_tournament_conversions():
     tournaments = tournament.parse_tournaments()[:10]
     units = tournament.tournaments_to_units(tournaments)
     assert len(units) >= 70 * 8
-    matches = tournament.units_to_matches(units)
-    assert len(matches) >= 70
