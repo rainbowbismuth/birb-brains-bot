@@ -203,19 +203,107 @@ ARENAS = [
         choke_point=0.0,
         team_distance=0.5
     ),
+    Arena(
+        name='117) Checkerboard Land',
+        width=12,
+        height=8,
+        team_split=0.4,
+        height_diff=0.5,
+        choke_point=0.7,
+        team_distance=0.0
+    ),
+    Arena(
+        name='12) Gate of Lionel Castle',
+        width=15,
+        height=9,
+        team_split=0.2,
+        height_diff=0.3,
+        choke_point=0.1,
+        team_distance=0.2
+    ),
+    Arena(
+        name='125) Checkerboard Stairs',
+        width=16,
+        height=16,
+        team_split=0.1,
+        height_diff=0.3,
+        choke_point=0.0,
+        team_distance=0.6
+    ),
+    Arena(
+        name='13) Lionel Castle',
+        width=8,
+        height=10,
+        team_split=0.3,
+        height_diff=0.4,
+        choke_point=0.5,
+        team_distance=0.3
+    ),
+    Arena(
+        name='14) Office of Lionel Castle',
+        width=9,
+        height=7,
+        team_split=0.3,
+        height_diff=0.1,
+        choke_point=0.2,
+        team_distance=0.1
+    ),
+    Arena(
+        name='15) Gate of Limberry Castle',
+        width=10,
+        height=13,
+        team_split=0.3,
+        height_diff=0.8,
+        choke_point=0.4,
+        team_distance=0.6
+    ),
+    Arena(
+        name='16) Limberry Castle',
+        width=10,
+        height=13,
+        team_split=0.2,
+        height_diff=0.1,
+        choke_point=0.1,
+        team_distance=0.5
+    ),
+    Arena(
+        name='17) Underground Cemetary of Limberry Castle',
+        width=6,
+        height=17,
+        team_split=0.1,
+        height_diff=0.3,
+        choke_point=0.7,
+        team_distance=0.6
+    ),
+    Arena(
+        name='18) Office of Limberry Castle',
+        width=9,
+        height=10,
+        team_split=0.1,
+        height_diff=0.1,
+        choke_point=0.2,
+        team_distance=0.2
+    ),
+    Arena(
+        name='19) Back Gate of Limberry Castle',
+        width=8,
+        height=14,
+        team_split=0.3,
+        height_diff=0.3,
+        choke_point=0.7,
+        team_distance=0.7
+    ),
+    Arena(
+        name='2) Back Gate of Lesalia Castle',
+        width=9,
+        height=9,
+        team_split=0.2,
+        height_diff=0.2,
+        choke_point=0.1,
+        team_distance=0.7
+    ),
 ]
 
-#  '117) Checkerboard Land',
-#  '12) Gate of Lionel Castle',
-#  '125) Checkerboard Stairs',
-#  '13) Lionel Castle',
-#  '14) Office of Lionel Castle',
-#  '15) Gate of Limberry Castle',
-#  '16) Limberry Castle',
-#  '17) Underground Cemetary of Limberry Castle',
-#  '18) Office of Limberry Castle',
-#  '19) Back Gate of Limberry Castle',
-#  '2) Back Gate of Lesalia Castle',
 #  '20) Zeltennia Castle',
 #  '21) Office of Zeltennia Castle',
 #  '22) Magic City Gariland',

@@ -80,17 +80,17 @@ def main():
             n,
             kernel_initializer='he_normal',
             activation='elu',
-            kernel_regularizer=keras.regularizers.l1_l2(0.01))
+            kernel_regularizer=keras.regularizers.l2(0.02))
         layer2 = keras.layers.Dense(
             n,
             kernel_initializer='he_normal',
             activation='elu',
-            kernel_regularizer=keras.regularizers.l1_l2(0.01))
+            kernel_regularizer=keras.regularizers.l2(0.02))
         layer3 = keras.layers.Dense(
             n,
             kernel_initializer='he_normal',
             activation='elu',
-            kernel_regularizer=keras.regularizers.l1_l2(0.01))
+            kernel_regularizer=keras.regularizers.l2(0.02))
 
         return lambda x: layer3(layer2(layer1(x)))
 
