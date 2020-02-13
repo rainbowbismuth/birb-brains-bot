@@ -7,12 +7,14 @@ from typing import List
 
 import pandas
 
+from arena import get_arena
 from combatant import CATEGORICAL, SKILL_TAG, combatant_to_dict
 from config import TOURNAMENTS_ROOT
 
 LOG = logging.getLogger(__name__)
 
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
+NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance']
 
 
 @dataclass
@@ -32,10 +34,29 @@ class MatchUp:
     game_map: str
 
     def to_combatants(self):
-        left = {'Side': 'Left', 'Color': self.left.color, 'LeftWins': self.left_wins, 'Winner': self.left_wins,
-                'Map': self.game_map}
-        right = {'Side': 'Right', 'Color': self.right.color, 'LeftWins': self.left_wins, 'Winner': not self.left_wins,
-                 'Map': self.game_map}
+        arena = get_arena(self.game_map)
+        arena_map = {
+            'Map': self.game_map,
+            'Map-Area': arena.area,
+            'Map-Team-Split': arena.team_split,
+            'Map-Height-Diff': arena.height_diff,
+            'Map-Choke-Point': arena.choke_point,
+            'Map-Team-Distance': arena.team_distance
+        }
+        left = {
+            'Side': 'Left',
+            'Color': self.left.color,
+            'LeftWins': self.left_wins,
+            'Winner': self.left_wins,
+            **arena_map
+        }
+        right = {
+            'Side': 'Right',
+            'Color': self.right.color,
+            'LeftWins': self.left_wins,
+            'Winner': not self.left_wins,
+            **arena_map
+        }
         out = []
         left_combatants = self.left.to_combatants()
         right_combatants = self.right.to_combatants()

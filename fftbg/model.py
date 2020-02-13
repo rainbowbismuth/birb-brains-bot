@@ -12,6 +12,7 @@ from tensorflow import keras
 import combatant
 import config
 import data
+import tournament
 
 LOG = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def main():
     LOG.info('Going to compute tournament model')
     df = data.read_combatants()
 
-    num_columns = combatant.NUMERIC
+    num_columns = combatant.NUMERIC + tournament.NUMERIC
     cat_columns = ['Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
                    'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory', 'Map']
     skill_columns = [c for c in df.keys() if combatant.SKILL_TAG in c]
@@ -72,16 +73,26 @@ def main():
     LOG.info(f'Validation data shapes  X:{str(valid_X[0].shape):>14} y:{str(valid_y.shape):>9}')
 
     COMBATANT_SIZE = train_X[0].shape[1]
-    N = COMBATANT_SIZE
+    N = (COMBATANT_SIZE * 2) / 3
 
     def dense(n):
-        layer = keras.layers.Dense(
+        layer1 = keras.layers.Dense(
             n,
             kernel_initializer='he_normal',
             activation='elu',
-            kernel_regularizer=keras.regularizers.l2(0.01))
-        dropout = keras.layers.Dropout(0.25)
-        return lambda x: dropout(layer(x))
+            kernel_regularizer=keras.regularizers.l1_l2(0.01))
+        layer2 = keras.layers.Dense(
+            n,
+            kernel_initializer='he_normal',
+            activation='elu',
+            kernel_regularizer=keras.regularizers.l1_l2(0.01))
+        layer3 = keras.layers.Dense(
+            n,
+            kernel_initializer='he_normal',
+            activation='elu',
+            kernel_regularizer=keras.regularizers.l1_l2(0.01))
+
+        return lambda x: layer3(layer2(layer1(x)))
 
     inputs = [keras.layers.Input(shape=(COMBATANT_SIZE,)) for _ in range(8)]
     combatant_layer = dense(N)
@@ -148,7 +159,7 @@ def score_model(model, tag, X, y):
     LOG.info(f'{tag:>8} precision  {precision_score(y, pred_y):.1%}')
     LOG.info(f'{tag:>8} recall     {recall_score(y, pred_y):.1%}')
     y_scores = predictions[:, 1]
-    LOG.info(f'training roc auc    {roc_auc_score(y, y_scores):.1%}')
+    LOG.info(f'{tag:>8} roc auc    {roc_auc_score(y, y_scores):.1%}')
     return y_scores
 
 
