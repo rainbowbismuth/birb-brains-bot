@@ -12,7 +12,7 @@ CLASS_HELP_PATH = DATA_PATH / 'static' / 'classhelp.txt'
 CONFIG_PATH = Path('./config')
 MODEL_PATH = DATA_PATH / 'model.h5'
 
-SAVE_MODEL = False
+SAVE_MODEL = True
 
 LOGGING_CONFIG = toml.loads((CONFIG_PATH / 'logging.toml').read_text())
 logging.config.dictConfig(LOGGING_CONFIG)

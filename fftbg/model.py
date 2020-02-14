@@ -73,7 +73,7 @@ def main():
     LOG.info(f'Validation data shapes  X:{str(valid_X[0].shape):>14} y:{str(valid_y.shape):>9}')
 
     COMBATANT_SIZE = train_X[0].shape[1]
-    N = (COMBATANT_SIZE * 2) / 3
+    N = COMBATANT_SIZE
 
     def dense(n):
         layer1 = keras.layers.Dense(
@@ -98,7 +98,7 @@ def main():
     combatant_layer = dense(N)
     combatant_nodes = [combatant_layer(input) for input in inputs]
 
-    ally_layer = dense(N / 20)
+    ally_layer = dense(N / 5)
     foe_layer = dense(N / 5)
     pair_layers = []
 
@@ -123,17 +123,19 @@ def main():
     predictions = keras.layers.Dense(2, activation='softmax')(combined)
 
     model = keras.Model(inputs=inputs, outputs=predictions)
+    LOG.info(f'Number of parameters: {model.count_params()}')
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    early_stopping_cb = keras.callbacks.EarlyStopping(patience=10, monitor='val_loss', restore_best_weights=True)
+    early_stopping_cb = keras.callbacks.EarlyStopping(patience=5, monitor='val_loss')
     model.fit(train_X,
               train_y,
               epochs=100,
               verbose=1,
               validation_data=(valid_X, valid_y),
               callbacks=[early_stopping_cb])
+    LOG.info('Done training model')
 
     if config.SAVE_MODEL:
-        LOG.info(f'saving model at {config.MODEL_PATH}')
+        LOG.info(f'Saving model at {config.MODEL_PATH}')
         model.save(config.MODEL_PATH)
 
     train_y_scores = score_model(model, 'train', train_X, train_y)
