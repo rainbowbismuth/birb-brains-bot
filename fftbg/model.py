@@ -6,7 +6,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, RobustScaler
 from tensorflow import keras
 
 import combatant
@@ -56,7 +56,7 @@ def main():
     train_X, test_X, train_y, test_y = split(combatant_dfs, winner, size=0.3)
     test_X, valid_X, test_y, valid_y = split(test_X, test_y, size=0.2)
 
-    scalers = [StandardScaler() for _ in range(len(train_X))]
+    scalers = [RobustScaler() for _ in range(len(train_X))]
     train_X = [scaler.fit_transform(train_xi) for (scaler, train_xi) in zip(scalers, train_X)]
     test_X = [scaler.fit_transform(test_xi) for (scaler, test_xi) in zip(scalers, test_X)]
     valid_X = [scaler.fit_transform(valid_xi) for (scaler, valid_xi) in zip(scalers, valid_X)]
@@ -80,17 +80,17 @@ def main():
             n,
             kernel_initializer='he_normal',
             activation='elu',
-            kernel_regularizer=keras.regularizers.l2(0.02))
+            kernel_regularizer=keras.regularizers.l2(0.01))
         layer2 = keras.layers.Dense(
             n,
             kernel_initializer='he_normal',
             activation='elu',
-            kernel_regularizer=keras.regularizers.l2(0.02))
+            kernel_regularizer=keras.regularizers.l2(0.01))
         layer3 = keras.layers.Dense(
             n,
             kernel_initializer='he_normal',
             activation='elu',
-            kernel_regularizer=keras.regularizers.l2(0.02))
+            kernel_regularizer=keras.regularizers.l2(0.01))
 
         return lambda x: layer3(layer2(layer1(x)))
 
