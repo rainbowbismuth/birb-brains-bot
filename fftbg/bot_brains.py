@@ -128,8 +128,8 @@ class BotBrains:
             LOG.info('Skipping make_bet() because tournament is not ready')
         pool_total = left_total + right_total
 
-        left_wins_percent = (self.prediction[1] ** 1.5) * 0.9
-        right_wins_percent = 1 - left_wins_percent
+        left_wins_percent = self.prediction[1]
+        right_wins_percent = self.prediction[0]
 
         LOG.info(f'Adjusted predictions to {self.left_team} {left_wins_percent:.1%} vs'
                  f' {self.right_team} {right_wins_percent:.1%}')
@@ -138,10 +138,10 @@ class BotBrains:
         right_wins = right_wins_percent * left_total
         if left_wins > right_wins:
             self.betting_on = self.left_team
-            return self.left_team, self._how_much_to_bet(self.prediction[1], pool_total)
+            return self.left_team, self._how_much_to_bet(left_wins_percent, pool_total)
         else:
             self.betting_on = self.right_team
-            return self.right_team, self._how_much_to_bet(self.prediction[0], pool_total)
+            return self.right_team, self._how_much_to_bet(right_wins_percent, pool_total)
 
     def _how_much_to_bet(self, confidence, pool_total):
         amount = max(200, self.balance * (confidence / 10.0))
