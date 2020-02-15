@@ -18,6 +18,11 @@ def get_tournament(tid):
     return requests.get(f'{FFTBG_API_URL}/tournament/{tid}/json').text
 
 
+def get_latest_tournament():
+    LOG.info('Retrieving latest tournament json')
+    return requests.get(f'{FFTBG_API_URL}/tournament/latest/json').text
+
+
 def tournament_sync():
     LOG.info('Beginning tournament sync')
     TOURNAMENTS_ROOT.mkdir(exist_ok=True)

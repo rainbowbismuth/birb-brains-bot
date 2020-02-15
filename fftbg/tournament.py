@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Tuple
 
 import pandas
 
@@ -15,6 +15,29 @@ LOG = logging.getLogger(__name__)
 
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
 NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance']
+
+
+def _calculate_hypothetical_match_ups():
+    matches = []
+    for i in range(0, len(COLORS) - 1, 2):
+        left = COLORS[i]
+        right = COLORS[i + 1]
+        matches.append((left, right, i // 2))
+    for left in COLORS[0:2]:
+        for right in COLORS[2:4]:
+            matches.append((left, right, 4))
+    for left in COLORS[4:6]:
+        for right in COLORS[6:8]:
+            matches.append((left, right, 5))
+    for left in COLORS[0:4]:
+        for right in COLORS[4:8]:
+            matches.append((left, right, 6))
+    for left in COLORS[:-1]:
+        matches.append((left, 'champion', 7))
+    return matches
+
+
+HYPOTHETICAL_MATCHES: List[Tuple[str, str, int]] = _calculate_hypothetical_match_ups()
 
 
 @dataclass
@@ -30,7 +53,7 @@ class Team:
 class MatchUp:
     left: Team
     right: Team
-    left_wins: bool
+    left_wins: Optional[bool]
     game_map: str
 
     def to_combatants(self):
@@ -90,14 +113,22 @@ class Tournament:
         return out
 
 
+def parse_hypothetical_tournament(tournament: dict) -> Tournament:
+    modified, teams, tid = parse_teams(tournament)
+    maps = tournament['Maps']
+
+    match_ups = []
+    for (left_color, right_color, map_index) in HYPOTHETICAL_MATCHES:
+        left = teams[left_color]
+        right = teams[right_color]
+        match_ups.append(MatchUp(left, right, None, maps[map_index]))
+
+    return Tournament(tid, modified, teams, match_ups)
+
+
 def parse_tournament(path: Path) -> Tournament:
     tournament = json.loads(path.read_text())
-    tid = tournament['ID']
-    modified = datetime.fromisoformat(tournament['LastMod'])
-    teams = {}
-    for color, team in tournament['Teams'].items():
-        assert color in COLORS
-        teams[color] = Team(color, team['Units'])
+    modified, teams, tid = parse_teams(tournament)
 
     match_n = 0
     bracket = COLORS[:-1]
@@ -134,6 +165,16 @@ def parse_tournament(path: Path) -> Tournament:
     match_up = MatchUp(left, right, left_wins, game_map)
     match_ups.append(match_up)
     return Tournament(tid, modified, teams, match_ups)
+
+
+def parse_teams(tournament):
+    tid = tournament['ID']
+    modified = datetime.fromisoformat(tournament['LastMod'])
+    teams = {}
+    for color, team in tournament['Teams'].items():
+        assert color in COLORS
+        teams[color] = Team(color, team['Units'])
+    return modified, teams, tid
 
 
 def parse_tournaments() -> List[Tournament]:

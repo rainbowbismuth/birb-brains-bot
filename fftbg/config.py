@@ -11,11 +11,17 @@ CLASS_HELP_PATH = DATA_PATH / 'static' / 'classhelp.txt'
 
 CONFIG_PATH = Path('./config')
 MODEL_PATH = DATA_PATH / 'model.h5'
+COLUMN_XFORM_PATH = DATA_PATH / 'column_xform.pickle'
+FEATURE_SCALER_PATH = DATA_PATH / 'feature_scaler.pickle'
+ALL_COLUMNS_PATH = DATA_PATH / 'all_columns.pickle'
+EVENT_LOG_PATH = DATA_PATH / 'event_log.json'
 
 SAVE_MODEL = True
 
 LOGGING_CONFIG = toml.loads((CONFIG_PATH / 'logging.toml').read_text())
 logging.config.dictConfig(LOGGING_CONFIG)
+
+BOT_CONFIG = toml.loads((CONFIG_PATH / 'twitch.toml').read_text())
 
 LOG = logging.getLogger(__name__)
 LOG.info("Good morning")

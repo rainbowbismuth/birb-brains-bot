@@ -1,0 +1,135 @@
+import asyncio
+import logging
+import re
+
+from twitchio.ext import commands
+
+from bot_brains import BotBrains
+from config import BOT_CONFIG
+
+LOG = logging.getLogger(__name__)
+
+TWITCH = BOT_CONFIG['twitch']
+BOT_TMI_TOKEN = TWITCH['tmi_token']
+BOT_CLIENT_ID = TWITCH['client_id']
+BOT_NICK = TWITCH['bot_nick']
+BOT_CHANNEL = TWITCH['channel']
+BOT_PREFIX = '!!birbbrainsbot'
+
+NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
+BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')
+BETTING_OPEN_RE = re.compile(r'Betting is open for (\w+) vs (\w+).')
+BETTING_CLOSE_RE = re.compile(r'Betting is closed: Final Bets: (\w+) - (\d+) bets for ([\d,]+)G(?:.*?); (\w+) - (\d+) '
+                              r'bets for ([\d,]+)G')
+ODDS_RE = re.compile(r'(\w+) - (\d+) bets for ([\d,]+)G(?:.*?); (\w+) - (\d+) bets for ([\d,]+)G')
+
+
+# TODO:
+#   - Log betting totals and predictions with tournament ID, in a file I guess? plain text? IDK.
+#   - Make a better, simpler, more robust model.
+#   - Add the betting logic and stuff.
+#   - Need to loop refresh for tournament, mark that a new tournament has happened and not bet on old data
+
+
+def parse_comma_int(s):
+    return int(s.replace(',', ''))
+
+
+class Bot(commands.Bot):
+    def __init__(self):
+        self.brains = BotBrains()
+        LOG.info('Starting up the rest of the Bot')
+        super().__init__(
+            irc_token=BOT_TMI_TOKEN,
+            client_id=BOT_CLIENT_ID,
+            nick=BOT_NICK,
+            prefix=BOT_PREFIX,
+            initial_channels=[BOT_CHANNEL])
+        self.waiting_for_odds = False
+
+    # Events don't need decorators when subclassed
+    async def event_ready(self):
+        LOG.info('Connected to twitch.tv')
+        await self.brains.refresh_tournament()
+        await self.send_balance_command()
+
+    async def send_balance_command(self):
+        channel = self.get_channel(BOT_CHANNEL)
+        await channel.send("!balance")
+
+    async def send_pot_command(self):
+        self.waiting_for_odds = True
+        channel = self.get_channel(BOT_CHANNEL)
+        await channel.send("!pot")
+
+    async def send_bet_command(self, team, amount):
+        channel = self.get_channel(BOT_CHANNEL)
+        await channel.send(f'!bet {amount} {team}')
+
+    async def event_message(self, message):
+        if re.search(BOT_NICK, message.content, re.IGNORECASE):
+            LOG.info(f'Bot mentioned by {message.author.name}: {message.content}')
+
+        if message.author.channel.name != BOT_CHANNEL:
+            return
+
+        if message.author.name != BOT_CHANNEL:
+            return
+
+        if NEW_TOURNAMENT in message.content:
+            self.brains.new_tournament()
+            await self.send_balance_command()
+
+        balance_match = BALANCE_RE.findall(message.content)
+        if balance_match:
+            for (user, balance) in balance_match:
+                if user != BOT_NICK:
+                    continue
+                self.brains.update_balance(parse_comma_int(balance))
+            return
+
+        betting_open = BETTING_OPEN_RE.findall(message.content)
+        if betting_open:
+            (left, right) = betting_open[0]
+            await self.send_balance_command()
+            sleep_seconds = 40
+            if left == 'red' and right == 'blue':
+                await self.brains.refresh_tournament()
+                sleep_seconds = 20
+            await self.brains.log_prediction(left, right)
+            LOG.info(f'Sleeping for {sleep_seconds} seconds before asking for odds')
+            await asyncio.sleep(sleep_seconds)
+            await self.send_pot_command()
+            return
+
+        betting_close = BETTING_CLOSE_RE.findall(message.content)
+        if betting_close:
+            left, left_bets, left_total, right, right_bets, right_total = betting_close[0]
+            LOG.info(f'Final betting totals: {left}/{left_bets} {left_total} G; {right}/{right_bets} {right_total} G')
+            return
+
+        odds_match = ODDS_RE.findall(message.content)
+        if odds_match and self.waiting_for_odds:
+            self.waiting_for_odds = False
+            left, left_bets, left_total, right, right_bets, right_total = odds_match[0]
+            left_total_n = parse_comma_int(left_total)
+            right_total_n = parse_comma_int(right_total)
+            LOG.info(f'Betting totals: {left}/{left_bets} {left_total} G; {right}/{right_bets} {right_total} G')
+            team, amount = await self.brains.make_bet(left_total_n, right_total_n)
+            LOG.info(f'Betting {amount} G on {team} team')
+            await self.send_bet_command(team, amount)
+            return
+
+        await self.handle_commands(message)
+
+
+def main():
+    try:
+        bot = Bot()
+        bot.run()
+    except:
+        LOG.critical('Bot died', exc_info=True)
+
+
+if __name__ == '__main__':
+    main()

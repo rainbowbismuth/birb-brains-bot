@@ -11,8 +11,8 @@ stream = 'ext://sys.stdout'
 
 [handlers.file]
 class = 'logging.handlers.RotatingFileHandler'
-backupCount = 10
-maxBytes = 32768
+backupCount = 100
+maxBytes = 1048576
 level = 'INFO'
 formatter = 'simple'
 filename = 'logs/log'

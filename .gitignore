@@ -7,5 +7,7 @@ __pycache__
 data/tournaments
 data/*.feather
 data/*.h5
+data/*.pickle
 logs
 venv
+config/twitch.toml
