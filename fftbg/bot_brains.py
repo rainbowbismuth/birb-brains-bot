@@ -149,7 +149,7 @@ class BotBrains:
         if amount > betting_cap:
             LOG.info(f'Capping bet at {betting_cap}')
             return betting_cap
-        return amount
+        return int(amount)
 
 
 def main():

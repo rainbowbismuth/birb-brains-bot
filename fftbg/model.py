@@ -7,13 +7,14 @@ from sklearn.compose import ColumnTransformer
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
 
 import combatant
 import config
 import data
 import tournament
+from passthrough import MyPassthrough
 
 LOG = logging.getLogger(__name__)
 
@@ -28,9 +29,11 @@ def split(xs, y, size):
 
 
 NUM_COLUMNS = combatant.NUMERIC + tournament.NUMERIC
-CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
-               'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory', 'Map']
+CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'SupportSkill', 'MoveSkill',
+               'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 
+
+# CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'SupportSkill', 'MoveSkill']
 
 def get_skill_columns(df):
     return [c for c in df.keys() if combatant.SKILL_TAG in c]
@@ -53,11 +56,11 @@ def main():
     combatant_dfs = [df.sort_index(axis=1) for df in combatant_dfs]
 
     pipeline = ColumnTransformer([
-        ('cat',
+        ('c',
          OneHotEncoder(),
          CAT_COLUMNS),
-        ('none',
-         'passthrough',
+        ('p',
+         MyPassthrough(NUM_COLUMNS + skill_columns),
          NUM_COLUMNS + skill_columns),
     ])
 
@@ -70,10 +73,27 @@ def main():
     train_X, test_X, train_y, test_y = split(combatant_dfs, winner, size=0.3)
     test_X, valid_X, test_y, valid_y = split(test_X, test_y, size=0.2)
 
-    scalers = [StandardScaler(with_mean=False) for _ in range(len(train_X))]
+    scalers = [MaxAbsScaler() for _ in range(len(train_X))]
     train_X = [scaler.fit_transform(train_xi) for (scaler, train_xi) in zip(scalers, train_X)]
     test_X = [scaler.transform(test_xi) for (scaler, test_xi) in zip(scalers, test_X)]
     valid_X = [scaler.transform(valid_xi) for (scaler, valid_xi) in zip(scalers, valid_X)]
+
+    # combined_training = np.concatenate(train_X)
+    # combined_training_y = np.concatenate([train_y for _y in range(8)])
+    # sel1 = VarianceThreshold(0.98 * (1-0.98))
+    # sel2 = SelectKBest(chi2, k=100)
+    # combined_training = sel1.fit_transform(combined_training)
+    # sel2.fit(combined_training, combined_training_y)
+    #
+    # sel1_support = sel1.get_support()
+    # sel2_support = sel2.get_support()
+    # word_vec = pipeline.get_feature_names()
+    # word_vec = ma.masked_array(word_vec, ~sel1_support).compressed()
+    # word_vec = ma.masked_array(word_vec, ~sel2_support).compressed()
+    # important_features = [word.replace('__', '') for word in sorted(word_vec)]
+    # print(f"determined the following {len(important_features)} important features:")
+    # print(textwrap.fill(", ".join(sorted(important_features)), width=120))
+    # return
 
     # Augment tests:
     # train_X2 = train_X[4:] + train_X[:4]
@@ -241,7 +261,9 @@ def score_model(model, tag, X, y):
 def read_model():
     from tensorflow.keras.models import load_model
     LOG.info(f'Reading model from {config.MODEL_PATH}')
-    custom_objects = {MCDropout.__name__: MCDropout}
+    custom_objects = {
+        MCDropout.__name__: MCDropout,
+    }
     return load_model(config.MODEL_PATH, custom_objects=custom_objects, compile=True)
 
 
