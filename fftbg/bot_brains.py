@@ -76,9 +76,9 @@ class BotBrains:
             return
         self.balance = balance
         if difference > 0:
-            LOG.info(f'Won {difference} betting on {self.betting_on}, new balance {self.balance}')
+            LOG.info(f'Won {difference} G betting on {self.betting_on}, new balance {self.balance} G')
         else:
-            LOG.info(f'Lost {abs(difference)} betting on {self.betting_on}, new balance {self.balance}')
+            LOG.info(f'Lost {abs(difference)} G betting on {self.betting_on}, new balance {self.balance} G')
 
     @property
     def tournament_id_or_none(self):
