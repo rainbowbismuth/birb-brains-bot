@@ -1,9 +1,10 @@
 from math import floor
 
+import ability
 import base_stats
 import equipment
 
-PER_COMBATANTS = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
+PER_COMBATANTS = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
                   'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 NUMERIC = ['Brave', 'Faith', 'HP', 'MP', 'Speed', 'Range', 'W-EV', 'C-EV', 'PA', 'PA!', 'MA', 'MA!',
            'Physical A-EV', 'Magical A-EV',
@@ -12,13 +13,8 @@ CATEGORICAL = PER_COMBATANTS + ['Color', 'Side', 'Map']
 SKILL_TAG = '⭒ '
 
 
-def combatant_to_dict(combatant):
-    skills = {}
-    for skill in combatant['ClassSkills']:
-        skills[SKILL_TAG + skill] = True
-    for skill in combatant['ExtraSkills']:
-        skills[SKILL_TAG + skill] = True
-    output = {**combatant, **skills}
+def combatant_to_dict(combatant: dict):
+    output = dict(combatant)
     del output['ClassSkills']
     del output['ExtraSkills']
 
@@ -38,10 +34,10 @@ def combatant_to_dict(combatant):
     output['W-EV'] = max([e.w_ev for e in all_equips])
     output['C-EV'] = stats.c_ev
 
-    output['PA'] = stats.pa
-    output['PA!'] = stats.pa + sum([e.pa_bonus for e in all_equips])
-    output['MA'] = stats.ma
-    output['MA!'] = stats.ma + sum([e.ma_bonus for e in all_equips])
+    output['PA!'] = stats.pa
+    output['PA'] = stats.pa + sum([e.pa_bonus for e in all_equips])
+    output['MA!'] = stats.ma
+    output['MA'] = stats.ma + sum([e.ma_bonus for e in all_equips])
     output['Physical A-EV'] = sum([e.phys_ev for e in all_equips])
     output['Magical A-EV'] = sum([e.magic_ev for e in all_equips])
 
@@ -58,6 +54,22 @@ def combatant_to_dict(combatant):
         damage_2 = damage_calculation(output, offhand)
 
     output['Attack-Damage'] = damage_1 + damage_2
+
+    # Skill effectiveness calculations:
+    brave = output['Brave'] / 100.0
+    faith = output['Faith'] / 100.0
+    pa = output['PA']
+    pa_bang = output['PA!']
+    ma = output['MA']
+    wp = max(mainhand.wp, offhand.wp)  # no idea here, ask B.M.G.
+    speed = output['Speed']
+
+    for skill in combatant['ClassSkills'] + combatant['ExtraSkills']:
+        calc = ability.get_ability(skill)
+        output[SKILL_TAG + skill] = calc.multiply(1, brave, faith, pa, pa_bang, ma, wp, speed)
+
+    output[SKILL_TAG + combatant['ReactionSkill']] = brave
+    del output['ReactionSkill']
 
     return output
 

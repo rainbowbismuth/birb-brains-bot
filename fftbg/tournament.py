@@ -197,8 +197,7 @@ def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
     for column in df.keys():
         if not column.startswith(SKILL_TAG):
             continue
-        df[column].fillna(False, inplace=True)
-        df[column] = df[column].astype(bool)
+        df[column].fillna(0, inplace=True)
     df.set_index('MID')
     return df
 

@@ -33,8 +33,8 @@ class BaseStats:
 
 
 def parse_base_stats():
-    class_job = config.CLASS_HELP_PATH.read_text().splitlines()
-    for class_job in class_job:
+    class_jobs = config.CLASS_HELP_PATH.read_text().splitlines()
+    for class_job in class_jobs:
         human_match = HUMAN_RE.match(class_job)
         if human_match:
             job, gender = human_match.groups()

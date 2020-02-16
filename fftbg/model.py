@@ -28,7 +28,7 @@ def split(xs, y, size):
 
 
 NUM_COLUMNS = combatant.NUMERIC + tournament.NUMERIC
-CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'ActionSkill', 'ReactionSkill', 'SupportSkill', 'MoveSkill',
+CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
                'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory', 'Map']
 
 
@@ -70,7 +70,7 @@ def main():
     train_X, test_X, train_y, test_y = split(combatant_dfs, winner, size=0.3)
     test_X, valid_X, test_y, valid_y = split(test_X, test_y, size=0.2)
 
-    scalers = [StandardScaler() for _ in range(len(train_X))]
+    scalers = [StandardScaler(with_mean=False) for _ in range(len(train_X))]
     train_X = [scaler.fit_transform(train_xi) for (scaler, train_xi) in zip(scalers, train_X)]
     test_X = [scaler.transform(test_xi) for (scaler, test_xi) in zip(scalers, test_X)]
     valid_X = [scaler.transform(valid_xi) for (scaler, valid_xi) in zip(scalers, valid_X)]
@@ -129,7 +129,17 @@ class MCDropout(keras.layers.Dropout):
         return super().call(inputs, training=True)
 
 
-def dense_single(n):
+def dense_bias(n):
+    d = keras.layers.Dense(
+        n,
+        kernel_initializer='he_normal',
+        kernel_regularizer=keras.regularizers.l2(0.01),
+        activation='elu',
+        use_bias=True)
+    return d
+
+
+def dense_norm(n):
     d = keras.layers.Dense(
         n,
         kernel_initializer='he_normal',
@@ -140,17 +150,21 @@ def dense_single(n):
     return lambda x: a(bn(d(x)))
 
 
-def dense(n):
-    d1 = dense_single(n)
-    d2 = dense_single(n)
-    d3 = dense_single(n)
+def dense(n, o=None, p=None):
+    if o is None:
+        o = n
+    if p is None:
+        p = o
+    d1 = dense_bias(n)
+    d2 = dense_bias(o)
+    d3 = dense_norm(p)
     mc = MCDropout(0.25)
     return lambda x: mc(d3(d2(d1(x))))
 
 
 def model_classic(combatant_size, layer_size):
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    combatant_layer = dense(layer_size // 10)
+    combatant_layer = dense(layer_size, layer_size // 5, layer_size // 10)
     combatant_nodes = [combatant_layer(c_input) for c_input in inputs]
 
     # ally_layer = dense(layer_size // 10)
