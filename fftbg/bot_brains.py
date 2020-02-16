@@ -145,7 +145,7 @@ class BotBrains:
 
     def _how_much_to_bet(self, confidence, pool_total):
         amount = max(200, self.balance * (confidence / 10.0))
-        betting_cap = pool_total // 10
+        betting_cap = pool_total // 20
         if amount > betting_cap:
             LOG.info(f'Capping bet at {betting_cap}')
             return betting_cap

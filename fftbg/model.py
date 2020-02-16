@@ -4,8 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.compose import ColumnTransformer
-from sklearn.metrics import precision_score, recall_score, accuracy_score
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import roc_curve, roc_auc_score, precision_score, recall_score, accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
@@ -95,12 +94,15 @@ def main():
     # print(textwrap.fill(", ".join(sorted(important_features)), width=120))
     # return
 
+    def rotate_right(xs, amount: int = 1):
+        return xs[-amount:] + xs[:-amount]
+
     # Augment tests:
-    # train_X2 = train_X[4:] + train_X[:4]
-    # train_y2 = ~train_y
-    #
-    # train_X = [np.append(train_X[i], train_X2[i], axis=0) for i in range(8)]
-    # train_y = np.append(train_y, train_y2)
+    train_X2 = rotate_right(train_X[4:]) + rotate_right(train_X[:4])
+    train_y2 = ~train_y
+
+    train_X = [np.append(train_X[i], train_X2[i], axis=0) for i in range(8)]
+    train_y = np.append(train_y, train_y2)
 
     LOG.info(f'Training data shapes    X:{str(train_X[0].shape):>14} y:{str(train_y.shape):>9}')
     LOG.info(f'Testing data shapes     X:{str(test_X[0].shape):>14} y:{str(test_y.shape):>9}')
@@ -178,7 +180,7 @@ def dense(n, o=None, p=None):
     d1 = dense_bias(n)
     d2 = dense_bias(o)
     d3 = dense_norm(p)
-    mc = MCDropout(0.25)
+    mc = MCDropout(0.50)
     return lambda x: mc(d3(d2(d1(x))))
 
 
@@ -200,7 +202,7 @@ def model_classic(combatant_size, layer_size):
         #         continue
         #     team_1_ally_layers.append(ally_layer(keras.layers.concatenate([combatant_node, ally_node])))
         for foe_node in combatant_nodes[4:]:
-            team_1_foe_layers.append(foe_layer(keras.layers.concatenate([combatant_node, foe_node])))
+            team_1_foe_layers.append(foe_layer(keras.layers.subtract([combatant_node, foe_node])))
 
     for combatant_node in combatant_nodes[4:]:
         # for ally_node in combatant_nodes[4:]:
@@ -208,21 +210,24 @@ def model_classic(combatant_size, layer_size):
         #         continue
         #     team_2_ally_layers.append(ally_layer(keras.layers.concatenate([combatant_node, ally_node])))
         for foe_node in combatant_nodes[:4]:
-            team_2_foe_layers.append(foe_layer(keras.layers.concatenate([combatant_node, foe_node])))
+            team_2_foe_layers.append(foe_layer(keras.layers.subtract([combatant_node, foe_node])))
 
     # ally_combined = dense(layer_size // 6)
     foe_combined = dense(layer_size // 100)
 
     # team_1_ally_combined = ally_combined(keras.layers.concatenate(team_1_ally_layers))
-    team_1_foe_combined = foe_combined(keras.layers.concatenate(team_1_foe_layers))
+    # team_1_foe_combined = foe_combined(keras.layers.concatenate(team_1_foe_layers))
+    team_1_foe_combined = foe_combined(keras.layers.average(team_1_foe_layers))
     # team_2_ally_combined = ally_combined(keras.layers.concatenate(team_2_ally_layers))
-    team_2_foe_combined = foe_combined(keras.layers.concatenate(team_2_foe_layers))
+    # team_2_foe_combined = foe_combined(keras.layers.concatenate(team_2_foe_layers))
+    team_2_foe_combined = foe_combined(keras.layers.average(team_2_foe_layers))
 
     # team_combined = dense(layer_size // 4)
     # team_1_combined = team_combined(keras.layers.concatenate([team_1_ally_combined, team_1_foe_combined]))
     # team_2_combined = team_combined(keras.layers.concatenate([team_2_ally_combined, team_2_foe_combined]))
 
-    concat_all = keras.layers.concatenate([team_1_foe_combined, team_2_foe_combined])
+    # concat_all = keras.layers.concatenate([team_1_foe_combined, team_2_foe_combined])
+    concat_all = keras.layers.subtract([team_1_foe_combined, team_2_foe_combined])
     # concat_all = keras.layers.concatenate([team_1_combined, team_2_combined])
     combined = dense(layer_size // 100)(concat_all)
     predictions = keras.layers.Dense(2, activation='softmax')(combined)
@@ -253,6 +258,7 @@ def score_model(model, tag, X, y):
     LOG.info(f'{tag:>8} accuracy   {accuracy_score(y, pred_y):.1%}')
     LOG.info(f'{tag:>8} precision  {precision_score(y, pred_y):.1%}')
     LOG.info(f'{tag:>8} recall     {recall_score(y, pred_y):.1%}')
+    LOG.info(f'{tag:>8} log loss   {log_loss(y, pred_y):.4}')
     y_scores = predictions[:, 1]
     LOG.info(f'{tag:>8} roc auc    {roc_auc_score(y, y_scores):.1%}')
     return y_scores
