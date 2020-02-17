@@ -91,10 +91,10 @@ class BotBrains:
             return
         self.balance = balance
         if difference > 0:
-            left_wins = self.left_team == self.betting_on
+            left_wins = self.left_team_bet == self.betting_on
             LOG.info(f'Won {difference} G betting on {self.betting_on}, new balance {self.balance} G')
         else:
-            left_wins = self.left_team != self.betting_on
+            left_wins = self.left_team_bet != self.betting_on
             LOG.info(f'Lost {abs(difference)} G betting on {self.betting_on}, new balance {self.balance} G')
         self.memory.log_balance(
             tournament_id=self.tournament_id,  # we can't use self.tournament, it may have changed
