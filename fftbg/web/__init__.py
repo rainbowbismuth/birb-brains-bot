@@ -13,7 +13,7 @@ app = Flask(
     static_folder='static.1',
     template_folder='templates')
 
-LIMIT = 100
+LIMIT = 200
 
 
 @app.route('/')

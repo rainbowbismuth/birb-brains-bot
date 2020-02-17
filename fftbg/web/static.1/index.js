@@ -94,23 +94,23 @@ const StatSummary = {
             m('.card-body', [
                 m('h5.card-title', 'Quick summary'),
                 m('.card-text', [
-                    m('.mx-2', [
-                        m('div', [length, ' matches ',
+                    m('ul', [
+                        m('li', [length, ' matches ',
                             m('span.text-muted', 'over the last '),
                             duration.hours(), ' hours ',
                             m('span.text-muted', 'are shown on this page.')]),
-                        m('div', [
+                        m('li', [
                             m('span.text-muted', 'Total Gain/Loss: '),
                             display_gain_loss(total_gain), ' G',
                             ' (', display_gain_loss((total_gain / hours_shown) | 0), ' G/hour.)'
                         ]),
-                        m('div', [
+                        m('li', [
                             m('span.text-muted', 'Total Wagers: '),
                             total_wager.toLocaleString(), ' G',
                             ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
-                        ]), placed_bet_msg,
+                        ]),
+                        m('li', placed_bet_msg),
                     ]),
-                    m('br'),
                     m('h5.my-1', 'Testimonial'),
                     m('img.mx-2.my-1', {
                         src: '/static.1/nacho-testimonial.jpeg',
@@ -195,14 +195,20 @@ const BalanceChart = {
                     xAxes: [{
                         ticks: {
                             autoSkipPadding: 10
-                        }
+                        },
+                        gridLines: {
+                            color: '#303030',
+                        },
                     }],
                     yAxes: [{
                         ticks: {
                             callback: function (label, index, labels) {
                                 return label.toLocaleString() + ' G';
                             }
-                        }
+                        },
+                        gridLines: {
+                            color: '#303030',
+                        },
                     }]
                 }
             }
