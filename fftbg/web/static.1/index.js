@@ -122,36 +122,41 @@ const BalanceLog = {
                 m('tr', [
                     m('th', {scope: 'col'}, '#'),
                     m('th', {scope: 'col'}, 'Time'),
-                    m('th', {scope: 'col'}, 'Tournament ID'),
-                    m('th', {scope: 'col'}, 'Balance'),
-                    m('th', {scope: 'col'}, 'Gain/Loss'),
-                    m('th', {scope: 'col'}, 'Wager'),
-                    m('th', ''),
-                    m('th', {scope: 'col'}, 'Player 1'),
-                    m('th', {scope: 'col'}, 'Est. Win%'),
-                    m('th', {scope: 'col'}, 'Bet Total'),
-                    m('th', ''),
-                    m('th', {scope: 'col'}, 'Player 2'),
-                    m('th', {scope: 'col'}, 'Est. Win%'),
-                    m('th', {scope: 'col'}, 'Bet Total'),
+                    m('th.jr', {scope: 'col'}, 'Balance'),
+                    m('th.jr', {scope: 'col'}, 'Gain/Loss'),
+                    m('th.jr', {scope: 'col'}, 'Wager'),
+                    m('th', {scope: 'col'}, 'Bet On'),
+                    m('th', {scope: 'col'}, 'Winner'),
+                    m('th', {scope: 'col'}, 'Win %'),
+                    m('th.jr', {scope: 'col'}, 'Pool'),
+                    m('th', {scope: 'col'}, 'Loser'),
+                    m('th', {scope: 'col'}, 'Win %'),
+                    m('th.jr', {scope: 'col'}, 'Pool'),
                 ]),
             ]),
             m('tbody', State.balance_log.map(function (log) {
+                const left_team = [
+                    m('td', team_color(log.left_team)),
+                    m('td', format_prediction(log.left_prediction)),
+                    m('td.jr.text-muted', log.left_total_final.toLocaleString())
+                ];
+                const right_team = [
+                    m('td', team_color(log.right_team)),
+                    m('td', format_prediction(log.right_prediction)),
+                    m('td.jr.text-muted', log.right_total_final.toLocaleString())
+                ];
+                const winner = log.left_wins ? left_team : right_team;
+                const loser = log.left_wins ? right_team : left_team;
+
                 return m('tr', [
                     m('th.text-muted', {scope: 'row'}, log.id),
                     m('td', log.time.format('LT')),
-                    m('td.text-muted', log.tournament),
                     m('td.jr', log.new_balance.toLocaleString()),
                     m('td.jr', display_gain_loss(log.new_balance - log.old_balance)),
                     m('td.jr', log.wager.toLocaleString()),
-                    m('td', win_lose(log.left_wins)),
-                    m('td', team_color(log.left_team)),
-                    m('td', format_prediction(log.left_prediction)),
-                    m('td.jr.text-muted', log.left_total_final.toLocaleString()),
-                    m('td', win_lose(!log.left_wins)),
-                    m('td', team_color(log.right_team)),
-                    m('td', format_prediction(log.right_prediction)),
-                    m('td.jr.text-muted', log.right_total_final.toLocaleString()),
+                    m('td', team_color(log.bet_on)),
+                    ...winner,
+                    ...loser
                 ]);
             }))
         ]);
