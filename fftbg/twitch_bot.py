@@ -98,7 +98,6 @@ class Bot(commands.Bot):
 
         betting_open = BETTING_OPEN_RE.findall(message.content)
         if betting_open:
-            time_diff = time.time() - self.betting_open_time
 
             (left, right) = betting_open[0]
             self.betting_open_time = time.time()
@@ -107,6 +106,7 @@ class Bot(commands.Bot):
                 await self.brains.refresh_tournament()
             await self.brains.log_prediction(left, right)
 
+            time_diff = time.time() - self.betting_open_time
             time_remaining = MATCH_BETTING_LENGTH - time_diff
             if time_remaining > MATCH_ODDS_TIME_REMAINING:
                 sleep_seconds = int(time_remaining - MATCH_ODDS_TIME_REMAINING)

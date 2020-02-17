@@ -17,7 +17,7 @@ FEATURE_SCALER_PATH = DATA_PATH / 'feature_scaler.pickle'
 ALL_COLUMNS_PATH = DATA_PATH / 'all_columns.pickle'
 BOT_MEMORY_PATH = DATA_PATH / 'bot_memory.db'
 
-SAVE_MODEL = False
+SAVE_MODEL = True
 
 LOGGING_CONFIG = toml.loads((CONFIG_PATH / 'logging.toml').read_text())
 logging.config.dictConfig(LOGGING_CONFIG)
