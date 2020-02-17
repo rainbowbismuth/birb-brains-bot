@@ -8,6 +8,7 @@ data/tournaments
 data/*.feather
 data/*.h5
 data/*.pickle
+data/*.db
 logs
 venv
 config/twitch.toml

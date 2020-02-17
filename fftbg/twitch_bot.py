@@ -122,6 +122,9 @@ class Bot(commands.Bot):
             self.waiting_for_odds = False
             left, left_bets, left_total, right, right_bets, right_total = betting_close[0]
             LOG.info(f'Final betting totals: {left}/{left_bets} {left_total} G; {right}/{right_bets} {right_total} G')
+            left_total_n = parse_comma_int(left_total)
+            right_total_n = parse_comma_int(right_total)
+            self.brains.final_odds(left_total_n, right_total_n)
             return
 
         odds_match = ODDS_RE.findall(message.content)

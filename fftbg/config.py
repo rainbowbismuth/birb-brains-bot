@@ -15,7 +15,7 @@ MODEL_PATH = DATA_PATH / 'model.h5'
 COLUMN_XFORM_PATH = DATA_PATH / 'column_xform.pickle'
 FEATURE_SCALER_PATH = DATA_PATH / 'feature_scaler.pickle'
 ALL_COLUMNS_PATH = DATA_PATH / 'all_columns.pickle'
-EVENT_LOG_PATH = DATA_PATH / 'event_log.json'
+BOT_MEMORY_PATH = DATA_PATH / 'bot_memory.db'
 
 SAVE_MODEL = False
 
