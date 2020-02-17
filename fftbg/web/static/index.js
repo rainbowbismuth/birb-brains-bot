@@ -11,6 +11,9 @@ function load_balance_log() {
         withCredentials: false,
     }).then(function (result) {
         State.balance_log = result;
+        State.balance_log.forEach(function (log) {
+            log.time = moment(log.time + 'Z');
+        });
         State.balance_log.sort((a, b) => b.id - a.id);
     });
 }
@@ -37,10 +40,49 @@ function format_prediction(percent) {
     return (percent * 100).toFixed(1) + '%';
 }
 
+const StatSummary = {
+    view: function (vnode) {
+        if (State.balance_log.length === 0) {
+            return '';
+        }
+        const length = State.balance_log.length;
+        const oldest = State.balance_log[length - 1].time;
+        const newest = State.balance_log[0].time;
+        const duration = moment.duration(newest.diff(oldest));
+        const hours_shown = duration.asHours();
+        const total_gain = State.balance_log
+            .map(log => log.new_balance - log.old_balance)
+            .reduce((a, b) => a + b, 0);
+        const total_wager = State.balance_log
+            .map(log => log.wager)
+            .reduce((a, b) => a + b, 0);
+
+
+        return m('.card.stat-summary', [
+            m('.card-body', [
+                m('h5.card-title', 'Quick summary'),
+                m('.card-text', [
+                    m('div', [length, ' matches ',
+                        m('span.text-muted', 'over the last '),
+                        duration.hours(), ' hours ',
+                        m('span.text-muted', 'shown on this page.')]),
+                    m('div', [
+                        m('span.text-muted', 'Total Gain/Loss: '),
+                        display_gain_loss(total_gain), ' G',
+                        ' (', display_gain_loss((total_gain / hours_shown) | 0), ' G/hour.)'
+                    ]),
+                    m('div', [
+                        m('span.text-muted', 'Total Wagers: '),
+                        total_wager.toLocaleString(), ' G',
+                        ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
+                    ])
+                ])
+            ])
+        ]);
+    }
+};
+
 const BalanceLog = {
-    oninit: function (vnode) {
-        load_balance_log();
-    },
     view: function (vnode) {
         return m('table.table', [
             m('thead', [
@@ -63,20 +105,20 @@ const BalanceLog = {
             ]),
             m('tbody', State.balance_log.map(function (log) {
                 return m('tr', [
-                    m('th', {scope: 'row'}, log.id),
-                    m('td', log.time.slice(11)),
-                    m('td', m('span.text-muted', log.tournament)),
+                    m('th.text-muted', {scope: 'row'}, log.id),
+                    m('td', log.time.format('LT')),
+                    m('td.text-muted', log.tournament),
                     m('td.jr', log.new_balance.toLocaleString()),
                     m('td.jr', display_gain_loss(log.new_balance - log.old_balance)),
                     m('td.jr', log.wager.toLocaleString()),
                     m('td', win_lose(log.left_wins)),
                     m('td', team_color(log.left_team)),
                     m('td', format_prediction(log.left_prediction)),
-                    m('td.jr', m('span.text-muted', log.left_total_final.toLocaleString())),
+                    m('td.jr.text-muted', log.left_total_final.toLocaleString()),
                     m('td', win_lose(!log.left_wins)),
                     m('td', team_color(log.right_team)),
                     m('td', format_prediction(log.right_prediction)),
-                    m('td.jr', m('span.text-muted', log.right_total_final.toLocaleString())),
+                    m('td.jr.text-muted', log.right_total_final.toLocaleString()),
                 ]);
             }))
         ]);
@@ -103,6 +145,7 @@ const Root = {
                 ]),
                 m('.row', [
                     m('.col', [
+                        m(StatSummary),
                         m(BalanceLog)
                     ])
                 ])
@@ -112,3 +155,11 @@ const Root = {
 };
 
 m.mount(document.body, Root);
+load_balance_log();
+
+document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === 'visible') {
+            load_balance_log();
+        }
+    }
+);

@@ -11,6 +11,11 @@ body {
     text-align: right;
 }
 
+.stat-summary {
+    margin: 2%;
+}
+
+
 .color-red {
     color: var(--red);
 }
