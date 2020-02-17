@@ -90,25 +90,32 @@ const StatSummary = {
             ]);
         }
 
-        return m('.card.stat-summary', [
+        return m('.card.stat-summary.h-100', [
             m('.card-body', [
                 m('h5.card-title', 'Quick summary'),
                 m('.card-text', [
-                    m('div', [length, ' matches ',
-                        m('span.text-muted', 'over the last '),
-                        duration.hours(), ' hours ',
-                        m('span.text-muted', 'are shown on this page.')]),
-                    m('div', [
-                        m('span.text-muted', 'Total Gain/Loss: '),
-                        display_gain_loss(total_gain), ' G',
-                        ' (', display_gain_loss((total_gain / hours_shown) | 0), ' G/hour.)'
+                    m('.mx-2', [
+                        m('div', [length, ' matches ',
+                            m('span.text-muted', 'over the last '),
+                            duration.hours(), ' hours ',
+                            m('span.text-muted', 'are shown on this page.')]),
+                        m('div', [
+                            m('span.text-muted', 'Total Gain/Loss: '),
+                            display_gain_loss(total_gain), ' G',
+                            ' (', display_gain_loss((total_gain / hours_shown) | 0), ' G/hour.)'
+                        ]),
+                        m('div', [
+                            m('span.text-muted', 'Total Wagers: '),
+                            total_wager.toLocaleString(), ' G',
+                            ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
+                        ]), placed_bet_msg,
                     ]),
-                    m('div', [
-                        m('span.text-muted', 'Total Wagers: '),
-                        total_wager.toLocaleString(), ' G',
-                        ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
-                    ]),
-                    placed_bet_msg
+                    m('br'),
+                    m('h5.my-1', 'Testimonial'),
+                    m('img.mx-2.my-1', {
+                        src: '/static.1/nacho-testimonial.jpeg',
+                        height: '50px'
+                    })
                 ])
             ])
         ]);
@@ -117,7 +124,7 @@ const StatSummary = {
 
 const BalanceLog = {
     view: function (vnode) {
-        return m('table.table', [
+        return m('table.table.mx-4', [
             m('thead', [
                 m('tr', [
                     m('th', {scope: 'col'}, '#'),
@@ -163,6 +170,46 @@ const BalanceLog = {
     }
 };
 
+const BalanceChart = {
+    view: function (vnode) {
+        return m('.position-relative', m('canvas', {id: 'balance-chart'}));
+    },
+    onupdate: function (vnode) {
+        const ctx = document.getElementById('balance-chart').getContext('2d');
+        const yBalance = State.balance_log.map(log => log.new_balance).reverse();
+        const X = State.balance_log.map(log => log.time.format('LT')).reverse();
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: X,
+                datasets: [{
+                    label: 'Balance',
+                    backgroundColor: '#303030',
+                    borderColor: '#00bc8c',
+                    pointRadius: 0.5,
+                    data: yBalance,
+                }],
+            },
+            options: {
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            autoSkipPadding: 10
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            callback: function (label, index, labels) {
+                                return label.toLocaleString() + ' G';
+                            }
+                        }
+                    }]
+                }
+            }
+        });
+    }
+};
+
 const Root = {
     view: function (vnode) {
         return [
@@ -181,11 +228,16 @@ const Root = {
                             'doing without having to dig through log files, but feel free to take a look yourself.')
                     ])
                 ]),
-                m('.row', [
+                m('.row.mb-4', [
                     m('.col', [
                         m(StatSummary),
-                        m(BalanceLog)
+                    ]),
+                    m('.col.mt-4', [
+                        m(BalanceChart),
                     ])
+                ]),
+                m('.row', [
+                    m(BalanceLog)
                 ])
             ])
         ];
