@@ -75,11 +75,18 @@ const StatSummary = {
                     ? placed_bet.left_prediction
                     : placed_bet.right_prediction;
 
+            const not_bet_team =
+                placed_bet.bet_on === placed_bet.left_team
+                    ? placed_bet.right_team
+                    : placed_bet.left_team;
+
             placed_bet_msg = m('div', [
                 'Betting ', placed_bet.wager.toLocaleString(), ' G on ',
                 team_color(placed_bet.bet_on),
                 m('span.text-muted',
-                    ' (Estimated ', format_prediction(win_prediction), ' chance to win.)')
+                    ' (Estimated ', format_prediction(win_prediction), ' chance to win versus ',
+                    team_color(not_bet_team),
+                    '.)')
             ]);
         }
 

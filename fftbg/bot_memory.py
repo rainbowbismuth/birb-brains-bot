@@ -50,7 +50,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 GET_BALANCE_LOG = """
-SELECT * FROM 'balance_log' ORDER BY 'id' DESC
+SELECT * FROM 'balance_log' 
+ORDER BY id DESC
 """
 
 INSERT_PLACED_BET = """
@@ -61,7 +62,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
 """
 
 GET_PLACED_BETS = """
-SELECT * FROM 'placed_bet' ORDER BY 'id' DESC
+SELECT * FROM 'placed_bet' 
+ORDER BY id DESC
 """
 
 
