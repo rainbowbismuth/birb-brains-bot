@@ -111,7 +111,7 @@ def main():
     combatant_size = train_X[0].shape[1]
     layer_size = combatant_size
 
-    early_stopping_cb, model = model_classic(combatant_size, layer_size)
+    early_stopping_cb, model = model_residual(combatant_size)
     model.fit(train_X,
               train_y,
               epochs=100,
@@ -149,6 +149,56 @@ def main():
 class MCDropout(keras.layers.Dropout):
     def call(self, inputs, _training=True):
         return super().call(inputs, training=True)
+
+
+def model_residual(combatant_size):
+    def res_block(n=combatant_size):
+        kernel_size = int(n * 0.05)
+        layer_1 = keras.layers.Dense(
+            kernel_size,
+            kernel_initializer='he_normal',
+            activation='elu',
+            use_bias=True)
+
+        layer_2 = keras.layers.Dense(
+            n,
+            kernel_initializer='he_normal',
+            activation='elu',
+            use_bias=True)
+        do = MCDropout(0.20)
+
+        def combine(x):
+            fg = layer_2(layer_1(x))
+            add = keras.layers.add([fg, x])
+            return do(add)
+
+        return combine
+
+    inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
+    combatant_layer = res_block()
+    combatant_nodes = [combatant_layer(node) for node in inputs]
+
+    foe_layer = res_block()
+    foe_nodes = []
+    for p1 in combatant_nodes[:4]:
+        for p2 in combatant_nodes[4:]:
+            sub = keras.layers.subtract([p1, p2])
+            node = foe_layer(sub)
+            foe_nodes.append(node)
+
+    combined = MCDropout(0.5)(keras.layers.average(foe_nodes))
+    predictions = keras.layers.Dense(2, activation='softmax')(combined)
+
+    model = keras.Model(inputs=inputs, outputs=predictions)
+    LOG.info(f'Number of parameters: {model.count_params()}')
+
+    model.compile(
+        optimizer='nadam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+    early_stopping_cb = keras.callbacks.EarlyStopping(
+        patience=10, monitor='val_loss', restore_best_weights=True)
+
+    return early_stopping_cb, model
 
 
 def dense_bias(n):
