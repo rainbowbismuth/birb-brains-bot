@@ -1719,7 +1719,7 @@
         ) + "$")
         return function (data1) {
             // First, check the params. Usually, there isn't any, and it's just
-            // checking a static set.
+            // checking a static.1 set.
             for (var i = 0; i < templateKeys.length; i++) {
                 if (templateData.params[templateKeys[i]] !== data1.params[templateKeys[i]]) return false
             }

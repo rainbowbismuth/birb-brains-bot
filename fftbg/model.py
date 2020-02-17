@@ -239,7 +239,7 @@ def model_classic(combatant_size, layer_size):
         optimizer='nadam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     early_stopping_cb = keras.callbacks.EarlyStopping(
-        patience=10, monitor='val_loss', restore_best_weights=True)
+        patience=20, monitor='val_loss', restore_best_weights=True)
 
     return early_stopping_cb, model
 

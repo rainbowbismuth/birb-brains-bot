@@ -96,6 +96,8 @@ class BotBrains:
         else:
             left_wins = self.left_team_bet != self.betting_on
             LOG.info(f'Lost {abs(difference)} G betting on {self.betting_on}, new balance {self.balance} G')
+        if self.left_team_bet is None or self.right_team_bet is None:
+            return  # skip if we restarted the bot, essentially.
         self.memory.log_balance(
             tournament_id=self.tournament_id,  # we can't use self.tournament, it may have changed
             old_balance=old_balance,
@@ -183,6 +185,12 @@ class BotBrains:
         else:
             self.betting_on = self.right_team
             self.wager = self._how_much_to_bet(right_wins_percent, pool_total)
+
+        self.memory.placed_bet(
+            self.tournament_id, self.betting_on, self.wager,
+            self.left_team_bet, self.left_prediction,
+            self.right_team_bet, self.right_prediction
+        )
         return self.betting_on, self.wager
 
     def _how_much_to_bet(self, confidence, pool_total):

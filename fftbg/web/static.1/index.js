@@ -1,20 +1,28 @@
 'use strict';
 
 const State = {
-    balance_log: []
+    balance_log: [],
+    placed_bet: null
 };
 
-function load_balance_log() {
-    return m.request({
+function load_summary_info() {
+    m.request({
         method: 'GET',
         url: '/balance-log',
-        withCredentials: false,
     }).then(function (result) {
         State.balance_log = result;
         State.balance_log.forEach(function (log) {
             log.time = moment(log.time + 'Z');
         });
         State.balance_log.sort((a, b) => b.id - a.id);
+    });
+
+    m.request({
+        method: 'GET',
+        url: '/placed-bet',
+    }).then(function (result) {
+        State.placed_bet = result;
+        State.placed_bet.time = moment(result.time + 'Z');
     });
 }
 
@@ -57,6 +65,23 @@ const StatSummary = {
             .map(log => log.wager)
             .reduce((a, b) => a + b, 0);
 
+        const placed_bet = State.placed_bet;
+        let placed_bet_msg = m('div', [
+            'Betting is currently open!'
+        ]);
+        if (placed_bet && newest.isBefore(placed_bet.time)) {
+            const win_prediction =
+                placed_bet.left_team === placed_bet.bet_on
+                    ? placed_bet.left_prediction
+                    : placed_bet.right_prediction;
+
+            placed_bet_msg = m('div', [
+                'Betting ', placed_bet.wager.toLocaleString(), ' G on ',
+                team_color(placed_bet.bet_on),
+                m('span.text-muted',
+                    ' (Estimated ', format_prediction(win_prediction), ' chance to win.)')
+            ]);
+        }
 
         return m('.card.stat-summary', [
             m('.card-body', [
@@ -65,7 +90,7 @@ const StatSummary = {
                     m('div', [length, ' matches ',
                         m('span.text-muted', 'over the last '),
                         duration.hours(), ' hours ',
-                        m('span.text-muted', 'shown on this page.')]),
+                        m('span.text-muted', 'are shown on this page.')]),
                     m('div', [
                         m('span.text-muted', 'Total Gain/Loss: '),
                         display_gain_loss(total_gain), ' G',
@@ -75,7 +100,8 @@ const StatSummary = {
                         m('span.text-muted', 'Total Wagers: '),
                         total_wager.toLocaleString(), ' G',
                         ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
-                    ])
+                    ]),
+                    placed_bet_msg
                 ])
             ])
         ]);
@@ -155,11 +181,11 @@ const Root = {
 };
 
 m.mount(document.body, Root);
-load_balance_log();
+load_summary_info();
 
 document.addEventListener("visibilitychange", function () {
         if (document.visibilityState === 'visible') {
-            load_balance_log();
+            load_summary_info();
         }
     }
 );
