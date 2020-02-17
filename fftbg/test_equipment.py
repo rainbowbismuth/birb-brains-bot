@@ -1,4 +1,4 @@
-import equipment
+import fftbg.equipment as equipment
 
 
 def test_parse_equipment():

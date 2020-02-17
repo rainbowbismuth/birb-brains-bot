@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-import config
+import fftbg.config as config
 
 ABILITY_MAP = {}
 

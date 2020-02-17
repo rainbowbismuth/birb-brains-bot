@@ -1,10 +1,10 @@
-import twitch_bot
+import fftbg.twitch_bot as twitch_bot
 
 
 def test_regular_expressions():
     assert twitch_bot.BALANCE_RE.findall('randomuser1, your balance is: 30,500G (Spendable: 30,368G).; random_user3, '
-                                         'your balance is: 3,363G (Spendable: 3,239G).; anotherRANDOMuser, your balance is: '
-                                         '5,700G (Spendable: 5,464G).')
+                                         'your balance is: 3,363G (Spendable: 3,239G).; anotherRANDOMuser, your balance'
+                                         'is: 5,700G (Spendable: 5,464G).')
 
     user, balance = twitch_bot.BALANCE_RE.findall('abc, your balance is: 10,400G')[0]
     assert user == 'abc'

@@ -7,9 +7,9 @@ from typing import List, Optional, Tuple
 
 import pandas
 
-from arena import get_arena
-from combatant import CATEGORICAL, SKILL_TAG, combatant_to_dict
-from config import TOURNAMENTS_ROOT
+from fftbg.arena import get_arena
+from fftbg.combatant import CATEGORICAL, SKILL_TAG, combatant_to_dict
+from fftbg.config import TOURNAMENTS_ROOT
 
 LOG = logging.getLogger(__name__)
 

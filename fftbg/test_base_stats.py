@@ -1,4 +1,4 @@
-import base_stats
+import fftbg.base_stats as base_stats
 
 
 def test_parse_combatant_stats():

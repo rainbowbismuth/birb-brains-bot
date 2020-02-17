@@ -1,6 +1,6 @@
-import data
-import download
-import tournament
+import fftbg.data as data
+import fftbg.download as download
+import fftbg.tournament as tournament
 
 
 def update_data():

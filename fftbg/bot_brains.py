@@ -2,12 +2,12 @@ import asyncio
 import json
 import logging
 
-import config
-import data
-import download
-import model
-from bot_memory import BotMemory
-from tournament import \
+import fftbg.config as config
+import fftbg.data as data
+import fftbg.download as download
+import fftbg.model as model
+from fftbg.bot_memory import BotMemory
+from fftbg.tournament import \
     Tournament, tournament_to_combatants, parse_hypothetical_tournament, HYPOTHETICAL_MATCHES
 
 LOG = logging.getLogger(__name__)

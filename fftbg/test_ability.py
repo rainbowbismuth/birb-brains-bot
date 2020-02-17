@@ -1,4 +1,4 @@
-import ability
+import fftbg.ability as ability
 
 
 def test_abilities_with_multipliers():

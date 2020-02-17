@@ -2,7 +2,7 @@ import logging
 
 import pandas
 
-from config import DATA_PATH
+from fftbg.config import DATA_PATH
 
 LOG = logging.getLogger(__name__)
 COMBATANT_FILE = DATA_PATH / 'combatants.feather'

@@ -1,8 +1,8 @@
 from math import floor
 
-import ability
-import base_stats
-import equipment
+import fftbg.ability as ability
+import fftbg.base_stats as base_stats
+import fftbg.equipment as equipment
 
 PER_COMBATANTS = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
                   'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']

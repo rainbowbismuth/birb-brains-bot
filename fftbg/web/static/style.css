@@ -1,0 +1,48 @@
+body {
+    background-image: url('birb.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: bottom left;
+    background-blend-mode: lighten;
+    background-size: 15%;
+}
+
+.jr {
+    text-align: right;
+}
+
+.color-red {
+    color: var(--red);
+}
+
+.color-blue {
+    color: var(--blue);
+}
+
+.color-green {
+    color: var(--green);
+}
+
+.color-yellow {
+    color: var(--yellow);
+}
+
+.color-white {
+    color: var(--white);
+}
+
+.color-black {
+    color: var(--gray);
+}
+
+.color-purple {
+    color: var(--indigo);
+}
+
+.color-brown {
+    color: sandybrown;
+}
+
+.color-champion {
+    color: var(--orange);
+}

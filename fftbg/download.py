@@ -4,7 +4,7 @@ from datetime import datetime
 
 import requests
 
-from config import FFTBG_API_URL, TOURNAMENTS_ROOT
+from fftbg.config import FFTBG_API_URL, TOURNAMENTS_ROOT
 
 LOG = logging.getLogger(__name__)
 

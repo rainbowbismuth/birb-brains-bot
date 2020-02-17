@@ -9,11 +9,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
 
-import combatant
-import config
-import data
-import tournament
-from passthrough import MyPassthrough
+import fftbg.combatant as combatant
+import fftbg.config as config
+import fftbg.data as data
+import fftbg.tournament as tournament
+from fftbg.passthrough import MyPassthrough
 
 LOG = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 import json
 
-import config
-import tournament
+import fftbg.config as config
+import fftbg.tournament as tournament
 
 
 def test_to_combatants():

@@ -1,7 +1,8 @@
 import logging
 import sqlite3
+from dataclasses import dataclass
 
-import config
+import fftbg.config as config
 
 LOG = logging.getLogger(__name__)
 
@@ -35,14 +36,34 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """
 
 GET_BALANCE_LOG = """
-SELECT * FROM 'balance_log'
+SELECT * FROM 'balance_log' ORDER BY 'id' DESC
 """
+
+
+@dataclass
+class BalanceLogDTO:
+    id: int
+    time: str
+    tournament: int
+    old_balance: int
+    new_balance: int
+    bet_on: str
+    wager: int
+    left_team: str
+    left_prediction: float
+    left_total_on_bet: int
+    left_total_final: int
+    right_team: str
+    right_prediction: float
+    right_total_on_bet: int
+    right_total_final: int
+    left_wins: bool
 
 
 class BotMemory:
     def __init__(self, db_path=config.BOT_MEMORY_PATH):
         self.db_path = db_path
-        LOG.info(f'Opening up sqlite3 connection to {self.db_path}')
+        LOG.debug(f'Opening up sqlite3 connection to {self.db_path}')
         self.connection = sqlite3.connect(self.db_path)
         with self.connection:
             self.connection.execute(SCHEMA)
@@ -63,6 +84,7 @@ class BotMemory:
                  right_team, float(right_prediction), int(right_total_on_bet), int(right_total_final),
                  bool(left_wins)))
 
-    def get_balance_log(self):
+    def get_balance_log(self, limit: int = 100):
         with self.connection:
-            return self.connection.execute(GET_BALANCE_LOG).fetchall()
+            tuples = self.connection.execute(GET_BALANCE_LOG).fetchmany(limit)
+            return [BalanceLogDTO(*(t[:-1] + (bool(t[-1]),))) for t in tuples]

@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 
-import config
+import fftbg.config as config
 
 BASE_STATS_MAP = {}
 
