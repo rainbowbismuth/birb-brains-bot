@@ -115,8 +115,7 @@ def main():
     tuner = Hyperband(
         lambda hp: model_residual(hp, combatant_size),
         objective='val_loss',
-        max_trials=100,
-        max_epochs=100,
+        max_epochs=30,
         directory='hyperband',
         project_name='residual-20200217')
 
@@ -129,6 +128,8 @@ def main():
     #           validation_data=(valid_X, valid_y),
     #           callbacks=[early_stopping_cb])
     LOG.info('Done training model')
+
+    model = tuner.get_best_models(num_models=2)[0]
 
     if config.SAVE_MODEL:
         LOG.info(f'Saving model at {config.MODEL_PATH}')
@@ -180,9 +181,9 @@ def model_residual(hp, combatant_size):
                               max_value=0.9)
 
     def res_block(n=combatant_size):
-        kernel_size = int(kernel_size * n)
+        k_size = int(kernel_size * n)
         layer_1 = keras.layers.Dense(
-            kernel_size,
+            k_size,
             kernel_initializer='he_normal',
             activation=activation,
             use_bias=True)

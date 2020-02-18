@@ -177,14 +177,21 @@ class BotBrains:
         self.left_total_on_bet = left_total
         self.right_total_on_bet = right_total
 
-        left_wins = left_wins_percent * right_total
-        right_wins = right_wins_percent * left_total
-        if left_wins > right_wins:
+        def optimal_bet(win_percent, our_side, their_side):
+            top = win_percent * (our_side + their_side) - our_side
+            bottom = 2 - win_percent * 2
+            return top / bottom
+
+        left_optimal = optimal_bet(left_wins_percent, left_total, right_total)
+        right_optimal = optimal_bet(right_wins_percent, right_total, left_total)
+
+        assert not (left_optimal > 0 and right_optimal > 0)
+        if left_optimal > right_optimal:
             self.betting_on = self.left_team
-            self.wager = self._how_much_to_bet(left_wins_percent, pool_total)
+            self.wager = int(max(200, min(left_optimal, self.balance * 0.10)))
         else:
             self.betting_on = self.right_team
-            self.wager = self._how_much_to_bet(right_wins_percent, pool_total)
+            self.wager = int(max(200, min(right_optimal, self.balance * 0.10)))
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
@@ -193,13 +200,13 @@ class BotBrains:
         )
         return self.betting_on, self.wager
 
-    def _how_much_to_bet(self, confidence, pool_total):
-        amount = max(200, self.balance * (confidence / 10.0))
-        betting_cap = pool_total // 20
-        if amount > betting_cap:
-            LOG.info(f'Capping bet at {betting_cap}')
-            return betting_cap
-        return int(amount)
+    # def _how_much_to_bet(self, confidence, pool_total):
+    #     amount = max(200, self.balance * (confidence / 10.0))
+    #     betting_cap = pool_total // 20
+    #     if amount > betting_cap:
+    #         LOG.info(f'Capping bet at {betting_cap}')
+    #         return betting_cap
+    #     return int(amount)
 
 
 def main():
