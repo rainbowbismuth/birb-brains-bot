@@ -65,6 +65,16 @@ const StatSummary = {
             .map(log => log.wager)
             .reduce((a, b) => a + b, 0);
 
+        const log_losses_sum = State.balance_log
+            .map(log => {
+                if (log.left_wins) {
+                    return -Math.log(log.left_prediction);
+                } else {
+                    return -Math.log(1 - log.left_prediction);
+                }
+            }).reduce((a, b) => a + b, 0);
+        const average_log_loss = log_losses_sum / length;
+
         const placed_bet = State.placed_bet;
         let placed_bet_msg = m('div', [
             'Betting is currently open!'
@@ -84,12 +94,11 @@ const StatSummary = {
                 'Betting ', placed_bet.wager.toLocaleString(), ' G on ',
                 team_color(placed_bet.bet_on),
                 m('span.text-muted',
-                    ' (Estimated ', format_prediction(win_prediction), ' chance to win versus ',
+                    ' (', format_prediction(win_prediction), ' chance to win versus ',
                     team_color(not_bet_team),
                     '.)')
             ]);
         }
-
         return m('.card.stat-summary.h-100', [
             m('.card-body', [
                 m('h5.card-title', 'Quick summary'),
@@ -104,11 +113,18 @@ const StatSummary = {
                             display_gain_loss(total_gain), ' G',
                             ' (', display_gain_loss((total_gain / hours_shown) | 0), ' G/hour.)'
                         ]),
-                        m('li', [
-                            m('span.text-muted', 'Total Wagers: '),
-                            total_wager.toLocaleString(), ' G',
-                            ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
-                        ]),
+                        m('li',
+                            m('span.text-muted', [
+                                'Total Wagers: ', total_wager.toLocaleString(), ' G',
+                                ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
+                            ])
+                        ),
+                        m('li',
+                            m('span.text-muted', [
+                                'Log Loss is: ',
+                                average_log_loss.toFixed(4)
+                            ])
+                        ),
                         m('li', placed_bet_msg),
                     ]),
                     m('h5.my-1', 'Testimonial'),
@@ -116,9 +132,9 @@ const StatSummary = {
                         src: '/static.1/nacho-testimonial.jpeg',
                         height: '50px'
                     })
-                ])
+                ]),
             ])
-        ]);
+        ])
     }
 };
 
