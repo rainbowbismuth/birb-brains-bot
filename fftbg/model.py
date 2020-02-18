@@ -78,6 +78,14 @@ def main():
     test_X = [scaler.transform(test_xi) for (scaler, test_xi) in zip(scalers, test_X)]
     valid_X = [scaler.transform(valid_xi) for (scaler, valid_xi) in zip(scalers, valid_X)]
 
+    if config.SAVE_MODEL:
+        LOG.info(f'Saving column transformation pipeline at {config.COLUMN_XFORM_PATH}')
+        with config.COLUMN_XFORM_PATH.open(mode='wb') as f:
+            pickle.dump(pipeline, f)
+        LOG.info(f'Saving feature scalers at {config.FEATURE_SCALER_PATH}')
+        with config.FEATURE_SCALER_PATH.open(mode='wb') as f:
+            pickle.dump(scalers, f)
+
     # combined_training = np.concatenate(train_X)
     # combined_training_y = np.concatenate([train_y for _y in range(8)])
     # sel1 = VarianceThreshold(0.98 * (1-0.98))
@@ -134,12 +142,6 @@ def main():
     if config.SAVE_MODEL:
         LOG.info(f'Saving model at {config.MODEL_PATH}')
         model.save(config.MODEL_PATH)
-        LOG.info(f'Saving column transformation pipeline at {config.COLUMN_XFORM_PATH}')
-        with config.COLUMN_XFORM_PATH.open(mode='wb') as f:
-            pickle.dump(pipeline, f)
-        LOG.info(f'Saving feature scalers at {config.FEATURE_SCALER_PATH}')
-        with config.FEATURE_SCALER_PATH.open(mode='wb') as f:
-            pickle.dump(scalers, f)
 
     train_y_scores = score_model(model, 'train', train_X, train_y)
     test_y_scores = score_model(model, 'test', test_X, test_y)
@@ -167,30 +169,35 @@ def model_residual(hp, combatant_size):
                            values=['elu', 'relu'])
     kernel_size = hp.Float('kernel_size',
                            min_value=0.01,
-                           max_value=1.0)
+                           max_value=3.0)
     learning_rate = hp.Choice('learning_rate',
                               values=[1e-2, 1e-3, 1e-4])
     drop_out_input = hp.Float('drop_out_input',
-                              min_value=0.1,
-                              max_value=0.6)
+                              min_value=0.0,
+                              max_value=0.7)
     drop_out_res = hp.Float('drop_out_res',
                             min_value=0.1,
                             max_value=0.9)
     drop_out_final = hp.Float('drop_out_final',
-                              min_value=0.4,
-                              max_value=0.9)
+                              min_value=0.3,
+                              max_value=0.95)
+    l2_reg = hp.Float('l2_reg',
+                      min_value=0.001,
+                      max_value=0.02)
 
     def res_block(n=combatant_size):
         k_size = int(kernel_size * n)
         layer_1 = keras.layers.Dense(
             k_size,
             kernel_initializer='he_normal',
+            kernel_regularizer=keras.regularizers.l2(l2_reg),
             activation=activation,
             use_bias=True)
 
         layer_2 = keras.layers.Dense(
             n,
             kernel_initializer='he_normal',
+            kernel_regularizer=keras.regularizers.l2(l2_reg),
             activation=activation,
             use_bias=True)
         do = MCDropout(drop_out_res)
