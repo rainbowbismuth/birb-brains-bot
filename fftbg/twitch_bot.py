@@ -18,7 +18,7 @@ BOT_CHANNEL = TWITCH['channel']
 BOT_PREFIX = '!!birbbrainsbot'
 
 MATCH_BETTING_LENGTH = 60.0
-MATCH_ODDS_TIME_REMAINING = 10.0
+MATCH_ODDS_TIME_REMAINING = 25.0
 
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
 BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')

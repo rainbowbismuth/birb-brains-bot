@@ -75,6 +75,18 @@ const StatSummary = {
             }).reduce((a, b) => a + b, 0);
         const average_log_loss = log_losses_sum / length;
 
+        const accuracy_sum = State.balance_log
+            .map(log => {
+                if (log.left_wins && log.left_prediction > 0.5) {
+                    return 1;
+                } else if (!log.left_wins && log.right_prediction > 0.5) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }).reduce((a, b) => a + b, 0);
+        const accuracy_average = accuracy_sum / length;
+
         const placed_bet = State.placed_bet;
         let placed_bet_msg = m('div', [
             'Betting is currently open!'
@@ -106,7 +118,7 @@ const StatSummary = {
                     m('ul', [
                         m('li', [length, ' matches ',
                             m('span.text-muted', 'over the last '),
-                            duration.hours(), ' hours ',
+                            duration.asHours().toFixed(), ' hours ',
                             m('span.text-muted', 'are shown on this page.')]),
                         m('li', [
                             m('span.text-muted', 'Total Gain/Loss: '),
@@ -117,6 +129,12 @@ const StatSummary = {
                             m('span.text-muted', [
                                 'Total Wagers: ', total_wager.toLocaleString(), ' G',
                                 ' (', ((total_wager / hours_shown) | 0).toLocaleString(), ' G/hour.)'
+                            ])
+                        ),
+                        m('li',
+                            m('span.text-muted', [
+                                'Accuracy is: ',
+                                format_prediction(accuracy_average)
                             ])
                         ),
                         m('li',

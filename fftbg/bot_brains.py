@@ -141,7 +141,7 @@ class BotBrains:
                     LOG.info(f'Tournament ready')
                     self.tournament_ready.set()
                     return
-                sleep_seconds = 10
+                sleep_seconds = 5
                 LOG.info(f'Waiting for newer tournament, sleeping for {sleep_seconds} seconds')
                 await asyncio.sleep(sleep_seconds)
         finally:
@@ -185,13 +185,16 @@ class BotBrains:
         left_optimal = optimal_bet(left_wins_percent, left_total, right_total)
         right_optimal = optimal_bet(right_wins_percent, right_total, left_total)
 
+        MIN_BET = 200
+        MAX_BET_PERCENT = 0.025
+
         assert not (left_optimal > 0 and right_optimal > 0)
         if left_optimal > right_optimal:
             self.betting_on = self.left_team
-            self.wager = int(max(200, min(left_optimal, self.balance * 0.10)))
+            self.wager = int(max(MIN_BET, min(left_optimal, self.balance * MAX_BET_PERCENT)))
         else:
             self.betting_on = self.right_team
-            self.wager = int(max(200, min(right_optimal, self.balance * 0.10)))
+            self.wager = int(max(MIN_BET, min(right_optimal, self.balance * MAX_BET_PERCENT)))
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
