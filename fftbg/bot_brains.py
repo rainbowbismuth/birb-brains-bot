@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 
+import fftbg.betting as betting
 import fftbg.config as config
 import fftbg.data as data
 import fftbg.download as download
@@ -66,6 +67,8 @@ class BotBrains:
         self.left_team = None
         self.right_team = None
         self.prediction = None
+
+        self.moving_increase = 1.5
 
         # Per Bet information we need to log when victor is confirmed
         self.tournament_id = None
@@ -150,6 +153,18 @@ class BotBrains:
     def final_odds(self, left_total, right_total):
         self.left_total_final = left_total
         self.right_total_final = right_total
+        old_increase = self.moving_increase
+
+        left_increase = self.left_total_final / self.left_total_on_bet
+        right_increase = self.right_total_final / self.right_total_on_bet
+        if self.betting_on == self.left_team:
+            self.moving_increase = ((old_increase * 0.80) + left_increase * 0.20) / 2.0
+            LOG.info(f'Bet on left team, pool increase was {left_increase}')
+        else:
+            self.moving_increase = ((old_increase * 0.80) + right_increase * 0.20) / 2.0
+            LOG.info(f'Bet on right team, pool increase was {right_increase}')
+        self.moving_increase = min(1.1, self.moving_increase)
+        LOG.info(f'Moving increase changed from {old_increase:.1} to {self.moving_increase:.1}')
 
     async def log_prediction(self, left, right):
         if not self.tournament_ready.is_set():
@@ -177,16 +192,14 @@ class BotBrains:
         self.left_total_on_bet = left_total
         self.right_total_on_bet = right_total
 
-        def optimal_bet(win_percent, our_side, their_side):
-            top = win_percent * (our_side + their_side) - our_side
-            bottom = 2 - win_percent * 2
-            return top / bottom
-
-        left_optimal = optimal_bet(left_wins_percent, left_total, right_total)
-        right_optimal = optimal_bet(right_wins_percent, right_total, left_total)
-
         MIN_BET = 200
-        MAX_BET_PERCENT = 0.025
+        MAX_BET_PERCENT = 0.05
+
+        left_optimal = betting.optimal_bet(
+            left_wins_percent, left_total * self.moving_increase, right_total)
+
+        right_optimal = betting.optimal_bet(
+            right_wins_percent, right_total * self.moving_increase, left_total)
 
         assert not (left_optimal > 0 and right_optimal > 0)
         if left_optimal > right_optimal:
@@ -202,14 +215,6 @@ class BotBrains:
             self.right_team_bet, self.right_prediction
         )
         return self.betting_on, self.wager
-
-    # def _how_much_to_bet(self, confidence, pool_total):
-    #     amount = max(200, self.balance * (confidence / 10.0))
-    #     betting_cap = pool_total // 20
-    #     if amount > betting_cap:
-    #         LOG.info(f'Capping bet at {betting_cap}')
-    #         return betting_cap
-    #     return int(amount)
 
 
 def main():
