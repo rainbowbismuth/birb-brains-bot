@@ -68,7 +68,7 @@ class BotBrains:
         self.right_team = None
         self.prediction = None
 
-        self.moving_increase = 1.5
+        self.moving_increase = 1.2
 
         # Per Bet information we need to log when victor is confirmed
         self.tournament_id = None
@@ -161,12 +161,16 @@ class BotBrains:
         left_increase = self.left_total_final / self.left_total_on_bet
         right_increase = self.right_total_final / self.right_total_on_bet
         if self.betting_on == self.left_team:
-            self.moving_increase = (old_increase * 0.60 + left_increase * 0.40) / 2.0
-            LOG.info(f'Bet on left team, pool increase was {left_increase:.4}')
+            relative_increase = left_increase / right_increase
+            self.moving_increase = old_increase * 0.80 + relative_increase * 0.20
+            LOG.info(f'Bet on left team, pool absolute increase was {left_increase:.4}')
+            LOG.info(f'Bet on left team, pool relative increase was {relative_increase:.4}')
         else:
-            self.moving_increase = (old_increase * 0.60 + right_increase * 0.40) / 2.0
-            LOG.info(f'Bet on right team, pool increase was {right_increase:.4}')
-        self.moving_increase = max(1.1, self.moving_increase)
+            relative_increase = right_increase / left_increase
+            self.moving_increase = old_increase * 0.80 + relative_increase * 0.20
+            LOG.info(f'Bet on right team, pool absolute increase was {right_increase:.4}')
+            LOG.info(f'Bet on right team, pool relative increase was {relative_increase:.4}')
+        self.moving_increase = max(1, self.moving_increase)
         LOG.info(f'Moving increase changed from {old_increase:.4} to {self.moving_increase:.4}')
 
     async def log_prediction(self, left, right):
