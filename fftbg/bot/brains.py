@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 
-import fftbg.betting as betting
 import fftbg.config as config
 import fftbg.data as data
 import fftbg.download as download
@@ -68,7 +67,7 @@ class BotBrains:
         self.right_team = None
         self.prediction = None
 
-        self.moving_increase = 1.2
+        self.moving_increase = 2.0
 
         # Per Bet information we need to log when victor is confirmed
         self.tournament_id = None
@@ -144,7 +143,7 @@ class BotBrains:
                     LOG.info(f'Tournament ready')
                     self.tournament_ready.set()
                     return
-                sleep_seconds = 5
+                sleep_seconds = 2.5
                 LOG.info(f'Waiting for newer tournament, sleeping for {sleep_seconds} seconds')
                 await asyncio.sleep(sleep_seconds)
         finally:
@@ -153,29 +152,23 @@ class BotBrains:
     def final_odds(self, left_total, right_total):
         self.left_total_final = left_total
         self.right_total_final = right_total
-        old_increase = self.moving_increase
 
         if not self.betting_on:
             return
 
+        old_increase = self.moving_increase
         left_increase = self.left_total_final / self.left_total_on_bet
         right_increase = self.right_total_final / self.right_total_on_bet
-        if self.betting_on == self.left_team:
-            relative_increase = left_increase / right_increase
-            self.moving_increase = old_increase * 0.80 + relative_increase * 0.20
-            LOG.info(f'Bet on left team, pool absolute increase was {left_increase:.4}')
-            LOG.info(f'Bet on left team, pool relative increase was {relative_increase:.4}')
-        else:
-            relative_increase = right_increase / left_increase
-            self.moving_increase = old_increase * 0.80 + relative_increase * 0.20
-            LOG.info(f'Bet on right team, pool absolute increase was {right_increase:.4}')
-            LOG.info(f'Bet on right team, pool relative increase was {relative_increase:.4}')
+        average = (left_increase + right_increase) / 2
+        LOG.info(f'Average pool increase was {average:.4}')
+        self.moving_increase = old_increase * 0.85 + min(old_increase * 3, average) * 0.15
         self.moving_increase = max(1, self.moving_increase)
         LOG.info(f'Moving increase changed from {old_increase:.4} to {self.moving_increase:.4}')
 
-    async def log_prediction(self, left, right):
+    def log_prediction(self, left, right):
         if not self.tournament_ready.is_set():
             LOG.info('Skipping log_prediction() because tournament is not ready')
+            return
         i = look_up_prediction_index(left, right)
         prediction = self.predictions[i, :]
         LOG.info(f'Prediction is {left} {prediction[1]:.1%} vs {right} {prediction[0]:.1%}')
@@ -183,10 +176,11 @@ class BotBrains:
         self.right_team = right
         self.prediction = prediction
 
-    async def make_bet(self, left_total, right_total):
+    def make_bet(self, left_total, right_total):
         if not self.tournament_ready.is_set():
             LOG.info('Skipping make_bet() because tournament is not ready')
-        pool_total = left_total + right_total
+            return
+        pool_total_est = (left_total + right_total) * self.moving_increase
 
         left_wins_percent = self.prediction[1]
         right_wins_percent = self.prediction[0]
@@ -200,26 +194,35 @@ class BotBrains:
         self.right_total_on_bet = right_total
 
         MIN_BET = 200
-        MAX_BET_PERCENT = 0.05
+        MAX_BET_PERCENT = 0.10
 
-        optimistic_left = betting.optimal_bet(left_wins_percent, left_total, right_total)
-        left_optimal = betting.optimal_bet(
-            left_wins_percent, left_total * self.moving_increase, right_total)
-
-        optimistic_right = betting.optimal_bet(right_wins_percent, right_total, left_total)
-        right_optimal = betting.optimal_bet(
-            right_wins_percent, right_total * self.moving_increase, left_total)
-
-        LOG.info(f'Optimistic optimal bet: {int(optimistic_left)} vs {int(optimistic_right)}')
-        LOG.info(f'Pessimistic optimal bet: {int(left_optimal)} vs {int(right_optimal)} ')
-
-        assert not (left_optimal > 0 and right_optimal > 0)
-        if left_optimal > right_optimal:
+        if self.left_prediction > self.right_prediction:
             self.betting_on = self.left_team
-            self.wager = int(max(MIN_BET, min(left_optimal, self.balance * MAX_BET_PERCENT)))
+            self.wager = int(
+                max(MIN_BET, min(self.balance * MAX_BET_PERCENT * self.left_prediction, pool_total_est / 10.0)))
         else:
             self.betting_on = self.right_team
-            self.wager = int(max(MIN_BET, min(right_optimal, self.balance * MAX_BET_PERCENT)))
+            self.wager = int(
+                max(MIN_BET, min(self.balance * MAX_BET_PERCENT * self.right_prediction, pool_total_est / 10.0)))
+
+        # optimistic_left_bet = betting.optimal_bet(left_wins_percent, left_total, right_total)
+        # left_optimal_bet = betting.optimal_bet(
+        #     left_wins_percent, left_total * self.moving_increase, right_total * self.moving_increase)
+        #
+        # optimistic_right_bet = betting.optimal_bet(right_wins_percent, right_total, left_total)
+        # right_optimal_bet = betting.optimal_bet(
+        #     right_wins_percent, right_total * self.moving_increase, left_total * self.moving_increase)
+        #
+        # LOG.info(f'Optimistic optimal bet: {int(optimistic_left_bet)} vs {int(optimistic_right_bet)}')
+        # LOG.info(f'Pessimistic optimal bet: {int(left_optimal_bet)} vs {int(right_optimal_bet)} ')
+        #
+        # assert not (left_optimal_bet > 0 and right_optimal_bet > 0)
+        # if left_optimal_bet > right_optimal_bet:
+        #     self.betting_on = self.left_team
+        #     self.wager = int(max(MIN_BET, min(left_optimal_bet, self.balance * MAX_BET_PERCENT)))
+        # else:
+        #     self.betting_on = self.right_team
+        #     self.wager = int(max(MIN_BET, min(right_optimal_bet, self.balance * MAX_BET_PERCENT)))
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,

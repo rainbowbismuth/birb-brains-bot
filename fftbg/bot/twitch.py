@@ -18,7 +18,7 @@ BOT_CHANNEL = TWITCH['channel']
 BOT_PREFIX = '!!birbbrainsbot'
 
 MATCH_BETTING_LENGTH = 60.0
-MATCH_ODDS_TIME_REMAINING = 25.0
+MATCH_ODDS_TIME_REMAINING = 31.0
 
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
 BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')
@@ -71,6 +71,7 @@ class Bot(commands.Bot):
         await channel.send("!pot")
 
     async def send_bet_command(self, team, amount):
+        amount = int(amount)
         LOG.info(f'Betting {amount} G on {team} team')
         channel = self.get_channel(BOT_CHANNEL)
         await channel.send(f'!bet {amount} {team}')
@@ -98,13 +99,12 @@ class Bot(commands.Bot):
 
         betting_open = BETTING_OPEN_RE.findall(message.content)
         if betting_open:
-
             (left, right) = betting_open[0]
             self.betting_open_time = time.time()
             await self.send_balance_command()
             if left == 'red' and right == 'blue':
                 await self.brains.refresh_tournament()
-            await self.brains.log_prediction(left, right)
+            self.brains.log_prediction(left, right)
 
             time_diff = time.time() - self.betting_open_time
             time_remaining = MATCH_BETTING_LENGTH - time_diff
@@ -115,8 +115,9 @@ class Bot(commands.Bot):
             await self.send_pot_command()
 
         betting_closed = BETTING_CLOSED_RE.findall(message.content)
-        if betting_closed and BOT_NICK in betting_closed:
+        if betting_closed and any([BOT_NICK in msg for msg in betting_closed]):
             LOG.info(f'Missed the betting window!')
+            self.waiting_for_odds = False
 
         betting_close = BETTING_CLOSE_RE.findall(message.content)
         if betting_close:
@@ -135,7 +136,7 @@ class Bot(commands.Bot):
             left_total_n = parse_comma_int(left_total)
             right_total_n = parse_comma_int(right_total)
             LOG.info(f'Betting totals: {left}/{left_bets} {left_total} G; {right}/{right_bets} {right_total} G')
-            team, amount = await self.brains.make_bet(left_total_n, right_total_n)
+            team, amount = self.brains.make_bet(left_total_n, right_total_n)
             await self.send_bet_command(team, amount)
 
         await self.handle_commands(message)

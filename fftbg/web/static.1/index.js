@@ -2,19 +2,24 @@
 
 const State = {
     balance_log: [],
-    placed_bet: null
+    placed_bet: null,
+    chart_vnodes: []
 };
 
 function load_summary_info() {
     m.request({
         method: 'GET',
-        url: '/balance-log',
+        url: '/balance-log-stats',
     }).then(function (result) {
         State.balance_log = result;
         State.balance_log.forEach(function (log) {
             log.time = moment(log.time + 'Z');
         });
         State.balance_log.sort((a, b) => b.id - a.id);
+        State.chart_vnodes.forEach(function (vnode) {
+            vnode.state.chart.destroy();
+            create_chart(vnode);
+        });
     });
 
     m.request({
@@ -34,10 +39,6 @@ function display_gain_loss(x) {
     } else {
         return m('span.text-danger', x.toLocaleString());
     }
-}
-
-function win_lose(win) {
-    return win ? m('small.text-muted', 'W') : m('small.text-muted', 'L');
 }
 
 function team_color(team) {
@@ -204,87 +205,149 @@ const BalanceLog = {
     }
 };
 
-const BalanceChart = {
-    view: function (vnode) {
-        return m('.position-relative', m('canvas', {id: 'balance-chart'}));
-    },
-    onupdate: function (vnode) {
-        const ctx = document.getElementById('balance-chart').getContext('2d');
-        const yBalance = State.balance_log.map(log => log.new_balance).reverse();
-        const X = State.balance_log.map(log => log.time.format('LT')).reverse();
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: X,
-                datasets: [{
-                    label: 'Balance',
-                    backgroundColor: '#303030',
-                    borderColor: '#00bc8c',
-                    pointRadius: 0.5,
-                    data: yBalance,
+function label_gil(label, index, labels) {
+    return label.toLocaleString() + ' G';
+}
+
+function label_percent(label, index, labels) {
+    return (label * 100).toFixed() + '%';
+}
+
+function label_fixed(label, index, labels) {
+    return label.toFixed(2);
+}
+
+function create_chart(vnode) {
+    const ctx = document.getElementById('chart-' + vnode.attrs.attribute).getContext('2d');
+    const y = State.balance_log.map(log => log[vnode.attrs.attribute]).reverse();
+    const X = State.balance_log.map(log => log.time.format('LT')).reverse();
+    vnode.state.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: X,
+            datasets: [{
+                label: vnode.attrs.attribute,
+                borderColor: '#00bc8c',
+                pointRadius: 0.5,
+                data: y,
+            }],
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    ticks: {
+                        autoSkipPadding: 10,
+                    },
+                    gridLines: {
+                        color: '#303030',
+                    },
                 }],
-            },
-            options: {
-                scales: {
-                    xAxes: [{
-                        ticks: {
-                            autoSkipPadding: 10
-                        },
-                        gridLines: {
-                            color: '#303030',
-                        },
-                    }],
-                    yAxes: [{
-                        ticks: {
-                            callback: function (label, index, labels) {
-                                return label.toLocaleString() + ' G';
-                            }
-                        },
-                        gridLines: {
-                            color: '#303030',
-                        },
-                    }]
-                }
+                yAxes: [{
+                    ticks: {
+                        callback: vnode.attrs.yLabel,
+                        beginAtZero: true,
+                        suggestedMax: 1.0
+                    },
+                    gridLines: {
+                        color: '#303030',
+                    },
+                }]
             }
-        });
+        }
+    });
+}
+
+// THIS IS SO HACK-Y PLEASE FIXME
+const SimpleChart = {
+    view: function (vnode) {
+        return m('.position-relative', m('canvas', {id: 'chart-' + vnode.attrs.attribute}));
+    },
+    oncreate: function (vnode) {
+        State.chart_vnodes.push(vnode);
+        create_chart(vnode);
+    },
+    onremove: function (vnode) {
+        if (vnode.state.chart) {
+            State.chart_vnodes.splice(State.chart_vnodes.indexOf(vnode), 1);
+            vnode.state.chart.destroy();
+        }
     }
 };
 
-const Root = {
+const NavBar = {
     view: function (vnode) {
-        return [
-            m('.container', [
-                m('.row', [
-                    m('.col', [
-                        m('nav.navbar.navbar-expand-lg.navbar-dark.bg-dark', [
-                            m('a.navbar-brand', {href: '#'}, 'Birb Brains Bot'),
-                            m('span.navbar-text', [
-                                'A machine learning powered betting bot for ',
-                                m('a', {href: 'https://www.twitch.tv/fftbattleground'}, 'FFT Battleground')
-                            ])
-                        ]),
-                        m('br'),
-                        m('p', 'This work in progress dashboard is to help me get an idea of how the bot is ' +
-                            'doing without having to dig through log files, but feel free to take a look yourself.')
+        return m('ul.nav.navbar.navbar-expand-lg.navbar-dark.bg-dark', [
+            m('li.navbar-brand', m(m.route.Link, {
+                href: '/home',
+            }, 'Birb Brains Bot')),
+            m('li.nav-item', m(m.route.Link, {
+                href: '/stats',
+                class: 'nav-link'
+            }, 'Stats')),
+            m('span.navbar-text', [
+                'A machine learning powered betting bot for ',
+                m('a', {href: 'https://www.twitch.tv/fftbattleground'}, 'FFT Battleground')
+            ])
+        ]);
+
+    }
+};
+
+const Home = {
+    view: function (vnode) {
+        return m('.container', [
+            m('.row', [
+                m('.col', [
+                    m(NavBar),
+                    m('br'),
+                    m('p', 'This work in progress dashboard is to help me get an idea of how the bot is ' +
+                        'doing without having to dig through log files, but feel free to take a look yourself.')
+                ])
+            ]),
+            m('.row.mb-4', [
+                m('.col', [
+                    m(StatSummary),
+                ]),
+                m('.col.mt-4', [
+                    m(SimpleChart, {attribute: 'new_balance', yLabel: label_gil, log: State.balance_log}),
+                ])
+            ]),
+            m('.row', [
+                m(BalanceLog)
+            ])
+        ]);
+    }
+};
+
+const Stats = {
+    view: function (vnode) {
+        return m('.container', [
+            m('.row', [
+                m('.col', [
+                    m(NavBar),
+                    m('br'),
+                    m('p', [
+                        'Some more statistics, right now just a rolling average of the bot\'s accuracy ',
+                        'and log loss'
                     ])
                 ]),
-                m('.row.mb-4', [
-                    m('.col', [
-                        m(StatSummary),
-                    ]),
-                    m('.col.mt-4', [
-                        m(BalanceChart),
-                    ])
-                ]),
-                m('.row', [
-                    m(BalanceLog)
+            ]),
+            m('.row', [
+                m('.col', [
+                    m(SimpleChart, {attribute: 'new_balance', yLabel: label_gil, log: State.balance_log}),
+                    m(SimpleChart, {attribute: 'rolling_accuracy', yLabel: label_percent, log: State.balance_log}),
+                    m(SimpleChart, {attribute: 'rolling_log_loss', yLabel: label_fixed, log: State.balance_log}),
                 ])
             ])
-        ];
+        ])
     }
 };
 
-m.mount(document.body, Root);
+m.route(document.body, '/home', {
+    '/home': Home,
+    '/stats': Stats,
+});
+
 load_summary_info();
 
 document.addEventListener("visibilitychange", function () {
