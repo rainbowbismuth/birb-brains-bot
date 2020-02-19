@@ -1,4 +1,4 @@
-from fftbg.bot_memory import BotMemory
+from fftbg.bot.memory import BotMemory
 
 
 def test_creation_and_logging():

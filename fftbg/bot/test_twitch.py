@@ -1,4 +1,4 @@
-import fftbg.twitch_bot as twitch_bot
+import fftbg.bot.twitch as twitch_bot
 
 
 def test_regular_expressions():

@@ -7,7 +7,7 @@ import fftbg.config as config
 import fftbg.data as data
 import fftbg.download as download
 import fftbg.model as model
-from fftbg.bot_memory import BotMemory
+from fftbg.bot.memory import BotMemory
 from fftbg.tournament import \
     Tournament, tournament_to_combatants, parse_hypothetical_tournament, HYPOTHETICAL_MATCHES
 
@@ -161,13 +161,13 @@ class BotBrains:
         left_increase = self.left_total_final / self.left_total_on_bet
         right_increase = self.right_total_final / self.right_total_on_bet
         if self.betting_on == self.left_team:
-            self.moving_increase = ((old_increase * 0.80) + left_increase * 0.20) / 2.0
-            LOG.info(f'Bet on left team, pool increase was {left_increase:.1}')
+            self.moving_increase = (old_increase * 0.60 + left_increase * 0.40) / 2.0
+            LOG.info(f'Bet on left team, pool increase was {left_increase:.4}')
         else:
-            self.moving_increase = ((old_increase * 0.80) + right_increase * 0.20) / 2.0
-            LOG.info(f'Bet on right team, pool increase was {right_increase:.1}')
+            self.moving_increase = (old_increase * 0.60 + right_increase * 0.40) / 2.0
+            LOG.info(f'Bet on right team, pool increase was {right_increase:.4}')
         self.moving_increase = max(1.1, self.moving_increase)
-        LOG.info(f'Moving increase changed from {old_increase:.1} to {self.moving_increase:.1}')
+        LOG.info(f'Moving increase changed from {old_increase:.4} to {self.moving_increase:.4}')
 
     async def log_prediction(self, left, right):
         if not self.tournament_ready.is_set():
@@ -198,11 +198,16 @@ class BotBrains:
         MIN_BET = 200
         MAX_BET_PERCENT = 0.05
 
+        optimistic_left = betting.optimal_bet(left_wins_percent, left_total, right_total)
         left_optimal = betting.optimal_bet(
             left_wins_percent, left_total * self.moving_increase, right_total)
 
+        optimistic_right = betting.optimal_bet(right_wins_percent, right_total, left_total)
         right_optimal = betting.optimal_bet(
             right_wins_percent, right_total * self.moving_increase, left_total)
+
+        LOG.info(f'Optimistic optimal bet: {int(optimistic_left)} vs {int(optimistic_right)}')
+        LOG.info(f'Pessimistic optimal bet: {int(left_optimal)} vs {int(right_optimal)} ')
 
         assert not (left_optimal > 0 and right_optimal > 0)
         if left_optimal > right_optimal:

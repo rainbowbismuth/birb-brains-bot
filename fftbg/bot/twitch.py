@@ -5,7 +5,7 @@ import time
 
 from twitchio.ext import commands
 
-from fftbg.bot_brains import BotBrains
+from fftbg.bot.brains import BotBrains
 from fftbg.config import BOT_CONFIG
 
 LOG = logging.getLogger(__name__)
