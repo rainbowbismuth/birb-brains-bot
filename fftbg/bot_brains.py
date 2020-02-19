@@ -155,15 +155,18 @@ class BotBrains:
         self.right_total_final = right_total
         old_increase = self.moving_increase
 
+        if not self.betting_on:
+            return
+
         left_increase = self.left_total_final / self.left_total_on_bet
         right_increase = self.right_total_final / self.right_total_on_bet
         if self.betting_on == self.left_team:
             self.moving_increase = ((old_increase * 0.80) + left_increase * 0.20) / 2.0
-            LOG.info(f'Bet on left team, pool increase was {left_increase}')
+            LOG.info(f'Bet on left team, pool increase was {left_increase:.1}')
         else:
             self.moving_increase = ((old_increase * 0.80) + right_increase * 0.20) / 2.0
-            LOG.info(f'Bet on right team, pool increase was {right_increase}')
-        self.moving_increase = min(1.1, self.moving_increase)
+            LOG.info(f'Bet on right team, pool increase was {right_increase:.1}')
+        self.moving_increase = max(1.1, self.moving_increase)
         LOG.info(f'Moving increase changed from {old_increase:.1} to {self.moving_increase:.1}')
 
     async def log_prediction(self, left, right):
