@@ -109,6 +109,7 @@ class Bot(commands.Bot):
         betting_open = BETTING_OPEN_RE.findall(message.content)
         if betting_open:
             (left, right) = betting_open[0]
+            LOG.info(f'Betting open for {left} vs {right}')
             self.betting_open_time = time.time()
             await self.send_balance_command()
             if left == 'red' and right == 'blue':

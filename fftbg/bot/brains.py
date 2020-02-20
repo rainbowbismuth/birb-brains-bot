@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 
+import fftbg.betting as betting
 import fftbg.config as config
 import fftbg.data as data
 import fftbg.download as download
@@ -200,33 +201,38 @@ class BotBrains:
         MIN_BET = 200
         MAX_BET_PERCENT = 0.10
 
-        if self.left_prediction > self.right_prediction:
-            self.betting_on = self.left_team
-            self.wager = int(
-                max(MIN_BET, min(self.balance * MAX_BET_PERCENT * self.left_prediction, pool_total_est / 10.0)))
-        else:
-            self.betting_on = self.right_team
-            self.wager = int(
-                max(MIN_BET, min(self.balance * MAX_BET_PERCENT * self.right_prediction, pool_total_est / 10.0)))
-
-        # optimistic_left_bet = betting.optimal_bet(left_wins_percent, left_total, right_total)
-        # left_optimal_bet = betting.optimal_bet(
-        #     left_wins_percent, left_total * self.moving_increase, right_total * self.moving_increase)
-        #
-        # optimistic_right_bet = betting.optimal_bet(right_wins_percent, right_total, left_total)
-        # right_optimal_bet = betting.optimal_bet(
-        #     right_wins_percent, right_total * self.moving_increase, left_total * self.moving_increase)
-        #
-        # LOG.info(f'Optimistic optimal bet: {int(optimistic_left_bet)} vs {int(optimistic_right_bet)}')
-        # LOG.info(f'Pessimistic optimal bet: {int(left_optimal_bet)} vs {int(right_optimal_bet)} ')
-        #
-        # assert not (left_optimal_bet > 0 and right_optimal_bet > 0)
-        # if left_optimal_bet > right_optimal_bet:
+        # if self.left_prediction > self.right_prediction:
         #     self.betting_on = self.left_team
-        #     self.wager = int(max(MIN_BET, min(left_optimal_bet, self.balance * MAX_BET_PERCENT)))
+        #     self.wager = int(
+        #         max(MIN_BET, min(self.balance * MAX_BET_PERCENT * self.left_prediction, pool_total_est / 10.0)))
         # else:
         #     self.betting_on = self.right_team
-        #     self.wager = int(max(MIN_BET, min(right_optimal_bet, self.balance * MAX_BET_PERCENT)))
+        #     self.wager = int(
+        #         max(MIN_BET, min(self.balance * MAX_BET_PERCENT * self.right_prediction, pool_total_est / 10.0)))
+
+        new_left_total = min(left_total, right_total * 3)
+        new_right_total = min(left_total * 3, right_total)
+        LOG.info(f'Capping left total {left_total} -> {new_left_total}')
+        LOG.info(f'Capping right total {right_total} -> {new_right_total}')
+
+        optimistic_left_bet = betting.optimal_bet(left_wins_percent, new_left_total, new_right_total)
+        left_optimal_bet = betting.optimal_bet(
+            left_wins_percent, new_left_total * self.moving_increase, new_right_total * self.moving_increase)
+
+        optimistic_right_bet = betting.optimal_bet(right_wins_percent, new_right_total, new_left_total)
+        right_optimal_bet = betting.optimal_bet(
+            right_wins_percent, new_right_total * self.moving_increase, new_left_total * self.moving_increase)
+
+        LOG.info(f'Optimistic optimal bet: {int(optimistic_left_bet)} vs {int(optimistic_right_bet)}')
+        LOG.info(f'Pessimistic optimal bet: {int(left_optimal_bet)} vs {int(right_optimal_bet)} ')
+
+        assert not (left_optimal_bet > 0 and right_optimal_bet > 0)
+        if left_optimal_bet > right_optimal_bet:
+            self.betting_on = self.left_team
+            self.wager = int(max(MIN_BET, min(left_optimal_bet, self.balance * MAX_BET_PERCENT)))
+        else:
+            self.betting_on = self.right_team
+            self.wager = int(max(MIN_BET, min(right_optimal_bet, self.balance * MAX_BET_PERCENT)))
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
