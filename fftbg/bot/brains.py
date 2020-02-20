@@ -129,6 +129,7 @@ class BotBrains:
     async def refresh_tournament(self):
         if self.refreshing_tournament.is_set():
             LOG.info(f'Already refreshing tournament, skipping')
+            return
         try:
             self.refreshing_tournament.set()
             self.tournament_ready.clear()
@@ -148,6 +149,7 @@ class BotBrains:
                 await asyncio.sleep(sleep_seconds)
         finally:
             self.refreshing_tournament.clear()
+            LOG.info(f'tournament_ready.is_set() = {self.tournament_ready.is_set()}')
 
     def final_odds(self, left_total, right_total):
         self.left_total_final = left_total
