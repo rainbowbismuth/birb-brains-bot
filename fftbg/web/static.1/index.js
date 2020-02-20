@@ -3,7 +3,6 @@
 const State = {
     balance_log: [],
     placed_bet: null,
-    chart_vnodes: []
 };
 
 function load_summary_info() {
@@ -16,10 +15,6 @@ function load_summary_info() {
             log.time = moment(log.time + 'Z');
         });
         State.balance_log.sort((a, b) => b.id - a.id);
-        State.chart_vnodes.forEach(function (vnode) {
-            vnode.state.chart.destroy();
-            create_chart(vnode);
-        });
     });
 
     m.request({
@@ -233,6 +228,13 @@ function create_chart(vnode) {
             }],
         },
         options: {
+            animation: {
+                duration: 0,
+            },
+            hover: {
+                animationDuration: 0,
+            },
+            responsiveAnimationDuration: 0,
             scales: {
                 xAxes: [{
                     ticks: {
@@ -257,18 +259,21 @@ function create_chart(vnode) {
     });
 }
 
-// THIS IS SO HACK-Y PLEASE FIXME
 const SimpleChart = {
     view: function (vnode) {
         return m('.position-relative', m('canvas', {id: 'chart-' + vnode.attrs.attribute}));
     },
     oncreate: function (vnode) {
-        State.chart_vnodes.push(vnode);
+        create_chart(vnode);
+    },
+    onupdate: function (vnode) {
+        if (vnode.state.chart) {
+            vnode.state.chart.destroy();
+        }
         create_chart(vnode);
     },
     onremove: function (vnode) {
         if (vnode.state.chart) {
-            State.chart_vnodes.splice(State.chart_vnodes.indexOf(vnode), 1);
             vnode.state.chart.destroy();
         }
     }
