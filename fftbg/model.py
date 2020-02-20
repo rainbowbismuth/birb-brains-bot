@@ -3,7 +3,6 @@ import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
-from kerastuner.tuners import Hyperband
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, recall_score, accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
@@ -57,7 +56,7 @@ def main():
 
     pipeline = ColumnTransformer([
         ('c',
-         OneHotEncoder(),
+         OneHotEncoder(handle_unknown="ignore"),
          CAT_COLUMNS),
         ('p',
          MyPassthrough(NUM_COLUMNS + skill_columns),
@@ -118,26 +117,32 @@ def main():
     LOG.info(f'Validation data shapes  X:{str(valid_X[0].shape):>14} y:{str(valid_y.shape):>9}')
 
     combatant_size = train_X[0].shape[1]
-    layer_size = combatant_size
 
-    tuner = Hyperband(
-        lambda hp: model_residual(hp, combatant_size),
-        objective='val_loss',
-        max_epochs=30,
-        directory='hyperband',
-        project_name='residual-20200217')
+    # tuner = Hyperband(
+    #     lambda hp: model_residual_hp(hp, combatant_size),
+    #     objective='val_loss',
+    #     max_epochs=30,
+    #     directory='hyperband',
+    #     project_name='residual-20200217')
 
-    # early_stopping_cb, model = model_residual(combatant_size)
-    tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
-    # model.fit(train_X,
-    #           train_y,
-    #           epochs=100,
-    #           verbose=1,
-    #           validation_data=(valid_X, valid_y),
-    #           callbacks=[early_stopping_cb])
+    early_stopping_cb, model = model_residual(combatant_size,
+                                              activation='relu',
+                                              kernel_size=0.05,
+                                              learning_rate=1e-3,
+                                              drop_out_input=0.5,
+                                              drop_out_res=0.35,
+                                              drop_out_final=0.5,
+                                              l2_reg=0.01)
+    # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
+    model.fit(train_X,
+              train_y,
+              epochs=100,
+              verbose=1,
+              validation_data=(valid_X, valid_y),
+              callbacks=[early_stopping_cb])
     LOG.info('Done training model')
 
-    model = tuner.get_best_models(num_models=2)[0]
+    # model = tuner.get_best_models(num_models=2)[0]
 
     if config.SAVE_MODEL:
         LOG.info(f'Saving model at {config.MODEL_PATH}')
@@ -164,12 +169,12 @@ class MCDropout(keras.layers.Dropout):
         return super().call(inputs, training=True)
 
 
-def model_residual(hp, combatant_size):
+def model_residual_hp(hp, combatant_size):
     activation = hp.Choice('activation',
                            values=['elu', 'relu'])
     kernel_size = hp.Float('kernel_size',
                            min_value=0.01,
-                           max_value=3.0)
+                           max_value=1.0)
     learning_rate = hp.Choice('learning_rate',
                               values=[1e-2, 1e-3, 1e-4])
     drop_out_input = hp.Float('drop_out_input',
@@ -184,7 +189,14 @@ def model_residual(hp, combatant_size):
     l2_reg = hp.Float('l2_reg',
                       min_value=0.001,
                       max_value=0.02)
+    return model_residual(combatant_size, activation,
+                          kernel_size, learning_rate, drop_out_input,
+                          drop_out_res, drop_out_final, l2_reg)[1]
 
+
+def model_residual(combatant_size, activation,
+                   kernel_size, learning_rate, drop_out_input,
+                   drop_out_res, drop_out_final, l2_reg):
     def res_block(n=combatant_size):
         k_size = int(kernel_size * n)
         layer_1 = keras.layers.Dense(
@@ -239,10 +251,10 @@ def model_residual(hp, combatant_size):
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy'])
 
-    # early_stopping_cb = keras.callbacks.EarlyStopping(
-    #     patience=10, monitor='val_loss', restore_best_weights=True)
+    early_stopping_cb = keras.callbacks.EarlyStopping(
+        patience=10, monitor='val_loss', restore_best_weights=True)
 
-    return model
+    return early_stopping_cb, model
 
 
 def dense_bias(n):

@@ -147,6 +147,8 @@ class BotBrains:
                 sleep_seconds = 2.5
                 LOG.info(f'Waiting for newer tournament, sleeping for {sleep_seconds} seconds')
                 await asyncio.sleep(sleep_seconds)
+        except Exception as e:
+            LOG.error(f'Error refreshing tournament', exc_info=e)
         finally:
             self.refreshing_tournament.clear()
             LOG.info(f'tournament_ready.is_set() = {self.tournament_ready.is_set()}')

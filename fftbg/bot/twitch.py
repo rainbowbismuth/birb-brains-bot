@@ -141,6 +141,9 @@ class Bot(commands.Bot):
 
         await self.handle_commands(message)
 
+    async def event_command_error(self, ctx, error):
+        LOG.error('Error while processing command', exc_info=error)
+
     async def event_error(self, error: Exception, data=None):
         LOG.error('Error while processing event', exc_info=error)
 
