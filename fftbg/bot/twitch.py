@@ -60,21 +60,30 @@ class Bot(commands.Bot):
         await self.send_balance_command()
 
     async def send_balance_command(self):
-        LOG.info('Asking for balance')
-        channel = self.get_channel(BOT_CHANNEL)
-        await channel.send("!balance")
+        try:
+            LOG.info('Asking for balance')
+            channel = self.get_channel(BOT_CHANNEL)
+            await channel.send("!balance")
+        except Exception as e:
+            LOG.error('Error asking for balance!', exc_info=e)
 
     async def send_pot_command(self):
-        LOG.info('Asking for betting odds')
-        self.waiting_for_odds = True
-        channel = self.get_channel(BOT_CHANNEL)
-        await channel.send("!pot")
+        try:
+            LOG.info('Asking for betting odds')
+            self.waiting_for_odds = True
+            channel = self.get_channel(BOT_CHANNEL)
+            await channel.send("!pot")
+        except Exception as e:
+            LOG.error('Error asking for betting odds!', exc_info=e)
 
     async def send_bet_command(self, team, amount):
-        amount = int(amount)
-        LOG.info(f'Betting {amount} G on {team} team')
-        channel = self.get_channel(BOT_CHANNEL)
-        await channel.send(f'!bet {amount} {team}')
+        try:
+            amount = int(amount)
+            LOG.info(f'Betting {amount} G on {team} team')
+            channel = self.get_channel(BOT_CHANNEL)
+            await channel.send(f'!bet {amount} {team}')
+        except Exception as e:
+            LOG.error('Error trying to bet!', exc_info=e)
 
     async def event_message(self, message):
         if re.search(BOT_NICK, message.content, re.IGNORECASE):
