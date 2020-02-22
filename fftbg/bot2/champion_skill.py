@@ -3,6 +3,7 @@ import sys
 import time
 
 import fftbg.redis
+import fftbg.server
 import fftbg.twitch.outgoing.messages as outgoing_messages
 from fftbg.twitch.incoming.pubsub import Subscriber
 from fftbg.twitch.outgoing.pubsub import Publisher
@@ -11,7 +12,7 @@ from fftbg.twitch.outgoing.pubsub import Publisher
 def main():
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    redis = fftbg.redis.get_redis()
+    redis = fftbg.server.get_redis()
     sub = Subscriber(redis)
     pub = Publisher(redis)
     while True:

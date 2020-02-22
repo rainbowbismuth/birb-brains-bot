@@ -32,8 +32,7 @@ class IRCBot(commands.Bot):
         self.betting_open_time = None
         self.publisher = publisher
         self.subscriber = subscriber
-        self.loop = asyncio.get_event_loop()
-        self.outgoing = asyncio.Queue()
+        self.outgoing = asyncio.Queue(loop=self.loop)
         self.time_between_messages_seconds = 5.0
         self.thread = threading.Thread(name='Outgoing messages subscriber', target=self._handle_incoming_messages,
                                        daemon=True)
