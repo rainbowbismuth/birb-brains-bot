@@ -2,14 +2,11 @@ import asyncio
 import json
 import logging
 
-from redis import Redis
 import fftbg.betting as betting
-import fftbg.data as data
 import fftbg.download as download
-import fftbg.model as model
 from fftbg.bot.memory import BotMemory
-from fftbg.tournament import Tournament, tournament_to_combatants, parse_hypothetical_tournament
-from fftbg.bot2.baked_model import BakedModel
+from fftbg.tournament import parse_hypothetical_tournament
+from fftbg.brains.baked_model import BakedModel
 
 LOG = logging.getLogger(__name__)
 

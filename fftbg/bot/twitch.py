@@ -17,7 +17,7 @@ BOT_NICK = TWITCH['bot_nick']
 BOT_CHANNEL = TWITCH['channel']
 BOT_PREFIX = '!!birbbrainsbot'
 
-MATCH_BETTING_LENGTH = 59.0
+MATCH_BETTING_LENGTH = 58.0
 MATCH_ODDS_TIME_REMAINING = 31.0
 
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
@@ -153,7 +153,7 @@ class Bot(commands.Bot):
             now = time.time()
             time_left = max(0.0, (now - self.betting_open_time) - 20.0)
             LOG.info(f'Time left before bot bets close: {time_left:.4}')
-            time_left = max(0.0, time_left - 4.0)
+            time_left = max(0.0, time_left - 6.0)
             LOG.info(f'Sleeping for {time_left:.4} before betting')
             await asyncio.sleep(time_left)
             await self.send_bet_command(team, amount)

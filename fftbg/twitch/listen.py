@@ -2,13 +2,14 @@ import logging
 import sys
 
 import fftbg.redis
+import fftbg.server
 from fftbg.twitch.incoming.pubsub import Subscriber
 
 
 def main():
     logging.basicConfig(stream=sys.stdout, level='INFO')
 
-    redis = fftbg.redis.get_redis()
+    redis = fftbg.server.get_redis()
     sub = Subscriber(redis)
     while True:
         msg = sub.get_message()
