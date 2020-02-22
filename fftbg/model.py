@@ -223,15 +223,17 @@ def model_residual(combatant_size, activation,
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
     combatant_layer = res_block()
-    combatant_nodes = [MCDropout(drop_out_input)(combatant_layer(node))
+    c2 = res_block()
+    combatant_nodes = [MCDropout(drop_out_input)(c2(combatant_layer(node)))
                        for node in inputs]
 
     foe_layer = res_block()
+    foe2 = res_block()
     foe_nodes = []
     for p1 in combatant_nodes[:4]:
         for p2 in combatant_nodes[4:]:
             sub = keras.layers.subtract([p1, p2])
-            node = foe_layer(sub)
+            node = foe2(foe_layer(sub))
             foe_nodes.append(node)
 
     team_stack1 = keras.layers.minimum(combatant_nodes[:4])
@@ -239,9 +241,9 @@ def model_residual(combatant_size, activation,
     team_diff = keras.layers.subtract([team_stack1, team_stack2])
     team_computed = res_block()(team_diff)
 
-    combined = MCDropout(drop_out_final)(keras.layers.average(foe_nodes))
-    predictions = keras.layers.Dense(2, activation='softmax')(
-        keras.layers.concatenate([combined, team_computed]))
+    combined = res_block()(keras.layers.add(foe_nodes))
+    final_do = MCDropout(drop_out_final)(keras.layers.concatenate([combined, team_computed]))
+    predictions = keras.layers.Dense(2, activation='softmax')(final_do)
 
     model = keras.Model(inputs=inputs, outputs=predictions)
     LOG.info(f'Number of parameters: {model.count_params()}')
