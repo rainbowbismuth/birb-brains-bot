@@ -166,7 +166,7 @@ class BotBrains:
         right_increase = self.right_total_final / self.right_total_on_bet
         average = (left_increase + right_increase) / 2
         LOG.info(f'Average pool increase was {average:.4}')
-        self.moving_increase = old_increase * 0.85 + min(old_increase * 3, average) * 0.15
+        self.moving_increase = old_increase * 0.80 + min(old_increase * 3, average) * 0.20
         self.moving_increase = max(1, self.moving_increase)
         LOG.info(f'Moving increase changed from {old_increase:.4} to {self.moving_increase:.4}')
 
@@ -210,29 +210,22 @@ class BotBrains:
         #     self.wager = int(
         #         max(MIN_BET, min(self.balance * MAX_BET_PERCENT * self.right_prediction, pool_total_est / 10.0)))
 
-        new_left_total = min(left_total, right_total * 3)
-        new_right_total = min(left_total * 3, right_total)
-        LOG.info(f'Capping left total {left_total} -> {new_left_total}')
-        LOG.info(f'Capping right total {right_total} -> {new_right_total}')
+        new_left_total = left_total * self.moving_increase
+        new_right_total = right_total * self.moving_increase
 
-        optimistic_left_bet = betting.optimal_bet(left_wins_percent, new_left_total, new_right_total)
-        left_optimal_bet = betting.optimal_bet(
-            left_wins_percent, new_left_total * self.moving_increase, new_right_total * self.moving_increase)
+        left_bet = betting.optimal_bet(left_wins_percent, new_left_total, new_right_total)
+        right_bet = betting.optimal_bet(right_wins_percent, new_right_total, new_left_total)
 
-        optimistic_right_bet = betting.optimal_bet(right_wins_percent, new_right_total, new_left_total)
-        right_optimal_bet = betting.optimal_bet(
-            right_wins_percent, new_right_total * self.moving_increase, new_left_total * self.moving_increase)
+        LOG.info(f'Optimal bet: {int(left_bet)} vs {int(right_bet)}')
+        assert not (left_bet > 0 and right_bet > 0)
 
-        LOG.info(f'Optimistic optimal bet: {int(optimistic_left_bet)} vs {int(optimistic_right_bet)}')
-        LOG.info(f'Pessimistic optimal bet: {int(left_optimal_bet)} vs {int(right_optimal_bet)} ')
-
-        assert not (left_optimal_bet > 0 and right_optimal_bet > 0)
-        if left_optimal_bet > right_optimal_bet:
+        if left_bet > right_bet:
             self.betting_on = self.left_team
-            self.wager = int(max(MIN_BET, min(left_optimal_bet, self.balance * MAX_BET_PERCENT)))
+            self.wager = int(max(MIN_BET, min(left_bet, self.balance * MAX_BET_PERCENT)))
         else:
             self.betting_on = self.right_team
-            self.wager = int(max(MIN_BET, min(right_optimal_bet, self.balance * MAX_BET_PERCENT)))
+            self.wager = int(max(MIN_BET, min(right_bet, self.balance * MAX_BET_PERCENT)))
+        self.wager = max(1000 + pool_total_est * 0.02, self.wager)
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,

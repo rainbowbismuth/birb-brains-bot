@@ -81,7 +81,7 @@ class Bot(commands.Bot):
             amount = int(amount)
             LOG.info(f'Betting {amount} G on {team} team')
             channel = self.get_channel(BOT_CHANNEL)
-            await channel.send(f'!bet {amount} {team}')
+            await channel.send(f'!bet {int(amount)} {team}')
         except Exception as e:
             LOG.error('Error trying to bet!', exc_info=e)
 
@@ -147,6 +147,7 @@ class Bot(commands.Bot):
             right_total_n = parse_comma_int(right_total)
             LOG.info(f'Betting totals: {left}/{left_bets} {left_total} G; {right}/{right_bets} {right_total} G')
             team, amount = self.brains.make_bet(left_total_n, right_total_n)
+            await asyncio.sleep(5)
             await self.send_bet_command(team, amount)
 
         await self.handle_commands(message)
