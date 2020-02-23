@@ -59,7 +59,7 @@ class BotBrains:
         LOG.info('Starting up BotBrains')
         self.model = BakedModel()
         self.memory = BotMemory()
-        self.balance = 0
+        self.balance = 0.0
         self.refreshing_tournament = asyncio.Event()
         self.tournament_ready = asyncio.Event()
         self.tournament = None
@@ -73,7 +73,7 @@ class BotBrains:
         # Per Bet information we need to log when victor is confirmed
         self.tournament_id = None
         self.betting_on = None
-        self.wager = None
+        self.wager = 0.0
         self.left_team_bet = None
         self.left_prediction = None
         self.left_total_on_bet = None
@@ -225,8 +225,8 @@ class BotBrains:
         else:
             self.betting_on = self.right_team
             self.wager = right_bet
-        self.wager = max(1000 + pool_total_est * 0.02, self.wager)
-        self.wager = int(max(MIN_BET, min(self.wager, self.balance * MAX_BET_PERCENT)))
+        self.wager = min(self.wager, 1000 + pool_total_est * 0.02, self.balance * MAX_BET_PERCENT)
+        self.wager = int(max(MIN_BET, self.wager))
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
