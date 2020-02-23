@@ -14,7 +14,9 @@ from fftbg.config import TOURNAMENTS_ROOT
 LOG = logging.getLogger(__name__)
 
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
-NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance']
+NUMERIC = [
+    'Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
+    'Map-Thinness', 'Map-Archer-Boon', 'Map-Meat-Grinder']
 
 
 def _calculate_hypothetical_match_ups():
@@ -64,7 +66,10 @@ class MatchUp:
             'Map-Team-Split': arena.team_split,
             'Map-Height-Diff': arena.height_diff,
             'Map-Choke-Point': arena.choke_point,
-            'Map-Team-Distance': arena.team_distance
+            'Map-Team-Distance': arena.team_distance,
+            'Map-Thinness': arena.thinness,
+            'Map-Archer-Boon': arena.archer_boon,
+            'Map-Meat-Grinder': arena.meat_grinder
         }
         left = {
             'Side': 'Left',

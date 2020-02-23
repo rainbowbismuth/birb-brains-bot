@@ -21,6 +21,18 @@ class Arena:
     def area(self):
         return self.width * self.height
 
+    @property
+    def thinness(self):
+        return min(self.width, self.height) / max(self.width, self.height)
+
+    @property
+    def archer_boon(self):
+        return self.height_diff * self.team_distance
+
+    @property
+    def meat_grinder(self):
+        return (1.0 - self.team_distance) * self.choke_point
+
 
 ARENAS = [
     Arena(
@@ -302,31 +314,215 @@ ARENAS = [
         choke_point=0.1,
         team_distance=0.7
     ),
+    Arena(
+        name='20) Zeltennia Castle',  # really unsure about this one
+        width=9,
+        height=10,
+        team_split=0.3,
+        height_diff=0.3,
+        choke_point=0.3,
+        team_distance=0.3
+    ),
+    Arena(
+        name='21) Office of Zeltennia Castle',
+        width=11,
+        height=8,
+        team_split=0.2,
+        height_diff=0.2,
+        choke_point=0.1,
+        team_distance=0.4
+    ),
+    Arena(
+        name='22) Magic City Gariland',
+        width=10,
+        height=15,
+        team_split=0.4,
+        height_diff=0.4,
+        choke_point=0.4,
+        team_distance=0.8
+    ),
+    Arena(
+        name='23) Beoulve Estate',
+        width=9,
+        height=12,
+        team_split=0.2,
+        height_diff=0.1,
+        choke_point=0.0,
+        team_distance=0.1
+    ),
+    Arena(
+        name='24) Military Academy Auditorium',
+        width=8,
+        height=10,
+        team_split=0.1,
+        height_diff=0.2,
+        choke_point=0.0,
+        team_distance=0.1
+    ),
+    Arena(
+        name='25) Yardow Fort City',
+        width=10,
+        height=12,
+        team_split=0.1,
+        height_diff=0.4,
+        choke_point=0.5,
+        team_distance=0.5
+    ),
+    Arena(
+        name='26) Weapon Storage of Yardow',
+        width=4,
+        height=18,
+        team_split=0.1,
+        height_diff=0.4,
+        choke_point=0.7,
+        team_distance=0.9
+    ),
+    Arena(
+        name='27) Goland Coal City',
+        width=10,
+        height=10,
+        team_split=0.3,
+        height_diff=0.6,
+        choke_point=0.2,
+        team_distance=0.5
+    ),
+    Arena(
+        name='28) Colliery Underground First Floor',
+        width=13,
+        height=11,
+        team_split=0.2,
+        height_diff=0.4,
+        choke_point=0.4,
+        team_distance=0.8
+    ),
+    Arena(
+        name='29) Colliery Underground Second Floor',
+        width=12,
+        height=13,
+        team_split=0.2,
+        height_diff=0.8,
+        choke_point=0.1,
+        team_distance=0.7
+    ),
+    Arena(
+        name='3) Hall of St. Murond Temple',
+        width=9,
+        height=13,
+        team_split=0.4,
+        height_diff=0.2,
+        choke_point=0.0,
+        team_distance=0.4
+    ),
+    Arena(
+        name='30) Colliery Underground Third Floor',
+        width=11,
+        height=11,
+        team_split=0.6,
+        height_diff=0.7,
+        choke_point=0.5,
+        team_distance=0.6
+    ),
+    Arena(
+        name='31) Dorter Trade City',
+        width=9,
+        height=11,
+        team_split=0.2,
+        height_diff=0.3,
+        choke_point=0.1,
+        team_distance=0.3
+    ),
+    Arena(
+        name='32) Slums in Dorter',
+        width=10,
+        height=16,
+        team_split=0.3,
+        height_diff=0.6,
+        choke_point=0.2,
+        team_distance=0.7
+    ),
+    Arena(
+        name='33) Hospital in Slums',
+        width=13,
+        height=9,
+        team_split=0.1,
+        height_diff=0.0,
+        choke_point=1.0,
+        team_distance=0.6
+    ),
+    Arena(
+        name='34) Cellar of Sand Mouse',
+        width=11,
+        height=10,
+        team_split=0.4,
+        height_diff=0.2,
+        choke_point=0.4,
+        team_distance=0.6
+    ),
+    Arena(
+        name='35) Zaland Fort City',
+        width=10,
+        height=13,
+        team_split=0.2,
+        height_diff=0.5,
+        choke_point=0.7,
+        team_distance=0.6
+    ),
+    Arena(
+        name='36) Church Outside of Town',
+        width=10,
+        height=10,
+        team_split=0.1,
+        height_diff=0.5,
+        choke_point=0.6,
+        team_distance=0.5
+    ),
+    Arena(
+        name='37) Ruins Outside Zaland',
+        width=9,
+        height=12,
+        team_split=0.3,
+        height_diff=0.3,
+        choke_point=0.5,
+        team_distance=0.4
+    ),
+    Arena(
+        name='38) Goug Machine City',
+        width=8,
+        height=11,
+        team_split=0.3,
+        height_diff=0.8,
+        choke_point=0.8,
+        team_distance=0.5
+    ),
+    Arena(
+        name='39) Underground Passage in Goland',
+        width=6,
+        height=18,
+        team_split=0.1,
+        height_diff=0.2,
+        choke_point=0.8,
+        team_distance=0.7
+    ),
+    Arena(
+        name='4) Lesalia Castle',
+        width=6,
+        height=12,
+        team_split=0.1,
+        height_diff=0.1,
+        choke_point=0.4,
+        team_distance=0.2
+    ),
+    Arena(
+        name='40) Slums in Goug',
+        width=11,
+        height=9,
+        team_split=0.3,
+        height_diff=0.4,
+        choke_point=0.2,
+        team_distance=0.4
+    ),
 ]
 
-#  '20) Zeltennia Castle',
-#  '21) Office of Zeltennia Castle',
-#  '22) Magic City Gariland',
-#  '23) Beoulve Estate',
-#  '24) Military Academy Auditorium',
-#  '25) Yardow Fort City',
-#  '26) Weapon Storage of Yardow',
-#  '27) Goland Coal City',
-#  '28) Colliery Underground First Floor',
-#  '29) Colliery Underground Second Floor',
-#  '3) Hall of St. Murond Temple',
-#  '30) Colliery Underground Third Floor',
-#  '31) Dorter Trade City',
-#  '32) Slums in Dorter',
-#  '33) Hospital in Slums',
-#  '34) Cellar of Sand Mouse',
-#  '35) Zaland Fort City',
-#  '36) Church Outside of Town',
-#  '37) Ruins Outside Zaland',
-#  '38) Goug Machine City',
-#  '39) Underground Passage in Goland',
-#  '4) Lesalia Castle',
-#  '40) Slums in Goug',
 #  "41) Besrodio's House",
 #  '42) Warjilis Trade City',
 #  '43) Port of Warjilis',
