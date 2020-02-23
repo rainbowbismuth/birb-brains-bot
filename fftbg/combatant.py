@@ -46,6 +46,9 @@ def combatant_to_dict(combatant: dict):
     c_ev = 1 - (output['C-EV'] / 200.0)
     a_ev = 1 - (output['Physical A-EV'] / 100.0)
     summary_ev = w_ev * c_ev * a_ev
+    if combatant['SupportSkill'] == 'Defense UP':
+        summary_ev = summary_ev * (2.0 / 3.0)
+
     output['Effective HP'] = output['HP'] * (1 / summary_ev)
 
     damage_1 = damage_calculation(output, mainhand)

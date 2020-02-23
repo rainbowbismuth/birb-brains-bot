@@ -1,13 +1,16 @@
 import logging
 import pickle
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+import tensorflow
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, recall_score, accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
+from tensorflow import linalg
 
 import fftbg.combatant as combatant
 import fftbg.config as config
@@ -31,8 +34,6 @@ NUM_COLUMNS = combatant.NUMERIC + tournament.NUMERIC
 CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'SupportSkill', 'MoveSkill',
                'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 
-
-# CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'SupportSkill', 'MoveSkill']
 
 def get_skill_columns(df):
     return [c for c in df.keys() if combatant.SKILL_TAG in c]
@@ -106,11 +107,11 @@ def main():
         return xs[-amount:] + xs[:-amount]
 
     # Augment tests:
-    train_X2 = rotate_right(train_X[:4]) + rotate_right(train_X[4:])
-    train_y2 = train_y  # ~train_y
-
-    train_X = [np.append(train_X[i], train_X2[i], axis=0) for i in range(8)]
-    train_y = np.append(train_y, train_y2)
+    # train_X2 = rotate_right(train_X[:4]) + rotate_right(train_X[4:])
+    # train_y2 = train_y  # ~train_y
+    #
+    # train_X = [np.append(train_X[i], train_X2[i], axis=0) for i in range(8)]
+    # train_y = np.append(train_y, train_y2)
 
     LOG.info(f'Training data shapes    X:{str(train_X[0].shape):>14} y:{str(train_y.shape):>9}')
     LOG.info(f'Testing data shapes     X:{str(test_X[0].shape):>14} y:{str(test_y.shape):>9}')
@@ -125,14 +126,15 @@ def main():
     #     directory='hyperband',
     #     project_name='residual-20200217')
 
-    early_stopping_cb, model = model_residual(combatant_size,
-                                              activation='relu',
-                                              kernel_size=0.05,
-                                              learning_rate=1e-3,
-                                              drop_out_input=0.5,
-                                              drop_out_res=0.35,
-                                              drop_out_final=0.5,
-                                              l2_reg=0.01)
+    # early_stopping_cb, model = model_residual(combatant_size,
+    #                                           activation='relu',
+    #                                           kernel_size=0.05,
+    #                                           learning_rate=1e-3,
+    #                                           drop_out_input=0.5,
+    #                                           drop_out_res=0.35,
+    #                                           drop_out_final=0.5,
+    #                                           l2_reg=0.01)
+    early_stopping_cb, model = model_huge_multiply(combatant_size)
     # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
     model.fit(train_X,
               train_y,
@@ -167,6 +169,64 @@ def main():
 class MCDropout(keras.layers.Dropout):
     def call(self, inputs, _training=True):
         return super().call(inputs, training=True)
+
+
+def model_huge_multiply(combatant_size):
+    combatant_layer = keras.layers.Dense(
+        combatant_size // 2,
+        kernel_initializer='he_normal',
+        kernel_regularizer=keras.regularizers.l2(0.005),
+        activation='relu',
+        use_bias=True)
+
+    inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
+    combatant_nodes = [combatant_layer(input_node) for input_node in inputs]
+
+    pair_multiply_layer = keras.layers.Dense(
+        2,
+        kernel_initializer='he_normal',
+        kernel_regularizer=keras.regularizers.l2(0.005),
+        activation='elu',
+        use_bias=True)
+
+    def multiply(tensors: List[tensorflow.Tensor]):
+        size = tensors[0].shape[1]
+
+        def fn(xs):
+            return [tensorflow.reshape(
+                linalg.matmul(
+                    tensorflow.reshape(xs[0], (-1, 1)),
+                    tensorflow.reshape(xs[1], (1, -1)),
+                    a_is_sparse=True,
+                    b_is_sparse=True,
+                ),
+                (size ** 2,)), 0]
+
+        return tensorflow.map_fn(fn,
+                                 elems=tensors)[0]
+
+    def pair_multiply(a, b):
+        return keras.layers.Lambda(multiply)([a, b])
+
+    foe_nodes = []
+    for p1 in combatant_nodes[:4]:
+        for p2 in combatant_nodes[4:]:
+            foe_nodes.append(pair_multiply_layer(pair_multiply(p1, p2)))
+
+    predictions = keras.layers.Dense(2, activation='softmax')(
+        keras.layers.concatenate(foe_nodes))
+
+    model = keras.Model(inputs=inputs, outputs=predictions)
+    LOG.info(f'Number of parameters: {model.count_params()}')
+    model.compile(
+        optimizer=keras.optimizers.Nadam(learning_rate=1e-3),
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy'])
+
+    early_stopping_cb = keras.callbacks.EarlyStopping(
+        patience=10, monitor='val_loss', restore_best_weights=True)
+
+    return early_stopping_cb, model
 
 
 def model_residual_hp(hp, combatant_size):
