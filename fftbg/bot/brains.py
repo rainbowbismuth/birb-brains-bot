@@ -221,11 +221,12 @@ class BotBrains:
 
         if left_bet > right_bet:
             self.betting_on = self.left_team
-            self.wager = int(max(MIN_BET, min(left_bet, self.balance * MAX_BET_PERCENT)))
+            self.wager = left_bet
         else:
             self.betting_on = self.right_team
-            self.wager = int(max(MIN_BET, min(right_bet, self.balance * MAX_BET_PERCENT)))
+            self.wager = right_bet
         self.wager = max(1000 + pool_total_est * 0.02, self.wager)
+        self.wager = int(max(MIN_BET, min(self.wager, self.balance * MAX_BET_PERCENT)))
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
