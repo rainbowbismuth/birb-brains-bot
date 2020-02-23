@@ -18,7 +18,7 @@ BOT_CHANNEL = TWITCH['channel']
 BOT_PREFIX = '!!birbbrainsbot'
 
 MATCH_BETTING_LENGTH = 60.0
-MATCH_ODDS_TIME_REMAINING = 31.0
+MATCH_ODDS_TIME_REMAINING = 30.0
 
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
 BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')
@@ -52,6 +52,7 @@ class Bot(commands.Bot):
             initial_channels=[BOT_CHANNEL])
         self.waiting_for_odds = False
         self.betting_open_time = None
+        self.send_pot_time = None
 
     # Events don't need decorators when subclassed
     async def event_ready(self):
@@ -123,6 +124,7 @@ class Bot(commands.Bot):
                 LOG.info(f'Sleeping for {sleep_seconds} seconds before asking for odds')
                 await asyncio.sleep(sleep_seconds)
             await self.send_pot_command()
+            self.send_pot_time = time.time()
 
         betting_closed = BETTING_CLOSED_RE.findall(message.content)
         if betting_closed and any([BOT_NICK in msg for msg in betting_closed]):
@@ -147,7 +149,13 @@ class Bot(commands.Bot):
             right_total_n = parse_comma_int(right_total)
             LOG.info(f'Betting totals: {left}/{left_bets} {left_total} G; {right}/{right_bets} {right_total} G')
             team, amount = self.brains.make_bet(left_total_n, right_total_n)
-            await asyncio.sleep(5)
+
+            now = time.time()
+            time_left = max(0.0, (now - self.betting_open_time) - 20.0)
+            LOG.info(f'Time left before bot bets close: {time_left}')
+            time_left = max(0.0, time_left - 5.0)
+            LOG.info(f'Sleeping for {time_left} before betting')
+            await asyncio.sleep(time_left)
             await self.send_bet_command(team, amount)
 
         await self.handle_commands(message)
