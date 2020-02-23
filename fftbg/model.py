@@ -106,8 +106,8 @@ def main():
         return xs[-amount:] + xs[:-amount]
 
     # Augment tests:
-    train_X2 = rotate_right(train_X[4:]) + rotate_right(train_X[:4])
-    train_y2 = ~train_y
+    train_X2 = rotate_right(train_X[:4]) + rotate_right(train_X[4:])
+    train_y2 = train_y  # ~train_y
 
     train_X = [np.append(train_X[i], train_X2[i], axis=0) for i in range(8)]
     train_y = np.append(train_y, train_y2)

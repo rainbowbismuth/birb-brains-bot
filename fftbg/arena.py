@@ -22,8 +22,12 @@ class Arena:
         return self.width * self.height
 
     @property
-    def thinness(self):
-        return min(self.width, self.height) / max(self.width, self.height)
+    def min_dimension(self):
+        return min(self.width, self.height)
+
+    @property
+    def max_dimension(self):
+        return max(self.width, self.height)
 
     @property
     def archer_boon(self):
@@ -521,31 +525,215 @@ ARENAS = [
         choke_point=0.2,
         team_distance=0.4
     ),
+    Arena(
+        name='41) Besrodio\'s House',
+        width=8,
+        height=8,
+        team_split=0.1,
+        height_diff=0.2,
+        choke_point=0.3,
+        team_distance=0.1
+    ),
+    Arena(
+        name='42) Warjilis Trade City',
+        width=10,
+        height=15,
+        team_split=0.1,
+        height_diff=0.3,
+        choke_point=0.1,
+        team_distance=0.6
+    ),
+    Arena(
+        name='43) Port of Warjilis',
+        width=15,
+        height=9,
+        team_split=0.1,
+        height_diff=0.4,
+        choke_point=0.7,
+        team_distance=0.3
+    ),
+    Arena(
+        name='44) Bervenia Free City',
+        width=10,
+        height=13,
+        team_split=0.3,
+        height_diff=0.8,
+        choke_point=0.2,
+        team_distance=0.8
+    ),
+    Arena(
+        name='45) Ruins of Zeltennia Castle\'s Church',
+        width=9,
+        height=16,
+        team_split=0.2,
+        height_diff=0.5,
+        choke_point=0.3,
+        team_distance=0.5
+    ),
+    Arena(
+        name='46) Cemetary of Heavenly Knight, Balbanes',
+        width=9,
+        height=15,
+        team_split=0.2,
+        height_diff=0.2,
+        choke_point=0.2,
+        team_distance=0.5
+    ),
+    Arena(
+        name='47) Zarghidas Trade City',
+        width=10,
+        height=16,
+        team_split=0.1,
+        height_diff=0.4,
+        choke_point=0.4,
+        team_distance=0.6
+    ),
+    Arena(
+        name='48) Slums of Zarghidas',
+        width=11,
+        height=14,
+        team_split=0.3,
+        height_diff=0.5,
+        choke_point=0.5,
+        team_distance=0.6
+    ),
+    Arena(
+        name='49) Fort Zeakden',
+        width=9,
+        height=13,
+        team_split=0.8,
+        height_diff=0.6,
+        choke_point=0.5,
+        team_distance=0.4
+    ),
+    Arena(
+        name='5) Roof of Riovanes Castle',
+        width=11,
+        height=11,
+        team_split=0.8,
+        height_diff=0.8,
+        choke_point=0.5,
+        team_distance=0.2
+    ),
+    Arena(
+        name='50) St. Murond Temple',
+        width=8,
+        height=16,
+        team_split=0.3,
+        height_diff=0.8,
+        choke_point=0.8,
+        team_distance=0.5
+    ),
+    Arena(
+        name='51) Office of St. Murond Temple',
+        width=10,
+        height=11,
+        team_split=0.1,
+        height_diff=0.2,
+        choke_point=0.1,
+        team_distance=0.4
+    ),
+    Arena(
+        name='52) Chapel of St. Murond Temple',
+        width=10,
+        height=9,
+        team_split=0.8,
+        height_diff=0.3,
+        choke_point=0.1,
+        team_distance=0.2
+    ),
+    Arena(
+        name='53) Entrance to Death City',
+        width=4,  # map feels very small
+        height=9,
+        team_split=0.3,
+        height_diff=0.1,
+        choke_point=0.8,
+        team_distance=0.2
+    ),
+    Arena(
+        name='54) Lost Sacred Precincts',
+        width=10,
+        height=14,
+        team_split=0.3,
+        height_diff=0.3,
+        choke_point=0.7,
+        team_distance=0.5
+    ),
+    Arena(
+        name='55) Graveyard of Airships',
+        width=16,
+        height=9,
+        team_split=0.1,
+        height_diff=0.2,
+        choke_point=0.1,
+        team_distance=0.4
+    ),
+    Arena(
+        name='56) Orbonne Monastery',
+        width=10,
+        height=14,
+        team_split=0.1,
+        height_diff=0.2,
+        choke_point=0.1,
+        team_distance=0.4
+    ),
+    Arena(
+        name='57) Underground Book Storage First Floor',
+        width=9,
+        height=13,
+        team_split=0.6,
+        height_diff=0.5,
+        choke_point=0.6,
+        team_distance=0.4
+    ),
+    Arena(
+        name='58) Underground Book Storage Second Floor',
+        width=10,
+        height=12,
+        team_split=0.1,
+        height_diff=0.3,
+        choke_point=0.2,
+        team_distance=0.3
+    ),
+    Arena(
+        name='59) Underground Book Storage Third Floor',
+        width=12,
+        height=11,
+        team_split=0.5,
+        height_diff=0.5,
+        choke_point=0.4,
+        team_distance=0.7
+    ),
+    Arena(
+        name='6) Gate of Riovanes Castle',
+        width=12,
+        height=12,
+        team_split=0.4,
+        height_diff=0.9,
+        choke_point=0.3,
+        team_distance=0.7
+    ),
+    Arena(
+        name='60) Underground Book Storage Fourth Floor',
+        width=16,
+        height=8,
+        team_split=0.3,
+        height_diff=0.4,
+        choke_point=0.5,
+        team_distance=0.8
+    ),
+    Arena(
+        name='61) Underground Book Storage Fifth Floor',
+        width=11,
+        height=15,
+        team_split=0.4,
+        height_diff=0.5,
+        choke_point=0.3,
+        team_distance=0.6
+    ),
 ]
 
-#  "41) Besrodio's House",
-#  '42) Warjilis Trade City',
-#  '43) Port of Warjilis',
-#  '44) Bervenia Free City',
-#  "45) Ruins of Zeltennia Castle's Church",
-#  '46) Cemetary of Heavenly Knight, Balbanes',
-#  '47) Zarghidas Trade City',
-#  '48) Slums of Zarghidas',
-#  '49) Fort Zeakden',
-#  '5) Roof of Riovanes Castle',
-#  '50) St. Murond Temple',
-#  '51) Office of St. Murond Temple',
-#  '52) Chapel of St. Murond Temple',
-#  '53) Entrance to Death City',
-#  '54) Lost Sacred Precincts',
-#  '55) Graveyard of Airships',
-#  '56) Orbonne Monastery',
-#  '57) Underground Book Storage First Floor',
-#  '58) Underground Book Storage Second Floor',
-#  '59) Underground Book Storage Third Floor',
-#  '6) Gate of Riovanes Castle',
-#  '60) Underground Book Storage Fourth Floor',
-#  '61) Underground Book Storage Fifth Floor',
 #  '62) Chapel of Orbonne Monastery',
 #  '63) Golgorand Execution Site',
 #  '64) Sluice of Bethla Garrison',
