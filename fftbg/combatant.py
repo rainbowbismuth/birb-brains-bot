@@ -121,3 +121,58 @@ def damage_calculation(combatant, weapon: equipment.Equipment):
         return wp * wp
 
     raise Exception('missing weapon type in damage calc: ' + weapon.weapon_type)
+
+
+ZODIAC_INDEX = {
+    'Aries': 0,
+    'Taurus': 1,
+    'Gemini': 2,
+    'Cancer': 3,
+    'Leo': 4,
+    'Virgo': 5,
+    'Libra': 6,
+    'Scorpio': 7,
+    'Sagittarius': 8,
+    'Capricorn': 9,
+    'Aquarius': 10,
+    'Pisces': 11,
+    'Serpentarius': 12
+}
+
+ZODIAC_CHART = [
+    'O  O  O  -  +  O  ?  O  +  -  O  O  O'.split('  '),
+    'O  O  O  O  -  +  O  ?  O  +  -  O  O'.split('  '),
+    'O  O  O  O  O  -  +  0  ?  0  +  -  O'.split('  '),
+    '-  O  O  O  O  O  -  +  O  ?  O  +  O'.split('  '),
+    '+  -  O  O  O  O  O  -  +  O  ?  O  O'.split('  '),
+    'O  +  -  O  O  O  O  O  -  +  O  ?  O'.split('  '),
+    '?  O  +  -  O  O  O  O  O  -  +  O  O'.split('  '),
+    'O  ?  O  +  -  O  O  O  O  O  -  +  O'.split('  '),
+    '+  O  ?  O  +  -  O  O  O  O  O  -  O'.split('  '),
+    '-  +  O  ?  O  +  -  O  O  O  O  O  O'.split('  '),
+    'O  -  +  O  ?  O  +  -  O  O  O  O  O'.split('  '),
+    'O  O  -  +  O  ?  O  +  -  O  O  O  O'.split('  '),
+    'O  O  O  O  O  O  O  O  O  O  O  O  O'.split('  '),
+]
+
+
+def zodiac_compat(c1, c2):
+    print(ZODIAC_CHART)
+    s1 = ZODIAC_INDEX[c1['Sign']]
+    s2 = ZODIAC_INDEX[c2['Sign']]
+    g1 = c1['Gender']
+    g2 = c2['Gender']
+
+    if ZODIAC_CHART[s1][s2] == 'O':
+        return 1.0
+    elif ZODIAC_CHART[s1][s2] == '+':
+        return 1.25
+    elif ZODIAC_CHART[s1][s2] == '-':
+        return 0.75
+    elif ZODIAC_CHART[s1][s2] == '?':
+        if g1 == 'Monster' or g2 == 'Monster':
+            return 0.75
+        elif g1 != g2:
+            return 1.5
+        else:
+            return 0.5
