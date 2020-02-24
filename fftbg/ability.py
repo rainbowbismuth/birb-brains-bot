@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Optional
 
@@ -19,7 +20,12 @@ MULT_PA_TIMES_WP = 'PA_TIMES_WP'
 @dataclass
 class Ability:
     name: str
-    multiplier: Optional[str]
+    multiplier: Optional[str] = None
+    damage: bool = False
+    heals: bool = False
+    element: Optional[str] = None
+    range: Optional[int] = None
+    aoe: Optional[int] = None
 
     def multiply(self, ability, brave, faith, pa, pa_bang, ma, wp, speed):
         if self.multiplier == MULT_BRAVE:
@@ -46,7 +52,10 @@ class Ability:
             raise Exception('Encountered unknown multiplier type: ' + self.multiplier)
 
 
-DEFAULT_ABILITY = Ability('', None)
+DEFAULT_ABILITY = Ability('')
+RANGE_RE = re.compile(r'(\d+) range')
+AOE_RE = re.compile(r'(\d+) AoE')
+ELEMENT_RE = re.compile(r'Element: (\w+)')
 
 
 def parse_abilities():
@@ -77,10 +86,45 @@ def parse_abilities():
         elif 'PA' in desc:
             multiplier = MULT_PA
 
-        ABILITY_MAP[name.lower()] = Ability(name, multiplier)
+        damage = False
+        heals = False
+        if ' Damage ' in desc:
+            damage = True
+        if ' Heal ' in desc:
+            heals = True
+
+        range = None
+        range_match = RANGE_RE.findall(desc)
+        if range_match:
+            range = int(range_match[0])
+
+        aoe = None
+        aoe_match = AOE_RE.findall(desc)
+        if aoe_match:
+            aoe = int(aoe_match[0])
+
+        element = None
+        element_match = ELEMENT_RE.findall(desc)
+        if element_match:
+            element = element_match[0]
+
+        ABILITY_MAP[name.lower()] = Ability(
+            name=name,
+            multiplier=multiplier,
+            damage=damage,
+            heals=heals,
+            range=range,
+            aoe=aoe,
+            element=element)
 
 
 def get_ability(name: str) -> Ability:
     if not ABILITY_MAP:
         parse_abilities()
     return ABILITY_MAP.get(name.lower(), DEFAULT_ABILITY)
+
+
+if __name__ == '__main__':
+    parse_abilities()
+    for ability in ABILITY_MAP.values():
+        print(ability)

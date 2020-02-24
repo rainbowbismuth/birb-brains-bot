@@ -792,3 +792,9 @@ ARENA_MAP = dict([(arena.name, arena) for arena in ARENAS])
 
 def get_arena(name: str) -> Arena:
     return ARENA_MAP.get(name, DEFAULT_ARENA)
+
+
+if __name__ == '__main__':
+    for arena in ARENA_MAP.values():
+        print(arena)
+    print(DEFAULT_ARENA)

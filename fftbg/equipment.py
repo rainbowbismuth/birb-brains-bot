@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
 import fftbg.config as config
 
@@ -16,6 +16,13 @@ PHYS_EVADE_RE = re.compile(r'(\d+)% phys evade')
 MAGIC_EVADE_RE = re.compile(r'(\d+)% magic evade')
 MOVE_RE = re.compile(r'\+(\d+) Move')
 JUMP_RE = re.compile(r'\+(\d+) Jump')
+WEAPON_ELEMENT_RE = re.compile(r'Element: (\w+)')
+
+STRENGTHEN_RE = re.compile(r'Strengthen ([\w,\s]+)')
+ABSORB_RE = re.compile(r'Absorb ([\w,\s]+)')
+HALF_RE = re.compile(r'Half ([\w,\s]+)')
+WEAK_RE = re.compile(r'Weak ([\w,\s]+)')
+CANCEL_RE = re.compile(r'Cancel ([\w,\s]+)')
 
 
 @dataclass(frozen=True)
@@ -32,8 +39,14 @@ class Equipment:
     phys_ev: int = 0
     magic_ev: int = 0
     weapon_type: Optional[str] = None
+    weapon_element: Optional[str] = None
     move_bonus: int = 0
     jump_bonus: int = 0
+    strengthens: Tuple[str] = tuple()
+    absorbs: Tuple[str] = tuple()
+    halves: Tuple[str] = tuple()
+    weaknesses: Tuple[str] = tuple()
+    cancels: Tuple[str] = tuple()
 
 
 EMPTY = Equipment(name='')
@@ -46,9 +59,30 @@ def try_int(regex, s: str, default: int = 0):
     return default
 
 
+def try_str(regex, s: str):
+    matches = regex.findall(s)
+    if matches:
+        return matches[0]
+    return None
+
+
+def try_elemental(regex, s: str):
+    result = tuple()
+    matches = regex.findall(s)
+    if matches:
+        result = tuple(sorted(e.strip() for e in matches[0].split(',')))
+    return result
+
+
 def parse_equipment():
     items = config.INFO_ITEM_PATH.read_text().splitlines()
     for item in items:
+        strengthens = try_elemental(STRENGTHEN_RE, item)
+        absorbs = try_elemental(ABSORB_RE, item)
+        halves = try_elemental(HALF_RE, item)
+        weaknesses = try_elemental(WEAK_RE, item)
+        cancels = try_elemental(CANCEL_RE, item)
+
         armor_match = ARMOR_RE.match(item)
         if armor_match:
             name, hp_bonus, mp_bonus, everything_else = armor_match.groups()
@@ -64,7 +98,12 @@ def parse_equipment():
                                             pa_bonus=pa_bonus,
                                             ma_bonus=ma_bonus,
                                             move_bonus=move_bonus,
-                                            jump_bonus=jump_bonus)
+                                            jump_bonus=jump_bonus,
+                                            strengthens=strengthens,
+                                            absorbs=absorbs,
+                                            halves=halves,
+                                            weaknesses=weaknesses,
+                                            cancels=cancels)
             continue
 
         weapon_match = WEAPON_RE.match(item)
@@ -74,6 +113,7 @@ def parse_equipment():
             pa_bonus = try_int(BONUS_PA_RE, everything_else)
             ma_bonus = try_int(BONUS_MA_RE, everything_else)
             move_bonus = try_int(MOVE_RE, everything_else)
+            weapon_element = try_str(WEAPON_ELEMENT_RE, everything_else)
             EQUIPMENT_MAP[name] = Equipment(name=name,
                                             speed_bonus=speed_bonus,
                                             pa_bonus=pa_bonus,
@@ -82,10 +122,16 @@ def parse_equipment():
                                             range=int(w_range),
                                             w_ev=int(w_ev),
                                             weapon_type=weapon_type,
-                                            move_bonus=move_bonus)
+                                            weapon_element=weapon_element,
+                                            move_bonus=move_bonus,
+                                            strengthens=strengthens,
+                                            absorbs=absorbs,
+                                            halves=halves,
+                                            weaknesses=weaknesses,
+                                            cancels=cancels)
             continue
 
-        if 'Accessory' in item:
+        if 'Accessory' in item or 'Shield' in item:
             accessory_match = ACCESSORY_RE.match(item)
             name, everything_else = accessory_match.groups()
             speed_bonus = try_int(SPEED_EFFECT_RE, everything_else)
@@ -102,10 +148,21 @@ def parse_equipment():
                                             phys_ev=phys_ev,
                                             magic_ev=magic_ev,
                                             move_bonus=move_bonus,
-                                            jump_bonus=jump_bonus)
+                                            jump_bonus=jump_bonus,
+                                            strengthens=strengthens,
+                                            absorbs=absorbs,
+                                            halves=halves,
+                                            weaknesses=weaknesses,
+                                            cancels=cancels)
 
 
 def get_equipment(name: str) -> Equipment:
     if not EQUIPMENT_MAP:
         parse_equipment()
     return EQUIPMENT_MAP.get(name, EMPTY)
+
+
+if __name__ == '__main__':
+    parse_equipment()
+    for eq in EQUIPMENT_MAP.values():
+        print(eq)
