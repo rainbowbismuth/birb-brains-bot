@@ -126,15 +126,15 @@ def main():
     #     directory='hyperband',
     #     project_name='residual-20200217')
 
-    # early_stopping_cb, model = model_residual(combatant_size,
-    #                                           activation='relu',
-    #                                           kernel_size=0.05,
-    #                                           learning_rate=1e-3,
-    #                                           drop_out_input=0.5,
-    #                                           drop_out_res=0.35,
-    #                                           drop_out_final=0.5,
-    #                                           l2_reg=0.01)
-    early_stopping_cb, model = model_huge_multiply(combatant_size)
+    early_stopping_cb, model = model_residual(combatant_size,
+                                              activation='relu',
+                                              kernel_size=0.05,
+                                              learning_rate=1e-3,
+                                              drop_out_input=0.5,
+                                              drop_out_res=0.35,
+                                              drop_out_final=0.5,
+                                              l2_reg=0.01)
+    # early_stopping_cb, model = model_huge_multiply(combatant_size)
     # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
     model.fit(train_X,
               train_y,

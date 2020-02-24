@@ -11,3 +11,4 @@ def test_parse_equipment():
     assert equipment.get_equipment('Small Mantle').phys_ev == 10
     assert equipment.get_equipment('Small Mantle').speed_bonus == 1
     assert equipment.get_equipment('Bracer').pa_bonus == 3
+    assert equipment.get_equipment('Kunai').move_bonus == 1

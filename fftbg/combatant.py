@@ -7,6 +7,7 @@ import fftbg.equipment as equipment
 PER_COMBATANTS = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
                   'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 NUMERIC = ['Brave', 'Faith', 'HP', 'MP', 'Speed', 'Range', 'W-EV', 'C-EV', 'PA', 'PA!', 'MA', 'MA!',
+           'Move', 'Jump',
            'Physical A-EV', 'Magical A-EV',
            'Effective HP', 'Attack-Damage']
 CATEGORICAL = PER_COMBATANTS + ['Color', 'Side', 'Map']
@@ -33,6 +34,13 @@ def combatant_to_dict(combatant: dict):
     output['Range'] = max([e.range for e in all_equips])
     output['W-EV'] = max([e.w_ev for e in all_equips])
     output['C-EV'] = stats.c_ev
+    output['Move'] = stats.move + sum([e.move_bonus for e in all_equips])
+    output['Jump'] = stats.jump + sum([e.jump_bonus for e in all_equips])
+
+    if combatant['MoveSkill'][:-1] == 'Move+':
+        output['Move'] += int(combatant['MoveSkill'][-1])
+    if combatant['MoveSkill'][:-1] == 'Jump+':
+        output['Jump'] += int(combatant['MoveSkill'][-1])
 
     output['PA!'] = stats.pa
     output['PA'] = stats.pa + sum([e.pa_bonus for e in all_equips])

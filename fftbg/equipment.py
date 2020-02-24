@@ -14,36 +14,29 @@ BONUS_PA_RE = re.compile(r'\+(\d+) PA')
 BONUS_MA_RE = re.compile(r'\+(\d+) MA')
 PHYS_EVADE_RE = re.compile(r'(\d+)% phys evade')
 MAGIC_EVADE_RE = re.compile(r'(\d+)% magic evade')
+MOVE_RE = re.compile(r'\+(\d+) Move')
+JUMP_RE = re.compile(r'\+(\d+) Jump')
 
 
 @dataclass(frozen=True)
 class Equipment:
     name: str
-    hp_bonus: int
-    mp_bonus: int
-    speed_bonus: int
-    pa_bonus: int
-    ma_bonus: int
-    wp: int
-    range: int
-    w_ev: int
-    phys_ev: int
-    magic_ev: int
-    weapon_type: Optional[str]
+    hp_bonus: int = 0
+    mp_bonus: int = 0
+    speed_bonus: int = 0
+    pa_bonus: int = 0
+    ma_bonus: int = 0
+    wp: int = 0
+    range: int = 0
+    w_ev: int = 0
+    phys_ev: int = 0
+    magic_ev: int = 0
+    weapon_type: Optional[str] = None
+    move_bonus: int = 0
+    jump_bonus: int = 0
 
 
-EMPTY = Equipment(name='',
-                  hp_bonus=0,
-                  mp_bonus=0,
-                  speed_bonus=0,
-                  pa_bonus=0,
-                  ma_bonus=0,
-                  wp=0,
-                  range=0,
-                  w_ev=0,
-                  weapon_type=None,
-                  phys_ev=0,
-                  magic_ev=0)
+EMPTY = Equipment(name='')
 
 
 def try_int(regex, s: str, default: int = 0):
@@ -62,18 +55,16 @@ def parse_equipment():
             speed_bonus = try_int(SPEED_EFFECT_RE, everything_else)
             pa_bonus = try_int(BONUS_PA_RE, everything_else)
             ma_bonus = try_int(BONUS_MA_RE, everything_else)
+            move_bonus = try_int(MOVE_RE, everything_else)
+            jump_bonus = try_int(JUMP_RE, everything_else)
             EQUIPMENT_MAP[name] = Equipment(name=name,
                                             hp_bonus=int(hp_bonus),
                                             mp_bonus=int(mp_bonus),
                                             speed_bonus=speed_bonus,
                                             pa_bonus=pa_bonus,
                                             ma_bonus=ma_bonus,
-                                            wp=0,
-                                            range=0,
-                                            w_ev=0,
-                                            weapon_type=None,
-                                            phys_ev=0,
-                                            magic_ev=0)
+                                            move_bonus=move_bonus,
+                                            jump_bonus=jump_bonus)
             continue
 
         weapon_match = WEAPON_RE.match(item)
@@ -82,9 +73,8 @@ def parse_equipment():
             speed_bonus = try_int(SPEED_EFFECT_RE, everything_else)
             pa_bonus = try_int(BONUS_PA_RE, everything_else)
             ma_bonus = try_int(BONUS_MA_RE, everything_else)
+            move_bonus = try_int(MOVE_RE, everything_else)
             EQUIPMENT_MAP[name] = Equipment(name=name,
-                                            hp_bonus=0,
-                                            mp_bonus=0,
                                             speed_bonus=speed_bonus,
                                             pa_bonus=pa_bonus,
                                             ma_bonus=ma_bonus,
@@ -92,8 +82,7 @@ def parse_equipment():
                                             range=int(w_range),
                                             w_ev=int(w_ev),
                                             weapon_type=weapon_type,
-                                            phys_ev=0,
-                                            magic_ev=0)
+                                            move_bonus=move_bonus)
             continue
 
         if 'Accessory' in item:
@@ -104,18 +93,16 @@ def parse_equipment():
             ma_bonus = try_int(BONUS_MA_RE, everything_else)
             phys_ev = try_int(PHYS_EVADE_RE, everything_else)
             magic_ev = try_int(MAGIC_EVADE_RE, everything_else)
+            move_bonus = try_int(MOVE_RE, everything_else)
+            jump_bonus = try_int(JUMP_RE, everything_else)
             EQUIPMENT_MAP[name] = Equipment(name=name,
-                                            hp_bonus=0,
-                                            mp_bonus=0,
                                             speed_bonus=speed_bonus,
                                             pa_bonus=pa_bonus,
                                             ma_bonus=ma_bonus,
-                                            wp=0,
-                                            range=0,
-                                            w_ev=0,
-                                            weapon_type=None,
                                             phys_ev=phys_ev,
-                                            magic_ev=magic_ev)
+                                            magic_ev=magic_ev,
+                                            move_bonus=move_bonus,
+                                            jump_bonus=jump_bonus)
 
 
 def get_equipment(name: str) -> Equipment:
