@@ -3,6 +3,7 @@ from math import floor
 import fftbg.ability as ability
 import fftbg.base_stats as base_stats
 import fftbg.equipment as equipment
+from fftbg.ability import SKILL_TAG
 
 PER_COMBATANTS = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
                   'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
@@ -11,7 +12,6 @@ NUMERIC = ['Brave', 'Faith', 'HP', 'MP', 'Speed', 'Range', 'W-EV', 'C-EV', 'PA',
            'Physical A-EV', 'Magical A-EV',
            'Effective HP', 'Attack-Damage']
 CATEGORICAL = PER_COMBATANTS + ['Color', 'Side', 'Map']
-SKILL_TAG = '⭒ '
 
 
 def combatant_to_dict(combatant: dict):
@@ -59,6 +59,29 @@ def combatant_to_dict(combatant: dict):
 
     output['Effective HP'] = output['HP'] * (1 / summary_ev)
 
+    absorbs = set(stats.absorbs)
+    halves = set(stats.halves)
+    weaknesses = set(stats.weaknesses)
+    cancels = set(stats.cancels)
+    strengthens = set()
+    for equip in all_equips:
+        absorbs.update(equip.absorbs)
+        halves.update(equip.halves)
+        weaknesses.update(equip.weaknesses)
+        cancels.update(equip.cancels)
+        strengthens.update(equip.strengthens)
+
+    for element in absorbs:
+        output[f'Absorb-{element}'] = 1.0
+    for element in halves:
+        output[f'Half-{element}'] = 1.0
+    for element in weaknesses:
+        output[f'Weak-{element}'] = 1.0
+    for element in cancels:
+        output[f'Cancel-{element}'] = 1.0
+    for element in strengthens:
+        output[f'Strengthen-{element}'] = 1.0
+
     damage_1 = damage_calculation(output, mainhand)
     damage_2 = 0
     if offhand.weapon_type is not None:
@@ -93,6 +116,11 @@ def damage_calculation(combatant, weapon: equipment.Equipment):
     wp = weapon.wp
     sp = combatant['Speed']
 
+    element = weapon.weapon_element
+    if element and combatant.get(f'Strengthen-{element}'):
+        pa_bang = (pa_bang * 5) // 4
+        ma_bang = (ma_bang * 5) // 4
+
     if combatant['SupportSkill'] == 'Doublehand':
         wp *= 2
     if combatant['SupportSkill'] == 'Attack UP':
@@ -120,7 +148,7 @@ def damage_calculation(combatant, weapon: equipment.Equipment):
     if weapon.weapon_type == 'Gun':
         return wp * wp
 
-    raise Exception('missing weapon type in damage calc: ' + weapon.weapon_type)
+    raise Exception('Missing weapon type in damage calc: ' + weapon.weapon_type)
 
 
 ZODIAC_INDEX = {
@@ -142,7 +170,7 @@ ZODIAC_INDEX = {
 ZODIAC_CHART = [
     'O  O  O  -  +  O  ?  O  +  -  O  O  O'.split('  '),
     'O  O  O  O  -  +  O  ?  O  +  -  O  O'.split('  '),
-    'O  O  O  O  O  -  +  0  ?  0  +  -  O'.split('  '),
+    'O  O  O  O  O  -  +  O  ?  O  +  -  O'.split('  '),
     '-  O  O  O  O  O  -  +  O  ?  O  +  O'.split('  '),
     '+  -  O  O  O  O  O  -  +  O  ?  O  O'.split('  '),
     'O  +  -  O  O  O  O  O  -  +  O  ?  O'.split('  '),
@@ -157,7 +185,6 @@ ZODIAC_CHART = [
 
 
 def zodiac_compat(c1, c2):
-    print(ZODIAC_CHART)
     s1 = ZODIAC_INDEX[c1['Sign']]
     s2 = ZODIAC_INDEX[c2['Sign']]
     g1 = c1['Gender']
@@ -176,3 +203,129 @@ def zodiac_compat(c1, c2):
             return 1.5
         else:
             return 0.5
+    else:
+        raise Exception(f"Missing case in zodiac compatibility calculation {c1['Sign']} {g1} vs {c2['Sign']} {g2}")
+
+
+def has_absorb(actor, element) -> float:
+    return actor.get(f'Absorb-{element}', 0.0)
+
+
+def has_half(actor, element) -> float:
+    return actor.get(f'Half-{element}', 0.0)
+
+
+def has_weak(actor, element) -> float:
+    return actor.get(f'Weak-{element}', 0.0)
+
+
+def has_cancel(actor, element) -> float:
+    return actor.get(f'Cancel-{element}', 0.0)
+
+
+def has_strengthen(actor, element) -> float:
+    return actor.get(f'Strengthen-{element}', 0.0)
+
+
+def can_heal(actor, victim):
+    weapon = equipment.get_equipment(actor['Mainhand'])
+    amount = 0
+    z_compatibility = zodiac_compat(actor, victim)
+    if has_absorb(victim, weapon.weapon_element):
+        amount = max(amount, actor['Attack-Damage'] * z_compatibility)
+
+    for ability_name in actor.keys():
+        if not ability_name.startswith(SKILL_TAG):
+            continue
+        ab = ability.get_ability(ability_name)
+
+        if has_cancel(victim, ab.element):
+            continue
+
+        bonus = 1.0
+        if has_strengthen(actor, ab.element):
+            bonus = 1.25
+
+        if ab.heals and ab.ma_constant and not has_cancel(victim, ab.element):
+            vfaith = victim['Faith'] / 100.0
+            f = actor[ability_name] * vfaith * z_compatibility * ab.ma_constant * bonus
+            amount = max(f, amount)
+
+        if ab.damage and ab.ma_constant and has_absorb(victim, ab.element):
+            if actor['SupportSkill'] == 'Magic Attack UP':
+                bonus = bonus * (4.0 / 3.0)
+            if victim['SupportSkill'] == 'Magic Defend UP':
+                bonus = bonus * (2.0 / 3.0)
+
+            vfaith = victim['Faith'] / 100.0
+            f = actor[ability_name] * vfaith * z_compatibility * ab.ma_constant * bonus
+            amount = max(f, amount)
+
+        if ab.name == 'Potion':
+            amount = max(100, amount)
+        elif ab.name == 'Hi-Potion':
+            amount = max(120, amount)
+        elif ab.name == 'X-Potion':
+            amount = max(150, amount)
+        elif ab.name == 'Elixir':
+            amount = max(victim['HP'], amount)
+
+    return max(0, min(amount, 500))
+
+
+# TODO: Break these calculations out into a single per skill function
+#  can-heal can reuse 'if absorb'
+
+def can_hurt(actor, victim):
+    weapon = equipment.get_equipment(actor['Mainhand'])
+    z_compatibility = zodiac_compat(actor, victim)
+    amount = actor['Attack-Damage'] * z_compatibility
+
+    if has_absorb(victim, weapon.weapon_element):
+        amount = 0
+    if has_cancel(victim, weapon.weapon_element):
+        amount = 0
+    if has_half(victim, weapon.weapon_element):
+        amount = amount // 2
+    if has_weak(victim, weapon.weapon_element):
+        amount = amount * 2
+
+    for ability_name in actor.keys():
+        if not ability_name.startswith(SKILL_TAG):
+            continue
+        ab = ability.get_ability(ability_name)
+        if ab.damage and (ab.ma_constant or ab.multiplier == ability.MULT_PA_HALF_MA):
+            vfaith = victim['Faith'] / 100.0
+
+            constant = 1.0
+            if ab.ma_constant:
+                constant = ab.ma_constant
+            if ab.multiplier == ability.MULT_PA_HALF_MA:
+                vfaith = 1.0
+
+            f = actor[ability_name] * vfaith * z_compatibility * constant
+
+            if has_strengthen(actor, ab.element):
+                f = (f * 5) // 4
+
+            if actor['SupportSkill'] == 'Magic Attack UP':
+                f = (f * 4) // 3
+
+            if victim['SupportSkill'] == 'Magic Defend UP':
+                f = (f * 2) // 3
+
+            if has_absorb(victim, ab.element):
+                f = 0
+            if has_cancel(victim, ab.element):
+                f = 0
+            if has_half(victim, ab.element):
+                f = f // 2
+            if has_weak(victim, ab.element):
+                f = f * 2
+
+            amount = max(f, amount)
+        elif ab.damage and ab.multiplier == ability.MULT_PA_TIMES_WP:
+            f = actor[ability_name] * z_compatibility
+            amount = max(f, amount)
+
+    return max(0, min(amount, 500))

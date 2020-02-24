@@ -16,6 +16,9 @@ MULT_PA_HALF_MA = 'PA_HALF_MA'
 MULT_PA_PLUS_WP = 'PA_PLUS_WP'
 MULT_PA_TIMES_WP = 'PA_TIMES_WP'
 
+MA_CONSTANT_RE = re.compile(r'\(MA \* (\d+)\)')
+SKILL_TAG = '⭒ '
+
 
 @dataclass
 class Ability:
@@ -26,6 +29,7 @@ class Ability:
     element: Optional[str] = None
     range: Optional[int] = None
     aoe: Optional[int] = None
+    ma_constant: Optional[int] = None
 
     def multiply(self, ability, brave, faith, pa, pa_bang, ma, wp, speed):
         if self.multiplier == MULT_BRAVE:
@@ -41,7 +45,7 @@ class Ability:
         elif self.multiplier == MULT_PA_PA_BANG:
             return ability * pa * pa_bang
         elif self.multiplier == MULT_PA_HALF_MA:
-            return ability * (pa + ma / 2.0)
+            return ability * (((pa + 2.0) / 2.0) * ma)
         elif self.multiplier == MULT_PA_PLUS_WP:
             return ability * (pa + wp)
         elif self.multiplier == MULT_PA_TIMES_WP:
@@ -93,20 +97,15 @@ def parse_abilities():
         if ' Heal ' in desc:
             heals = True
 
-        range = None
-        range_match = RANGE_RE.findall(desc)
-        if range_match:
-            range = int(range_match[0])
-
-        aoe = None
-        aoe_match = AOE_RE.findall(desc)
-        if aoe_match:
-            aoe = int(aoe_match[0])
+        range = try_int(RANGE_RE, desc)
+        aoe = try_int(AOE_RE, desc)
 
         element = None
         element_match = ELEMENT_RE.findall(desc)
         if element_match:
             element = element_match[0]
+
+        ma_constant = try_int(MA_CONSTANT_RE, desc)
 
         ABILITY_MAP[name.lower()] = Ability(
             name=name,
@@ -115,16 +114,26 @@ def parse_abilities():
             heals=heals,
             range=range,
             aoe=aoe,
-            element=element)
+            element=element,
+            ma_constant=ma_constant)
+
+
+def try_int(regex, s):
+    match = regex.findall(s)
+    if match:
+        return int(match[0])
+    return None
 
 
 def get_ability(name: str) -> Ability:
     if not ABILITY_MAP:
         parse_abilities()
+    if name.startswith(SKILL_TAG):
+        name = name[len(SKILL_TAG):]
     return ABILITY_MAP.get(name.lower(), DEFAULT_ABILITY)
 
 
 if __name__ == '__main__':
     parse_abilities()
-    for ability in ABILITY_MAP.values():
-        print(ability)
+    for ab in ABILITY_MAP.values():
+        print(ab)

@@ -7,16 +7,21 @@ from typing import List, Optional, Tuple
 
 import pandas
 
+from fftbg.ability import SKILL_TAG
 from fftbg.arena import get_arena
-from fftbg.combatant import CATEGORICAL, SKILL_TAG, combatant_to_dict
+from fftbg.combatant import CATEGORICAL, combatant_to_dict, can_hurt, can_heal, zodiac_compat
 from fftbg.config import TOURNAMENTS_ROOT
 
 LOG = logging.getLogger(__name__)
 
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
-NUMERIC = [
-    'Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
-    'Map-Min-Dimension', 'Map-Max-Dimension', 'Map-Archer-Boon', 'Map-Meat-Grinder']
+CAN_HEAL_TEAM = [f'Can-Heal-Team-{i}' for i in range(4)]
+CAN_HURT_ENEMY = [f'Can-Hurt-Enemy-{i}' for i in range(4)]
+ZODIAC_TEAM = [f'Zodiac-Team-{i}' for i in range(4)]
+ZODIAC_ENEMY = [f'Zodiac-Enemy-{i}' for i in range(4)]
+NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
+           'Map-Min-Dimension', 'Map-Max-Dimension', 'Map-Archer-Boon', 'Map-Meat-Grinder'] \
+          + CAN_HEAL_TEAM + CAN_HURT_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY
 
 
 def _calculate_hypothetical_match_ups():
@@ -92,12 +97,31 @@ class MatchUp:
         for i, combatant in enumerate(left_combatants):
             combatant.update(left)
             combatant['UIDX'] = i
+
+            for j, ally in enumerate(left_combatants):
+                combatant[f'Can-Heal-Team-{j}'] = can_heal(combatant, ally)
+                combatant[f'Zodiac-Team-{j}'] = zodiac_compat(combatant, ally)
+
+            for j, victim in enumerate(right_combatants):
+                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim)
+                combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
+
             out.append(combatant)
 
         for i, combatant in enumerate(right_combatants):
             combatant.update(right)
             combatant['UIDX'] = i + 4
+
+            for j, ally in enumerate(right_combatants):
+                combatant[f'Can-Heal-Team-{j}'] = can_heal(combatant, ally)
+                combatant[f'Zodiac-Team-{j}'] = zodiac_compat(combatant, ally)
+
+            for j, victim in enumerate(left_combatants):
+                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim)
+                combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
+
             out.append(combatant)
+
         return out
 
 

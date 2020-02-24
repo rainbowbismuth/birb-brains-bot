@@ -12,6 +12,7 @@ from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
 from tensorflow import linalg
 
+import fftbg.ability
 import fftbg.combatant as combatant
 import fftbg.config as config
 import fftbg.data as data
@@ -36,7 +37,7 @@ CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'SupportSkill', 'MoveSkill',
 
 
 def get_skill_columns(df):
-    return [c for c in df.keys() if combatant.SKILL_TAG in c]
+    return [c for c in df.keys() if fftbg.ability.SKILL_TAG in c]
 
 
 def get_all_columns(df):
@@ -103,8 +104,8 @@ def main():
     # print(textwrap.fill(", ".join(sorted(important_features)), width=120))
     # return
 
-    def rotate_right(xs, amount: int = 1):
-        return xs[-amount:] + xs[:-amount]
+    # def rotate_right(xs, amount: int = 1):
+    #     return xs[-amount:] + xs[:-amount]
 
     # Augment tests:
     # train_X2 = rotate_right(train_X[:4]) + rotate_right(train_X[4:])
@@ -128,10 +129,10 @@ def main():
 
     early_stopping_cb, model = model_residual(combatant_size,
                                               activation='relu',
-                                              kernel_size=0.05,
+                                              kernel_size=0.025,
                                               learning_rate=1e-3,
-                                              drop_out_input=0.5,
-                                              drop_out_res=0.35,
+                                              drop_out_input=0.2,
+                                              drop_out_res=0.2,
                                               drop_out_final=0.5,
                                               l2_reg=0.01)
     # early_stopping_cb, model = model_huge_multiply(combatant_size)
