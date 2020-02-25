@@ -13,6 +13,8 @@ def test_parse_equipment():
     assert equipment.get_equipment('Bracer').pa_bonus == 3
     assert equipment.get_equipment('Kunai').move_bonus == 1
     assert equipment.get_equipment('Ice Rod').weapon_element == 'Ice'
+    assert equipment.get_equipment('Gold Shield').phys_ev != 0
+    assert equipment.get_equipment('Gold Shield').magic_ev != 0
     assert 'Ice' in equipment.get_equipment('Ice Rod').strengthens
     assert 'Holy' in equipment.get_equipment('108 Gems').strengthens
     assert 'Earth' in equipment.get_equipment('Defense Armlet').halves

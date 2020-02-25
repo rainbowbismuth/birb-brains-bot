@@ -32,8 +32,7 @@ def split(xs, y, size):
 
 
 NUM_COLUMNS = combatant.NUMERIC + tournament.NUMERIC
-CAT_COLUMNS = ['Gender', 'Sign', 'Class', 'SupportSkill', 'MoveSkill',
-               'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
+CAT_COLUMNS = ['Gender', 'Class', 'SupportSkill', 'MoveSkill']
 
 
 def get_skill_columns(df):
@@ -287,16 +286,16 @@ def model_residual(combatant_size, activation,
     combatant_nodes = [MCDropout(drop_out_input)(combatant_layer(node))
                        for node in inputs]
 
-    foe_layer = res_block()
+    f1_layer = res_block(combatant_size * 2)
     foe_nodes = []
     for p1 in combatant_nodes[:4]:
         for p2 in combatant_nodes[4:]:
-            sub = keras.layers.subtract([p1, p2])
-            node = foe_layer(sub)
+            sub = keras.layers.concatenate([p1, p2])
+            node = f1_layer(sub)
             foe_nodes.append(node)
 
-    team_stack1 = keras.layers.minimum(combatant_nodes[:4])
-    team_stack2 = keras.layers.minimum(combatant_nodes[4:])
+    team_stack1 = keras.layers.maximum(combatant_nodes[:4])
+    team_stack2 = keras.layers.maximum(combatant_nodes[4:])
     team_diff = keras.layers.subtract([team_stack1, team_stack2])
     team_computed = res_block()(team_diff)
 

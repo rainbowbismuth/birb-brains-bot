@@ -1,5 +1,7 @@
 from math import floor
 
+import numpy as np
+
 import fftbg.ability as ability
 import fftbg.base_stats as base_stats
 import fftbg.equipment as equipment
@@ -7,10 +9,8 @@ from fftbg.ability import SKILL_TAG
 
 PER_COMBATANTS = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
                   'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
-NUMERIC = ['Brave', 'Faith', 'HP', 'MP', 'Speed', 'Range', 'W-EV', 'C-EV', 'PA', 'PA!', 'MA', 'MA!',
-           'Move', 'Jump',
-           'Physical A-EV', 'Magical A-EV',
-           'Effective HP', 'Attack-Damage']
+NUMERIC = ['Brave', 'Faith', 'HP', 'MP', 'Speed', 'Range', 'Ability-Range',
+           'PA', 'MA', 'Move', 'Jump', 'Physical Evade', 'Magical Evade']
 CATEGORICAL = PER_COMBATANTS + ['Color', 'Side', 'Map']
 
 
@@ -32,44 +32,68 @@ def combatant_to_dict(combatant: dict):
     output['MP'] = stats.mp + sum([e.mp_bonus for e in all_equips])
     output['Speed'] = stats.speed + sum([e.speed_bonus for e in all_equips])
     output['Range'] = max([e.range for e in all_equips])
-    output['W-EV'] = max([e.w_ev for e in all_equips])
-    output['C-EV'] = stats.c_ev
+    output['W-EV'] = max([e.w_ev for e in all_equips]) / 100.0
+    output['C-EV'] = stats.c_ev / 100.0
     output['Move'] = stats.move + sum([e.move_bonus for e in all_equips])
     output['Jump'] = stats.jump + sum([e.jump_bonus for e in all_equips])
+    output['Physical S-EV'] = sum([e.phys_ev for e in (mainhand, offhand)]) / 100.0
+    output['Magical S-EV'] = sum([e.phys_ev for e in (mainhand, offhand)]) / 100.0
 
     if combatant['MoveSkill'][:-1] == 'Move+':
         output['Move'] += int(combatant['MoveSkill'][-1])
+        output['MoveSkill'] = ''
     if combatant['MoveSkill'][:-1] == 'Jump+':
         output['Jump'] += int(combatant['MoveSkill'][-1])
+        output['MoveSkill'] = ''
 
     output['PA!'] = stats.pa
     output['PA'] = stats.pa + sum([e.pa_bonus for e in all_equips])
     output['MA!'] = stats.ma
     output['MA'] = stats.ma + sum([e.ma_bonus for e in all_equips])
-    output['Physical A-EV'] = sum([e.phys_ev for e in all_equips])
-    output['Magical A-EV'] = sum([e.magic_ev for e in all_equips])
+    output['Physical A-EV'] = accessory.phys_ev / 100.0
+    output['Magical A-EV'] = accessory.magic_ev / 100.0
 
-    # An estimate here, against physical attacks
-    w_ev = 1 - (output['W-EV'] / 150.0)
-    c_ev = 1 - (output['C-EV'] / 200.0)
-    a_ev = 1 - (output['Physical A-EV'] / 100.0)
-    summary_ev = w_ev * c_ev * a_ev
-    if combatant['SupportSkill'] == 'Defense UP':
-        summary_ev = summary_ev * (2.0 / 3.0)
+    if output['ReactionSkill'] == 'Abandon':
+        output['Physical S-EV'] *= 2
+        output['Magical S-EV'] *= 2
+        output['Physical A-EV'] *= 2
+        output['Magical A-EV'] *= 2
+        output['C-EV'] *= 2
+        output['ReactionSkill'] = ''
 
-    output['Effective HP'] = output['HP'] * (1 / summary_ev)
+    if output['ReactionSkill'] != 'Parry':
+        output['W-EV'] = 0.0
+    else:
+        output['ReactionSkill'] = ''
+
+    physical_evasions = [
+        output['W-EV'], output['C-EV'] * 3.0 / 4.0, output['Physical S-EV'] / 2.0, output['Physical A-EV']]
+    output['Physical Evade'] = 1.0 - np.product([1 - p for p in physical_evasions])
+    assert 0 <= output['Physical Evade'] < 1.0
+
+    magical_evasions = [
+        output['Magical S-EV'] / 2.0, output['Magical A-EV']]
+    output['Magical Evade'] = 1.0 - np.product([1 - p for p in magical_evasions])
+    assert 0 <= output['Magical Evade'] < 1.0
 
     absorbs = set(stats.absorbs)
     halves = set(stats.halves)
     weaknesses = set(stats.weaknesses)
     cancels = set(stats.cancels)
     strengthens = set()
+    chance_to_add = set()
+    chance_to_cancel = set()
+    immune_to = set()
+
     for equip in all_equips:
         absorbs.update(equip.absorbs)
         halves.update(equip.halves)
         weaknesses.update(equip.weaknesses)
         cancels.update(equip.cancels)
         strengthens.update(equip.strengthens)
+        chance_to_add.update(equip.chance_to_add)
+        chance_to_cancel.update(equip.chance_to_cancel)
+        immune_to.update(equip.immune_to)
 
     for element in absorbs:
         output[f'Absorb-{element}'] = 1.0
@@ -81,6 +105,10 @@ def combatant_to_dict(combatant: dict):
         output[f'Cancel-{element}'] = 1.0
     for element in strengthens:
         output[f'Strengthen-{element}'] = 1.0
+    for status in chance_to_add:
+        output[f'Chance-To-Add-{status}'] = 1.0
+    for status in immune_to:
+        output[f'Immune-{status}'] = 1.0
 
     damage_1 = damage_calculation(output, mainhand)
     damage_2 = 0
@@ -98,9 +126,11 @@ def combatant_to_dict(combatant: dict):
     wp = max(mainhand.wp, offhand.wp)  # no idea here, ask B.M.G.
     speed = output['Speed']
 
+    output['Ability-Range'] = 0.0
     for skill in combatant['ClassSkills'] + combatant['ExtraSkills']:
         calc = ability.get_ability(skill)
-        output[SKILL_TAG + skill] = calc.multiply(1, brave, faith, pa, pa_bang, ma, wp, speed)
+        output['Ability-Range'] = max(output['Ability-Range'], calc.range)
+        output[SKILL_TAG + skill] = calc.multiply(brave, faith, pa, pa_bang, ma, wp, speed)
 
     output[SKILL_TAG + combatant['ReactionSkill']] = brave
     del output['ReactionSkill']
@@ -227,6 +257,10 @@ def has_strengthen(actor, element) -> float:
     return actor.get(f'Strengthen-{element}', 0.0)
 
 
+def is_immune(actor, status) -> float:
+    return actor.get(f'Immune-{status}', 0.0)
+
+
 def can_heal(actor, victim):
     weapon = equipment.get_equipment(actor['Mainhand'])
     amount = 0
@@ -329,3 +363,59 @@ def can_hurt(actor, victim):
             amount = max(f, amount)
 
     return max(0, min(amount, 500))
+
+
+def can_cause(actor, victim, status):
+    if is_immune(victim, status):
+        return 0.0
+
+    effectiveness = 0.0
+    z_compatibility = zodiac_compat(actor, victim)
+
+    physical_guard = 1.0 - victim['Physical Evade']
+    weapon = equipment.get_equipment(actor['Mainhand'])
+    if status in weapon.chance_to_add:
+        effectiveness = 0.19 * physical_guard
+
+    weapon2 = equipment.get_equipment(actor['Offhand'])
+    if status in weapon2.chance_to_add:
+        chance = 0.19 * physical_guard
+        effectiveness = (chance + effectiveness) - (chance * effectiveness)
+
+    caster_ma = actor['MA']
+    caster_faith = actor['Faith'] / 100.0
+    victim_faith = victim['Faith'] / 100.0
+
+    for ab in ability.get_ability_by_adds(status):
+        if ab.name_with_tag not in actor:
+            continue
+
+        hit = ab.hit_chance.chance(caster_ma, caster_faith, victim_faith)
+
+        magic_guard = 1.0
+        if ab.hit_chance.times_faith:
+            magic_guard = 1.0 - victim['Magical Evade']
+
+        hit *= z_compatibility * magic_guard
+        effectiveness = max(hit, effectiveness)
+
+    return min(effectiveness, 1.0)
+
+
+def can_cancel(actor, victim, status):
+    effectiveness = 0.0
+    z_compatibility = zodiac_compat(actor, victim)
+
+    caster_ma = actor['MA']
+    caster_faith = actor['Faith'] / 100.0
+    victim_faith = victim['Faith'] / 100.0
+
+    for ab in ability.get_ability_by_cancels(status):
+        if ab.name_with_tag not in actor:
+            continue
+
+        hit = ab.hit_chance.chance(caster_ma, caster_faith, victim_faith)
+        hit *= z_compatibility
+        effectiveness = max(hit, effectiveness)
+
+    return min(effectiveness, 1.0)

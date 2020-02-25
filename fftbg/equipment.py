@@ -24,6 +24,10 @@ HALF_RE = re.compile(r'Half ([\w,\s]+)')
 WEAK_RE = re.compile(r'Weak ([\w,\s]+)')
 CANCEL_RE = re.compile(r'Cancel ([\w,\s]+)')
 
+CHANCE_TO_ADD_RE = re.compile(r'Chance to Add ([\w,\s]+)', re.IGNORECASE)
+CHANCE_TO_CANCEL_RE = re.compile(r'Chance to Cancel ([\w,\s]+)', re.IGNORECASE)
+IMMUNE_TO_RE = re.compile(r'Immune ([\w,\s]+)')
+
 
 @dataclass(frozen=True)
 class Equipment:
@@ -47,6 +51,9 @@ class Equipment:
     halves: Tuple[str] = tuple()
     weaknesses: Tuple[str] = tuple()
     cancels: Tuple[str] = tuple()
+    chance_to_add: Tuple[str] = tuple()
+    chance_to_cancel: Tuple[str] = tuple()
+    immune_to: Tuple[str] = tuple()
 
 
 EMPTY = Equipment(name='')
@@ -66,22 +73,25 @@ def try_str(regex, s: str):
     return None
 
 
-def try_elemental(regex, s: str):
-    result = tuple()
+def try_list(regex, s: str):
     matches = regex.findall(s)
     if matches:
-        result = tuple(sorted(e.strip() for e in matches[0].split(',')))
-    return result
+        return tuple(sorted(e.strip() for e in matches[0].split(',')))
+    return tuple()
 
 
 def parse_equipment():
     items = config.INFO_ITEM_PATH.read_text().splitlines()
     for item in items:
-        strengthens = try_elemental(STRENGTHEN_RE, item)
-        absorbs = try_elemental(ABSORB_RE, item)
-        halves = try_elemental(HALF_RE, item)
-        weaknesses = try_elemental(WEAK_RE, item)
-        cancels = try_elemental(CANCEL_RE, item)
+        strengthens = try_list(STRENGTHEN_RE, item)
+        absorbs = try_list(ABSORB_RE, item)
+        halves = try_list(HALF_RE, item)
+        weaknesses = try_list(WEAK_RE, item)
+        cancels = try_list(CANCEL_RE, item)
+
+        chance_to_add = try_list(CHANCE_TO_ADD_RE, item)
+        chance_to_cancel = try_list(CHANCE_TO_CANCEL_RE, item)
+        immune_to = try_list(IMMUNE_TO_RE, item)
 
         armor_match = ARMOR_RE.match(item)
         if armor_match:
@@ -103,7 +113,10 @@ def parse_equipment():
                                             absorbs=absorbs,
                                             halves=halves,
                                             weaknesses=weaknesses,
-                                            cancels=cancels)
+                                            cancels=cancels,
+                                            chance_to_add=chance_to_add,
+                                            chance_to_cancel=chance_to_cancel,
+                                            immune_to=immune_to)
             continue
 
         weapon_match = WEAPON_RE.match(item)
@@ -128,7 +141,10 @@ def parse_equipment():
                                             absorbs=absorbs,
                                             halves=halves,
                                             weaknesses=weaknesses,
-                                            cancels=cancels)
+                                            cancels=cancels,
+                                            chance_to_add=chance_to_add,
+                                            chance_to_cancel=chance_to_cancel,
+                                            immune_to=immune_to)
             continue
 
         if 'Accessory' in item or 'Shield' in item:
@@ -153,7 +169,10 @@ def parse_equipment():
                                             absorbs=absorbs,
                                             halves=halves,
                                             weaknesses=weaknesses,
-                                            cancels=cancels)
+                                            cancels=cancels,
+                                            chance_to_add=chance_to_add,
+                                            chance_to_cancel=chance_to_cancel,
+                                            immune_to=immune_to)
 
 
 def get_equipment(name: str) -> Equipment:
