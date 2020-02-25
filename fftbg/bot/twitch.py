@@ -17,8 +17,9 @@ BOT_NICK = TWITCH['bot_nick']
 BOT_CHANNEL = TWITCH['channel']
 BOT_PREFIX = '!!birbbrainsbot'
 
-MATCH_BETTING_LENGTH = 58.0
-MATCH_ODDS_TIME_REMAINING = 31.0
+MATCH_BETTING_LENGTH = 60.0
+MATCH_BOT_BETTING_END = 39.0
+MATCH_ODDS_TIME_REMAINING = 10.0
 
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
 BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')
@@ -52,6 +53,7 @@ class Bot(commands.Bot):
             initial_channels=[BOT_CHANNEL])
         self.waiting_for_odds = False
         self.betting_open_time = None
+        self.betting_bots_closed_time = None
         self.send_pot_time = None
 
     # Events don't need decorators when subclassed
@@ -86,6 +88,14 @@ class Bot(commands.Bot):
         except Exception as e:
             LOG.error('Error trying to bet!', exc_info=e)
 
+    def time_betting_opened(self):
+        self.betting_open_time = time.time()
+        self.betting_bots_closed_time = self.betting_open_time + MATCH_BOT_BETTING_END
+
+    @property
+    def time_remaining(self):
+        return self.betting_bots_closed_time - time.time()
+
     async def event_message(self, message):
         if re.search(BOT_NICK, message.content, re.IGNORECASE):
             LOG.info(f'Bot mentioned by {message.author.name}: {message.content}')
@@ -111,16 +121,14 @@ class Bot(commands.Bot):
         if betting_open:
             (left, right) = betting_open[0]
             LOG.info(f'Betting open for {left} vs {right}')
-            self.betting_open_time = time.time()
+            self.time_betting_opened()
             await self.send_balance_command()
             if left == 'red' and right == 'blue':
                 await self.brains.refresh_tournament()
             self.brains.log_prediction(left, right)
 
-            time_diff = time.time() - self.betting_open_time
-            time_remaining = MATCH_BETTING_LENGTH - time_diff
-            if time_remaining > MATCH_ODDS_TIME_REMAINING:
-                sleep_seconds = int(time_remaining - MATCH_ODDS_TIME_REMAINING)
+            if self.time_remaining > MATCH_ODDS_TIME_REMAINING:
+                sleep_seconds = int(self.time_remaining - MATCH_ODDS_TIME_REMAINING)
                 LOG.info(f'Sleeping for {sleep_seconds} seconds before asking for odds')
                 await asyncio.sleep(sleep_seconds)
             await self.send_pot_command()
@@ -150,12 +158,12 @@ class Bot(commands.Bot):
             LOG.info(f'Betting totals: {left}/{left_bets} {left_total} G; {right}/{right_bets} {right_total} G')
             team, amount = self.brains.make_bet(left_total_n, right_total_n)
 
-            now = time.time()
-            time_left = max(0.0, (now - self.betting_open_time) - 20.0)
+            time_left = self.time_remaining
             LOG.info(f'Time left before bot bets close: {time_left:.4}')
-            time_left = max(0.0, time_left - 6.0)
-            LOG.info(f'Sleeping for {time_left:.4} before betting')
-            await asyncio.sleep(time_left)
+            if time_left > 5.0:
+                sleep_for = time_left - 5.0
+                LOG.info(f'Sleeping for {sleep_for:.4} before betting')
+                await asyncio.sleep(sleep_for)
             await self.send_bet_command(team, amount)
 
         await self.handle_commands(message)
