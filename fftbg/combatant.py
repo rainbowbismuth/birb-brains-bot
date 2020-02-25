@@ -304,7 +304,8 @@ def can_heal(actor, victim):
         elif ab.name == 'Elixir':
             amount = max(victim['HP'], amount)
 
-    return max(0, min(amount, 500))
+    assert amount >= 0
+    return min(amount, 500)
 
 
 # TODO: Break these calculations out into a single per skill function
@@ -362,7 +363,8 @@ def can_hurt(actor, victim):
             f = actor[ability_name] * z_compatibility
             amount = max(f, amount)
 
-    return max(0, min(amount, 500))
+    assert amount >= 0
+    return min(amount, 500)
 
 
 def can_cause(actor, victim, status):
@@ -399,6 +401,7 @@ def can_cause(actor, victim, status):
         hit *= z_compatibility * magic_guard
         effectiveness = max(hit, effectiveness)
 
+    assert effectiveness >= 0
     return min(effectiveness, 1.0)
 
 
@@ -418,4 +421,5 @@ def can_cancel(actor, victim, status):
         hit *= z_compatibility
         effectiveness = max(hit, effectiveness)
 
+    assert effectiveness >= 0
     return min(effectiveness, 1.0)

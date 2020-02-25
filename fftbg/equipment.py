@@ -24,9 +24,9 @@ HALF_RE = re.compile(r'Half ([\w,\s]+)')
 WEAK_RE = re.compile(r'Weak ([\w,\s]+)')
 CANCEL_RE = re.compile(r'Cancel ([\w,\s]+)')
 
-CHANCE_TO_ADD_RE = re.compile(r'Chance to Add ([\w,\s]+)', re.IGNORECASE)
-CHANCE_TO_CANCEL_RE = re.compile(r'Chance to Cancel ([\w,\s]+)', re.IGNORECASE)
-IMMUNE_TO_RE = re.compile(r'Immune ([\w,\s]+)')
+CHANCE_TO_ADD_RE = re.compile(r'Chance to Add ([\w,\s\']+)', re.IGNORECASE)
+CHANCE_TO_CANCEL_RE = re.compile(r'Chance to Cancel ([\w,\s\']+)', re.IGNORECASE)
+IMMUNE_TO_RE = re.compile(r'Immune ([\w,\s\']+)')
 
 
 @dataclass(frozen=True)

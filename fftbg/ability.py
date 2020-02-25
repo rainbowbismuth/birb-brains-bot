@@ -88,8 +88,8 @@ ELEMENT_RE = re.compile(r'Element: (\w+)')
 
 HIT_MA_PLUS_RE = re.compile(r'Hit: \(MA \+ (\d+)\)%')
 HIT_FAITH_MA_PLUS_RE = re.compile(r'Hit: Faith\(MA \+ (\d+)\)%')
-ADD_STATUS_RE = re.compile(r'Add ([\w,\s]+)')
-CANCEL_STATUS_RE = re.compile(r'Cancel ([\w,\s]+)')
+ADD_STATUS_RE = re.compile(r'Add ([\w,\s\']+)')
+CANCEL_STATUS_RE = re.compile(r'Cancel ([\w,\s\']+)')
 
 
 def parse_hit_chance(desc) -> Optional[HitChance]:
