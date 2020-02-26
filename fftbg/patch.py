@@ -36,20 +36,20 @@ class Patch:
 
 
 PATCH_MAP: {str: Patch} = {}
-SWITCH_OVER_DATE = datetime(year=2020, month=2, day=25, tzinfo=pytz.utc)
 
 
 def get_test_patch():
-    return get_patch(SWITCH_OVER_DATE)
+    return get_patch_from_file('initial')
 
 
 def get_patch(when: datetime):
     # TODO: hard coded for now
-    if when < SWITCH_OVER_DATE:
-        return get_patch_from_file('initial')
+    if when > datetime(year=2020, month=2, day=26, tzinfo=pytz.utc):
+        return get_patch_from_file('2020-02-26')
+    if when > datetime(year=2020, month=2, day=25, tzinfo=pytz.utc):
+        return get_patch_from_file('2020-02-25')
     else:
-        date_name = str(SWITCH_OVER_DATE).split()[0]
-        return get_patch_from_file(date_name)
+        return get_patch_from_file('initial')
 
 
 def get_patch_from_file(filename: str):

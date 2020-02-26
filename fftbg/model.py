@@ -32,7 +32,7 @@ def split(xs, y, size):
 
 
 NUM_COLUMNS = combatant.NUMERIC + tournament.NUMERIC
-CAT_COLUMNS = ['Gender', 'Class', 'SupportSkill', 'MoveSkill']
+CAT_COLUMNS = ['Gender', 'Class', 'SupportSkill', 'MoveSkill', 'Map']
 
 
 def get_skill_columns(df):
