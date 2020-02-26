@@ -128,7 +128,7 @@ def main():
 
     early_stopping_cb, model = model_residual(combatant_size,
                                               activation='relu',
-                                              kernel_size=0.025,
+                                              kernel_size=0.05,
                                               learning_rate=1e-3,
                                               drop_out_input=0.2,
                                               drop_out_res=0.2,

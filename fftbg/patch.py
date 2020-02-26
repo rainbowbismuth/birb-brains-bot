@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
-import pytz
+from pytz import timezone
 
 import fftbg.ability as ability
 import fftbg.base_stats as base_stats
@@ -36,28 +37,28 @@ class Patch:
 
 
 PATCH_MAP: {str: Patch} = {}
+EASTERN_TZ = timezone('US/Eastern')
 
 
 def get_test_patch():
-    return get_patch_from_file('initial')
+    return get_patch(datetime(year=2020, month=2, day=1, tzinfo=EASTERN_TZ))
 
 
 def get_patch(when: datetime):
-    # TODO: hard coded for now
-    if when > datetime(year=2020, month=2, day=26, tzinfo=pytz.utc):
-        return get_patch_from_file('2020-02-26')
-    if when > datetime(year=2020, month=2, day=25, tzinfo=pytz.utc):
-        return get_patch_from_file('2020-02-25')
-    else:
-        return get_patch_from_file('initial')
+    root = DATA_PATH / 'static'
+    for patch_dir in sorted(root.iterdir(), reverse=True):
+        year, month, day = [int(x) for x in patch_dir.name.split('-')]
+        time = datetime(year=year, month=month, day=day, tzinfo=EASTERN_TZ)
+        if when > time:
+            return get_patch_from_file(patch_dir)
+    raise Exception(f'unable to find patch directory for {str(when)}')
 
 
-def get_patch_from_file(filename: str):
-    if filename in PATCH_MAP:
-        return PATCH_MAP[filename]
-    root = DATA_PATH / 'static' / filename
-    base_stat_data = base_stats.parse_base_stats(root / 'classhelp.txt')
-    ability_data = ability.parse_abilities(root / 'infoability.txt')
-    equipment_data = equipment.parse_equipment(root / 'infoitem.txt')
-    PATCH_MAP[filename] = Patch(ability=ability_data, equipment=equipment_data, base_stats=base_stat_data)
-    return PATCH_MAP[filename]
+def get_patch_from_file(patch_dir: Path):
+    if patch_dir.name in PATCH_MAP:
+        return PATCH_MAP[patch_dir.name]
+    base_stat_data = base_stats.parse_base_stats(patch_dir / 'classhelp.txt')
+    ability_data = ability.parse_abilities(patch_dir / 'infoability.txt')
+    equipment_data = equipment.parse_equipment(patch_dir / 'infoitem.txt')
+    PATCH_MAP[patch_dir.name] = Patch(ability=ability_data, equipment=equipment_data, base_stats=base_stat_data)
+    return PATCH_MAP[patch_dir.name]
