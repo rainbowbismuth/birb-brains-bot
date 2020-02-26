@@ -7,11 +7,13 @@ from typing import List, Optional, Tuple
 
 import pandas
 
+import fftbg.patch
 from fftbg.ability import SKILL_TAG
 from fftbg.arena import get_arena
 from fftbg.combatant import CATEGORICAL, combatant_to_dict, can_hurt, can_heal, \
     zodiac_compat, can_cause, can_cancel
 from fftbg.config import TOURNAMENTS_ROOT
+from fftbg.patch import Patch
 
 LOG = logging.getLogger(__name__)
 
@@ -60,8 +62,8 @@ class Team:
     color: str
     combatants: List[dict]
 
-    def to_combatants(self):
-        return [combatant_to_dict(combatant) for combatant in self.combatants]
+    def to_combatants(self, patch: Patch):
+        return [combatant_to_dict(combatant, patch) for combatant in self.combatants]
 
 
 @dataclass
@@ -71,7 +73,7 @@ class MatchUp:
     left_wins: Optional[bool]
     game_map: str
 
-    def to_combatants(self):
+    def to_combatants(self, patch: Patch):
         arena = get_arena(self.game_map)
         arena_map = {
             'Map': self.game_map,
@@ -100,23 +102,23 @@ class MatchUp:
             **arena_map
         }
         out = []
-        left_combatants = self.left.to_combatants()
-        right_combatants = self.right.to_combatants()
+        left_combatants = self.left.to_combatants(patch)
+        right_combatants = self.right.to_combatants(patch)
         for i, combatant in enumerate(left_combatants):
             combatant.update(left)
             combatant['UIDX'] = i
 
             for j, ally in enumerate(left_combatants):
-                combatant[f'Can-Heal-Team-{j}'] = can_heal(combatant, ally)
+                combatant[f'Can-Heal-Team-{j}'] = can_heal(combatant, ally, patch)
                 combatant[f'Zodiac-Team-{j}'] = zodiac_compat(combatant, ally)
                 for status in OFFENSIVE_STATUSES:
-                    combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status)
+                    combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status, patch)
 
             for j, victim in enumerate(right_combatants):
-                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim)
+                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim, patch)
                 combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
                 for status in OFFENSIVE_STATUSES:
-                    combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status)
+                    combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
 
             out.append(combatant)
 
@@ -125,16 +127,16 @@ class MatchUp:
             combatant['UIDX'] = i + 4
 
             for j, ally in enumerate(right_combatants):
-                combatant[f'Can-Heal-Team-{j}'] = can_heal(combatant, ally)
+                combatant[f'Can-Heal-Team-{j}'] = can_heal(combatant, ally, patch)
                 combatant[f'Zodiac-Team-{j}'] = zodiac_compat(combatant, ally)
                 for status in OFFENSIVE_STATUSES:
-                    combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status)
+                    combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status, patch)
 
             for j, victim in enumerate(left_combatants):
-                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim)
+                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim, patch)
                 combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
                 for status in OFFENSIVE_STATUSES:
-                    combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status)
+                    combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
 
             out.append(combatant)
 
@@ -148,11 +150,11 @@ class Tournament:
     teams: {str: Team}
     match_ups: List[MatchUp]
 
-    def to_combatants(self):
+    def to_combatants(self, patch: Patch):
         tournament = {'TID': self.id, 'Modified': self.modified}
         out = []
         for i, match_up in enumerate(self.match_ups):
-            for combatant in match_up.to_combatants():
+            for combatant in match_up.to_combatants(patch):
                 combatant.update(tournament)
                 combatant['MatchUp'] = i
                 out.append(combatant)
@@ -231,7 +233,8 @@ def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
     LOG.info('Converting tournaments to by-combatant DataFrame')
     data = []
     for tournament in tournaments:
-        data.extend(tournament.to_combatants())
+        patch = fftbg.patch.get_patch(tournament.modified)
+        data.extend(tournament.to_combatants(patch))
 
     _add_composite_id(data, 'UID', lambda c: f"{c['TID']}{c['Color']}{c['Name']}")
     _add_composite_id(data, 'MID', lambda c: f"{c['TID']}{c['MatchUp']}")

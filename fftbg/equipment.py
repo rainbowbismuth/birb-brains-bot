@@ -2,10 +2,6 @@ import re
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-import fftbg.config as config
-
-EQUIPMENT_MAP = {}
-
 WEAPON_RE = re.compile(r'(.+?): (\d+) WP(.+)?, (\d+) range, (\d+)% evade, (.+?)\.(.*)')
 ARMOR_RE = re.compile(r'(.+?): \+(\d+) HP.*(\d+) MP,.(.*)')
 ACCESSORY_RE = re.compile(r'(.+?):(.*)')
@@ -59,6 +55,14 @@ class Equipment:
 EMPTY = Equipment(name='')
 
 
+@dataclass
+class EquipmentData:
+    by_name: {str: Equipment}
+
+    def get_equipment(self, name: str) -> Equipment:
+        return self.by_name.get(name, EMPTY)
+
+
 def try_int(regex, s: str, default: int = 0):
     matches = regex.findall(s)
     if matches:
@@ -80,8 +84,9 @@ def try_list(regex, s: str):
     return tuple()
 
 
-def parse_equipment():
-    items = config.INFO_ITEM_PATH.read_text().splitlines()
+def parse_equipment(info_item_path) -> EquipmentData:
+    by_name = {}
+    items = info_item_path.read_text().splitlines()
     for item in items:
         strengthens = try_list(STRENGTHEN_RE, item)
         absorbs = try_list(ABSORB_RE, item)
@@ -101,22 +106,22 @@ def parse_equipment():
             ma_bonus = try_int(BONUS_MA_RE, everything_else)
             move_bonus = try_int(MOVE_RE, everything_else)
             jump_bonus = try_int(JUMP_RE, everything_else)
-            EQUIPMENT_MAP[name] = Equipment(name=name,
-                                            hp_bonus=int(hp_bonus),
-                                            mp_bonus=int(mp_bonus),
-                                            speed_bonus=speed_bonus,
-                                            pa_bonus=pa_bonus,
-                                            ma_bonus=ma_bonus,
-                                            move_bonus=move_bonus,
-                                            jump_bonus=jump_bonus,
-                                            strengthens=strengthens,
-                                            absorbs=absorbs,
-                                            halves=halves,
-                                            weaknesses=weaknesses,
-                                            cancels=cancels,
-                                            chance_to_add=chance_to_add,
-                                            chance_to_cancel=chance_to_cancel,
-                                            immune_to=immune_to)
+            by_name[name] = Equipment(name=name,
+                                      hp_bonus=int(hp_bonus),
+                                      mp_bonus=int(mp_bonus),
+                                      speed_bonus=speed_bonus,
+                                      pa_bonus=pa_bonus,
+                                      ma_bonus=ma_bonus,
+                                      move_bonus=move_bonus,
+                                      jump_bonus=jump_bonus,
+                                      strengthens=strengthens,
+                                      absorbs=absorbs,
+                                      halves=halves,
+                                      weaknesses=weaknesses,
+                                      cancels=cancels,
+                                      chance_to_add=chance_to_add,
+                                      chance_to_cancel=chance_to_cancel,
+                                      immune_to=immune_to)
             continue
 
         weapon_match = WEAPON_RE.match(item)
@@ -127,24 +132,24 @@ def parse_equipment():
             ma_bonus = try_int(BONUS_MA_RE, everything_else)
             move_bonus = try_int(MOVE_RE, everything_else)
             weapon_element = try_str(WEAPON_ELEMENT_RE, everything_else)
-            EQUIPMENT_MAP[name] = Equipment(name=name,
-                                            speed_bonus=speed_bonus,
-                                            pa_bonus=pa_bonus,
-                                            ma_bonus=ma_bonus,
-                                            wp=int(wp),
-                                            range=int(w_range),
-                                            w_ev=int(w_ev),
-                                            weapon_type=weapon_type,
-                                            weapon_element=weapon_element,
-                                            move_bonus=move_bonus,
-                                            strengthens=strengthens,
-                                            absorbs=absorbs,
-                                            halves=halves,
-                                            weaknesses=weaknesses,
-                                            cancels=cancels,
-                                            chance_to_add=chance_to_add,
-                                            chance_to_cancel=chance_to_cancel,
-                                            immune_to=immune_to)
+            by_name[name] = Equipment(name=name,
+                                      speed_bonus=speed_bonus,
+                                      pa_bonus=pa_bonus,
+                                      ma_bonus=ma_bonus,
+                                      wp=int(wp),
+                                      range=int(w_range),
+                                      w_ev=int(w_ev),
+                                      weapon_type=weapon_type,
+                                      weapon_element=weapon_element,
+                                      move_bonus=move_bonus,
+                                      strengthens=strengthens,
+                                      absorbs=absorbs,
+                                      halves=halves,
+                                      weaknesses=weaknesses,
+                                      cancels=cancels,
+                                      chance_to_add=chance_to_add,
+                                      chance_to_cancel=chance_to_cancel,
+                                      immune_to=immune_to)
             continue
 
         if 'Accessory' in item or 'Shield' in item:
@@ -157,31 +162,21 @@ def parse_equipment():
             magic_ev = try_int(MAGIC_EVADE_RE, everything_else)
             move_bonus = try_int(MOVE_RE, everything_else)
             jump_bonus = try_int(JUMP_RE, everything_else)
-            EQUIPMENT_MAP[name] = Equipment(name=name,
-                                            speed_bonus=speed_bonus,
-                                            pa_bonus=pa_bonus,
-                                            ma_bonus=ma_bonus,
-                                            phys_ev=phys_ev,
-                                            magic_ev=magic_ev,
-                                            move_bonus=move_bonus,
-                                            jump_bonus=jump_bonus,
-                                            strengthens=strengthens,
-                                            absorbs=absorbs,
-                                            halves=halves,
-                                            weaknesses=weaknesses,
-                                            cancels=cancels,
-                                            chance_to_add=chance_to_add,
-                                            chance_to_cancel=chance_to_cancel,
-                                            immune_to=immune_to)
+            by_name[name] = Equipment(name=name,
+                                      speed_bonus=speed_bonus,
+                                      pa_bonus=pa_bonus,
+                                      ma_bonus=ma_bonus,
+                                      phys_ev=phys_ev,
+                                      magic_ev=magic_ev,
+                                      move_bonus=move_bonus,
+                                      jump_bonus=jump_bonus,
+                                      strengthens=strengthens,
+                                      absorbs=absorbs,
+                                      halves=halves,
+                                      weaknesses=weaknesses,
+                                      cancels=cancels,
+                                      chance_to_add=chance_to_add,
+                                      chance_to_cancel=chance_to_cancel,
+                                      immune_to=immune_to)
 
-
-def get_equipment(name: str) -> Equipment:
-    if not EQUIPMENT_MAP:
-        parse_equipment()
-    return EQUIPMENT_MAP.get(name, EMPTY)
-
-
-if __name__ == '__main__':
-    parse_equipment()
-    for eq in EQUIPMENT_MAP.values():
-        print(eq)
+    return EquipmentData(by_name)

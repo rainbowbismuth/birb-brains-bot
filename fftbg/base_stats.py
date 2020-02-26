@@ -2,10 +2,6 @@ import re
 from dataclasses import dataclass
 from typing import Tuple
 
-import fftbg.config as config
-
-BASE_STATS_MAP = {}
-
 HUMAN_RE = re.compile(r"^(\w+) (\w+)'s base stats")
 MONSTER_RE = re.compile(r"^(.+)'s base stats")
 
@@ -42,8 +38,18 @@ class BaseStats:
     cancels: Tuple[str]
 
 
-def parse_base_stats():
-    class_jobs = config.CLASS_HELP_PATH.read_text().splitlines()
+@dataclass
+class BaseStatsData:
+    by_job_gender: {(str, str): BaseStats}
+
+    def get_base_stats(self, job: str, gender: str) -> BaseStats:
+        job = job.replace(' ', '')
+        return self.by_job_gender[(job, gender)]
+
+
+def parse_base_stats(class_help_path) -> BaseStatsData:
+    by_job_gender = {}
+    class_jobs = class_help_path.read_text().splitlines()
     for class_job in class_jobs:
         human_match = HUMAN_RE.match(class_job)
         if human_match:
@@ -70,9 +76,10 @@ def parse_base_stats():
         weaknesses = element_match(WEAK_RE, class_job)
         cancels = element_match(CANCEL_RE, class_job)
 
-        BASE_STATS_MAP[(job, gender)] = BaseStats(
+        by_job_gender[(job, gender)] = BaseStats(
             job, gender, hp, mp, move, jump, speed, pa, ma, c_ev,
             absorbs, halves, weaknesses, cancels)
+    return BaseStatsData(by_job_gender)
 
 
 def element_match(regex, s):
@@ -81,16 +88,3 @@ def element_match(regex, s):
     if match:
         result = tuple(match[0].split('&'))
     return result
-
-
-def get_base_stats(job: str, gender: str) -> BaseStats:
-    job = job.replace(' ', '')
-    if not BASE_STATS_MAP:
-        parse_base_stats()
-    return BASE_STATS_MAP[(job, gender)]
-
-
-if __name__ == '__main__':
-    parse_base_stats()
-    for bs in BASE_STATS_MAP.values():
-        print(bs)

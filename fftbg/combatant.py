@@ -3,9 +3,9 @@ from math import floor
 import numpy as np
 
 import fftbg.ability as ability
-import fftbg.base_stats as base_stats
 import fftbg.equipment as equipment
 from fftbg.ability import SKILL_TAG
+from fftbg.patch import Patch
 
 PER_COMBATANTS = ['Name', 'Gender', 'Sign', 'Class', 'ActionSkill', 'SupportSkill', 'MoveSkill',
                   'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
@@ -14,18 +14,18 @@ NUMERIC = ['Brave', 'Faith', 'HP', 'MP', 'Speed', 'Range', 'Ability-Range',
 CATEGORICAL = PER_COMBATANTS + ['Color', 'Side', 'Map']
 
 
-def combatant_to_dict(combatant: dict):
+def combatant_to_dict(combatant: dict, patch: Patch):
     output = dict(combatant)
     del output['ClassSkills']
     del output['ExtraSkills']
 
     # Compute stats
-    stats = base_stats.get_base_stats(combatant['Class'], combatant['Gender'])
-    mainhand = equipment.get_equipment(combatant['Mainhand'])
-    offhand = equipment.get_equipment(combatant['Offhand'])
-    headgear = equipment.get_equipment(combatant['Head'])
-    armor = equipment.get_equipment(combatant['Armor'])
-    accessory = equipment.get_equipment(combatant['Accessory'])
+    stats = patch.get_base_stats(combatant['Class'], combatant['Gender'])
+    mainhand = patch.get_equipment(combatant['Mainhand'])
+    offhand = patch.get_equipment(combatant['Offhand'])
+    headgear = patch.get_equipment(combatant['Head'])
+    armor = patch.get_equipment(combatant['Armor'])
+    accessory = patch.get_equipment(combatant['Accessory'])
     all_equips = [mainhand, offhand, headgear, armor, accessory]
 
     output['HP'] = stats.hp + sum([e.hp_bonus for e in all_equips])
@@ -128,7 +128,7 @@ def combatant_to_dict(combatant: dict):
 
     output['Ability-Range'] = 0.0
     for skill in combatant['ClassSkills'] + combatant['ExtraSkills']:
-        calc = ability.get_ability(skill)
+        calc = patch.get_ability(skill)
         output['Ability-Range'] = max(output['Ability-Range'], calc.range)
         output[SKILL_TAG + skill] = calc.multiply(brave, faith, pa, pa_bang, ma, wp, speed)
 
@@ -261,8 +261,8 @@ def is_immune(actor, status) -> float:
     return actor.get(f'Immune-{status}', 0.0)
 
 
-def can_heal(actor, victim):
-    weapon = equipment.get_equipment(actor['Mainhand'])
+def can_heal(actor, victim, patch: Patch):
+    weapon = patch.get_equipment(actor['Mainhand'])
     amount = 0
     z_compatibility = zodiac_compat(actor, victim)
     if has_absorb(victim, weapon.weapon_element):
@@ -271,7 +271,7 @@ def can_heal(actor, victim):
     for ability_name in actor.keys():
         if not ability_name.startswith(SKILL_TAG):
             continue
-        ab = ability.get_ability(ability_name)
+        ab = patch.get_ability(ability_name)
 
         if has_cancel(victim, ab.element):
             continue
@@ -311,8 +311,8 @@ def can_heal(actor, victim):
 # TODO: Break these calculations out into a single per skill function
 #  can-heal can reuse 'if absorb'
 
-def can_hurt(actor, victim):
-    weapon = equipment.get_equipment(actor['Mainhand'])
+def can_hurt(actor, victim, patch: Patch):
+    weapon = patch.get_equipment(actor['Mainhand'])
     z_compatibility = zodiac_compat(actor, victim)
     amount = actor['Attack-Damage'] * z_compatibility
 
@@ -328,7 +328,7 @@ def can_hurt(actor, victim):
     for ability_name in actor.keys():
         if not ability_name.startswith(SKILL_TAG):
             continue
-        ab = ability.get_ability(ability_name)
+        ab = patch.get_ability(ability_name)
         if ab.damage and (ab.ma_constant or ab.multiplier == ability.MULT_PA_HALF_MA):
             vfaith = victim['Faith'] / 100.0
 
@@ -367,7 +367,7 @@ def can_hurt(actor, victim):
     return min(amount, 500)
 
 
-def can_cause(actor, victim, status):
+def can_cause(actor, victim, status, patch: Patch):
     if is_immune(victim, status):
         return 0.0
 
@@ -375,11 +375,11 @@ def can_cause(actor, victim, status):
     z_compatibility = zodiac_compat(actor, victim)
 
     physical_guard = 1.0 - victim['Physical Evade']
-    weapon = equipment.get_equipment(actor['Mainhand'])
+    weapon = patch.get_equipment(actor['Mainhand'])
     if status in weapon.chance_to_add:
         effectiveness = 0.19 * physical_guard
 
-    weapon2 = equipment.get_equipment(actor['Offhand'])
+    weapon2 = patch.get_equipment(actor['Offhand'])
     if status in weapon2.chance_to_add:
         chance = 0.19 * physical_guard
         effectiveness = (chance + effectiveness) - (chance * effectiveness)
@@ -388,7 +388,7 @@ def can_cause(actor, victim, status):
     caster_faith = actor['Faith'] / 100.0
     victim_faith = victim['Faith'] / 100.0
 
-    for ab in ability.get_ability_by_adds(status):
+    for ab in patch.get_ability_by_adds(status):
         if ab.name_with_tag not in actor:
             continue
 
@@ -405,7 +405,7 @@ def can_cause(actor, victim, status):
     return min(effectiveness, 1.0)
 
 
-def can_cancel(actor, victim, status):
+def can_cancel(actor, victim, status, patch: Patch):
     effectiveness = 0.0
     z_compatibility = zodiac_compat(actor, victim)
 
@@ -413,7 +413,7 @@ def can_cancel(actor, victim, status):
     caster_faith = actor['Faith'] / 100.0
     victim_faith = victim['Faith'] / 100.0
 
-    for ab in ability.get_ability_by_cancels(status):
+    for ab in patch.get_ability_by_cancels(status):
         if ab.name_with_tag not in actor:
             continue
 

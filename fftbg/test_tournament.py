@@ -1,12 +1,14 @@
 import json
 
 import fftbg.config as config
+import fftbg.patch
 import fftbg.tournament as tournament
 
 
 def test_to_combatants():
+    patch = fftbg.patch.get_test_patch()
     t = tournament.parse_tournament(config.TOURNAMENTS_ROOT / '1580897292273.json')
-    assert len(t.to_combatants()) == 4 * 2 * 8
+    assert len(t.to_combatants(patch)) == 4 * 2 * 8
 
 
 def test_tournament_conversions():

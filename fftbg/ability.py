@@ -2,12 +2,6 @@ import re
 from dataclasses import dataclass
 from typing import Optional, Tuple, List
 
-import fftbg.config as config
-
-ABILITY_MAP = {}
-ABILITY_BY_ADDS = {}
-ABILITY_BY_CANCELS = {}
-
 MULT_BRAVE = 'BRAVE'
 MULT_PA = 'PA'
 MULT_MA = 'MA'
@@ -82,6 +76,26 @@ class Ability:
 
 
 DEFAULT_ABILITY = Ability('', name_with_tag=SKILL_TAG)
+
+
+@dataclass
+class AbilityData:
+    by_name: {str: Ability}
+    by_adds: {str: List[Ability]}
+    by_cancels: {str: List[Ability]}
+
+    def get_ability(self, name: str) -> Ability:
+        if name.startswith(SKILL_TAG):
+            name = name[len(SKILL_TAG):]
+        return self.by_name.get(name.lower(), DEFAULT_ABILITY)
+
+    def get_ability_by_adds(self, status: str) -> List[Ability]:
+        return self.by_adds.get(status, [])
+
+    def get_ability_by_cancels(self, status: str) -> List[Ability]:
+        return self.by_cancels.get(status, [])
+
+
 RANGE_RE = re.compile(r'(\d+) range')
 AOE_RE = re.compile(r'(\d+) AoE')
 ELEMENT_RE = re.compile(r'Element: (\w+)')
@@ -102,8 +116,11 @@ def parse_hit_chance(desc) -> Optional[HitChance]:
     return DEFAULT_HIT_CHANCE
 
 
-def parse_abilities():
-    abilities = config.ABILITY_HELP_PATH.read_text().splitlines()
+def parse_abilities(abillity_help_path) -> AbilityData:
+    by_name = {}
+    by_adds = {}
+    by_cancels = {}
+    abilities = abillity_help_path.read_text().splitlines()
     for ability in abilities:
         name = ability[:ability.index(':')]
         desc = ability[ability.index(':'):]
@@ -164,11 +181,12 @@ def parse_abilities():
                      ma_constant=ma_constant,
                      adds=adds,
                      cancels=cancels)
-        ABILITY_MAP[name.lower()] = ab
+        by_name[name.lower()] = ab
         for status in ab.adds:
-            ABILITY_BY_ADDS.setdefault(status, []).append(ab)
+            by_adds.setdefault(status, []).append(ab)
         for status in ab.cancels:
-            ABILITY_BY_CANCELS.setdefault(status, []).append(ab)
+            by_cancels.setdefault(status, []).append(ab)
+    return AbilityData(by_name, by_adds, by_cancels)
 
 
 def try_int(regex, s, default=None):
@@ -183,25 +201,3 @@ def try_list(regex, s):
     if match:
         return tuple(x.strip() for x in match[0].split(','))
     return tuple()
-
-
-def get_ability(name: str) -> Ability:
-    if not ABILITY_MAP:
-        parse_abilities()
-    if name.startswith(SKILL_TAG):
-        name = name[len(SKILL_TAG):]
-    return ABILITY_MAP.get(name.lower(), DEFAULT_ABILITY)
-
-
-def get_ability_by_adds(status: str) -> List[Ability]:
-    return ABILITY_BY_ADDS.get(status, [])
-
-
-def get_ability_by_cancels(status: str) -> List[Ability]:
-    return ABILITY_BY_CANCELS.get(status, [])
-
-
-if __name__ == '__main__':
-    parse_abilities()
-    for ab in ABILITY_MAP.values():
-        print(ab)

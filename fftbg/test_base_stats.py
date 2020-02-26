@@ -1,7 +1,7 @@
-import fftbg.base_stats as base_stats
+import fftbg.patch
 
 
 def test_parse_combatant_stats():
-    base_stats.parse_base_stats()
-    assert base_stats.get_base_stats('Floating Eye', 'Monster')
-    assert base_stats.get_base_stats('Ghost', 'Monster').pa == 11
+    patch = fftbg.patch.get_test_patch()
+    assert patch.get_base_stats('Floating Eye', 'Monster')
+    assert patch.get_base_stats('Ghost', 'Monster').pa == 11
