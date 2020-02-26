@@ -25,7 +25,7 @@ ZODIAC_ENEMY = [f'Zodiac-Enemy-{i}' for i in range(4)]
 OFFENSIVE_STATUSES = [
     'Poison', 'Sleep', 'Frog', 'Silence', 'Confusion', 'Darkness', 'Undead', 'Petrify',
     'Oil', 'Don\'t Act', 'Don\'t Move', 'Death Sentence', 'Charm', 'Stop', 'Blood Suck',
-    'Berserk'
+    'Berserk', 'Death'
 ]
 CAUSE_STATUS = [f'Can-{status}-Enemy-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
 CANCEL_STATUS = [f'Can-Cancel-{status}-Team-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
