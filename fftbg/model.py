@@ -5,6 +5,7 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow
+from kerastuner import Hyperband
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, recall_score, accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
@@ -119,32 +120,32 @@ def main():
 
     combatant_size = train_X[0].shape[1]
 
-    # tuner = Hyperband(
-    #     lambda hp: model_residual_hp(hp, combatant_size),
-    #     objective='val_loss',
-    #     max_epochs=30,
-    #     directory='hyperband',
-    #     project_name='residual-20200217')
+    tuner = Hyperband(
+        lambda hp: model_residual_hp(hp, combatant_size),
+        objective='val_loss',
+        max_epochs=30,
+        directory='hyperband',
+        project_name='residual-20200217')
 
-    early_stopping_cb, model = model_residual(combatant_size,
-                                              activation='relu',
-                                              kernel_size=0.025,
-                                              learning_rate=1e-3,
-                                              drop_out_input=0.2,
-                                              drop_out_res=0.2,
-                                              drop_out_final=0.5,
-                                              l2_reg=0.01)
+    # early_stopping_cb, model = model_residual(combatant_size,
+    #                                           activation='relu',
+    #                                           kernel_size=0.05,
+    #                                           learning_rate=1e-3,
+    #                                           drop_out_input=0.35,
+    #                                           drop_out_res=0.35,
+    #                                           drop_out_final=0.5,
+    #                                           l2_reg=0.005)
     # early_stopping_cb, model = model_huge_multiply(combatant_size)
-    # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
-    model.fit(train_X,
-              train_y,
-              epochs=100,
-              verbose=1,
-              validation_data=(valid_X, valid_y),
-              callbacks=[early_stopping_cb])
+    tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
+    # model.fit(train_X,
+    #           train_y,
+    #           epochs=100,
+    #           verbose=1,
+    #           validation_data=(valid_X, valid_y),
+    #           callbacks=[early_stopping_cb])
     LOG.info('Done training model')
 
-    # model = tuner.get_best_models(num_models=2)[0]
+    model = tuner.get_best_models(num_models=2)[0]
 
     if config.SAVE_MODEL:
         LOG.info(f'Saving model at {config.MODEL_PATH}')
@@ -231,23 +232,23 @@ def model_huge_multiply(combatant_size):
 
 def model_residual_hp(hp, combatant_size):
     activation = hp.Choice('activation',
-                           values=['elu', 'relu'])
+                           values=['elu', 'relu', 'tahn', 'sigmoid'])
     kernel_size = hp.Float('kernel_size',
-                           min_value=0.01,
+                           min_value=0.05,
                            max_value=1.0)
     learning_rate = hp.Choice('learning_rate',
                               values=[1e-2, 1e-3, 1e-4])
     drop_out_input = hp.Float('drop_out_input',
                               min_value=0.0,
-                              max_value=0.7)
+                              max_value=0.5)
     drop_out_res = hp.Float('drop_out_res',
-                            min_value=0.1,
-                            max_value=0.9)
+                            min_value=0.0,
+                            max_value=0.5)
     drop_out_final = hp.Float('drop_out_final',
-                              min_value=0.3,
-                              max_value=0.95)
+                              min_value=0.0,
+                              max_value=0.5)
     l2_reg = hp.Float('l2_reg',
-                      min_value=0.001,
+                      min_value=0.0,
                       max_value=0.02)
     return model_residual(combatant_size, activation,
                           kernel_size, learning_rate, drop_out_input,
