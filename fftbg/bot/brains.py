@@ -59,7 +59,7 @@ class BotBrains:
         LOG.info('Starting up BotBrains')
         self.model = BakedModel()
         self.memory = BotMemory()
-        self.balance = 0.0
+        self.balance = 0
         self.refreshing_tournament = asyncio.Event()
         self.tournament_ready = asyncio.Event()
         self.tournament = None
@@ -225,7 +225,7 @@ class BotBrains:
         else:
             self.betting_on = self.right_team
             self.wager = right_bet
-        self.wager = min(self.wager, 1000 + pool_total_est * 0.01)
+        self.wager = min(self.wager, 1000 + pool_total_est * 0.02)
         if left_bet > right_bet:
             self.wager *= left_wins_percent
         else:
@@ -234,6 +234,7 @@ class BotBrains:
             self.wager = 200
         else:
             self.wager = int(max(100, self.wager))
+        self.wager = min(self.wager, self.balance)
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
