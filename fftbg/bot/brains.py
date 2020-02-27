@@ -221,11 +221,15 @@ class BotBrains:
 
         if left_bet > right_bet:
             self.betting_on = self.left_team
-            self.wager = left_bet * left_wins_percent
+            self.wager = left_bet
         else:
             self.betting_on = self.right_team
-            self.wager = right_bet * right_wins_percent
+            self.wager = right_bet
         self.wager = min(self.wager, 1000 + pool_total_est * 0.01, self.balance * MAX_BET_PERCENT)
+        if left_bet > right_bet:
+            self.wager *= left_wins_percent
+        else:
+            self.wager *= right_wins_percent
         if self.balance <= 200:
             self.wager = 200
         else:
