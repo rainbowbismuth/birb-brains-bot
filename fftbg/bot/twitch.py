@@ -18,8 +18,8 @@ BOT_CHANNEL = TWITCH['channel']
 BOT_PREFIX = '!!birbbrainsbot'
 
 MATCH_BETTING_LENGTH = 60.0
-MATCH_BOT_BETTING_END = 39.0
-MATCH_ODDS_TIME_REMAINING = 10.0
+MATCH_BOT_BETTING_END = 39.5
+MATCH_ODDS_TIME_REMAINING = 8.0
 
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
 BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')
@@ -160,8 +160,8 @@ class Bot(commands.Bot):
 
             time_left = self.time_remaining
             LOG.info(f'Time left before bot bets close: {time_left:.4}')
-            if time_left > 5.0:
-                sleep_for = time_left - 5.0
+            if time_left > 3.5:
+                sleep_for = time_left - 3.5
                 LOG.info(f'Sleeping for {sleep_for:.4} before betting')
                 await asyncio.sleep(sleep_for)
             await self.send_bet_command(team, amount)

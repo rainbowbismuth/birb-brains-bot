@@ -130,8 +130,8 @@ def main():
                                               activation='relu',
                                               kernel_size=0.05,
                                               learning_rate=1e-3,
-                                              drop_out_input=0.2,
-                                              drop_out_res=0.2,
+                                              drop_out_input=0.3,
+                                              drop_out_res=0.3,
                                               drop_out_final=0.5,
                                               l2_reg=0.01)
     # early_stopping_cb, model = model_huge_multiply(combatant_size)
