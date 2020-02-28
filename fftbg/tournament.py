@@ -62,7 +62,7 @@ class Team:
     color: str
     combatants: List[dict]
 
-    def to_combatants(self, patch: Patch):
+    def to_combatants(self, patch: Patch) -> List[dict]:
         return [combatant_to_dict(combatant, patch) for combatant in self.combatants]
 
 
@@ -73,7 +73,7 @@ class MatchUp:
     left_wins: Optional[bool]
     game_map: str
 
-    def to_combatants(self, patch: Patch):
+    def to_combatants(self, patch: Patch) -> List[dict]:
         arena = get_arena(self.game_map)
         arena_map = {
             'Map': self.game_map,
@@ -150,7 +150,7 @@ class Tournament:
     teams: {str: Team}
     match_ups: List[MatchUp]
 
-    def to_combatants(self, patch: Patch):
+    def to_combatants(self, patch: Patch) -> List[dict]:
         tournament = {'TID': self.id, 'Modified': self.modified}
         out = []
         for i, match_up in enumerate(self.match_ups):
@@ -239,6 +239,12 @@ def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
     _add_composite_id(data, 'UID', lambda c: f"{c['TID']}{c['Color']}{c['Name']}")
     _add_composite_id(data, 'MID', lambda c: f"{c['TID']}{c['MatchUp']}")
 
+    df = _to_dataframe(data)
+    df.set_index('MID')
+    return df
+
+
+def _to_dataframe(data) -> pandas.DataFrame:
     df = pandas.DataFrame(data)
     for category in CATEGORICAL:
         df[category].replace('', None, inplace=True)
@@ -247,8 +253,15 @@ def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
         if not column.startswith(SKILL_TAG):
             continue
         df[column].fillna(0, inplace=True)
-    df.set_index('MID')
     return df
+
+
+def match_ups_to_combatants(match_ups: List[MatchUp], patch: Patch) -> pandas.DataFrame:
+    LOG.info('Converting match ups to by-combatant DataFrame')
+    data = []
+    for match_up in match_ups:
+        data.extend(match_up.to_combatants(patch))
+    return _to_dataframe(data)
 
 
 def _add_composite_id(data, name, f):

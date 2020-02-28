@@ -19,6 +19,9 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     del output['ClassSkills']
     del output['ExtraSkills']
 
+    if combatant['SupportSkill'].startswith('Equip '):
+        combatant['SupportSkill'] = ''
+
     # Compute stats
     stats = patch.get_base_stats(combatant['Class'], combatant['Gender'])
     mainhand = patch.get_equipment(combatant['Mainhand'])
