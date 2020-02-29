@@ -126,19 +126,22 @@ def main():
     #     directory='hyperband',
     #     project_name='residual-20200217')
 
-    early_stopping_cb, model = model_residual(combatant_size,
-                                              activation='relu',
-                                              kernel_size=0.05,
-                                              learning_rate=1e-3,
-                                              drop_out_input=0.3,
-                                              drop_out_res=0.3,
-                                              drop_out_final=0.5,
-                                              l2_reg=0.005)
+    # early_stopping_cb, model = model_residual(combatant_size,
+    #                                           activation='relu',
+    #                                           kernel_size=0.05,
+    #                                           learning_rate=1e-3,
+    #                                           drop_out_input=0.3,
+    #                                           drop_out_res=0.3,
+    #                                           drop_out_final=0.5,
+    #                                           l2_reg=0.005)
+
+    early_stopping_cb, model = model_three(combatant_size)
+
     # early_stopping_cb, model = model_huge_multiply(combatant_size)
     # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
     model.fit(train_X,
               train_y,
-              epochs=100,
+              epochs=300,
               verbose=1,
               validation_data=(valid_X, valid_y),
               callbacks=[early_stopping_cb])
@@ -169,6 +172,41 @@ def main():
 class MCDropout(keras.layers.Dropout):
     def call(self, inputs, _training=True):
         return super().call(inputs, training=True)
+
+
+def model_three(combatant_size):
+    def make_dense(output_size):
+        return keras.layers.Dense(
+            output_size,
+            kernel_initializer='he_normal',
+            kernel_regularizer=keras.regularizers.l1_l2(0.005, 0.005),
+            activation='relu',
+            use_bias=True)
+
+    extra_size = 50
+    inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
+    first_layer = make_dense(extra_size)
+    first_nodes = [first_layer(input_node) for input_node in inputs]
+
+    old_nodes = first_nodes
+    for _ in range(5):
+        new_layer = make_dense(extra_size)
+        old_nodes = [new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, old_nodes)]
+
+    predictions = keras.layers.Dense(2, activation='softmax')(
+        keras.layers.concatenate(old_nodes))
+
+    model = keras.Model(inputs=inputs, outputs=predictions)
+    LOG.info(f'Number of parameters: {model.count_params()}')
+    model.compile(
+        optimizer=keras.optimizers.Nadam(learning_rate=1e-3),
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy'])
+
+    early_stopping_cb = keras.callbacks.EarlyStopping(
+        patience=20, monitor='val_loss', restore_best_weights=True)
+
+    return early_stopping_cb, model
 
 
 def model_huge_multiply(combatant_size):

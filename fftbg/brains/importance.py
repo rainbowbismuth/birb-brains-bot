@@ -14,7 +14,7 @@ def main():
     latest_json = json.loads(Path('data/tournaments/1582860952351.json').read_text())
     # latest_json = json.loads(fftbg.download.get_latest_tournament())
     latest = fftbg.tournament.parse_hypothetical_tournament(latest_json)
-    match_up_root = latest.match_ups[1]  # just taking the first match up
+    match_up_root = latest.match_ups[0]  # just taking the first match up
     # match_up_root.right.combatants[3]['Mainhand'] = 'Main Gauche'
     match_ups = []
     base_line = baked.predict_match_ups([match_up_root], latest.modified)
