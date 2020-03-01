@@ -70,7 +70,7 @@ def combatant_to_dict(combatant: dict, patch: Patch):
         output['ReactionSkill'] = ''
 
     physical_evasions = [
-        output['W-EV'], output['C-EV'] * 3.0 / 4.0, output['Physical S-EV'] / 2.0, output['Physical A-EV']]
+        output['W-EV'], output['C-EV'] * 1.0 / 3.0, output['Physical S-EV'] * 3.0 / 4.0, output['Physical A-EV']]
     output['Physical Evade'] = 1.0 - np.product([1 - p for p in physical_evasions])
     assert 0 <= output['Physical Evade'] < 1.0
 
@@ -368,6 +368,15 @@ def can_hurt(actor, victim, patch: Patch):
 
     assert amount >= 0
     return min(amount, 500)
+
+
+def lethality(actor, victim, patch: Patch):
+    damage = can_hurt(actor, victim, patch)
+    hp = victim['HP']
+    ev_avg = 1.0 - (victim['Physical Evade'] + victim['Magical Evade']) / 3.0
+    damage *= ev_avg
+    damage = max(20, damage)
+    return max(0.25, hp / damage)
 
 
 def can_cause(actor, victim, status, patch: Patch):

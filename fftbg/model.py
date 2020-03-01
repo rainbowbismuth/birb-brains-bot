@@ -1,16 +1,13 @@
 import logging
 import pickle
-from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, recall_score, accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, MaxAbsScaler
 from tensorflow import keras
-from tensorflow import linalg
 
 import fftbg.ability
 import fftbg.combatant as combatant
@@ -174,95 +171,44 @@ class MCDropout(keras.layers.Dropout):
         return super().call(inputs, training=True)
 
 
-def model_three(combatant_size):
+def model_three(combatant_size,
+                extra_size=50,
+                activation='relu',
+                l1_rate=0.00,
+                l2_rate=0.01,
+                extra_layers=5,
+                learning_rate=1e-3):
     def make_dense(output_size):
-        return keras.layers.Dense(
+        dense = keras.layers.Dense(
             output_size,
             kernel_initializer='he_normal',
-            kernel_regularizer=keras.regularizers.l1_l2(0.005, 0.005),
-            activation='relu',
-            use_bias=True)
+            kernel_regularizer=keras.regularizers.l1_l2(l1_rate, l2_rate),
+            use_bias=False)
+        batch = keras.layers.BatchNormalization(momentum=0.99)
+        act = keras.layers.Activation(activation=activation)
+        return lambda x: act(batch(dense(x)))
 
-    extra_size = 50
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
     first_layer = make_dense(extra_size)
     first_nodes = [first_layer(input_node) for input_node in inputs]
 
-    old_nodes = first_nodes
-    for _ in range(5):
+    nodes = [first_nodes]
+    for _ in range(extra_layers):
         new_layer = make_dense(extra_size)
-        old_nodes = [new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, old_nodes)]
+        nodes.append([new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, *nodes)])
 
     predictions = keras.layers.Dense(2, activation='softmax')(
-        keras.layers.concatenate(old_nodes))
+        keras.layers.concatenate(nodes[-1]))
 
     model = keras.Model(inputs=inputs, outputs=predictions)
     LOG.info(f'Number of parameters: {model.count_params()}')
     model.compile(
-        optimizer=keras.optimizers.Nadam(learning_rate=1e-3),
+        optimizer=keras.optimizers.Nadam(learning_rate=learning_rate),
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy'])
 
     early_stopping_cb = keras.callbacks.EarlyStopping(
-        patience=20, monitor='val_loss', restore_best_weights=True)
-
-    return early_stopping_cb, model
-
-
-def model_huge_multiply(combatant_size):
-    combatant_layer = keras.layers.Dense(
-        combatant_size // 2,
-        kernel_initializer='he_normal',
-        kernel_regularizer=keras.regularizers.l2(0.005),
-        activation='relu',
-        use_bias=True)
-
-    inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    combatant_nodes = [combatant_layer(input_node) for input_node in inputs]
-
-    pair_multiply_layer = keras.layers.Dense(
-        2,
-        kernel_initializer='he_normal',
-        kernel_regularizer=keras.regularizers.l2(0.005),
-        activation='elu',
-        use_bias=True)
-
-    def multiply(tensors: List[tensorflow.Tensor]):
-        size = tensors[0].shape[1]
-
-        def fn(xs):
-            return [tensorflow.reshape(
-                linalg.matmul(
-                    tensorflow.reshape(xs[0], (-1, 1)),
-                    tensorflow.reshape(xs[1], (1, -1)),
-                    a_is_sparse=True,
-                    b_is_sparse=True,
-                ),
-                (size ** 2,)), 0]
-
-        return tensorflow.map_fn(fn,
-                                 elems=tensors)[0]
-
-    def pair_multiply(a, b):
-        return keras.layers.Lambda(multiply)([a, b])
-
-    foe_nodes = []
-    for p1 in combatant_nodes[:4]:
-        for p2 in combatant_nodes[4:]:
-            foe_nodes.append(pair_multiply_layer(pair_multiply(p1, p2)))
-
-    predictions = keras.layers.Dense(2, activation='softmax')(
-        keras.layers.concatenate(foe_nodes))
-
-    model = keras.Model(inputs=inputs, outputs=predictions)
-    LOG.info(f'Number of parameters: {model.count_params()}')
-    model.compile(
-        optimizer=keras.optimizers.Nadam(learning_rate=1e-3),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy'])
-
-    early_stopping_cb = keras.callbacks.EarlyStopping(
-        patience=10, monitor='val_loss', restore_best_weights=True)
+        patience=15, monitor='val_loss', restore_best_weights=True)
 
     return early_stopping_cb, model
 
@@ -386,66 +332,6 @@ def dense(n, o=None, p=None):
     d3 = dense_norm(p)
     mc = MCDropout(0.50)
     return lambda x: mc(d3(d2(d1(x))))
-
-
-def model_classic(combatant_size, layer_size):
-    inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    combatant_layer = dense(layer_size, layer_size // 5, layer_size // 10)
-    combatant_nodes = [combatant_layer(c_input) for c_input in inputs]
-
-    # ally_layer = dense(layer_size // 10)
-    foe_layer = dense(layer_size // 100)
-    # team_1_ally_layers = []
-    team_1_foe_layers = []
-    # team_2_ally_layers = []
-    team_2_foe_layers = []
-
-    for combatant_node in combatant_nodes[:4]:
-        # for ally_node in combatant_nodes[:4]:
-        #     if combatant_node is ally_node:
-        #         continue
-        #     team_1_ally_layers.append(ally_layer(keras.layers.concatenate([combatant_node, ally_node])))
-        for foe_node in combatant_nodes[4:]:
-            team_1_foe_layers.append(foe_layer(keras.layers.subtract([combatant_node, foe_node])))
-
-    for combatant_node in combatant_nodes[4:]:
-        # for ally_node in combatant_nodes[4:]:
-        #     if combatant_node is ally_node:
-        #         continue
-        #     team_2_ally_layers.append(ally_layer(keras.layers.concatenate([combatant_node, ally_node])))
-        for foe_node in combatant_nodes[:4]:
-            team_2_foe_layers.append(foe_layer(keras.layers.subtract([combatant_node, foe_node])))
-
-    # ally_combined = dense(layer_size // 6)
-    foe_combined = dense(layer_size // 100)
-
-    # team_1_ally_combined = ally_combined(keras.layers.concatenate(team_1_ally_layers))
-    # team_1_foe_combined = foe_combined(keras.layers.concatenate(team_1_foe_layers))
-    team_1_foe_combined = foe_combined(keras.layers.average(team_1_foe_layers))
-    # team_2_ally_combined = ally_combined(keras.layers.concatenate(team_2_ally_layers))
-    # team_2_foe_combined = foe_combined(keras.layers.concatenate(team_2_foe_layers))
-    team_2_foe_combined = foe_combined(keras.layers.average(team_2_foe_layers))
-
-    # team_combined = dense(layer_size // 4)
-    # team_1_combined = team_combined(keras.layers.concatenate([team_1_ally_combined, team_1_foe_combined]))
-    # team_2_combined = team_combined(keras.layers.concatenate([team_2_ally_combined, team_2_foe_combined]))
-
-    # concat_all = keras.layers.concatenate([team_1_foe_combined, team_2_foe_combined])
-    concat_all = keras.layers.subtract([team_1_foe_combined, team_2_foe_combined])
-    # concat_all = keras.layers.concatenate([team_1_combined, team_2_combined])
-    combined = dense(layer_size // 100)(concat_all)
-    predictions = keras.layers.Dense(2, activation='softmax')(combined)
-
-    model = keras.Model(inputs=inputs, outputs=predictions)
-    LOG.info(f'Number of parameters: {model.count_params()}')
-
-    model.compile(
-        optimizer='nadam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-
-    early_stopping_cb = keras.callbacks.EarlyStopping(
-        patience=20, monitor='val_loss', restore_best_weights=True)
-
-    return early_stopping_cb, model
 
 
 def mc_predict(model, X, samples=100):
