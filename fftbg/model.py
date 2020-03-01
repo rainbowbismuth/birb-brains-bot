@@ -3,6 +3,7 @@ import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
+from kerastuner import Hyperband
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, recall_score, accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
@@ -116,12 +117,12 @@ def main():
 
     combatant_size = train_X[0].shape[1]
 
-    # tuner = Hyperband(
-    #     lambda hp: model_residual_hp(hp, combatant_size),
-    #     objective='val_loss',
-    #     max_epochs=30,
-    #     directory='hyperband',
-    #     project_name='residual-20200217')
+    tuner = Hyperband(
+        lambda hp: model_three_hp(hp, combatant_size),
+        objective='val_loss',
+        max_epochs=50,
+        directory='hyperband',
+        project_name='three-20200229')
 
     # early_stopping_cb, model = model_residual(combatant_size,
     #                                           activation='relu',
@@ -132,19 +133,19 @@ def main():
     #                                           drop_out_final=0.5,
     #                                           l2_reg=0.005)
 
-    early_stopping_cb, model = model_three(combatant_size)
+    # early_stopping_cb, model = model_three(combatant_size)
 
     # early_stopping_cb, model = model_huge_multiply(combatant_size)
-    # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
-    model.fit(train_X,
-              train_y,
-              epochs=300,
-              verbose=1,
-              validation_data=(valid_X, valid_y),
-              callbacks=[early_stopping_cb])
+    tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
+    # model.fit(train_X,
+    #           train_y,
+    #           epochs=300,
+    #           verbose=1,
+    #           validation_data=(valid_X, valid_y),
+    #           callbacks=[early_stopping_cb])
     LOG.info('Done training model')
 
-    # model = tuner.get_best_models(num_models=2)[0]
+    model = tuner.get_best_models(num_models=1)[0]
 
     if config.SAVE_MODEL:
         LOG.info(f'Saving model at {config.MODEL_PATH}')
@@ -171,12 +172,35 @@ class MCDropout(keras.layers.Dropout):
         return super().call(inputs, training=True)
 
 
+def model_three_hp(hp, combatant_size):
+    activation = hp.Choice('activation',
+                           values=['elu', 'relu'])
+    learning_rate = hp.Choice('learning_rate',
+                              values=[1e-2, 1e-3, 1e-4])
+    final_size = hp.Choice('final_size', values=[1, 10, 100])
+    momentum = hp.Choice('momentum', values=[0.9, 0.99, 0.999])
+    l1_reg = hp.Float('l1_reg',
+                      min_value=0.0005,
+                      max_value=0.02)
+    l2_reg = hp.Float('l2_reg',
+                      min_value=0.0005,
+                      max_value=0.01)
+
+    return model_three(combatant_size,
+                       final_size=final_size,
+                       momentum=momentum,
+                       activation=activation,
+                       l1_rate=l1_reg,
+                       l2_rate=l2_reg,
+                       learning_rate=learning_rate)[1]
+
+
 def model_three(combatant_size,
-                extra_size=50,
+                final_size=10,
+                momentum=0.99,
                 activation='relu',
-                l1_rate=0.00,
+                l1_rate=0.001,
                 l2_rate=0.01,
-                extra_layers=5,
                 learning_rate=1e-3):
     def make_dense(output_size):
         dense = keras.layers.Dense(
@@ -184,21 +208,21 @@ def model_three(combatant_size,
             kernel_initializer='he_normal',
             kernel_regularizer=keras.regularizers.l1_l2(l1_rate, l2_rate),
             use_bias=False)
-        batch = keras.layers.BatchNormalization(momentum=0.99)
+        batch = keras.layers.BatchNormalization(momentum=momentum)
         act = keras.layers.Activation(activation=activation)
         return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    first_layer = make_dense(extra_size)
-    first_nodes = [first_layer(input_node) for input_node in inputs]
+    first_layer = make_dense(combatant_size)
+    first_nodes = [first_layer(node) for node in inputs]
 
-    nodes = [first_nodes]
-    for _ in range(extra_layers):
-        new_layer = make_dense(extra_size)
-        nodes.append([new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, *nodes)])
+    second_layer = make_dense(combatant_size)
+    second_nodes = [second_layer(node) for node in first_nodes]
 
+    last_layer = make_dense(int(final_size))
+    last_nodes = [last_layer(node) for node in second_nodes]
     predictions = keras.layers.Dense(2, activation='softmax')(
-        keras.layers.concatenate(nodes[-1]))
+        keras.layers.concatenate(last_nodes))
 
     model = keras.Model(inputs=inputs, outputs=predictions)
     LOG.info(f'Number of parameters: {model.count_params()}')
@@ -213,128 +237,8 @@ def model_three(combatant_size,
     return early_stopping_cb, model
 
 
-def model_residual_hp(hp, combatant_size):
-    activation = hp.Choice('activation',
-                           values=['elu', 'relu'])
-    kernel_size = hp.Float('kernel_size',
-                           min_value=0.01,
-                           max_value=1.0)
-    learning_rate = hp.Choice('learning_rate',
-                              values=[1e-2, 1e-3, 1e-4])
-    drop_out_input = hp.Float('drop_out_input',
-                              min_value=0.0,
-                              max_value=0.7)
-    drop_out_res = hp.Float('drop_out_res',
-                            min_value=0.1,
-                            max_value=0.9)
-    drop_out_final = hp.Float('drop_out_final',
-                              min_value=0.3,
-                              max_value=0.95)
-    l2_reg = hp.Float('l2_reg',
-                      min_value=0.001,
-                      max_value=0.02)
-    return model_residual(combatant_size, activation,
-                          kernel_size, learning_rate, drop_out_input,
-                          drop_out_res, drop_out_final, l2_reg)[1]
-
-
-def model_residual(combatant_size, activation,
-                   kernel_size, learning_rate, drop_out_input,
-                   drop_out_res, drop_out_final, l2_reg):
-    def res_block(n=combatant_size):
-        k_size = int(kernel_size * n)
-        layer_1 = keras.layers.Dense(
-            k_size,
-            kernel_initializer='he_normal',
-            kernel_regularizer=keras.regularizers.l2(l2_reg),
-            activation=activation,
-            use_bias=True)
-
-        layer_2 = keras.layers.Dense(
-            n,
-            kernel_initializer='he_normal',
-            kernel_regularizer=keras.regularizers.l2(l2_reg),
-            activation=activation,
-            use_bias=True)
-        do = MCDropout(drop_out_res)
-
-        def combine(x):
-            fg = layer_2(layer_1(x))
-            add = keras.layers.add([fg, x])
-            return do(add)
-
-        return combine
-
-    inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    combatant_layer = res_block()
-    combatant_nodes = [MCDropout(drop_out_input)(combatant_layer(node))
-                       for node in inputs]
-
-    f1_layer = res_block(combatant_size * 2)
-    foe_nodes = []
-    for p1 in combatant_nodes[:4]:
-        for p2 in combatant_nodes[4:]:
-            sub = keras.layers.concatenate([p1, p2])
-            node = f1_layer(sub)
-            foe_nodes.append(node)
-
-    team_stack1 = keras.layers.maximum(combatant_nodes[:4])
-    team_stack2 = keras.layers.maximum(combatant_nodes[4:])
-    team_diff = keras.layers.subtract([team_stack1, team_stack2])
-    team_computed = res_block()(team_diff)
-
-    combined = MCDropout(drop_out_final)(keras.layers.average(foe_nodes))
-    predictions = keras.layers.Dense(2, activation='softmax')(
-        keras.layers.concatenate([combined, team_computed]))
-
-    model = keras.Model(inputs=inputs, outputs=predictions)
-    LOG.info(f'Number of parameters: {model.count_params()}')
-
-    model.compile(
-        optimizer=keras.optimizers.Nadam(learning_rate=learning_rate),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy'])
-
-    early_stopping_cb = keras.callbacks.EarlyStopping(
-        patience=10, monitor='val_loss', restore_best_weights=True)
-
-    return early_stopping_cb, model
-
-
-def dense_bias(n):
-    d = keras.layers.Dense(
-        n,
-        kernel_initializer='he_normal',
-        kernel_regularizer=keras.regularizers.l2(0.01),
-        activation='elu',
-        use_bias=True)
-    return d
-
-
-def dense_norm(n):
-    d = keras.layers.Dense(
-        n,
-        kernel_initializer='he_normal',
-        kernel_regularizer=keras.regularizers.l2(0.01),
-        use_bias=False)
-    bn = keras.layers.BatchNormalization()
-    a = keras.layers.Activation('elu')
-    return lambda x: a(bn(d(x)))
-
-
-def dense(n, o=None, p=None):
-    if o is None:
-        o = n
-    if p is None:
-        p = o
-    d1 = dense_bias(n)
-    d2 = dense_bias(o)
-    d3 = dense_norm(p)
-    mc = MCDropout(0.50)
-    return lambda x: mc(d3(d2(d1(x))))
-
-
-def mc_predict(model, X, samples=100):
+# TODO: just hacking this to samples=1 since I'm not using MC/Dropout
+def mc_predict(model, X, samples=1):
     y_probas = np.stack([model.predict(X)
                          for _sample in range(samples)])
     return y_probas.mean(axis=0)
