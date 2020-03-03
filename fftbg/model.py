@@ -3,7 +3,6 @@ import pickle
 
 import matplotlib.pyplot as plt
 import numpy as np
-from kerastuner import Hyperband
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import roc_curve, roc_auc_score, precision_score, recall_score, accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
@@ -117,35 +116,25 @@ def main():
 
     combatant_size = train_X[0].shape[1]
 
-    tuner = Hyperband(
-        lambda hp: model_three_hp(hp, combatant_size),
-        objective='val_loss',
-        max_epochs=50,
-        directory='hyperband',
-        project_name='three-20200229')
+    # tuner = Hyperband(
+    #     lambda hp: model_three_hp(hp, combatant_size),
+    #     objective='val_loss',
+    #     max_epochs=50,
+    #     directory='hyperband',
+    #     project_name='three-20200229')
 
-    # early_stopping_cb, model = model_residual(combatant_size,
-    #                                           activation='relu',
-    #                                           kernel_size=0.05,
-    #                                           learning_rate=1e-3,
-    #                                           drop_out_input=0.3,
-    #                                           drop_out_res=0.3,
-    #                                           drop_out_final=0.5,
-    #                                           l2_reg=0.005)
+    early_stopping_cb, model = model_three(combatant_size)
 
-    # early_stopping_cb, model = model_three(combatant_size)
-
-    # early_stopping_cb, model = model_huge_multiply(combatant_size)
-    tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
-    # model.fit(train_X,
-    #           train_y,
-    #           epochs=300,
-    #           verbose=1,
-    #           validation_data=(valid_X, valid_y),
-    #           callbacks=[early_stopping_cb])
+    # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
+    model.fit(train_X,
+              train_y,
+              epochs=300,
+              verbose=1,
+              validation_data=(valid_X, valid_y),
+              callbacks=[early_stopping_cb])
     LOG.info('Done training model')
 
-    model = tuner.get_best_models(num_models=1)[0]
+    # model = tuner.get_best_models(num_models=1)[0]
 
     if config.SAVE_MODEL:
         LOG.info(f'Saving model at {config.MODEL_PATH}')
@@ -197,11 +186,11 @@ def model_three_hp(hp, combatant_size):
 
 def model_three(combatant_size,
                 final_size=10,
-                momentum=0.99,
+                momentum=0.90,
                 activation='relu',
-                l1_rate=0.001,
-                l2_rate=0.01,
-                learning_rate=1e-3):
+                l1_rate=0.005,
+                l2_rate=0.005,
+                learning_rate=0.001):
     def make_dense(output_size):
         dense = keras.layers.Dense(
             output_size,
@@ -213,10 +202,10 @@ def model_three(combatant_size,
         return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    first_layer = make_dense(combatant_size)
+    first_layer = make_dense(combatant_size // 50)
     first_nodes = [first_layer(node) for node in inputs]
 
-    second_layer = make_dense(combatant_size)
+    second_layer = make_dense(combatant_size // 50)
     second_nodes = [second_layer(node) for node in first_nodes]
 
     last_layer = make_dense(int(final_size))
