@@ -166,7 +166,8 @@ def model_three_hp(hp, combatant_size):
                            values=['elu', 'relu'])
     learning_rate = hp.Choice('learning_rate',
                               values=[1e-2, 1e-3, 1e-4])
-    final_size = hp.Choice('final_size', values=[1, 10, 100])
+    extra_size = hp.Choice('extra_size', values=[10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+    extra_layers = hp.Choice('extra_layers', values=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     momentum = hp.Choice('momentum', values=[0.9, 0.99, 0.999])
     l1_reg = hp.Float('l1_reg',
                       min_value=0.0005,
@@ -176,7 +177,8 @@ def model_three_hp(hp, combatant_size):
                       max_value=0.01)
 
     return model_three(combatant_size,
-                       final_size=final_size,
+                       extra_size=extra_size,
+                       extra_layers=extra_layers,
                        momentum=momentum,
                        activation=activation,
                        l1_rate=l1_reg,
@@ -185,7 +187,8 @@ def model_three_hp(hp, combatant_size):
 
 
 def model_three(combatant_size,
-                final_size=10,
+                extra_size=50,
+                extra_layers=6,
                 momentum=0.90,
                 activation='relu',
                 l1_rate=0.005,
@@ -202,16 +205,16 @@ def model_three(combatant_size,
         return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    first_layer = make_dense(combatant_size // 50)
-    first_nodes = [first_layer(node) for node in inputs]
+    first_layer = make_dense(extra_size)
+    first_nodes = [first_layer(input_node) for input_node in inputs]
 
-    second_layer = make_dense(combatant_size // 50)
-    second_nodes = [second_layer(node) for node in first_nodes]
+    nodes = [first_nodes]
+    for _ in range(extra_layers):
+        new_layer = make_dense(extra_size)
+        nodes.append([new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, nodes[-1])])
 
-    last_layer = make_dense(int(final_size))
-    last_nodes = [last_layer(node) for node in second_nodes]
     predictions = keras.layers.Dense(2, activation='softmax')(
-        keras.layers.concatenate(last_nodes))
+        keras.layers.concatenate(nodes[-1]))
 
     model = keras.Model(inputs=inputs, outputs=predictions)
     LOG.info(f'Number of parameters: {model.count_params()}')
