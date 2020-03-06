@@ -14,6 +14,8 @@ PA_RE = re.compile(r"(\d+) PA")
 MA_RE = re.compile(r"(\d+) MA")
 CEV_RE = re.compile(r"(\d+)% C-EV")
 
+INNATES_RE = re.compile(r'Innates: ([\w,\s]+)')
+
 ABSORB_RE = re.compile(r'Absorb-([\w&]+)')
 HALF_RE = re.compile(r'Absorb-([\w&]+)')
 WEAK_RE = re.compile(r'Weak-([\w&]+)')
@@ -32,6 +34,8 @@ class BaseStats:
     pa: int
     ma: int
     c_ev: int
+    innates: Tuple[str]
+    skills: Tuple[str]
     absorbs: Tuple[str]
     halves: Tuple[str]
     weaknesses: Tuple[str]
@@ -47,10 +51,12 @@ class BaseStatsData:
         return self.by_job_gender[(job, gender)]
 
 
-def parse_base_stats(class_help_path) -> BaseStatsData:
+def parse_base_stats(class_help_path, monster_skills_path) -> BaseStatsData:
     by_job_gender = {}
     class_jobs = class_help_path.read_text().splitlines()
-    for class_job in class_jobs:
+    monster_skills = monster_skills_path.read_text().splitlines()
+    first_monster = None
+    for i, class_job in enumerate(class_jobs):
         human_match = HUMAN_RE.match(class_job)
         if human_match:
             job, gender = human_match.groups()
@@ -58,6 +64,8 @@ def parse_base_stats(class_help_path) -> BaseStatsData:
             monster_match = MONSTER_RE.match(class_job)
             job = monster_match[1]
             gender = 'Monster'
+            if first_monster is None:
+                first_monster = i
         if gender == 'Eye':
             job = 'FloatingEye'
             gender = 'Monster'
@@ -71,6 +79,12 @@ def parse_base_stats(class_help_path) -> BaseStatsData:
         ma = int(MA_RE.findall(class_job)[0])
         c_ev = int(CEV_RE.findall(class_job)[0])
 
+        innates = tuple(s.strip() for s in INNATES_RE.findall(class_job)[0].split(','))
+        if first_monster is not None:
+            skills = tuple(monster_skills[i - first_monster].split('|'))
+        else:
+            skills = tuple()
+
         absorbs = element_match(ABSORB_RE, class_job)
         halves = element_match(HALF_RE, class_job)
         weaknesses = element_match(WEAK_RE, class_job)
@@ -78,7 +92,7 @@ def parse_base_stats(class_help_path) -> BaseStatsData:
 
         by_job_gender[(job, gender)] = BaseStats(
             job, gender, hp, mp, move, jump, speed, pa, ma, c_ev,
-            absorbs, halves, weaknesses, cancels)
+            innates, skills, absorbs, halves, weaknesses, cancels)
     return BaseStatsData(by_job_gender)
 
 

@@ -130,7 +130,7 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     speed = output['Speed']
 
     output['Ability-Range'] = 0.0
-    for skill in combatant['ClassSkills'] + combatant['ExtraSkills']:
+    for skill in combatant['ClassSkills'] + combatant['ExtraSkills'] + list(stats.skills):
         calc = patch.get_ability(skill)
         output['Ability-Range'] = max(output['Ability-Range'], calc.range)
         output[SKILL_TAG + skill] = calc.multiply(brave, faith, pa, pa_bang, ma, wp, speed)

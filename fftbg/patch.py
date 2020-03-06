@@ -57,7 +57,7 @@ def get_patch(when: datetime):
 def get_patch_from_file(patch_dir: Path):
     if patch_dir.name in PATCH_MAP:
         return PATCH_MAP[patch_dir.name]
-    base_stat_data = base_stats.parse_base_stats(patch_dir / 'classhelp.txt')
+    base_stat_data = base_stats.parse_base_stats(patch_dir / 'classhelp.txt', patch_dir / 'MonsterSkills.txt')
     ability_data = ability.parse_abilities(patch_dir / 'infoability.txt')
     equipment_data = equipment.parse_equipment(patch_dir / 'infoitem.txt')
     PATCH_MAP[patch_dir.name] = Patch(ability=ability_data, equipment=equipment_data, base_stats=base_stat_data)

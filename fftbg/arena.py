@@ -886,3 +886,31 @@ if __name__ == '__main__':
     for arena in ARENA_MAP.values():
         print(arena)
     print(DEFAULT_ARENA)
+    from sklearn.cluster import KMeans
+    import pandas
+
+    all_maps = list(ARENA_MAP.values())
+    maps = []
+    for arena in all_maps:
+        maps.append({
+            'area': arena.area,
+            'min': arena.min_dimension,
+            'max': arena.max_dimension,
+            'archer': arena.archer_boon,
+            'grinder': arena.meat_grinder,
+            'split': arena.team_split,
+            'dist': arena.team_distance,
+            'choke': arena.choke_point,
+            'height': arena.height_diff
+        })
+
+    arenas = pandas.DataFrame(maps)
+    knum = 5
+    kmeans = KMeans(n_clusters=knum)
+    clusters = [list() for _ in range(knum)]
+    kmeans.fit(arenas)
+    for i, label in enumerate(kmeans.labels_):
+        clusters[label].append(all_maps[i].name)
+    for i, cluster in enumerate(clusters):
+        print(f'{i} -> {cluster}')
+        print()
