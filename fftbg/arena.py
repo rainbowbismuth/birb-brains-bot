@@ -732,19 +732,107 @@ ARENAS = [
         choke_point=0.3,
         team_distance=0.6
     ),
+    Arena(
+        name='62) Chapel of Orbonne Monastery',
+        width=9,
+        height=5,
+        team_split=0.1,
+        height_diff=0.1,
+        choke_point=0.2,
+        team_distance=0.0
+    ),
+    Arena(
+        name='63) Golgorand Execution Site',
+        width=11,
+        height=11,
+        team_split=0.3,
+        height_diff=0.3,
+        choke_point=0.0,
+        team_distance=0.4
+    ),
+    Arena(
+        name='64) Sluice of Bethla Garrison',
+        width=10,
+        height=12,
+        team_split=0.6,
+        height_diff=0.7,
+        choke_point=0.7,
+        team_distance=0.5
+    ),
+    Arena(
+        name='65) Granary of Bethla Garrison',
+        width=6,
+        height=8,
+        team_split=0.3,
+        height_diff=0.7,
+        choke_point=0.4,
+        team_distance=0.2
+    ),
+    Arena(
+        name='66) South Wall of Bethla Garrison',
+        width=13,
+        height=9,
+        team_split=0.2,
+        height_diff=0.5,
+        choke_point=0.0,
+        team_distance=0.5
+    ),
+    Arena(
+        name='67) North Wall of Bethla Garrison',
+        width=13,
+        height=10,
+        team_split=0.3,
+        height_diff=0.5,
+        choke_point=0.5,
+        team_distance=0.6
+    ),
+    Arena(
+        name='68) Bethla Garrison',
+        width=19,
+        height=8,
+        team_split=0.0,
+        height_diff=0.1,
+        choke_point=0.0,
+        team_distance=0.3
+    ),
+    Arena(
+        name='69) Murond Death City',
+        width=12,
+        height=12,
+        team_split=0.2,
+        height_diff=0.3,
+        choke_point=0.1,
+        team_distance=0.5
+    ),
+    Arena(
+        name='7) Riovanes Castle',
+        width=12,
+        height=8,
+        team_split=0.4,
+        height_diff=0.5,
+        choke_point=0.5,
+        team_distance=0.6
+    ),
+    Arena(
+        name='70) Nelveska Temple',
+        width=12,
+        height=8,
+        team_split=0.4,
+        height_diff=0.7,
+        choke_point=0.4,
+        team_distance=0.2
+    ),
+    Arena(
+        name='71) Dolbodar Swamp',
+        width=14,
+        height=10,
+        team_split=0.3,
+        height_diff=0.1,
+        choke_point=0.2,
+        team_distance=0.7
+    ),
 ]
 
-#  '62) Chapel of Orbonne Monastery',
-#  '63) Golgorand Execution Site',
-#  '64) Sluice of Bethla Garrison',
-#  '65) Granary of Bethla Garrison',
-#  '66) South Wall of Bethla Garrison',
-#  '67) North Wall of Bethla Garrison',
-#  '68) Bethla Garrison',
-#  '69) Murond Death City',
-#  '7) Riovanes Castle',
-#  '70) Nelveska Temple',
-#  '71) Dolbodar Swamp',
 #  '72) Fovoham Plains',
 #  '73) Windmill Shed',
 #  '74) Sweegy Woods',
