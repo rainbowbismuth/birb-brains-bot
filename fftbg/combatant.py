@@ -48,6 +48,17 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     if combatant['MoveSkill'][:-1] == 'Jump+':
         output['Jump'] += int(combatant['MoveSkill'][-1])
         output['MoveSkill'] = ''
+    if combatant['MoveSkill'] == 'Ignore Height':
+        output['Jump'] = 20
+        output['MoveSkill'] = ''
+    if combatant['MoveSkill'].startswith('Teleport'):
+        output['Jump'] = 20
+
+    if 'Landlocked' in stats.innates:
+        output[SKILL_TAG + 'Landlocked'] = 1.0
+    if 'Fly' in stats.innates or 'Fly' == combatant['MoveSkill']:
+        output[SKILL_TAG + 'Fly'] = 1.0
+        output['Jump'] = 20
 
     output['PA!'] = stats.pa
     output['PA'] = stats.pa + sum([e.pa_bonus for e in all_equips])
