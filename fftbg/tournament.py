@@ -58,6 +58,13 @@ def _calculate_hypothetical_match_ups():
 HYPOTHETICAL_MATCHES: List[Tuple[str, str, int]] = _calculate_hypothetical_match_ups()
 
 
+def look_up_prediction_index(left, right):
+    for i, (team_1, team_2, _) in enumerate(HYPOTHETICAL_MATCHES):
+        if left == team_1 and right == team_2:
+            return i
+    raise Exception(f'unable to find teams ({left}, {right})')
+
+
 @dataclass
 class Team:
     color: str

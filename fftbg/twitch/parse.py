@@ -11,6 +11,7 @@ BETTING_CLOSE_RE = re.compile(r'Betting is closed: Final Bets: (\w+) - (\d+) bet
                               r'bets for ([\d,]+)G')
 ODDS_RE = re.compile(r'(\w+) - (\d+) bets for ([\d,]+)G(?:.*?); (\w+) - (\d+) bets for ([\d,]+)G')
 BETTING_CLOSED_RE = re.compile(r'(\w+), betting has closed, sorry!')
+TEAM_VICTORY = re.compile(r'The (\w+) team was victorious!')
 
 
 def parse_comma_int(s):

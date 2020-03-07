@@ -1,23 +1,15 @@
-import json
 from copy import deepcopy
-from pathlib import Path
+from typing import List, Dict
 
-import fftbg.brains.baked_model
-import fftbg.download
-import fftbg.tournament
+from fftbg.brains.baked_model import BakedModel
+from fftbg.tournament import MatchUp
 
 KEYS = ['ReactionSkill', 'SupportSkill', 'MoveSkill', 'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 
 
-def main():
-    baked = fftbg.brains.baked_model.BakedModel()
-    latest_json = json.loads(Path('data/tournaments/1582860952351.json').read_text())
-    # latest_json = json.loads(fftbg.download.get_latest_tournament())
-    latest = fftbg.tournament.parse_hypothetical_tournament(latest_json)
-    match_up_root = latest.match_ups[0]  # just taking the first match up
-    # match_up_root.right.combatants[3]['Mainhand'] = 'Main Gauche'
+def compute(model: BakedModel, match_up_root: MatchUp, patch_time) -> List[Dict[str, float]]:
     match_ups = []
-    base_line = baked.predict_match_ups([match_up_root], latest.modified)
+    base_line = model.predict_match_ups([match_up_root], patch_time)
     for i, combatant in enumerate(match_up_root.left.combatants):
         for k in KEYS:
             if match_up_root.left.combatants[i][k] == '':
@@ -48,7 +40,7 @@ def main():
             copied = deepcopy(match_up_root)
             copied.right.combatants[i]['ExtraSkills'].remove(k)
             match_ups.append((i + 4, k, copied))
-    predictions = baked.predict_match_ups([x[2] for x in match_ups], latest.modified)
+    predictions = model.predict_match_ups([x[2] for x in match_ups], patch_time)
 
     diffs = []
     for x, (i, k, match_up) in enumerate(match_ups):
@@ -58,11 +50,8 @@ def main():
             d = base_line[0][0] - predictions[x][0]
         diffs.append((d, i, k))
 
-    diffs = sorted(diffs, reverse=True)
-    diffs = sorted(diffs, key=lambda x: x[1])
-    for diff in diffs:
-        print(diff)
+    output = [{}, {}, {}, {}, {}, {}, {}, {}]
+    for (d, i, k) in diffs:
+        output[i][k] = float(d)
 
-
-if __name__ == '__main__':
-    main()
+    return output

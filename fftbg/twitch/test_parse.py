@@ -20,6 +20,7 @@ def test_regular_expressions():
         'Final Bets: purple - 72 bets for 88,285G (85.9%, x0.16); brown - 44 bets for 14,477G (14.1%, x6.10)')
 
     assert parse.BOTS_CANNOT_BET_RE.findall('BirbBrainsBot, bots cannot bet in the final 20 seconds!')
+    assert parse.TEAM_VICTORY.findall('The blue team was victorious!')
 
 
 def test_bet_regular_expressions():

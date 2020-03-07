@@ -1,22 +1,18 @@
-import logging
-import sys
-
-import fftbg.redis
+import fftbg.event_stream
 import fftbg.server
-from fftbg.twitch.incoming.pubsub import Subscriber
+import fftbg.twitch.msg_types as msg_types
 
 
 def main():
-    logging.basicConfig(stream=sys.stdout, level='INFO')
+    fftbg.server.set_name('fftbg.twitch.listen')
+    fftbg.server.configure_logging('TWITCH_LOG_LEVEL')
 
     redis = fftbg.server.get_redis()
-    sub = Subscriber(redis)
+    event_stream = fftbg.event_stream.EventStream(redis)
     while True:
-        msg = sub.get_message()
-        if msg is None:
-            continue
-        print(str(msg.time))
-        print(msg)
+        for (_, msg) in event_stream.read():
+            if msg.get('type') == msg_types.RECV_SAY:
+                print(f'{msg["user"]}: {msg["text"]}')
 
 
 if __name__ == '__main__':

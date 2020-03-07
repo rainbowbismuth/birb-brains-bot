@@ -1,7 +1,4 @@
-import logging.config
 from pathlib import Path
-
-import toml
 
 FFTBG_API_URL = 'https://fftbg.com'
 DATA_PATH = Path('./data')
@@ -16,10 +13,11 @@ BOT_MEMORY_PATH = DATA_PATH / 'bot_memory.db'
 
 SAVE_MODEL = True
 
-LOGGING_CONFIG = toml.loads((CONFIG_PATH / 'logging.toml').read_text())
-logging.config.dictConfig(LOGGING_CONFIG)
-
-BOT_CONFIG = toml.loads((CONFIG_PATH / 'twitch.toml').read_text())
-
-LOG = logging.getLogger(__name__)
-LOG.info("Good morning")
+# FIXME: Wrecking old style logging
+# LOGGING_CONFIG = toml.loads((CONFIG_PATH / 'logging.toml').read_text())
+# logging.config.dictConfig(LOGGING_CONFIG)
+#
+# BOT_CONFIG = toml.loads((CONFIG_PATH / 'twitch.toml').read_text())
+#
+# LOG = logging.getLogger(__name__)
+# LOG.info("Good morning")

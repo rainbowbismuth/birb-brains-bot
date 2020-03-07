@@ -1,15 +1,15 @@
 import logging
-import sys
 import os
+
+import fftbg.event_stream
 import fftbg.server
 from fftbg.twitch.ircbot import IRCBot
-from fftbg.twitch.incoming.pubsub import Publisher
-from fftbg.twitch.outgoing.pubsub import Subscriber
 
 LOG = logging.getLogger(__name__)
 
 
 def run_server():
+    fftbg.server.set_name(__package__)
     fftbg.server.configure_logging(env_var='TWITCH_LOG_LEVEL')
 
     tmi_token = os.environ['TWITCH_TMI_TOKEN']
@@ -19,16 +19,14 @@ def run_server():
     prefix = '@' + bot_nick
 
     redis = fftbg.server.get_redis()
-    publisher = Publisher(redis)
-    subscriber = Subscriber(redis)
+    event_stream = fftbg.event_stream.EventStream(redis)
     bot = IRCBot(
         irc_token=tmi_token,
         client_id=client_id,
         prefix=prefix,
         nick=bot_nick,
         fftbg_channel=channel,
-        publisher=publisher,
-        subscriber=subscriber)
+        event_stream=event_stream)
     bot.run()
 
 
