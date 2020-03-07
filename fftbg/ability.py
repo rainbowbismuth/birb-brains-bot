@@ -19,14 +19,22 @@ SKILL_TAG = '⭒ '
 @dataclass(frozen=True)
 class HitChance:
     ma_plus: Optional[int] = None
+    pa_plus: Optional[int] = None
+    speed_plus: Optional[int] = None
+    pa_wp_plus: Optional[int] = None
     times_faith: bool = False
 
-    def chance(self, caster_ma, caster_faith, target_faith):
+    def chance(self, caster_ma, caster_pa, caster_speed, caster_wp, caster_faith, target_faith):
         # Not including Zodiac right now..
-        if not self.ma_plus:
-            return 1.0
-
-        chance = (caster_ma + self.ma_plus) / 100.0
+        chance = 1.0
+        if self.ma_plus:
+            chance = (caster_ma + self.ma_plus) / 100.0
+        elif self.pa_plus:
+            chance = (caster_pa + self.pa_plus) / 100.0
+        elif self.speed_plus:
+            chance = (caster_speed + self.speed_plus) / 100.0
+        elif self.pa_wp_plus:
+            chance = (caster_pa + caster_wp + self.pa_wp_plus) / 100.0
         if self.times_faith:
             chance *= caster_faith * target_faith
         return chance
@@ -102,6 +110,9 @@ ELEMENT_RE = re.compile(r'Element: (\w+)')
 
 HIT_MA_PLUS_RE = re.compile(r'Hit: \(MA \+ (\d+)\)%')
 HIT_FAITH_MA_PLUS_RE = re.compile(r'Hit: Faith\(MA \+ (\d+)\)%')
+HIT_PA_PLUS_RE = re.compile(r'Hit: \(PA \+ (\d+)\)%')
+HIT_SPEED_PLUS_RE = re.compile(r'Hit:(?:\s*Undead;)?\s*\(Speed\s?\+\s?(\d+)\)%')
+HIT_PA_WP_PLUS_RE = re.compile(r'Hit: \(PA \+ WP \+ (\d+)\)%')
 ADD_STATUS_RE = re.compile(r'Add ([\w,\s\']+)')
 CANCEL_STATUS_RE = re.compile(r'Cancel ([\w,\s\']+)')
 
@@ -113,6 +124,15 @@ def parse_hit_chance(desc) -> Optional[HitChance]:
     faith_ma_plus = try_int(HIT_FAITH_MA_PLUS_RE, desc)
     if faith_ma_plus:
         return HitChance(ma_plus=faith_ma_plus, times_faith=True)
+    pa_plus = try_int(HIT_PA_PLUS_RE, desc)
+    if pa_plus:
+        return HitChance(pa_plus=pa_plus, times_faith=False)
+    speed_plus = try_int(HIT_SPEED_PLUS_RE, desc)
+    if speed_plus:
+        return HitChance(speed_plus=speed_plus, times_faith=False)
+    pa_wp_plus = try_int(HIT_PA_WP_PLUS_RE, desc)
+    if pa_wp_plus:
+        return HitChance(pa_wp_plus=pa_wp_plus, times_faith=False)
     return DEFAULT_HIT_CHANCE
 
 

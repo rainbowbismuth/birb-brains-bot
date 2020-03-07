@@ -127,6 +127,7 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     pa_bang = output['PA!']
     ma = output['MA']
     wp = max(mainhand.wp, offhand.wp)  # no idea here, ask B.M.G.
+    output['WP'] = wp
     speed = output['Speed']
 
     output['Ability-Range'] = 0.0
@@ -397,6 +398,9 @@ def can_cause(actor, victim, status, patch: Patch):
         effectiveness = (chance + effectiveness) - (chance * effectiveness)
 
     caster_ma = actor['MA']
+    caster_pa = actor['PA']
+    caster_speed = actor['Speed']
+    caster_wp = actor['WP']
     caster_faith = actor['Faith'] / 100.0
     victim_faith = victim['Faith'] / 100.0
 
@@ -404,7 +408,7 @@ def can_cause(actor, victim, status, patch: Patch):
         if ab.name_with_tag not in actor:
             continue
 
-        hit = ab.hit_chance.chance(caster_ma, caster_faith, victim_faith)
+        hit = ab.hit_chance.chance(caster_ma, caster_pa, caster_speed, caster_wp, caster_faith, victim_faith)
 
         magic_guard = 1.0
         if ab.hit_chance.times_faith:
@@ -422,6 +426,9 @@ def can_cancel(actor, victim, status, patch: Patch):
     z_compatibility = zodiac_compat(actor, victim)
 
     caster_ma = actor['MA']
+    caster_pa = actor['PA']
+    caster_speed = actor['Speed']
+    caster_wp = actor['WP']
     caster_faith = actor['Faith'] / 100.0
     victim_faith = victim['Faith'] / 100.0
 
@@ -429,7 +436,7 @@ def can_cancel(actor, victim, status, patch: Patch):
         if ab.name_with_tag not in actor:
             continue
 
-        hit = ab.hit_chance.chance(caster_ma, caster_faith, victim_faith)
+        hit = ab.hit_chance.chance(caster_ma, caster_pa, caster_speed, caster_wp, caster_faith, victim_faith)
         hit *= z_compatibility
         effectiveness = max(hit, effectiveness)
 

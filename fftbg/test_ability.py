@@ -12,3 +12,6 @@ def test_abilities_with_multipliers():
     assert patch.get_ability('Justice Sword').range == 2
     assert patch.get_ability('Cure 3').heals
     assert patch.get_ability('Meteor').damage
+    assert patch.get_ability('Seal Evil').hit_chance.speed_plus is not None
+    assert patch.get_ability('Revive').hit_chance.pa_plus is not None
+    assert 'Death' in patch.get_ability('Revive').cancels
