@@ -15,6 +15,23 @@ body {
     margin: 2%;
 }
 
+.portrait-left {
+    transform: scale(-1, 1);
+}
+
+.portrait-right {
+
+}
+
+.unit-summary-plus {
+    font-size: 12px;
+    color: #8db7e4;
+}
+
+.unit-summary-minus {
+    font-size: 12px;
+    color: #f19086;
+}
 
 .color-red {
     color: var(--red);
@@ -33,15 +50,15 @@ body {
 }
 
 .color-white {
-    color: var(--white);
+    color: #c5bfbf;
 }
 
 .color-black {
-    color: var(--gray);
+    color: #614675;
 }
 
 .color-purple {
-    color: var(--indigo);
+    color: #8b60d0;
 }
 
 .color-brown {

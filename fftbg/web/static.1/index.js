@@ -3,6 +3,7 @@
 const State = {
     balance_log: [],
     placed_bet: null,
+    team_summary: null
 };
 
 function load_summary_info() {
@@ -23,6 +24,13 @@ function load_summary_info() {
     }).then(function (result) {
         State.placed_bet = result;
         State.placed_bet.time = moment(result.time + 'Z');
+    });
+
+    m.request({
+        method: 'GET',
+        url: '/team-summary'
+    }).then(function (result) {
+        State.team_summary = result;
     });
 }
 
@@ -298,6 +306,143 @@ const NavBar = {
     }
 };
 
+
+const UnitPortrait = {
+    view: function (vnode) {
+        let unit;
+        if (vnode.attrs.gender === 'Monster') {
+            unit = vnode.attrs.job;
+        } else {
+            unit = vnode.attrs.job + vnode.attrs.gender[0];
+        }
+        unit = unit.replace(' ', '');
+        const cls = vnode.attrs.left ? '.portrait-left' : '.portrait-right';
+        return m('img' + cls, {src: 'https://mustadio-images.s3.amazonaws.com/units/' + unit + '.gif'});
+    }
+};
+
+const IndividualUnit = {
+    view: function (vnode) {
+        let pluses = vnode.attrs.plus.slice(0, 3).map(plus =>
+            m('.col.px-1.d-flex.justify-content-around.unit-summary-plus', [
+                '▲ ',
+                plus[0],
+                ' +',
+                format_prediction(plus[1]),
+            ])
+        );
+        if (pluses.length === 0) {
+            pluses = [m('.col.px-1.d-flex.justify-content-around.unit-summary-plus', '~')];
+        }
+        let minuses = vnode.attrs.minus.slice(0, 3).map(minus =>
+            m('.col.px-1.d-flex.justify-content-around.unit-summary-minus', [
+                '▼ ',
+                minus[0],
+                ' ',
+                format_prediction(minus[1]),
+            ])
+        );
+        if (minuses.length === 0) {
+            minuses = [m('.col.px-1.d-flex.justify-content-around.unit-summary-minus', '~')];
+        }
+
+        const header_cols = [
+            m('th', {scope: 'col'}, 'Name'),
+            m('th', {scope: 'col'}, 'Sign'),
+            m('th', {scope: 'col'}, 'Brave'),
+            m('th', {scope: 'col'}, 'Faith'),
+        ];
+        const tr1_cols = [
+            m('td', vnode.attrs.name),
+            m('td', vnode.attrs.sign),
+            m('td', vnode.attrs.brave),
+            m('td', vnode.attrs.faith),
+        ];
+
+        let header;
+        let tr1;
+        if (vnode.attrs.left) {
+            header = m('tr', [
+                m('th', {scope: 'col'}, ''),
+                ...header_cols
+            ]);
+            tr1 = m('tr', [
+                m('td', {rowspan: 3, style: {width: '70px'}}, m(UnitPortrait, vnode.attrs)),
+                ...tr1_cols
+            ]);
+        } else {
+            header = m('tr', [
+                ...header_cols,
+                m('th', {scope: 'col'}, ''),
+            ]);
+            tr1 = m('tr', [
+                ...tr1_cols,
+                m('td', {rowspan: 3, style: {width: '70px'}}, m(UnitPortrait, vnode.attrs)),
+            ]);
+        }
+
+        return [
+            m('thead' + ('.color-' + vnode.attrs.color), [header]),
+            m('tbody', [
+                tr1,
+                m('tr', [
+                    m('td', {colspan: 4}, m('.row', pluses))
+                ]),
+                m('tr', [
+                    m('td', {colspan: 4}, m('.row', minuses))
+                ]),
+                m('tr', m(
+                    'td',
+                    {
+                        colspan: 6,
+                        style: {
+                            height: '20px',
+                            'border-style': 'none'
+                        }
+                    },
+                    ''))
+            ])
+        ]
+    }
+};
+
+const IndividualTeam = {
+    view: function (vnode) {
+        return [
+            m('.row', m('.col', m('table.table.table-sm', [
+                ...vnode.attrs.units.map(unit => m(IndividualUnit, {
+                    left: vnode.attrs.left,
+                    color: vnode.attrs.color,
+                    ...unit
+                }))]
+            )))
+        ]
+    }
+};
+
+const TeamSummary = {
+    view: function (vnode) {
+        if (!State.team_summary) {
+            return ''
+        }
+
+        return [
+            m('.row', [
+                m('.col-md', m(IndividualTeam, {
+                    'left': true,
+                    'color': State.team_summary.left_team,
+                    'units': State.team_summary.left_team_units
+                })),
+                m('.col-md', m(IndividualTeam, {
+                    'left': false,
+                    'color': State.team_summary.right_team,
+                    'units': State.team_summary.right_team_units
+                })),
+            ])
+        ]
+    }
+};
+
 const Home = {
     view: function (vnode) {
         return m('.container', [
@@ -317,6 +462,7 @@ const Home = {
                     m(SimpleChart, {attribute: 'new_balance', yLabel: label_gil, log: State.balance_log}),
                 ])
             ]),
+            m(TeamSummary),
             m('.row', [
                 m(BalanceLog)
             ])

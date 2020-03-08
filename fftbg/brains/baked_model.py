@@ -1,24 +1,15 @@
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 import pandas
-from dataclasses_json import dataclass_json
 
 import fftbg.data as data
 import fftbg.model as model
 import fftbg.patch as patch
 import fftbg.tournament as tournament
+from fftbg.brains.predictions import Predictions
 from fftbg.tournament import MatchUp, Tournament
-
-
-@dataclass_json()
-@dataclass
-class Predictions:
-    tournament_id: int
-    left_wins: Dict[str, float]
-    right_wins: Dict[str, float]
 
 
 class BakedModel:

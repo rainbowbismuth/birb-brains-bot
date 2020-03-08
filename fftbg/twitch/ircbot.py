@@ -71,6 +71,7 @@ class IRCBot(commands.Bot):
 
     async def event_ready(self):
         LOG.info('Connected to twitch.tv')
+        self.event_stream.publish({'type': msg_types.CONNECTED_TO_TWITCH})
 
     async def _send_message_immediately(self, text: str):
         try:

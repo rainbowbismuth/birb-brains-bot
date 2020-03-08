@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from typing import Optional
+from typing import List
 
 from walrus import Database
 
@@ -11,26 +11,25 @@ import fftbg.event_stream
 import fftbg.server
 import fftbg.tournament
 import fftbg.twitch.msg_types as msg_types
-from fftbg.brains.baked_model import BakedModel, Predictions
+from fftbg.brains.api import CURRENT_TOURNAMENT_KEY, CURRENT_MATCH_KEY, get_current_tournament_id, get_prediction_key, \
+    get_prediction, get_importance_key
+from fftbg.brains.baked_model import BakedModel
 from fftbg.brains.msg_types import NEW_PREDICTIONS
+from fftbg.brains.predictions import Predictions
 from fftbg.event_stream import EventStream
 from fftbg.tournament import Tournament, MatchUp
 
 LOG = logging.getLogger(__name__)
 
-CURRENT_TOURNAMENT_KEY = 'brains.tournament_id'
 SLEEP_TIME = 2.0
 
 
-def get_prediction_key(tournament_id):
-    return f'brains.predictions:{tournament_id}'
+def set_current_tournament_id(db: Database, tournament_id):
+    db.set(CURRENT_TOURNAMENT_KEY, tournament_id)
 
 
-def get_prediction(db: Database, tournament_id) -> Optional[Predictions]:
-    data = db.get(get_prediction_key(tournament_id))
-    if data is not None:
-        data = Predictions.from_json(data)
-    return data
+def set_current_match(db: Database, left_team, right_team):
+    db.set(CURRENT_MATCH_KEY, f'{left_team} {right_team}')
 
 
 def set_prediction(db: Database, prediction: Predictions):
@@ -41,7 +40,7 @@ def set_prediction(db: Database, prediction: Predictions):
 def try_load_new(db: Database, retry_until_new=True) -> Tournament:
     tournament = None
     current_id = '0'
-    existing_id = db.get(CURRENT_TOURNAMENT_KEY)
+    existing_id = get_current_tournament_id(db)
 
     while tournament is None or retry_until_new:
         text = fftbg.download.get_latest_tournament()
@@ -52,11 +51,15 @@ def try_load_new(db: Database, retry_until_new=True) -> Tournament:
         elif retry_until_new:
             time.sleep(SLEEP_TIME)
 
-    db.set(CURRENT_TOURNAMENT_KEY, current_id)
+    set_current_tournament_id(db, current_id)
     return tournament
 
 
 def post_prediction(db: Database, event_stream: EventStream, model: BakedModel, tournament: Tournament):
+    prediction = get_prediction(db, tournament.id)
+    if prediction is not None:
+        LOG.info(f'Prediction already exists for {tournament.id}')
+        return
     LOG.info(f'Computing prediction for {tournament.id}')
     prediction = model.predict(tournament)
     set_prediction(db, prediction)
@@ -66,21 +69,9 @@ def post_prediction(db: Database, event_stream: EventStream, model: BakedModel, 
     LOG.info(f'Posted prediction for {tournament.id}')
 
 
-def get_importance_key(tournament_id, left_team, right_team):
-    return f'brains.importance:{tournament_id}-{left_team}-{right_team}'
-
-
-def set_importance(db: Database, tournament_id, match_up: MatchUp, importance):
+def set_importance(db: Database, tournament_id, match_up: MatchUp, importance: List[dict]):
     key = get_importance_key(tournament_id, match_up.left.color, match_up.right.color)
     db.set(key, json.dumps(importance))
-
-
-def get_importance(db: Database, tournament_id, left_team, right_team):
-    key = get_importance_key(tournament_id, left_team, right_team)
-    data = db.get(key)
-    if data is not None:
-        data = json.loads(data)
-    return data
 
 
 def post_importance(db: Database, model: BakedModel, tournament_id, match_up: MatchUp, patch_time):
@@ -103,15 +94,21 @@ def run_server():
 
     while True:
         for (_, msg) in event_stream.read():
-            if msg.get('type') == msg_types.RECV_BETTING_OPEN:
+            if msg.get('type') == msg_types.CONNECTED_TO_TWITCH:
+                tournament = try_load_new(db, retry_until_new=False)
+                post_prediction(db, event_stream, model, tournament)
+
+            elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
                 left_team = msg['left_team']
                 right_team = msg['right_team']
+
                 if left_team == 'red' and right_team == 'blue':
                     tournament = try_load_new(db, retry_until_new=True)
                     post_prediction(db, event_stream, model, tournament)
                 idx = fftbg.tournament.look_up_prediction_index(left_team, right_team)
                 match_up = tournament.match_ups[idx]
                 post_importance(db, model, tournament.id, match_up, tournament.modified)
+                set_current_match(db, left_team, right_team)
 
 
 def main():

@@ -100,7 +100,7 @@ class PlacedBetDTO:
     right_prediction: float
 
 
-class BotMemory:
+class Memory:
     def __init__(self, db_path=config.BOT_MEMORY_PATH):
         self.db_path = db_path
         LOG.debug(f'Opening up sqlite3 connection to {self.db_path}')

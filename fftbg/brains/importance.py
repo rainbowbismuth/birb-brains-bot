@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Dict
+from typing import List
 
 from fftbg.brains.baked_model import BakedModel
 from fftbg.tournament import MatchUp
@@ -7,7 +7,7 @@ from fftbg.tournament import MatchUp
 KEYS = ['ReactionSkill', 'SupportSkill', 'MoveSkill', 'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 
 
-def compute(model: BakedModel, match_up_root: MatchUp, patch_time) -> List[Dict[str, float]]:
+def compute(model: BakedModel, match_up_root: MatchUp, patch_time) -> List[dict]:
     match_ups = []
     base_line = model.predict_match_ups([match_up_root], patch_time)
     for i, combatant in enumerate(match_up_root.left.combatants):
@@ -51,7 +51,25 @@ def compute(model: BakedModel, match_up_root: MatchUp, patch_time) -> List[Dict[
         diffs.append((d, i, k))
 
     output = [{}, {}, {}, {}, {}, {}, {}, {}]
+    for i, combatant in enumerate(match_up_root.left.combatants + match_up_root.right.combatants):
+        output[i]['name'] = combatant['Name']
+        output[i]['gender'] = combatant['Gender']
+        output[i]['job'] = combatant['Class']
+        output[i]['sign'] = combatant['Sign']
+        output[i]['brave'] = combatant['Brave']
+        output[i]['faith'] = combatant['Faith']
+        output[i]['plus'] = []
+        output[i]['minus'] = []
+
     for (d, i, k) in diffs:
-        output[i][k] = float(d)
+        d = float(d)
+        if d > 0.0:
+            output[i]['plus'].append((k, d))
+        else:
+            output[i]['minus'].append((k, d))
+
+    for data in output:
+        data['plus'].sort(key=lambda x: x[1], reverse=True)
+        data['minus'].sort(key=lambda x: x[1])
 
     return output

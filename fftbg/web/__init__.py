@@ -6,7 +6,9 @@ import numpy as np
 import pandas
 from flask import Flask, render_template
 
-from fftbg.bot.memory import BotMemory
+import fftbg.brains.api
+from fftbg.bird.memory import Memory
+from fftbg.server import get_redis
 
 LOG = logging.getLogger(__name__)
 app = Flask(
@@ -26,7 +28,7 @@ def get_index():
 
 @app.route('/balance-log')
 def get_balance_log():
-    memory = BotMemory()
+    memory = Memory()
     log = memory.get_balance_log(LIMIT)
     log_entries = [dataclasses.asdict(entry) for entry in log]
     return json.dumps(log_entries, sort_keys=True)
@@ -34,14 +36,14 @@ def get_balance_log():
 
 @app.route('/placed-bet')
 def get_placed_bet():
-    memory = BotMemory()
+    memory = Memory()
     bet = memory.get_placed_bet()
     return json.dumps(dataclasses.asdict(bet), sort_keys=True)
 
 
 @app.route('/balance-log-stats')
 def get_balance_log_stats():
-    memory = BotMemory()
+    memory = Memory()
     log = memory.get_balance_log(LIMIT + WINDOW)
     log_entries = [dataclasses.asdict(entry) for entry in log]
 
@@ -61,3 +63,21 @@ def get_balance_log_stats():
     df['rolling_log_loss'] = df['log_loss'].rolling(WINDOW).mean()
 
     return df.iloc[-LIMIT:].to_json(orient='records')
+
+
+@app.route('/team-summary')
+def get_team_summary():
+    db = get_redis()
+    tournament_id = fftbg.brains.api.get_current_tournament_id(db)
+    left_team, right_team = fftbg.brains.api.get_current_match(db)
+    importance = fftbg.brains.api.get_importance(db, tournament_id, left_team, right_team)
+    left_team_units = importance[:4]
+    right_team_units = importance[4:]
+    data = {
+        'tournament_id': tournament_id,
+        'left_team': left_team,
+        'right_team': right_team,
+        'left_team_units': left_team_units,
+        'right_team_units': right_team_units
+    }
+    return json.dumps(data)

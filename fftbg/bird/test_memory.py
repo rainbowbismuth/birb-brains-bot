@@ -1,8 +1,8 @@
-from fftbg.bot.memory import BotMemory
+from fftbg.bird.memory import Memory
 
 
 def test_creation_and_logging():
-    b = BotMemory(db_path=':memory:')
+    b = Memory(db_path=':memory:')
     arg = 1, 2, 3, 'red', 100, 'red', 0.456, 4, 5, 'blue', 0.678, 5, 6, True
     b.log_balance(*arg)
     log = b.get_balance_log(1)
@@ -11,7 +11,7 @@ def test_creation_and_logging():
 
 
 def test_placed_bet():
-    b = BotMemory(db_path=':memory:')
+    b = Memory(db_path=':memory:')
     arg = 1, 'red', 100, 'red', 0.45, 'blue', 0.65
     b.placed_bet(*arg)
     bet = b.get_placed_bet()
