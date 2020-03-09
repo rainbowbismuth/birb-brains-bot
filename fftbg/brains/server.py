@@ -40,7 +40,7 @@ def set_prediction(db: Database, prediction: Predictions):
 def try_load_new(db: Database, retry_until_new=True) -> Tournament:
     tournament = None
     current_id = '0'
-    existing_id = get_current_tournament_id(db)
+    existing_id = int(get_current_tournament_id(db))
 
     while tournament is None or retry_until_new:
         text = fftbg.download.get_latest_tournament()
