@@ -3,7 +3,6 @@ import sched
 
 from walrus import Database
 
-import fftbg.brains.importance
 import fftbg.download
 import fftbg.event_stream
 import fftbg.server

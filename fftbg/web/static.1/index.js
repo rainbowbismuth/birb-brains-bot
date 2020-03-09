@@ -326,8 +326,8 @@ const UnitPortrait = {
 
 const IndividualUnit = {
     view: function (vnode) {
-        let pluses = vnode.attrs.plus.slice(0, 3).map(plus =>
-            m('.col.px-1.d-flex.justify-content-around.unit-summary-plus', [
+        let pluses = vnode.attrs.plus.slice(0, 5).map(plus =>
+            m('span.px-2.unit-summary-plus', [
                 '▲ ',
                 plus[0],
                 ' +',
@@ -335,10 +335,10 @@ const IndividualUnit = {
             ])
         );
         if (pluses.length === 0) {
-            pluses = [m('.col.px-1.d-flex.justify-content-around.unit-summary-plus', '~')];
+            pluses = [m('span.px-2.unit-summary-plus', '~')];
         }
         let minuses = vnode.attrs.minus.slice(0, 3).map(minus =>
-            m('.col.px-1.d-flex.justify-content-around.unit-summary-minus', [
+            m('span.px-2.unit-summary-minus', [
                 '▼ ',
                 minus[0],
                 ' ',
@@ -346,7 +346,7 @@ const IndividualUnit = {
             ])
         );
         if (minuses.length === 0) {
-            minuses = [m('.col.px-1.d-flex.justify-content-around.unit-summary-minus', '~')];
+            minuses = [m('span.px-2.unit-summary-minus', '~')];
         }
 
         const header_cols = [
@@ -389,10 +389,10 @@ const IndividualUnit = {
             m('tbody', [
                 tr1,
                 m('tr', [
-                    m('td', {colspan: 4}, m('.row', pluses))
+                    m('td', {colspan: 4}, m('.row.d-flex.flex-wrap.justify-content-center', pluses))
                 ]),
                 m('tr', [
-                    m('td', {colspan: 4}, m('.row', minuses))
+                    m('td', {colspan: 4}, m('.row.d-flex.flex-wrap.justify-content-center', minuses))
                 ]),
                 m('tr', m(
                     'td',
