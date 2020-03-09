@@ -25,12 +25,12 @@ class Server:
         self.waiting_for_odds = False
 
     def ask_for_odds(self):
-        # self.event_stream.publish({'type': msg_types.SEND_POT})
+        self.event_stream.publish({'type': msg_types.SEND_POT})
         self.waiting_for_odds = True
         LOG.info(f'Asking for odds')
 
     def ask_for_balance(self):
-        # self.event_stream.publish({'type': msg_types.SEND_BALANCE})
+        self.event_stream.publish({'type': msg_types.SEND_BALANCE})
         LOG.info(f'Asking for balance')
 
     def publish_bet(self, color, amount):
@@ -40,7 +40,7 @@ class Server:
             'color': color,
             'amount': amount
         }
-        # self.event_stream.publish(msg)
+        self.event_stream.publish(msg)
         LOG.info(f'Published bet, {amount} on {color}')
 
     def check_messages(self):

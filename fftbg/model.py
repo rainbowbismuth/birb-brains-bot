@@ -13,6 +13,7 @@ import fftbg.ability
 import fftbg.combatant as combatant
 import fftbg.config as config
 import fftbg.data as data
+import fftbg.server
 import fftbg.tournament as tournament
 from fftbg.passthrough import MyPassthrough
 
@@ -41,6 +42,7 @@ def get_all_columns(df):
 
 
 def main():
+    fftbg.server.configure_logging('MODEL_LOG_LEVEL')
     LOG.info('Going to compute tournament model')
     df = data.read_combatants()
 
