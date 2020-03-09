@@ -52,6 +52,7 @@ class Server:
             elif msg.get('type') == msg_types.RECV_TEAM_VICTORY:
                 self.ask_for_balance()
 
+            # TODO: stop hard-coding bot nick here
             elif msg.get('type') == msg_types.RECV_BALANCE and msg['user'].lower() == 'birbbrainsbot':
                 new_balance = int(msg['amount'])
                 self.bird.update_balance(new_balance)
@@ -59,8 +60,9 @@ class Server:
             elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
                 left_team = msg['left_team']
                 right_team = msg['right_team']
-                self.bird.log_prediction(left_team, right_team)
-                self.scheduler.enter(30, 1, self.ask_for_odds)
+                LOG.info(f'Betting has opened for {left_team} vs {right_team}')
+                self.scheduler.enter(30, 1, lambda: self.bird.log_prediction(left_team, right_team))
+                self.scheduler.enter(30, 2, self.ask_for_odds)
 
             elif msg.get('type') == msg_types.RECV_BETTING_POOL:
                 final = int(msg['final']) != 0

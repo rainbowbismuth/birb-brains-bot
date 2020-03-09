@@ -51,6 +51,8 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     if combatant['MoveSkill'] == 'Ignore Height':
         output['Jump'] = 20
         output['MoveSkill'] = ''
+    if combatant['MoveSkill'] == 'Lava Walking':
+        output['MoveSkill'] = ''
     if combatant['MoveSkill'].startswith('Teleport'):
         output['Jump'] = 20
 
