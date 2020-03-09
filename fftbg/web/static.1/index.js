@@ -315,9 +315,12 @@ const UnitPortrait = {
         } else {
             unit = vnode.attrs.job + vnode.attrs.gender[0];
         }
-        unit = unit.replace(' ', '');
+        let color = '';
+        if (vnode.attrs.color !== 'champion' && vnode.attrs.gender !== 'Monster') {
+            color = '_' + vnode.attrs.color[0].toUpperCase() + vnode.attrs.color.slice(1);
+        }
         const cls = vnode.attrs.left ? '.portrait-left' : '.portrait-right';
-        return m('img' + cls, {src: 'https://mustadio-images.s3.amazonaws.com/units/' + unit + '.gif'});
+        return m('img' + cls, {src: 'https://mustadio-images.s3.amazonaws.com/units/' + unit + color + '.gif'});
     }
 };
 

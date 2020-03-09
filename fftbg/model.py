@@ -190,10 +190,10 @@ def model_three_hp(hp, combatant_size):
 
 def model_three(combatant_size,
                 extra_size=50,
-                extra_layers=6,
+                extra_layers=3,
                 momentum=0.90,
                 activation='relu',
-                l1_rate=0.005,
+                l1_rate=0.0025,
                 l2_rate=0.005,
                 learning_rate=0.001):
     def make_dense(output_size):

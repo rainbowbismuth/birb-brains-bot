@@ -52,6 +52,7 @@ def try_load_new(db: Database, retry_until_new=True) -> Tournament:
             time.sleep(SLEEP_TIME)
 
     set_current_tournament_id(db, current_id)
+    LOG.info(f'Set tournament id to {current_id}')
     return tournament
 
 

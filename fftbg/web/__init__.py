@@ -71,6 +71,8 @@ def get_team_summary():
     tournament_id = fftbg.brains.api.get_current_tournament_id(db)
     left_team, right_team = fftbg.brains.api.get_current_match(db)
     importance = fftbg.brains.api.get_importance(db, tournament_id, left_team, right_team)
+    if importance is None:
+        return json.dumps(None)
     left_team_units = importance[:4]
     right_team_units = importance[4:]
     data = {
