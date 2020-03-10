@@ -34,8 +34,8 @@ class BakedModel:
         right_wins = {}
         for i, (team_1, team_2, _) in enumerate(tournament.HYPOTHETICAL_MATCHES):
             match = f'{team_1} {team_2}'
-            left_wins[match] = float(predictions[i, 0])
-            right_wins[match] = float(predictions[i, 1])
+            left_wins[match] = float(predictions[i, 1])
+            right_wins[match] = float(predictions[i, 0])
 
         return Predictions(tourny.id, left_wins, right_wins)
 
