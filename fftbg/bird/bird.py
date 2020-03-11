@@ -143,7 +143,7 @@ class Bird:
             self.wager = 200
         else:
             self.wager = int(max(100, self.wager))
-        self.wager = min(self.wager, self.balance)
+        self.wager = min(self.wager, self.balance, 1000)
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
