@@ -114,7 +114,7 @@ class Server:
                 if final:
                     self.bird.final_odds(left_total, right_total)
                 elif self.waiting_for_odds:
-                    color, wager = self.bird.make_bet(left_total, right_total)
+                    color, wager = self.bird.make_bet(left_total, right_total, self.go_all_in)
                     self.publish_bet(color, wager)
                     self.waiting_for_odds = False
 

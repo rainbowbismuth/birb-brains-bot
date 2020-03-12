@@ -105,7 +105,7 @@ class Bird:
         self.right_team = right
         self.prediction = prediction
 
-    def make_bet(self, left_total, right_total):
+    def make_bet(self, left_total, right_total, all_in=False):
         pool_total_est = (left_total + right_total) * self.moving_increase
 
         left_wins_percent = self.prediction[1]
@@ -118,6 +118,19 @@ class Bird:
         self.right_prediction = right_wins_percent
         self.left_total_on_bet = left_total
         self.right_total_on_bet = right_total
+
+        if all_in:
+            if self.left_prediction > self.right_prediction:
+                self.betting_on = self.left_team
+            else:
+                self.betting_on = self.right_team
+            self.wager = self.balance
+            self.memory.placed_bet(
+                self.tournament_id, self.betting_on, self.wager,
+                self.left_team_bet, self.left_prediction,
+                self.right_team_bet, self.right_prediction
+            )
+            return self.betting_on, self.wager
 
         new_left_total = left_total * self.moving_increase
         new_right_total = right_total * self.moving_increase
