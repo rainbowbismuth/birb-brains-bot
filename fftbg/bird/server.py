@@ -40,7 +40,7 @@ class Server:
     def publish_bet(self, color, amount):
         if self.go_all_in:
             self.say_message(f'!allin {color}')
-            self.say_message(f'Kwark! (I\'m so nervous!)')
+            self.say_message(f'Kweh! (I\'m so nervous! kwehLurk)')
             return
 
         amount = int(amount)
@@ -68,23 +68,26 @@ class Server:
         number = int(MAX_BET - cur_bal)
         if number <= 0:
             return
-        self.say_message(f'Kwark! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in!)')
+        self.say_message(
+            f'Kweh-kweh!! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in! kwehWink)')
 
     def update_balance(self, new_balance):
         if new_balance < MIN_BET and self.go_all_in:
             self.go_all_in = False
             self.say_message('Kweh... (Oh no... I really messed up didn\'t I?)')
+            self.say_message('kwehQQ')
             self.say_message('*sniffle* (Going to have to start from scratch now..)')
-            self.say_message('Kwark!! (I know I can do it though ;)! You believe in me, right?)')
+            self.say_message('Wark!! (I know I can do it though ;)! You believe in me, right? kwehLove)')
         elif new_balance >= MAX_BET and self.go_all_in:
             self.say_message('Kweh?? (Did... did I win? >.<)')
-            self.say_message(f'Kwark.. (What am I going to do with {new_balance:,d} G?)')
-            self.say_message('Wark! (Guess I\'m going to all-in again!!)')
+            self.say_message('kwehWut')
+            self.say_message(f'Wark.. (What am I going to do with {new_balance:,d} G?)')
+            self.say_message('Wark-wark!! (Guess I\'m going to all-in again!! kwehSwag)')
 
         self.bird.update_balance(new_balance)
         if not self.go_all_in and new_balance >= MAX_BET:
             self.go_all_in = True
-            self.say_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!!)')
+            self.say_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!! kwehSpook)')
 
     def check_messages(self):
         self.scheduler.enter(1, 1, self.check_messages)
