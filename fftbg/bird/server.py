@@ -14,6 +14,10 @@ from fftbg.event_stream import EventStream
 
 LOG = logging.getLogger(__name__)
 
+REMINDER_MIN = 30
+MIN_BET = 400000
+MAX_BET = 500000
+
 
 class Server:
     def __init__(self, db: Database, event_stream: EventStream, bird: Bird, scheduler: sched.scheduler):
@@ -22,6 +26,7 @@ class Server:
         self.bird = bird
         self.scheduler = scheduler
         self.waiting_for_odds = False
+        self.go_all_in = False
 
     def ask_for_odds(self):
         self.event_stream.publish({'type': msg_types.SEND_POT})
@@ -33,6 +38,11 @@ class Server:
         LOG.info(f'Asking for balance')
 
     def publish_bet(self, color, amount):
+        if self.go_all_in:
+            self.say_message(f'!allin {color}')
+            self.say_message(f'Kwark! (I\'m so nervous!)')
+            return
+
         amount = int(amount)
         msg = {
             'type': msg_types.SEND_BET,
@@ -41,6 +51,40 @@ class Server:
         }
         self.event_stream.publish(msg)
         LOG.info(f'Published bet, {amount} on {color}')
+
+    def say_message(self, text):
+        msg = {
+            'type': msg_types.SEND_MESSAGE,
+            'say': text
+        }
+        self.event_stream.publish(msg)
+        LOG.info(f'Sending message: {text}')
+
+    def all_in_ready(self):
+        self.scheduler.enter(60 * REMINDER_MIN, 3, self.all_in_ready)
+        cur_bal = self.bird.balance
+        if cur_bal == 0 or cur_bal < MIN_BET or self.go_all_in:
+            return
+        number = int(MAX_BET - cur_bal)
+        if number <= 0:
+            return
+        self.say_message(f'Kwark! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in!)')
+
+    def update_balance(self, new_balance):
+        if new_balance < MIN_BET and self.go_all_in:
+            self.go_all_in = False
+            self.say_message('Kweh... (Oh no... I really messed up didn\'t I?)')
+            self.say_message('*sniffle* (Going to have to start from scratch now..)')
+            self.say_message('Kwark!! (I know I can do it though ;)! You believe in me, right?)')
+        elif new_balance >= MAX_BET and self.go_all_in:
+            self.say_message('Kweh?? (Did... did I win? >.<)')
+            self.say_message(f'Kwark.. (What am I going to do with {new_balance:,d} G?)')
+            self.say_message('Wark! (Guess I\'m going to all-in again!!)')
+
+        self.bird.update_balance(new_balance)
+        if not self.go_all_in and new_balance >= MAX_BET:
+            self.go_all_in = True
+            self.say_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!!)')
 
     def check_messages(self):
         self.scheduler.enter(1, 1, self.check_messages)
@@ -54,7 +98,7 @@ class Server:
             # TODO: stop hard-coding bot nick here
             elif msg.get('type') == msg_types.RECV_BALANCE and msg['user'].lower() == 'birbbrainsbot':
                 new_balance = int(msg['amount'])
-                self.bird.update_balance(new_balance)
+                self.update_balance(new_balance)
 
             elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
                 left_team = msg['left_team']
@@ -87,6 +131,7 @@ def run_server():
 
     server = Server(db, event_stream, bird, scheduler)
     scheduler.enter(0, 1, server.check_messages)
+    scheduler.enter(0, 1, server.all_in_ready)
     scheduler.run()
 
 

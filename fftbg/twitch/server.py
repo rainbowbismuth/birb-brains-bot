@@ -16,6 +16,7 @@ def run_server():
     client_id = os.environ['TWITCH_CLIENT_ID']
     bot_nick = os.environ['TWITCH_BOT_NICK']
     channel = os.environ['TWITCH_BOT_CHANNEL']
+    mute = bool(int(os.environ['TWITCH_BOT_MUTE']))
     prefix = '@' + bot_nick
 
     redis = fftbg.server.get_redis()
@@ -26,7 +27,8 @@ def run_server():
         prefix=prefix,
         nick=bot_nick,
         fftbg_channel=channel,
-        event_stream=event_stream)
+        event_stream=event_stream,
+        mute=mute)
     bot.run()
 
 

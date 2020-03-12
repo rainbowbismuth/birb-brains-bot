@@ -13,7 +13,7 @@ LOG = logging.getLogger(__name__)
 
 
 class IRCBot(commands.Bot):
-    def __init__(self, irc_token, client_id, nick, prefix, fftbg_channel, event_stream: EventStream):
+    def __init__(self, irc_token, client_id, nick, prefix, fftbg_channel, event_stream: EventStream, mute=True):
         super().__init__(
             irc_token=irc_token,
             client_id=client_id,
@@ -28,6 +28,9 @@ class IRCBot(commands.Bot):
                                        daemon=True)
         self.thread.start()
         self.loop.create_task(self._send_outgoing_messages())
+        self.mute = mute
+        if self.mute:
+            LOG.info('Bot is muted and will not speak')
 
     def _handle_incoming_messages(self):
         try:
@@ -76,6 +79,11 @@ class IRCBot(commands.Bot):
     async def _send_message_immediately(self, text: str):
         try:
             channel = self.get_channel(self.fftbg_channel)
+            if self.mute:
+                LOG.info(f'[muted]: {text}')
+                return
+            else:
+                LOG.info(f'Saying: {text}')
             await channel.send(text)
         except Exception as e:
             LOG.error(f'Error while saying: {text}', exc_info=e)
@@ -133,6 +141,15 @@ class IRCBot(commands.Bot):
         balance_match = parse.BALANCE_RE.findall(message.content)
         if balance_match:
             for (user, balance) in balance_match:
+                amount = parse.parse_comma_int(balance)
+                msg = {'type': msg_types.RECV_BALANCE,
+                       'user': user,
+                       'amount': amount}
+                self.event_stream.publish(msg)
+
+        balance_match2 = parse.BALANCE2_RE.findall(message.content)
+        if balance_match2:
+            for (user, balance) in balance_match2:
                 amount = parse.parse_comma_int(balance)
                 msg = {'type': msg_types.RECV_BALANCE,
                        'user': user,
