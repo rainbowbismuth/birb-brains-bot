@@ -238,7 +238,7 @@ def parse_tournaments() -> List[Tournament]:
 
 
 def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
-    LOG.info('Converting tournaments to by-combatant DataFrame')
+    LOG.debug('Converting tournaments to by-combatant DataFrame')
     data = []
     for tournament in tournaments:
         patch = fftbg.patch.get_patch(tournament.modified)
@@ -265,7 +265,7 @@ def _to_dataframe(data) -> pandas.DataFrame:
 
 
 def match_ups_to_combatants(match_ups: List[MatchUp], patch: Patch) -> pandas.DataFrame:
-    LOG.info('Converting match ups to by-combatant DataFrame')
+    LOG.debug('Converting match ups to by-combatant DataFrame')
     data = []
     for match_up in match_ups:
         data.extend(match_up.to_combatants(patch))
