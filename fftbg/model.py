@@ -190,33 +190,38 @@ def model_three_hp(hp, combatant_size):
 
 def model_three(combatant_size,
                 extra_size=100,
-                extra_layers=5,
-                momentum=0.90,
-                activation='relu',
-                l1_rate=0.005,
-                l2_rate=0.005,
+                extra_layers=1,
+                momentum=0.99,
+                activation='elu',
+                l1_rate=0.000,
+                l2_rate=0.01,
                 learning_rate=0.001):
     def make_dense(output_size):
         dense = keras.layers.Dense(
             output_size,
             kernel_initializer='he_normal',
-            kernel_regularizer=keras.regularizers.l1_l2(l1_rate, l2_rate),
-            use_bias=False)
-        batch = keras.layers.BatchNormalization(momentum=momentum)
-        act = keras.layers.Activation(activation=activation)
-        return lambda x: act(batch(dense(x)))
+            kernel_regularizer=keras.regularizers.l2(l2_rate),
+            activation=activation,
+            use_bias=True)
+        # batch = keras.layers.BatchNormalization(momentum=momentum)
+        # act = keras.layers.Activation(activation=activation)
+        return dense
+        # return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    first_layer = make_dense(extra_size)
+    first_layer = make_dense(int(combatant_size))
     first_nodes = [first_layer(input_node) for input_node in inputs]
 
     nodes = [first_nodes]
     for _ in range(extra_layers):
-        new_layer = make_dense(extra_size)
-        nodes.append([new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, nodes[-1])])
+        new_layer = make_dense(combatant_size // 15)
+        nodes.append([new_layer(node) for node in nodes[-1]])
+        # nodes.append([new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, nodes[-1])])
 
-    predictions = keras.layers.Dense(2, activation='softmax')(
-        keras.layers.concatenate(nodes[-1]))
+    final_layer = make_dense(combatant_size // 25)
+    final_node = final_layer(keras.layers.concatenate(nodes[-1]))
+
+    predictions = keras.layers.Dense(2, activation='softmax')(final_node)
 
     model = keras.Model(inputs=inputs, outputs=predictions)
     LOG.info(f'Number of parameters: {model.count_params()}')
