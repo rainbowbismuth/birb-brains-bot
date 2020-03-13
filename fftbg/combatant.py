@@ -168,7 +168,7 @@ def damage_calculation(combatant, weapon: equipment.Equipment):
         pa = (pa * 5) // 4
         ma = (ma * 5) // 4
 
-    if combatant['SupportSkill'] == 'Doublehand':
+    if combatant['SupportSkill'] == 'Doublehand' and weapon.weapon_type not in ('Gun',):
         wp *= 2
     if combatant['SupportSkill'] == 'Attack UP':
         pa = (pa * 4) // 3
