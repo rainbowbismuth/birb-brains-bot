@@ -389,8 +389,8 @@ def lethality(actor, victim, patch: Patch):
     hp = victim['HP']
     ev_avg = 1.0 - (victim['Physical Evade'] + victim['Magical Evade']) / 3.0
     damage *= ev_avg
-    damage = max(20, damage)
-    return max(0.25, hp / damage)
+    damage = max(5, damage)
+    return max(0.01, hp / damage)
 
 
 def can_cause(actor, victim, status, patch: Patch):

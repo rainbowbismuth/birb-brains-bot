@@ -11,7 +11,7 @@ import fftbg.patch
 from fftbg.ability import SKILL_TAG
 from fftbg.arena import get_arena
 from fftbg.combatant import CATEGORICAL, combatant_to_dict, can_heal, \
-    zodiac_compat, can_cause, can_cancel, lethality
+    zodiac_compat, can_cause, can_cancel, lethality, can_hurt
 from fftbg.config import TOURNAMENTS_ROOT
 from fftbg.patch import Patch
 
@@ -20,6 +20,7 @@ LOG = logging.getLogger(__name__)
 COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown', 'champion']
 CAN_HEAL_TEAM = [f'Can-Heal-Team-{i}' for i in range(4)]
 CAN_HURT_ENEMY = [f'Can-Hurt-Enemy-{i}' for i in range(4)]
+CAN_LETHAL_ENEMY = [f'Can-Lethal-Enemy-{i}' for i in range(4)]
 ZODIAC_TEAM = [f'Zodiac-Team-{i}' for i in range(4)]
 ZODIAC_ENEMY = [f'Zodiac-Enemy-{i}' for i in range(4)]
 OFFENSIVE_STATUSES = [
@@ -31,7 +32,7 @@ CAUSE_STATUS = [f'Can-{status}-Enemy-{j}' for status in OFFENSIVE_STATUSES for j
 CANCEL_STATUS = [f'Can-Cancel-{status}-Team-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
 NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
            'Map-Min-Dimension', 'Map-Max-Dimension', 'Map-Archer-Boon', 'Map-Meat-Grinder'] \
-          + CAN_HEAL_TEAM + CAN_HURT_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
+          + CAN_HEAL_TEAM + CAN_HURT_ENEMY + CAN_LETHAL_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
           + CAUSE_STATUS + CANCEL_STATUS
 
 
@@ -123,7 +124,8 @@ class MatchUp:
                     combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status, patch)
 
             for j, victim in enumerate(right_combatants):
-                combatant[f'Can-Hurt-Enemy-{j}'] = lethality(combatant, victim, patch)
+                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim, patch)
+                combatant[f'Can-Lethal-Enemy-{j}'] = lethality(combatant, victim, patch)
                 combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
@@ -141,7 +143,8 @@ class MatchUp:
                     combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status, patch)
 
             for j, victim in enumerate(left_combatants):
-                combatant[f'Can-Hurt-Enemy-{j}'] = lethality(combatant, victim, patch)
+                combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim, patch)
+                combatant[f'Can-Lethal-Enemy-{j}'] = lethality(combatant, victim, patch)
                 combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
