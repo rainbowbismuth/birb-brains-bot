@@ -190,7 +190,7 @@ def model_three_hp(hp, combatant_size):
 
 def model_three(combatant_size,
                 extra_size=100,
-                extra_layers=1,
+                extra_layers=2,
                 momentum=0.99,
                 activation='elu',
                 l1_rate=0.000,

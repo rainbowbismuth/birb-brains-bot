@@ -157,21 +157,21 @@ def combatant_to_dict(combatant: dict, patch: Patch):
 
 def damage_calculation(combatant, weapon: equipment.Equipment):
     pa = combatant['PA']
+    ma = combatant['MA']
     pa_bang = combatant['PA!']
-    ma_bang = combatant['MA!']
     br = combatant['Brave'] / 100.0
     wp = weapon.wp
     sp = combatant['Speed']
 
     element = weapon.weapon_element
     if element and combatant.get(f'Strengthen-{element}'):
-        pa_bang = (pa_bang * 5) // 4
-        ma_bang = (ma_bang * 5) // 4
+        pa = (pa * 5) // 4
+        ma = (ma * 5) // 4
 
     if combatant['SupportSkill'] == 'Doublehand':
         wp *= 2
     if combatant['SupportSkill'] == 'Attack UP':
-        pa_bang = (pa_bang * 4) // 3
+        pa = (pa * 4) // 3
 
     # TODO: Fix magical guns, they are special.
 
@@ -181,17 +181,17 @@ def damage_calculation(combatant, weapon: equipment.Equipment):
             pa_bang = (pa_bang * 3) // 2
         return floor(pa * br) * pa_bang
     if weapon.weapon_type in ('Knife', 'Ninja Sword', 'Ninja Blade', 'Longbow', 'Bow'):
-        return ((pa_bang + sp) // 2) * wp
+        return ((pa + sp) // 2) * wp
     if weapon.weapon_type in ('Knight Sword', 'Katana'):
-        return floor(pa_bang * br) * wp
+        return floor(pa * br) * wp
     if weapon.weapon_type in ('Sword', 'Rod', 'Pole', 'Spear', 'Crossbow'):
-        return pa_bang * wp
+        return pa * wp
     if weapon.weapon_type in ('Staff', 'Stick'):
-        return ma_bang * wp
+        return ma * wp
     if weapon.weapon_type in ('Flail', 'Axe', 'Bag'):
-        return (pa_bang / 2) * wp
+        return (pa / 2) * wp
     if weapon.weapon_type in ('Cloth', 'Fabric', 'Musical Instrument', 'Harp', 'Dictionary', 'Book'):
-        return ((pa_bang + ma_bang) // 2) * wp
+        return ((pa + ma) // 2) * wp
     if weapon.weapon_type == 'Gun':
         return wp * wp
 

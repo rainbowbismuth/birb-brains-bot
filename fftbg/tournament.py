@@ -8,12 +8,12 @@ from typing import List, Optional, Tuple
 import pandas
 
 import fftbg.patch
-from fftbg.ability import SKILL_TAG
 from fftbg.arena import get_arena
 from fftbg.combatant import CATEGORICAL, combatant_to_dict, can_heal, \
     zodiac_compat, can_cause, can_cancel, lethality, can_hurt
 from fftbg.config import TOURNAMENTS_ROOT
 from fftbg.patch import Patch
+from fftbg.progress import progress_bar
 
 LOG = logging.getLogger(__name__)
 
@@ -243,7 +243,7 @@ def parse_tournaments() -> List[Tournament]:
 def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
     LOG.debug('Converting tournaments to by-combatant DataFrame')
     data = []
-    for tournament in tournaments:
+    for tournament in progress_bar(tournaments):
         patch = fftbg.patch.get_patch(tournament.modified)
         data.extend(tournament.to_combatants(patch))
 
@@ -260,10 +260,10 @@ def _to_dataframe(data) -> pandas.DataFrame:
     for category in CATEGORICAL:
         df[category].replace('', None, inplace=True)
         df[category] = df[category].astype('category')
-    for column in df.keys():
-        if not column.startswith(SKILL_TAG):
+    for column in progress_bar(list(df.keys())):
+        if df[column].dtype.name == 'category':
             continue
-        df[column].fillna(0, inplace=True)
+        df[column].fillna(0.0, inplace=True)
     return df
 
 
