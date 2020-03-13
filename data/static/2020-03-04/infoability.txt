@@ -210,7 +210,7 @@ Choco Meteor: 5 range, 0 AoE. Effect: Damage (MA * 4).
 Choco Esuna: 0 range, 1 AoE. Effect: Cancel Petrify, Darkness, Silence, Poison, Stop, Don't Move, Don't Act.
 Choco Cure: 0 range, 1 AoE. Effect: Heal (MA * 3).
 Tackle: 1 range, 0 AoE. Effect: Normal Attack.
-Goblin Punch: 1 range, 0 AoE. Hit: (MA + X)%. Effect: Damage (CasterMaxHP - CasterCurrentHP).
+Goblin Punch: 1 range, 0 AoE. Hit: (MA + 40)%. Effect: Damage (CasterMaxHP - CasterCurrentHP).
 Turn Punch: 0 range, 1 AoE. Effect: Damage ((PA + 4) / 2 * PA).
 Eye Gouge: 1 range, 0 AoE. Hit: (MA + 55)%. Effect: Add Darkness, Confusion (All).
 Mutilate: 1 range, 0 AoE. Hit: (MA + 29)%. Effect: AbsorbHP (66)%.
