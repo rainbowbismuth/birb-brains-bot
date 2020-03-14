@@ -147,16 +147,7 @@ class Bird:
         else:
             self.betting_on = self.right_team
             self.wager = right_bet
-        self.wager = min(self.wager, 1000 + pool_total_est * 0.02)
-        if left_bet > right_bet:
-            self.wager *= left_wins_percent
-        else:
-            self.wager *= right_wins_percent
-        if self.balance <= 200:
-            self.wager = 200
-        else:
-            self.wager = int(max(100, self.wager))
-        self.wager = min(self.wager, self.balance, 1000)
+        self.wager = min(self.wager, max(self.balance, 200), 1000)
 
         self.memory.placed_bet(
             self.tournament_id, self.betting_on, self.wager,
