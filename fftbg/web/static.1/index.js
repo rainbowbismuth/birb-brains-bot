@@ -555,7 +555,8 @@ function installInterval() {
         if (State.placed_bet.time.isAfter(old_time)) {
             load_balance_log();
         }
-        if (State.placed_bet.left_team !== State.team_summary.left_team
+        if (!State.team_summary
+            || State.placed_bet.left_team !== State.team_summary.left_team
             || State.placed_bet.right_team !== State.team_summary.right_team) {
             load_team_summary();
         }
