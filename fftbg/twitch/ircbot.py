@@ -100,20 +100,28 @@ class IRCBot(commands.Bot):
     async def send_bet_command(self, team, amount):
         await self.send_message(f'!bet {team} {amount}')
 
+    def publish_bet(self, user, team, amount):
+        bet = {'type': msg_types.RECV_BET,
+               'user': user,
+               'team': team}
+        if amount.endswith('%'):
+            percent = parse.parse_comma_int(amount.replace('%', ''))
+            bet['percent'] = percent
+        else:
+            amount = parse.parse_comma_int(amount)
+            bet['amount'] = amount
+        self.event_stream.publish(bet)
+
     async def event_message(self, message):
         bet_match = parse.BET_RE.findall(message.content)
         if bet_match:
             team, amount = bet_match[0]
-            bet = {'type': msg_types.RECV_BET,
-                   'user': message.author.name,
-                   'team': team}
-            if amount.endswith('%'):
-                percent = parse.parse_comma_int(amount.replace('%', ''))
-                bet['percent'] = percent
-            else:
-                amount = parse.parse_comma_int(amount)
-                bet['amount'] = amount
-            self.event_stream.publish(bet)
+            self.publish_bet(message.author.name, team, amount)
+
+        bet2_match = parse.BET2_RE.findall(message.content)
+        if bet2_match:
+            amount, team = bet2_match[0]
+            self.publish_bet(message.author.name, team, amount)
 
         all_in_match = parse.ALL_IN_RE.findall(message.content)
         if all_in_match:

@@ -3,6 +3,7 @@ import re
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
 
 BET_RE = re.compile(r'!bet (\w+) ([\d%]+)')
+BET2_RE = re.compile(r'!bet ([\d%]+) (\w+)')
 ALL_IN_RE = re.compile(r'!allin (\w+)')
 BOTS_CANNOT_BET_RE = re.compile(r'(\w+), bots cannot bet in the final (\d+) seconds!')
 BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')
