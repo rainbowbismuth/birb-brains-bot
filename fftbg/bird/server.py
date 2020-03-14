@@ -1,5 +1,5 @@
+import asyncio
 import logging
-import sched
 
 from walrus import Database
 
@@ -20,13 +20,15 @@ MAX_BET = 500000
 
 
 class Server:
-    def __init__(self, db: Database, event_stream: EventStream, bird: Bird, scheduler: sched.scheduler):
+    def __init__(self, db: Database, event_stream: EventStream, bird: Bird, loop: asyncio.AbstractEventLoop):
         self.db = db
         self.event_stream = event_stream
         self.bird = bird
-        self.scheduler = scheduler
+        self.loop = loop
         self.waiting_for_odds = False
         self.go_all_in = False
+        self.predictions_ready = asyncio.Event()
+        self.predictions_ready.set()
 
     def ask_for_odds(self):
         self.event_stream.publish({'type': msg_types.SEND_POT})
@@ -60,16 +62,17 @@ class Server:
         self.event_stream.publish(msg)
         LOG.info(f'Sending message: {text}')
 
-    def all_in_ready(self):
-        self.scheduler.enter(60 * REMINDER_MIN, 3, self.all_in_ready)
-        cur_bal = self.bird.balance
-        if cur_bal == 0 or cur_bal < MIN_BET or self.go_all_in:
-            return
-        number = int(MAX_BET - cur_bal)
-        if number <= 0:
-            return
-        self.say_message(
-            f'Kweh-kweh!! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in! kwehWink )')
+    async def all_in_ready(self):
+        while True:
+            await asyncio.sleep(60 * REMINDER_MIN)
+            cur_bal = self.bird.balance
+            if cur_bal == 0 or cur_bal < MIN_BET or self.go_all_in:
+                return
+            number = int(MAX_BET - cur_bal)
+            if number <= 0:
+                return
+            self.say_message(
+                f'Kweh-kweh!! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in! kwehWink )')
 
     def update_balance(self, new_balance):
         if new_balance < MIN_BET and self.go_all_in:
@@ -89,41 +92,54 @@ class Server:
             self.go_all_in = True
             self.say_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!! kwehSpook )')
 
-    def check_messages(self):
-        self.scheduler.enter(1, 1, self.check_messages)
-        for (_, msg) in self.event_stream.read():
-            if msg.get('type') == NEW_PREDICTIONS:
-                self.bird.load_current_tournament()
+    async def prepare_to_bet(self, betting_delay, left_team, right_team):
+        await asyncio.sleep(betting_delay)
+        await self.predictions_ready.wait()
+        self.bird.log_prediction(left_team, right_team)
+        self.ask_for_odds()
 
-            elif msg.get('type') == msg_types.RECV_TEAM_VICTORY:
-                self.ask_for_balance()
+    async def check_messages(self):
+        while True:
+            await asyncio.sleep(1)
+            for (_, msg) in self.event_stream.read():
+                if msg.get('type') == msg_types.RECV_NEW_TOURNAMENT:
+                    self.predictions_ready.clear()
+                    LOG.info('predictions_ready cleared')
 
-            # TODO: stop hard-coding bot nick here
-            elif msg.get('type') == msg_types.RECV_BALANCE and msg['user'].lower() == 'birbbrainsbot':
-                new_balance = int(msg['amount'])
-                self.update_balance(new_balance)
+                elif msg.get('type') == NEW_PREDICTIONS:
+                    self.bird.load_current_tournament()
+                    self.predictions_ready.set()
+                    LOG.info('predictions_ready set')
 
-            elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
-                left_team = msg['left_team']
-                right_team = msg['right_team']
-                LOG.info(f'Betting has opened for {left_team} vs {right_team}')
+                elif msg.get('type') == msg_types.RECV_TEAM_VICTORY:
+                    self.ask_for_balance()
 
-                betting_time = 30.0
-                if self.go_all_in:
-                    betting_time = 2.5
-                self.scheduler.enter(betting_time, 1, lambda: self.bird.log_prediction(left_team, right_team))
-                self.scheduler.enter(betting_time, 2, self.ask_for_odds)
+                # TODO: stop hard-coding bot nick here
+                elif msg.get('type') == msg_types.RECV_BALANCE and msg['user'].lower() == 'birbbrainsbot':
+                    new_balance = int(msg['amount'])
+                    self.update_balance(new_balance)
 
-            elif msg.get('type') == msg_types.RECV_BETTING_POOL:
-                final = int(msg['final']) != 0
-                left_total = int(msg['left_team_amount'])
-                right_total = int(msg['right_team_amount'])
-                if final:
-                    self.bird.final_odds(left_total, right_total)
-                elif self.waiting_for_odds:
-                    color, wager = self.bird.make_bet(left_total, right_total, self.go_all_in)
-                    self.publish_bet(color, wager)
-                    self.waiting_for_odds = False
+                elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
+                    left_team = msg['left_team']
+                    right_team = msg['right_team']
+                    LOG.info(f'Betting has opened for {left_team} vs {right_team}')
+
+                    betting_time = 30.0
+                    if self.go_all_in:
+                        betting_time = 1.0
+
+                    self.loop.create_task(self.prepare_to_bet(betting_time, left_team, right_team))
+
+                elif msg.get('type') == msg_types.RECV_BETTING_POOL:
+                    final = int(msg['final']) != 0
+                    left_total = int(msg['left_team_amount'])
+                    right_total = int(msg['right_team_amount'])
+                    if final:
+                        self.bird.final_odds(left_total, right_total)
+                    elif self.waiting_for_odds:
+                        color, wager = self.bird.make_bet(left_total, right_total, self.go_all_in)
+                        self.publish_bet(color, wager)
+                        self.waiting_for_odds = False
 
 
 def run_server():
@@ -134,12 +150,14 @@ def run_server():
 
     bird = Bird(db, event_stream)
     bird.load_current_tournament()
-    scheduler = sched.scheduler()
+    loop = asyncio.get_event_loop()
 
-    server = Server(db, event_stream, bird, scheduler)
-    scheduler.enter(0, 1, server.check_messages)
-    scheduler.enter(0, 1, server.all_in_ready)
-    scheduler.run()
+    server = Server(db, event_stream, bird, loop)
+
+    loop.create_task(server.check_messages())
+    loop.create_task(server.all_in_ready())
+
+    loop.run_forever()
 
 
 def main():
