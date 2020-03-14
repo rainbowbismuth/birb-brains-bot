@@ -107,8 +107,12 @@ class Server:
                 left_team = msg['left_team']
                 right_team = msg['right_team']
                 LOG.info(f'Betting has opened for {left_team} vs {right_team}')
-                self.scheduler.enter(30, 1, lambda: self.bird.log_prediction(left_team, right_team))
-                self.scheduler.enter(30, 2, self.ask_for_odds)
+
+                betting_time = 30.0
+                if self.go_all_in:
+                    betting_time = 2.5
+                self.scheduler.enter(betting_time, 1, lambda: self.bird.log_prediction(left_team, right_team))
+                self.scheduler.enter(betting_time, 2, self.ask_for_odds)
 
             elif msg.get('type') == msg_types.RECV_BETTING_POOL:
                 final = int(msg['final']) != 0
