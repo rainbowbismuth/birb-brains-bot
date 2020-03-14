@@ -6,7 +6,7 @@ const State = {
     team_summary: null
 };
 
-function load_summary_info() {
+function load_balance_log() {
     m.request({
         method: 'GET',
         url: '/balance-log-stats',
@@ -17,7 +17,9 @@ function load_summary_info() {
         });
         State.balance_log.sort((a, b) => b.id - a.id);
     });
+}
 
+function load_placed_bet() {
     m.request({
         method: 'GET',
         url: '/placed-bet',
@@ -25,13 +27,21 @@ function load_summary_info() {
         State.placed_bet = result;
         State.placed_bet.time = moment(result.time + 'Z');
     });
+}
 
+function load_team_summary() {
     m.request({
         method: 'GET',
         url: '/team-summary'
     }).then(function (result) {
         State.team_summary = result;
     });
+}
+
+function load_summary_info() {
+    load_balance_log();
+    load_placed_bet();
+    load_team_summary();
 }
 
 function display_gain_loss(x) {
@@ -51,6 +61,40 @@ function team_color(team) {
 function format_prediction(percent) {
     return (percent * 100).toFixed(1) + '%';
 }
+
+const PlacedBet = {
+    view: function (vnode) {
+        if (State.balance_log.length === 0) {
+            return '';
+        }
+        const placed_bet = State.placed_bet;
+        const newest = State.balance_log[0].time;
+        let placed_bet_msg = m('div', [
+            'Betting is currently open!'
+        ]);
+        if (placed_bet && newest.isBefore(placed_bet.time)) {
+            const win_prediction =
+                placed_bet.left_team === placed_bet.bet_on
+                    ? placed_bet.left_prediction
+                    : placed_bet.right_prediction;
+
+            const not_bet_team =
+                placed_bet.bet_on === placed_bet.left_team
+                    ? placed_bet.right_team
+                    : placed_bet.left_team;
+
+            placed_bet_msg = m('div', [
+                'Betting ', placed_bet.wager.toLocaleString(), ' G on ',
+                team_color(placed_bet.bet_on),
+                m('span.text-muted',
+                    ' (', format_prediction(win_prediction), ' chance to win versus ',
+                    team_color(not_bet_team),
+                    '.)')
+            ]);
+        }
+        return placed_bet_msg;
+    }
+};
 
 const StatSummary = {
     view: function (vnode) {
@@ -91,30 +135,6 @@ const StatSummary = {
             }).reduce((a, b) => a + b, 0);
         const accuracy_average = accuracy_sum / length;
 
-        const placed_bet = State.placed_bet;
-        let placed_bet_msg = m('div', [
-            'Betting is currently open!'
-        ]);
-        if (placed_bet && newest.isBefore(placed_bet.time)) {
-            const win_prediction =
-                placed_bet.left_team === placed_bet.bet_on
-                    ? placed_bet.left_prediction
-                    : placed_bet.right_prediction;
-
-            const not_bet_team =
-                placed_bet.bet_on === placed_bet.left_team
-                    ? placed_bet.right_team
-                    : placed_bet.left_team;
-
-            placed_bet_msg = m('div', [
-                'Betting ', placed_bet.wager.toLocaleString(), ' G on ',
-                team_color(placed_bet.bet_on),
-                m('span.text-muted',
-                    ' (', format_prediction(win_prediction), ' chance to win versus ',
-                    team_color(not_bet_team),
-                    '.)')
-            ]);
-        }
         return m('.card.stat-summary.h-100', [
             m('.card-body', [
                 m('h5.card-title', 'Quick summary'),
@@ -147,7 +167,7 @@ const StatSummary = {
                                 average_log_loss.toFixed(4)
                             ])
                         ),
-                        m('li', placed_bet_msg),
+                        m('li', m(PlacedBet)),
                     ]),
                     m('h5.my-1', 'Testimonial'),
                     m('img.mx-2.my-1', {
@@ -497,9 +517,16 @@ const Stats = {
     }
 };
 
+const Stream = {
+    view: function (vnode) {
+        return m('.px-1', m(PlacedBet));
+    }
+};
+
 m.route(document.body, '/home', {
     '/home': Home,
     '/stats': Stats,
+    '/stream': Stream
 });
 
 load_summary_info();
@@ -507,6 +534,41 @@ load_summary_info();
 document.addEventListener("visibilitychange", function () {
         if (document.visibilityState === 'visible') {
             load_summary_info();
+            installInterval();
+        } else {
+            uninstallInterval();
         }
     }
 );
+
+function installInterval() {
+    if (State.interval_id) {
+        return;
+    }
+
+    State.interval_id = setInterval(function () {
+        if (!State.placed_bet) {
+            return;
+        }
+        const old_time = State.placed_bet.time;
+        load_placed_bet();
+        if (State.placed_bet.time.isAfter(old_time)) {
+            load_balance_log();
+        }
+        if (State.placed_bet.left_team !== State.team_summary.left_team
+            || State.placed_bet.right_team !== State.team_summary.right_team) {
+            load_team_summary();
+        }
+    }, 5000);
+}
+
+function uninstallInterval() {
+    if (!State.interval_id) {
+        return;
+    }
+
+    clearInterval(State.interval_id);
+    State.interval_id = null;
+}
+
+installInterval();
