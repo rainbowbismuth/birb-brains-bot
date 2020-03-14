@@ -124,7 +124,7 @@ class Server:
                     right_team = msg['right_team']
                     LOG.info(f'Betting has opened for {left_team} vs {right_team}')
 
-                    betting_time = 30.0
+                    betting_time = 34.0
                     if self.go_all_in:
                         betting_time = 1.0
 

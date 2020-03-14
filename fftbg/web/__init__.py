@@ -18,7 +18,7 @@ app = Flask(
     template_folder='templates')
 
 WINDOW = 20
-LIMIT = 200
+LIMIT = 100
 
 
 @app.route('/')

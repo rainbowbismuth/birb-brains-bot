@@ -101,6 +101,7 @@ const StatSummary = {
         if (State.balance_log.length === 0) {
             return '';
         }
+        const new_balance = State.balance_log[0].new_balance;
         const length = State.balance_log.length;
         const oldest = State.balance_log[length - 1].time;
         const newest = State.balance_log[0].time;
@@ -149,6 +150,10 @@ const StatSummary = {
                             display_gain_loss(total_gain), ' G',
                             ' (', display_gain_loss((total_gain / hours_shown) | 0), ' G/hour.)'
                         ]),
+                        m('li',
+                            m('span.text-muted', [
+                                'Current balance is: ', new_balance.toLocaleString(), ' G'
+                            ])),
                         m('li',
                             m('span.text-muted', [
                                 'Total Wagers: ', total_wager.toLocaleString(), ' G',
