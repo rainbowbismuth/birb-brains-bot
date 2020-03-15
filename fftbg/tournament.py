@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+import numpy as np
 import pandas
 
 import fftbg.patch
@@ -98,6 +99,7 @@ class MatchUp:
         }
         left = {
             'Side': 'Left',
+            'Side-N': 0,
             'Color': self.left.color,
             'LeftWins': self.left_wins,
             'Winner': self.left_wins,
@@ -105,6 +107,7 @@ class MatchUp:
         }
         right = {
             'Side': 'Right',
+            'Side-N': 1,
             'Color': self.right.color,
             'LeftWins': self.left_wins,
             'Winner': not self.left_wins,
@@ -264,6 +267,9 @@ def _to_dataframe(data) -> pandas.DataFrame:
         if df[column].dtype.name == 'category':
             continue
         df[column].fillna(0.0, inplace=True)
+
+    map_mean = df.groupby('Map')['LeftWins'].mean()
+    df['Map-Wins-Mean'] = np.abs(df['Side-N'].values - map_mean[df['Map']].values)
     return df
 
 
