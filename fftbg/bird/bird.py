@@ -25,7 +25,7 @@ class Bird:
         self.right_team = None
         self.prediction = None
 
-        self.moving_increase = 2.0
+        self.moving_increase = 2.5
 
         # Per Bet information we need to log when victor is confirmed
         self.tournament_id = None
@@ -49,7 +49,7 @@ class Bird:
         old_balance = self.balance
         if self.balance == 0:
             self.balance = balance
-            LOG.info(f'Balance is {balance} G')
+            LOG.info(f'Balance is {balance:,d} G')
             return
         difference = balance - self.balance
         if difference == 0:
@@ -57,10 +57,10 @@ class Bird:
         self.balance = balance
         if difference > 0:
             left_wins = self.left_team_bet == self.betting_on
-            LOG.info(f'Won {difference} G betting on {self.betting_on}, new balance {self.balance} G')
+            LOG.info(f'Won {difference:,d} G betting on {self.betting_on}, new balance {self.balance:,d} G')
         else:
             left_wins = self.left_team_bet != self.betting_on
-            LOG.info(f'Lost {abs(difference)} G betting on {self.betting_on}, new balance {self.balance} G')
+            LOG.info(f'Lost {abs(difference):,d} G betting on {self.betting_on}, new balance {self.balance:,d} G')
         if self.left_team_bet is None or self.right_team_bet is None:
             return  # skip if we restarted the bot, essentially.
         self.memory.log_balance(
@@ -132,13 +132,22 @@ class Bird:
             )
             return self.betting_on, self.wager
 
-        new_left_total = left_total * self.moving_increase
-        new_right_total = right_total * self.moving_increase
+        new_left_total = int(left_total * self.moving_increase)
+        new_right_total = int(right_total * self.moving_increase)
+
+        LOG.info(f'Estimated totals: {new_left_total:,d} vs {new_right_total:,d}')
+
+        if new_left_total > new_right_total:
+            new_left_total = int(0.5 * new_left_total + new_right_total)
+        else:
+            new_right_total = int(0.5 * new_right_total + new_left_total)
+
+        LOG.info(f'Adjusted totals: {new_left_total:,d} vs {new_right_total:,d}')
 
         left_bet = betting.optimal_bet(left_wins_percent, new_left_total, new_right_total)
         right_bet = betting.optimal_bet(right_wins_percent, new_right_total, new_left_total)
 
-        LOG.info(f'Optimal bet: {int(left_bet)} vs {int(right_bet)}')
+        LOG.info(f'Optimal bet: {int(left_bet):,d} vs {int(right_bet):,d}')
         assert not (left_bet > 0 and right_bet > 0)
 
         if left_bet > right_bet:
