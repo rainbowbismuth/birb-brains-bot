@@ -10,6 +10,8 @@ data/*.feather
 data/*.h5
 data/*.pickle
 data/*.db
+data/*.tar.gz
+*.rdb
 logs
 venv
 config/twitch.toml
