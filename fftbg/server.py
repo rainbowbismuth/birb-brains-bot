@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 from typing import cast
 
 from walrus import Database
@@ -27,4 +26,16 @@ def get_redis() -> Database:
 
 def configure_logging(env_var: str):
     log_level = os.environ.get(env_var, 'INFO')
-    logging.basicConfig(stream=sys.stdout, level=log_level)
+    if 'DD_LOGS_INJECTION' in os.environ:
+        import json_log_formatter
+        formatter = json_log_formatter.JSONFormatter()
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+
+        logger = logging.getLogger()
+        logger.handlers = []
+        logger.setLevel(log_level)
+        logger.addHandler(handler)
+    else:
+        import sys
+        logging.basicConfig(stream=sys.stdout, level=log_level)
