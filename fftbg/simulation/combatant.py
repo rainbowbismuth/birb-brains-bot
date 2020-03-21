@@ -1,17 +1,19 @@
 import random
 from math import floor
-from typing import List
+from typing import List, Set
 
 from fftbg import equipment as equipment
 from fftbg.ability import Ability
 from fftbg.combatant import ZODIAC_INDEX, ZODIAC_CHART
 from fftbg.patch import Patch
-from fftbg.simulation.status import TIME_STATUS_LEN, TIME_STATUS_INDEX, SLEEP, SHELL, PROTECT
+from fftbg.simulation.status import TIME_STATUS_LENGTHS, TIME_STATUS_LEN, TIME_STATUS_INDEX, BERSERK, CHARGING, SLEEP, \
+    SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY
 
 
 class Combatant:
-    def __init__(self, combatant: dict, patch: Patch):
+    def __init__(self, combatant: dict, patch: Patch, team: int):
         self.raw_combatant: dict = combatant
+        self.team = team
         self.sign: str = combatant['Sign']
         self.job: str = combatant['Class']
         self.gender: str = combatant['Gender']
@@ -35,12 +37,20 @@ class Combatant:
         for ability_name in self.stats.skills:
             self.abilities.append(patch.get_ability(ability_name))
 
+        self.hp: int = self.max_hp
+        self.mp: int = self.max_mp
         self.ct: int = 0
-        self.charging: bool = False
-        self.speed_mod: int = 0
         self.pa_mod: int = 0
         self.ma_mod: int = 0
+        self.speed_mod: int = 0
         self.timed_status_conditions: List[int] = [0] * TIME_STATUS_LEN
+        self.other_status: Set[str] = set()
+
+    def is_friend(self, other: 'Combatant'):
+        return self.team == other.team
+
+    def is_foe(self, other: 'Combatant'):
+        return self.team != other.team
 
     @property
     def all_equips(self):
@@ -70,7 +80,7 @@ class Combatant:
     def evasion_multiplier(self) -> float:
         if self.charging:
             return 0.0
-        elif 'Abandon' in self.skills:
+        elif self.abandon:
             return 2.0
         else:
             return 1.0
@@ -81,7 +91,7 @@ class Combatant:
 
     @property
     def weapon_evasion(self) -> float:
-        if 'Parry' not in self.skills:
+        if not self.parry:
             return 0.0
         # TODO: Pretty sure this is wrong
         return self.evasion_multiplier * (max([e.w_ev for e in self.all_equips]) / 100.0)
@@ -141,35 +151,60 @@ class Combatant:
     def status_time_remaining(self, status: str) -> int:
         return self.timed_status_conditions[TIME_STATUS_INDEX[status]]
 
+    def add_status(self, status: str):
+        # NOTE: This doesn't handle opposing statuses (like Haste/Slow)
+        if status in TIME_STATUS_LENGTHS:
+            self.timed_status_conditions[TIME_STATUS_INDEX[status]] = TIME_STATUS_LENGTHS[status]
+        else:
+            self.other_status.add(status)
+
+    @property
+    def charging(self) -> bool:
+        return CHARGING in self.other_status
+
     @property
     def berserk(self) -> bool:
-        # TODO: Implement
-        return False
+        return BERSERK in self.other_status
 
     @property
     def sleep(self) -> bool:
-        # TODO: Implement
         return self.status_time_remaining(SLEEP) > 0
 
     @property
     def shell(self) -> bool:
-        # TODO: Implement
         return self.status_time_remaining(SHELL) > 0
 
     @property
     def protect(self) -> bool:
-        # TODO: Implement
         return self.status_time_remaining(PROTECT) > 0
 
     @property
+    def haste(self) -> bool:
+        return self.status_time_remaining(HASTE) > 0
+
+    @property
+    def slow(self) -> bool:
+        return self.status_time_remaining(SLOW) > 0
+
+    @property
     def chicken(self) -> bool:
-        # TODO: Implement
-        return False
+        return CHICKEN in self.other_status
 
     @property
     def frog(self) -> bool:
-        # TODO: Implement
-        return False
+        return FROG in self.other_status
+
+    @property
+    def petrified(self) -> bool:
+        return PETRIFY in self.other_status
+
+    @property
+    def abandon(self) -> bool:
+        return 'Abandon' in self.skills
+
+    @property
+    def parry(self) -> bool:
+        return 'Parry' in self.skills
 
     @property
     def attack_up(self) -> bool:

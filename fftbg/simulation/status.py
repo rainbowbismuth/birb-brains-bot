@@ -13,7 +13,15 @@ DONT_MOVE = "Don't Move"
 DONT_ACT = "Don't Act"
 CHARM = 'Charm'
 
-STATUS_CONDITION_LENGTHS = {
+CHICKEN = 'Chicken'
+FROG = 'Frog'
+CHARGING = 'Charging'
+BERSERK = 'Berserk'
+
+PETRIFY = 'Petrify'
+JUMPING = 'Jumping'
+
+TIME_STATUS_LENGTHS = {
     CHARM: 32,
     DONT_ACT: 24,
     DONT_MOVE: 24,
@@ -30,5 +38,5 @@ STATUS_CONDITION_LENGTHS = {
     STOP: 20,
 }
 
-TIME_STATUS_LEN = len(STATUS_CONDITION_LENGTHS)
-TIME_STATUS_INDEX = dict([(k, i) for i, k in enumerate(STATUS_CONDITION_LENGTHS.keys())])
+TIME_STATUS_LEN = len(TIME_STATUS_LENGTHS)
+TIME_STATUS_INDEX = dict([(k, i) for i, k in enumerate(TIME_STATUS_LENGTHS.keys())])
