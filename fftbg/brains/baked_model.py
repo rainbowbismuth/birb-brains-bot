@@ -20,6 +20,7 @@ class BakedModel:
         all_combatants_df = data.read_combatants()
         self.all_columns = model.get_all_columns(all_combatants_df)
         self.skill_columns = model.get_skill_columns(all_combatants_df)
+        self.status_elemental_columns = model.get_status_elemental_columns(all_combatants_df)
 
     def predict_match_ups(self, match_ups: List[MatchUp], patch_date: datetime) -> np.ndarray:
         p = patch.get_patch(patch_date)
@@ -43,6 +44,9 @@ class BakedModel:
         for column in self.skill_columns:
             if column not in df:
                 df[column] = False
+        for column in self.status_elemental_columns:
+            if column not in df:
+                df[column] = 0.0
 
         combatant_dfs = [df[df['UIDX'] == i][self.all_columns]
                          for i in range(8)]
