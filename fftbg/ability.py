@@ -54,6 +54,8 @@ class Ability:
     element: Optional[str] = None
     range: int = 0
     aoe: Optional[int] = None
+    ct: int = 0
+    mp: int = 0
     ma_constant: Optional[int] = None
     adds: Tuple[str] = tuple()
     cancels: Tuple[str] = tuple()
@@ -106,6 +108,8 @@ class AbilityData:
 
 RANGE_RE = re.compile(r'(\d+) range')
 AOE_RE = re.compile(r'(\d+) AoE')
+CT_RE = re.compile(r'(\d+) CT')
+MP_RE = re.compile(r'(\d+) MP')
 ELEMENT_RE = re.compile(r'Element: (\w+)')
 
 HIT_MA_PLUS_RE = re.compile(r'Hit: \(MA \+ (\d+)\)%')
@@ -176,6 +180,8 @@ def parse_abilities(abillity_help_path) -> AbilityData:
 
         range = try_int(RANGE_RE, desc, 0)
         aoe = try_int(AOE_RE, desc)
+        ct = try_int(CT_RE, desc, 0)
+        mp = try_int(MP_RE, desc, 0)
 
         element = None
         element_match = ELEMENT_RE.findall(desc)
@@ -197,6 +203,8 @@ def parse_abilities(abillity_help_path) -> AbilityData:
                      heals=heals,
                      range=range,
                      aoe=aoe,
+                     ct=ct,
+                     mp=mp,
                      element=element,
                      ma_constant=ma_constant,
                      adds=adds,

@@ -1,5 +1,6 @@
 import logging
 import pickle
+import textwrap
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,12 +34,16 @@ NUM_COLUMNS = combatant.NUMERIC + tournament.NUMERIC
 CAT_COLUMNS = ['Gender', 'SupportSkill', 'MoveSkill', 'Map-Wins-Mean']
 
 
+def get_status_elemental_columns(df):
+    return [c for c in df.keys() if fftbg.combatant.STATUS_ELEMENTAL_TAG in c]
+
+
 def get_skill_columns(df):
     return [c for c in df.keys() if fftbg.ability.SKILL_TAG in c]
 
 
 def get_all_columns(df):
-    return NUM_COLUMNS + CAT_COLUMNS + get_skill_columns(df)
+    return NUM_COLUMNS + CAT_COLUMNS + get_status_elemental_columns(df) + get_skill_columns(df)
 
 
 def main():
@@ -48,6 +53,7 @@ def main():
 
     skill_columns = get_skill_columns(df)
     all_columns = get_all_columns(df)
+    LOG.info('\n'.join(textwrap.wrap(f"All columns: {', '.join(all_columns)}", 120)))
     dfs = df[all_columns]
     dfs = dfs.sort_index(axis=1)
 
@@ -132,6 +138,7 @@ def main():
               train_y,
               epochs=300,
               verbose=1,
+              batch_size=32,
               validation_data=(valid_X, valid_y),
               callbacks=[early_stopping_cb])
     LOG.info('Done training model')
@@ -228,7 +235,8 @@ def model_three(combatant_size,
     model.compile(
         optimizer=keras.optimizers.Nadam(learning_rate=learning_rate),
         loss='sparse_categorical_crossentropy',
-        metrics=['accuracy'])
+        metrics=['accuracy'],
+    )
 
     early_stopping_cb = keras.callbacks.EarlyStopping(
         patience=15, monitor='val_loss', restore_best_weights=True)

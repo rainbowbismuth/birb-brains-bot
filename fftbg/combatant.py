@@ -45,6 +45,8 @@ ZODIAC_CHART = [
     'O  O  O  O  O  O  O  O  O  O  O  O  O'.split('  '),
 ]
 
+STATUS_ELEMENTAL_TAG = '▲ '
+
 
 def combatant_to_dict(combatant: dict, patch: Patch):
     output = dict(combatant)
@@ -132,6 +134,7 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     chance_to_add = set()
     chance_to_cancel = set()
     immune_to = set()
+    initial = set()
 
     for equip in all_equips:
         absorbs.update(equip.absorbs)
@@ -142,21 +145,24 @@ def combatant_to_dict(combatant: dict, patch: Patch):
         chance_to_add.update(equip.chance_to_add)
         chance_to_cancel.update(equip.chance_to_cancel)
         immune_to.update(equip.immune_to)
+        initial.update(equip.initial)
 
     for element in absorbs:
-        output[f'Absorb-{element}'] = 1.0
+        output[f'▲ Absorb-{element}'] = 1.0
     for element in halves:
-        output[f'Half-{element}'] = 1.0
+        output[f'▲ Half-{element}'] = 1.0
     for element in weaknesses:
-        output[f'Weak-{element}'] = 1.0
+        output[f'▲ Weak-{element}'] = 1.0
     for element in cancels:
-        output[f'Cancel-{element}'] = 1.0
+        output[f'▲ Cancel-{element}'] = 1.0
     for element in strengthens:
-        output[f'Strengthen-{element}'] = 1.0
+        output[f'▲ Strengthen-{element}'] = 1.0
     for status in chance_to_add:
-        output[f'Chance-To-Add-{status}'] = 1.0
+        output[f'▲ Chance-To-Add-{status}'] = 1.0
     for status in immune_to:
-        output[f'Immune-{status}'] = 1.0
+        output[f'▲ Immune-{status}'] = 1.0
+    for status in initial:
+        output[f'▲ Initial-{status}'] = 1.0
 
     damage_1 = damage_calculation(output, mainhand)
     damage_2 = 0
@@ -178,6 +184,9 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     output['Ability-Range'] = 0.0
     for skill in combatant['ClassSkills'] + combatant['ExtraSkills'] + list(stats.skills):
         calc = patch.get_ability(skill)
+        # Skip abilities that you don't have the MP to cast.
+        if calc.mp > output['MP']:
+            continue
         output['Ability-Range'] = max(output['Ability-Range'], calc.range)
         output[SKILL_TAG + skill] = calc.multiply(brave, faith, pa, pa_bang, ma, wp, speed)
 
@@ -253,27 +262,27 @@ def zodiac_compat(c1, c2):
 
 
 def has_absorb(actor, element) -> float:
-    return actor.get(f'Absorb-{element}', 0.0)
+    return actor.get(f'▲ Absorb-{element}', 0.0)
 
 
 def has_half(actor, element) -> float:
-    return actor.get(f'Half-{element}', 0.0)
+    return actor.get(f'▲ Half-{element}', 0.0)
 
 
 def has_weak(actor, element) -> float:
-    return actor.get(f'Weak-{element}', 0.0)
+    return actor.get(f'▲ Weak-{element}', 0.0)
 
 
 def has_cancel(actor, element) -> float:
-    return actor.get(f'Cancel-{element}', 0.0)
+    return actor.get(f'▲ Cancel-{element}', 0.0)
 
 
 def has_strengthen(actor, element) -> float:
-    return actor.get(f'Strengthen-{element}', 0.0)
+    return actor.get(f'▲ Strengthen-{element}', 0.0)
 
 
 def is_immune(actor, status) -> float:
-    return actor.get(f'Immune-{status}', 0.0)
+    return actor.get(f'▲ Immune-{status}', 0.0)
 
 
 def can_heal(actor, victim, patch: Patch):

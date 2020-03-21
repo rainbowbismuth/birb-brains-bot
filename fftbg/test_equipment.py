@@ -19,3 +19,4 @@ def test_parse_equipment():
     assert 'Holy' in patch.get_equipment('108 Gems').strengthens
     assert 'Earth' in patch.get_equipment('Defense Armlet').halves
     assert 'Ice' in patch.get_equipment('Ice Shield').absorbs
+    assert 'Slow' in patch.get_equipment('Stone Gun').initial

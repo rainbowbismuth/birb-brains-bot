@@ -20,6 +20,7 @@ HALF_RE = re.compile(r'Half ([\w,\s]+)')
 WEAK_RE = re.compile(r'Weak ([\w,\s]+)')
 CANCEL_RE = re.compile(r'Cancel ([\w,\s]+)')
 
+INITIAL_RE = re.compile(r'Initial ([\w,\s\']+)', re.IGNORECASE)
 CHANCE_TO_ADD_RE = re.compile(r'Chance to Add ([\w,\s\']+)', re.IGNORECASE)
 CHANCE_TO_CANCEL_RE = re.compile(r'Chance to Cancel ([\w,\s\']+)', re.IGNORECASE)
 IMMUNE_TO_RE = re.compile(r'Immune ([\w,\s\']+)')
@@ -47,6 +48,7 @@ class Equipment:
     halves: Tuple[str] = tuple()
     weaknesses: Tuple[str] = tuple()
     cancels: Tuple[str] = tuple()
+    initial: Tuple[str] = tuple()
     chance_to_add: Tuple[str] = tuple()
     chance_to_cancel: Tuple[str] = tuple()
     immune_to: Tuple[str] = tuple()
@@ -94,6 +96,7 @@ def parse_equipment(info_item_path) -> EquipmentData:
         weaknesses = try_list(WEAK_RE, item)
         cancels = try_list(CANCEL_RE, item)
 
+        initial = try_list(INITIAL_RE, item)
         chance_to_add = try_list(CHANCE_TO_ADD_RE, item)
         chance_to_cancel = try_list(CHANCE_TO_CANCEL_RE, item)
         immune_to = try_list(IMMUNE_TO_RE, item)
@@ -119,6 +122,7 @@ def parse_equipment(info_item_path) -> EquipmentData:
                                       halves=halves,
                                       weaknesses=weaknesses,
                                       cancels=cancels,
+                                      initial=initial,
                                       chance_to_add=chance_to_add,
                                       chance_to_cancel=chance_to_cancel,
                                       immune_to=immune_to)
@@ -147,6 +151,7 @@ def parse_equipment(info_item_path) -> EquipmentData:
                                       halves=halves,
                                       weaknesses=weaknesses,
                                       cancels=cancels,
+                                      initial=initial,
                                       chance_to_add=chance_to_add,
                                       chance_to_cancel=chance_to_cancel,
                                       immune_to=immune_to)
@@ -175,6 +180,7 @@ def parse_equipment(info_item_path) -> EquipmentData:
                                       halves=halves,
                                       weaknesses=weaknesses,
                                       cancels=cancels,
+                                      initial=initial,
                                       chance_to_add=chance_to_add,
                                       chance_to_cancel=chance_to_cancel,
                                       immune_to=immune_to)
