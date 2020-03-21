@@ -46,6 +46,10 @@ class Combatant:
         self.timed_status_conditions: List[int] = [0] * TIME_STATUS_LEN
         self.other_status: Set[str] = set()
 
+        for e in self.all_equips:
+            for status in e.initial:
+                self.add_status(status)
+
     def is_friend(self, other: 'Combatant'):
         return self.team == other.team
 

@@ -31,7 +31,7 @@ def split(xs, y, size):
 
 
 NUM_COLUMNS = combatant.NUMERIC + tournament.NUMERIC
-CAT_COLUMNS = ['Gender', 'SupportSkill', 'MoveSkill', 'Map-Wins-Mean']
+CAT_COLUMNS = ['Gender', 'SupportSkill', 'MoveSkill']
 
 
 def get_status_elemental_columns(df):
@@ -138,7 +138,7 @@ def main():
               train_y,
               epochs=300,
               verbose=1,
-              batch_size=32,
+              batch_size=1024,
               validation_data=(valid_X, valid_y),
               callbacks=[early_stopping_cb])
     LOG.info('Done training model')
