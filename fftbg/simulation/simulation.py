@@ -36,6 +36,7 @@ class Simulation:
                 combatant.location = int(-arena.max_dimension * arena.team_distance)
             else:
                 combatant.location = int(arena.max_dimension * arena.team_distance)
+
         self.report(f'Fighting on {arena.name}')
 
     def run(self):
@@ -213,9 +214,16 @@ class Simulation:
     def can_move_into_range(self, user: Combatant, range: int, target: Combatant):
         return user.distance(target) <= range + user.move
 
-    def move_to_range(self, user: Combatant, range: int, target: Combatant):
-        # TODO: Charm?
+    def do_move_with_bounds(self, user: Combatant, new_location: int):
         old_location = user.location
+        user.location = max(-self.arena.max_dimension, min(new_location, self.arena.max_dimension))
+        user.moved_during_active_turn = True
+        self.report(f'moved to from {old_location} to {user.location}')
+
+    def move_to_range(self, user: Combatant, range: int, target: Combatant):
+        if user.moved_during_active_turn:
+            return
+        # TODO: Charm?
         if user.team == 0:
             desired = target.location - range
         else:
@@ -230,17 +238,23 @@ class Simulation:
             sign = 1
         else:
             sign = -1
-        user.location += diff * sign
-        user.moved_during_active_turn = True
-        self.report(f'moved to from {old_location} to {user.location}')
+        self.do_move_with_bounds(user, user.location + diff * sign)
 
     def move_into_combat(self, user: Combatant):
+        if user.moved_during_active_turn:
+            return
         if user.team == 0:
-            user.location += user.move
+            self.do_move_with_bounds(user, user.location + user.move)
         else:
-            user.location -= user.move
-        user.moved_during_active_turn = True
-        self.report(f'moved to {user.location}')
+            self.do_move_with_bounds(user, user.location - user.move)
+
+    def move_out_of_combat(self, user: Combatant):
+        if user.moved_during_active_turn:
+            return
+        if user.team == 0:
+            self.do_move_with_bounds(user, user.location - user.move)
+        else:
+            self.do_move_with_bounds(user, user.location + user.move)
 
     def ai_calculate_friendly_targets(self, user: Combatant):
         if user.confusion:
@@ -269,8 +283,10 @@ class Simulation:
 
         self.ai_try_friendly_action(user, friendly_targets)
         if user.acted_during_active_turn:
+            self.move_out_of_combat(user)
             return
         elif not user.acted_during_active_turn and acting_cowardly:
+            self.move_out_of_combat(user)
             return
 
         enemy_targets = self.ai_calculate_enemy_targets(user)
@@ -278,6 +294,10 @@ class Simulation:
             return
 
         self.ai_try_enemy_action(user, enemy_targets)
+        if user.acted_during_active_turn:
+            self.move_out_of_combat(user)
+        else:
+            self.move_into_combat(user)
 
     def ai_try_friendly_action(self, user: Combatant, targets: List[Combatant]):
         if user.berserk:
