@@ -61,6 +61,8 @@ class Combatant:
         self.num_mp_using_abilities: int = len([ab for ab in self.abilities if ab.mp > 0])
         self.lowest_mp_cost_ability: int = min([999] + [ab.mp for ab in self.abilities if ab.mp > 0])
 
+        self.target_value: float = 0.0
+
         for e in self.all_equips:
             for status in e.initial:
                 self.add_status(status)
@@ -99,12 +101,20 @@ class Combatant:
         # TODO: Calculate death statuses here?
 
     @property
+    def hp_percent(self) -> float:
+        return self.raw_hp / self.max_hp
+
+    @property
     def mp(self) -> int:
         return self.raw_mp
 
     @mp.setter
     def mp(self, new_mp: int):
         self.raw_mp = max(0, min(new_mp, self.max_mp))
+
+    @property
+    def mp_percent(self) -> float:
+        return self.raw_mp / self.max_mp
 
     @property
     def can_cast_mp_ability(self) -> bool:

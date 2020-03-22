@@ -34,7 +34,7 @@ class Simulation:
         self.left_wins = None
         self.time_out_win = False
         self.log_report = log_report
-        self.prepend = self.set_phase('Init')
+        self.set_phase('Init')
 
         # initialize location based on arena
         for combatant in self.combatants:
@@ -294,7 +294,7 @@ class Simulation:
         return [target for target in self.combatants if user.is_foe(target) and target.healthy]
 
     def ai_calculate_target_value(self, user: Combatant, target: Combatant) -> float:
-        priority = target.hp / target.max_hp
+        priority = target.hp_percent
 
         priority += 0.51 * target.broken_items
         priority += self.ai_calculate_status_target_value_mod(target)
@@ -304,6 +304,10 @@ class Simulation:
         if user.is_foe(target):
             return -priority
         return priority
+
+    def ai_calculate_all_target_values(self, user: Combatant):
+        for target in self.combatants:
+            target.target_value = self.ai_calculate_target_value(user, target)
 
     def ai_calculate_caster_hate_mod(self, target: Combatant) -> float:
         if not target.can_cast_mp_ability:
@@ -465,6 +469,8 @@ class Simulation:
         return total
 
     def ai_do_basic_turn(self, user: Combatant):
+        self.ai_calculate_all_target_values(user)
+
         friendly_targets = self.ai_calculate_friendly_targets(user)
         acting_cowardly = user.critical and self.ai_can_be_cowardly(user)
         if acting_cowardly:
@@ -497,7 +503,7 @@ class Simulation:
                 self.ai_try_raise(user, target)
                 if user.acted_during_active_turn:
                     return
-            if target.critical:
+            if target.hp_percent <= 0.5:
                 self.ai_try_heal(user, target)
                 if user.acted_during_active_turn:
                     return
@@ -574,19 +580,15 @@ class Simulation:
             return
 
         # Otherwise target an enemy
-        lowest_priority = 100.0
-        lowest_priority_target = targets[0]
-
+        priority_target = targets[0]
         for target in targets:
-            priority = self.ai_calculate_target_value(user, target)
-            if priority < lowest_priority:
-                lowest_priority = priority
-                lowest_priority_target = target
+            if target.target_value < priority_target.target_value:
+                priority_target = target
 
         # TODO: Will have to think about picking someone in range
-        self.move_to_range(user, user.mainhand.range, lowest_priority_target)
-        if self.in_range(user, user.mainhand.range, lowest_priority_target):
-            self.do_cmd_attack(user, lowest_priority_target)
+        self.move_to_range(user, user.mainhand.range, priority_target)
+        if self.in_range(user, user.mainhand.range, priority_target):
+            self.do_cmd_attack(user, priority_target)
 
     def in_range(self, user: Combatant, range: int, target: Combatant):
         dist = user.distance(target)
@@ -740,7 +742,7 @@ def main():
                 for d in match_up.right.combatants:
                     combatants.append(Combatant(d, patch, 1))
                 arena = fftbg.arena.get_arena(match_up.game_map)
-                sim = Simulation(combatants, arena)
+                sim = Simulation(combatants, arena, log_report=False)
                 sim.run()
                 # if sim.left_wins:
                 #     LOG.info('Left team wins!')
