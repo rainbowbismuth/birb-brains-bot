@@ -53,6 +53,13 @@ class Equipment:
     chance_to_cancel: Tuple[str] = tuple()
     immune_to: Tuple[str] = tuple()
 
+    @property
+    def weapon_name(self):
+        if self.name:
+            return self.name
+        else:
+            return 'bare hands'
+
 
 EMPTY = Equipment(name='')
 

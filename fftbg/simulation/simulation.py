@@ -3,6 +3,8 @@ import random
 from pathlib import Path
 from typing import List
 
+import colored
+
 import fftbg.arena
 import fftbg.patch
 import fftbg.server
@@ -11,7 +13,8 @@ from fftbg.arena import Arena
 from fftbg.equipment import Equipment
 from fftbg.simulation.combatant import Combatant
 from fftbg.simulation.commands import attack
-from fftbg.simulation.status import TIME_STATUS_LEN, TIME_STATUS_INDEX_REVERSE, DAMAGE_CANCELS, DEATH_CANCELS
+from fftbg.simulation.status import TIME_STATUS_LEN, TIME_STATUS_INDEX_REVERSE, DAMAGE_CANCELS, DEATH_CANCELS, \
+    ALL_CONDITIONS, TRANSPARENT
 
 LOG = logging.getLogger(__name__)
 
@@ -51,17 +54,26 @@ class Simulation:
             self.phase_active_turn_resolve()
 
     def prepend_info(self):
-        return f'{self.clock_tick:4d}:{self.prepend:>20}'
+        return f'CT {self.clock_tick}: {self.prepend}'
+
+    def colored_phase(self, phase_name):
+        return colored.stylize(phase_name, colored.fg("cyan"))
+
+    def colored_name(self, combatant: Combatant):
+        if combatant.team == 0:
+            return colored.stylize(combatant.name, colored.fg("red"))
+        else:
+            return colored.stylize(combatant.name, colored.fg("blue"))
 
     def report(self, s: str):
         LOG.info(f'{self.prepend_info()}: {s}')
 
     def unit_report(self, combatant: Combatant, s: str):
-        LOG.info(f'{self.prepend_info()}: {combatant.name:>15} ({combatant.hp:3d} HP) {s}')
+        LOG.info(f'{self.prepend_info()}: {combatant.name} ({combatant.hp} HP) {s}')
 
     def phase_status_check(self):
         self.clock_tick += 1
-        self.prepend = 'Status Check'
+        self.prepend = self.colored_phase('Status Check')
         for combatant in self.combatants:
             for i in range(TIME_STATUS_LEN):
                 has_condition = combatant.timed_status_conditions[i] > 0
@@ -72,28 +84,35 @@ class Simulation:
                     self.unit_report(combatant, f'no longer has {condition}')
 
     def phase_slow_action_charging(self):
-        self.prepend = 'Slow Action Charge'
+        self.prepend = self.colored_phase('Slow Action Charge')
         for combatant in self.combatants:
             if not combatant.ctr_action:
                 continue
+
+            if combatant.stop:
+                continue  # FIXME: Does stop just remove the slow action?
+
             combatant.ctr -= 1
             if combatant.ctr <= 0:
                 self.slow_actions.append(combatant)
 
     def phase_slow_action_resolve(self):
-        self.prepend = 'Slow Action Resolve'
+        self.prepend = self.colored_phase('Slow Action Resolve')
         while self.slow_actions:
             combatant = self.slow_actions.pop(0)
             if not combatant.healthy:
                 continue
-            self.prepend = f'{combatant.name}\'s C'
+            self.prepend = f'{self.colored_name(combatant)}\'s C'
             action = combatant.ctr_action
             combatant.ctr_action = None
             action()
 
     def phase_ct_charging(self):
-        self.prepend = 'CT Charging'
+        self.prepend = self.colored_phase('CT Charging')
         for combatant in self.combatants:
+            if combatant.stop or combatant.sleep:
+                continue
+
             speed = combatant.speed
 
             if combatant.haste:
@@ -106,14 +125,40 @@ class Simulation:
             if combatant.ct >= 100:
                 self.active_turns.append(combatant)
 
+    def active_turn_status_bar(self, combatant: Combatant):
+        conditions = []
+        for condition in ALL_CONDITIONS:
+            if combatant.has_status(condition):
+                conditions.append(condition)
+        condition_str = ','.join(conditions)
+        if condition_str:
+            return f'{self.colored_name(combatant)} ({combatant.hp} HP, {condition_str})'
+        else:
+            return f'{self.colored_name(combatant)} ({combatant.hp} HP)'
+
+    def clear_active_turn_flags(self):
+        for combatant in self.combatants:
+            combatant.acted_during_active_turn = False
+            combatant.took_damage_during_active_turn = False
+
+    def end_of_active_turn_checks(self):
+        for combatant in self.combatants:
+            if combatant.acted_during_active_turn or combatant.took_damage_during_active_turn:
+                combatant.cancel_status(TRANSPARENT)
+
     def phase_active_turn_resolve(self):
-        self.prepend = 'Active Turn Resolve'
+        self.prepend = self.colored_phase('Active Turn Resolve')
         while self.active_turns:
             combatant = self.active_turns.pop(0)
             if not combatant.healthy:
                 continue
 
-            self.prepend = f'{combatant.name}\'s AT'
+            if combatant.stop or combatant.sleep:
+                continue
+
+            self.clear_active_turn_flags()
+
+            self.prepend = self.active_turn_status_bar(combatant)
 
             if combatant.regen:
                 self.change_target_hp(combatant, -(combatant.max_hp // 8), 'regen')
@@ -123,40 +168,197 @@ class Simulation:
             if combatant.poison:
                 self.change_target_hp(combatant, combatant.max_hp // 8, 'poison')
 
+            self.end_of_active_turn_checks()
+
     def set_ct_from_acting(self, user: Combatant, amount: int):
         new_amount = min(60, user.ct + amount)
         user.ct = new_amount
 
+    def ai_thirteen_rule(self) -> bool:
+        return random.random() <= 0.13
+
+    def roll_brave_reaction(self, user: Combatant) -> bool:
+        if user.berserk:
+            return False
+        return random.random() <= user.brave
+
     def ai_can_be_cowardly(self, user: Combatant):
         return any([c.healthy for c in self.combatants if user.team == c.team and user is not c])
 
+    def ai_calculate_friendly_targets(self, user: Combatant):
+        if user.confusion:
+            all_targets = list(self.combatants)
+            random.shuffle(all_targets)
+            return all_targets
+        if user.charm:
+            return [target for target in self.combatants if user.is_foe(target)]
+        return [target for target in self.combatants if user.is_friend(target)]
+
+    def ai_calculate_enemy_targets(self, user: Combatant):
+        if user.confusion:
+            all_targets = list(self.combatants)
+            random.shuffle(all_targets)
+            return all_targets
+        if user.charm:
+            return [target for target in self.combatants if
+                    user.is_friend(target) and target.healthy and target is not user]
+        return [target for target in self.combatants if user.is_foe(target) and target.healthy]
+
     def ai_do_basic_turn(self, user: Combatant):
-        if user.critical and self.ai_can_be_cowardly(user):
+        friendly_targets = self.ai_calculate_friendly_targets(user)
+        acting_cowardly = user.critical and self.ai_can_be_cowardly(user)
+        if acting_cowardly:
+            friendly_targets = [user]
+
+        self.ai_try_friendly_action(user, friendly_targets)
+        if user.acted_during_active_turn:
+            return
+        elif not user.acted_during_active_turn and acting_cowardly:
             self.unit_report(user, 'is cowardly skipping their turn')
             self.set_ct_from_acting(user, -80)
             return
 
-        targets = [target for target in self.combatants if user.is_foe(target) and target.healthy]
-        if not targets:
+        enemy_targets = self.ai_calculate_enemy_targets(user)
+        if not enemy_targets:
+            self.unit_report(user, 'did nothing')
             self.set_ct_from_acting(user, -80)
             return
 
-        # going to do an ATTACK
-        target = random.choice(targets)
-        self.do_cmd_attack(user, target)
+        self.ai_try_enemy_action(user, enemy_targets)
+        if not user.acted_during_active_turn:
+            self.unit_report(user, 'did nothing')
+            self.set_ct_from_acting(user, -80)
+
+    def ai_try_friendly_action(self, user: Combatant, targets: List[Combatant]):
+        if user.berserk:
+            return
+
+        for target in targets:
+            if not target.healthy:
+                self.ai_try_raise(user, target)
+                if user.acted_during_active_turn:
+                    return
+            if target.critical:
+                self.ai_try_heal(user, target)
+                if user.acted_during_active_turn:
+                    return
+        return
+
+    def ai_try_raise(self, user, target):
+        if user.berserk:
+            return
+
+        for ability in user.abilities:
+            # FIXME: super hack rn
+            if ability.name == 'Phoenix Down':
+                if self.ai_thirteen_rule():
+                    continue
+                self.change_target_hp(target, -random.randint(1, 20), ability.name)
+                user.acted_during_active_turn = True
+                self.set_ct_from_acting(user, -100)
+                return
+
+    def ai_try_heal(self, user, target):
+        if user.berserk:
+            return
+
+        for ability in user.abilities:
+            # FIXME: super hack rn
+            if ability.name == 'Elixir':
+                if self.ai_thirteen_rule():
+                    continue
+                self.change_target_hp(target, -target.max_hp, ability.name)
+                user.acted_during_active_turn = True
+                self.set_ct_from_acting(user, -100)
+
+            elif ability.name == 'X-Potion':
+                if self.ai_thirteen_rule():
+                    continue
+                self.change_target_hp(target, -150, ability.name)
+                user.acted_during_active_turn = True
+                self.set_ct_from_acting(user, -100)
+
+            elif ability.name == 'Hi-Potion':
+                if self.ai_thirteen_rule():
+                    continue
+                self.change_target_hp(target, -120, ability.name)
+                user.acted_during_active_turn = True
+                self.set_ct_from_acting(user, -100)
+
+            elif ability.name == 'Potion':
+                if self.ai_thirteen_rule():
+                    continue
+                self.change_target_hp(target, -100, ability.name)
+                user.acted_during_active_turn = True
+                self.set_ct_from_acting(user, -100)
+
+        return
+
+    def ai_try_enemy_action(self, user: Combatant, targets: List[Combatant]):
+        # TODO: Skipping thirteen rule here for now.
+        # if self.ai_thirteen_rule() or not targets:
+        #     return
+        if not targets:
+            return
+
+        # Target critical enemies first
+        for target in targets:
+            if target.critical:
+                self.do_cmd_attack(user, target)
+                user.acted_during_active_turn = True
+                return
+
+        # Otherwise target the tankiest enemy
+        highest_hp = targets[0]
+        for target in targets:
+            if target.hp > highest_hp.hp:
+                highest_hp = target
+
+        self.do_cmd_attack(user, highest_hp)
+        user.acted_during_active_turn = True
 
     def do_cmd_attack(self, user: Combatant, target: Combatant):
-        damage_1, crit = attack.damage(user, user.mainhand, target)
-        self.change_target_hp(target, damage_1, f'{user.name}\'s mainhand ATTACK')
-        self.chance_to_add_status(user, user.mainhand, target)
-
-        # TODO: Assuming critical hits always make your next attack miss
-        if user.dual_wield and not crit:
-            damage_2, _ = attack.damage(user, user.offhand, target)
-            self.change_target_hp(target, damage_2, f'{user.name}\'s offhand ATTACK')
-            self.chance_to_add_status(user, user.offhand, target)
-
+        damage, crit = self.do_single_weapon_attack(user, user.mainhand, target)
+        if user.dual_wield and target.healthy:
+            if crit and random.randint(1, 2) == 1:
+                self.unit_report(target, 'was pushed out of range of a second attack')
+            else:
+                damage, crit = self.do_single_weapon_attack(user, user.offhand, target)
+        if damage > 0:
+            self.after_damage_reaction(target, user, damage)
+        user.acted_during_active_turn = True
         self.set_ct_from_acting(user, -100)
+
+    def do_physical_evade(self, user: Combatant, weapon: Equipment, target: Combatant) -> bool:
+        if user.transparent or user.concentrate:
+            return False
+        # TODO: Arrow Guard, etc?
+        if random.random() < target.physical_accessory_evasion:
+            self.unit_report(target, f'guarded {user.name}\'s attack')
+            return True
+        if random.random() < target.physical_shield_evasion / 2.0:
+            self.unit_report(target, f'blocked {user.name}\'s attack')
+            return True
+        if random.random() < target.weapon_evasion / 2.0:
+            self.unit_report(target, f'parried {user.name}\'s attack')
+            return True
+        if random.random() < target.class_evasion / 2.0:
+            self.unit_report(target, f'evaded {user.name}\'s attack')
+            return True
+        return False
+
+    def do_single_weapon_attack(self, user: Combatant, weapon: Equipment, target: Combatant) -> (int, bool):
+        if self.do_physical_evade(user, weapon, target):
+            return 0, False
+
+        damage, crit = attack.damage(user, weapon, target)
+        if not crit:
+            src = f'{user.name}\'s {weapon.weapon_name}'
+        else:
+            src = f'{user.name}\'s {weapon.weapon_name} (critical!)'
+        self.change_target_hp(target, damage, src)
+        self.weapon_chance_to_add_or_cancel_status(user, weapon, target)
+        return damage, crit
 
     def add_status(self, target: Combatant, status: str, src: str):
         had_status = target.has_status(status)
@@ -170,7 +372,7 @@ class Simulation:
         target.cancel_status(status)
         self.unit_report(target, f'had {status} cancelled by {src}')
 
-    def chance_to_add_status(self, user: Combatant, weapon: Equipment, target: Combatant):
+    def weapon_chance_to_add_or_cancel_status(self, user: Combatant, weapon: Equipment, target: Combatant):
         if not target.healthy:
             return  # FIXME: this doesn't strictly make sense I don't think...
 
@@ -180,25 +382,53 @@ class Simulation:
         for status in weapon.chance_to_add:
             if random.random() >= 0.19:
                 continue
-            self.add_status(target, status, f'{user.name}\'s {weapon.name}')
+            self.add_status(target, status, f'{user.name}\'s {weapon.weapon_name}')
 
         for status in weapon.chance_to_cancel:
             if random.random() >= 0.19:
                 continue
-            self.cancel_status(target, status, f'{user.name}\'s {weapon.name}')
+            self.cancel_status(target, status, f'{user.name}\'s {weapon.weapon_name}')
 
     def change_target_hp(self, target: Combatant, amount, source: str):
         if not target.healthy:
             return
+
+        if target.mana_shield and target.mp > 0 and self.roll_brave_reaction(target):
+            self.change_target_mp(target, amount, source + ' (mana shielded)')
+
         target.hp = min(target.max_hp, max(0, target.hp - amount))
         if amount >= 0:
-            self.unit_report(target, f'took {amount:3d} damage from {source}')
+            self.unit_report(target, f'took {amount} damage from {source}')
+            target.took_damage_during_active_turn = True
             for status in DAMAGE_CANCELS:
                 self.cancel_status(target, status, source)
         else:
-            self.unit_report(target, f'was healed for {amount:3d} from {source}')
+            self.unit_report(target, f'was healed for {abs(amount)} from {source}')
         if target.hp == 0:
             self.target_died(target)
+
+    def change_target_mp(self, target: Combatant, amount, source: str):
+        if not target.healthy:
+            return
+        target.mp = min(target.max_mp, max(0, target.mp - amount))
+        if amount >= 0 and source:
+            self.unit_report(target, f'took {amount} MP damage from {source}')
+        elif amount < 0 and source:
+            self.unit_report(target, f'recovered {abs(amount)} MP from {source}')
+
+    def after_damage_reaction(self, target: Combatant, inflicter: Combatant, amount: int):
+        if amount == 0:
+            return
+
+        if target.auto_potion and self.roll_brave_reaction(target):
+            # FIXME: Need to consider UNDEAD
+            self.change_target_hp(target, -100, 'auto potion')
+            return
+
+        if target.damage_split and self.roll_brave_reaction(target):
+            self.change_target_hp(target, -(amount // 2), 'damage split')
+            self.change_target_hp(inflicter, amount // 2, 'damage split')
+            return
 
     def target_died(self, target: Combatant):
         self.unit_report(target, 'died')
@@ -209,20 +439,33 @@ class Simulation:
 def main():
     fftbg.server.configure_logging('SIMULATION_LOG_LEVEL')
     tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
-    match_up = tourny.match_ups[0]
     patch = fftbg.patch.get_patch(tourny.modified)
-    combatants = []
-    for d in match_up.left.combatants:
-        combatants.append(Combatant(d, patch, 0))
-    for d in match_up.right.combatants:
-        combatants.append(Combatant(d, patch, 1))
-    arena = fftbg.arena.get_arena(match_up.game_map)
-    sim = Simulation(combatants, arena)
-    sim.run()
-    if sim.left_wins:
-        LOG.info('Left team wins!')
-    else:
-        LOG.info('Right team wins!')
+
+    correct = 0
+    total = 0
+
+    for match_up in tourny.match_ups:
+        LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
+        combatants = []
+        for d in match_up.left.combatants:
+            combatants.append(Combatant(d, patch, 0))
+        for d in match_up.right.combatants:
+            combatants.append(Combatant(d, patch, 1))
+        arena = fftbg.arena.get_arena(match_up.game_map)
+        sim = Simulation(combatants, arena)
+        sim.run()
+        if sim.left_wins:
+            LOG.info('Left team wins!')
+        else:
+            LOG.info('Right team wins!')
+
+        if sim.left_wins and match_up.left_wins:
+            correct += 1
+            total += 1
+        else:
+            total += 1
+
+    LOG.info(f'Total correct: {correct}/{total}')
 
 
 if __name__ == '__main__':

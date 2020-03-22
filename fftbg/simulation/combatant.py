@@ -7,7 +7,7 @@ from fftbg.ability import Ability
 from fftbg.combatant import ZODIAC_INDEX, ZODIAC_CHART
 from fftbg.patch import Patch
 from fftbg.simulation.status import TIME_STATUS_LENGTHS, TIME_STATUS_LEN, TIME_STATUS_INDEX, BERSERK, CHARGING, SLEEP, \
-    SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY, REGEN, POISON, CRITICAL
+    SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY, REGEN, POISON, CRITICAL, STOP, CONFUSION, CHARM, TRANSPARENT
 
 
 class Combatant:
@@ -50,9 +50,15 @@ class Combatant:
         self.ctr: int = 0
         self.ctr_action = None
 
+        self.acted_during_active_turn = False
+        self.took_damage_during_active_turn = False
+
         for e in self.all_equips:
             for status in e.initial:
                 self.add_status(status)
+
+    def __repr__(self):
+        return f'<{self.name} ({self.hp} HP) team: {self.team}>'
 
     def is_friend(self, other: 'Combatant'):
         return self.team == other.team
@@ -86,7 +92,8 @@ class Combatant:
 
     @property
     def evasion_multiplier(self) -> float:
-        if self.charging:
+        # TODO: This is how sleep works right?
+        if self.charging or self.sleep:
             return 0.0
         elif self.abandon:
             return 2.0
@@ -203,6 +210,10 @@ class Combatant:
         return self.has_status(CHARGING)
 
     @property
+    def transparent(self) -> bool:
+        return self.has_status(TRANSPARENT)
+
+    @property
     def berserk(self) -> bool:
         return self.has_status(BERSERK)
 
@@ -227,6 +238,10 @@ class Combatant:
         return self.has_status(SLOW)
 
     @property
+    def stop(self) -> bool:
+        return self.has_status(STOP)
+
+    @property
     def regen(self) -> bool:
         return self.has_status(REGEN)
 
@@ -247,6 +262,14 @@ class Combatant:
         return self.has_status(PETRIFY)
 
     @property
+    def charm(self) -> bool:
+        return self.has_status(CHARM)
+
+    @property
+    def confusion(self) -> bool:
+        return self.has_status(CONFUSION)
+
+    @property
     def abandon(self) -> bool:
         return 'Abandon' in self.skills
 
@@ -263,6 +286,10 @@ class Combatant:
         return 'Defense UP' in self.skills
 
     @property
+    def concentrate(self) -> bool:
+        return 'Concentrate' in self.skills
+
+    @property
     def martial_arts(self) -> bool:
         return 'Martial Arts' in self.skills
 
@@ -275,8 +302,20 @@ class Combatant:
         return 'Doublehand' in self.skills
 
     @property
+    def auto_potion(self) -> bool:
+        return 'Auto Potion' in self.skills
+
+    @property
     def dual_wield(self) -> bool:
         return 'Dual Wield' in self.skills
+
+    @property
+    def mana_shield(self) -> bool:
+        return 'Mana Shield' in self.skills
+
+    @property
+    def damage_split(self) -> bool:
+        return 'Damage Split' in self.skills
 
     def zodiac_compatibility(self, other: 'Combatant') -> float:
         s1 = ZODIAC_INDEX[self.sign]

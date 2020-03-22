@@ -51,7 +51,36 @@ FLOAT = 'Float'
 PERFORMING = 'Performing'
 TRANSPARENT = 'Transparent'
 
-DAMAGE_CANCELS = (CHARM, CONFUSION)
+DAMAGE_CANCELS = (CHARM, CONFUSION, SLEEP)
 DEATH_CANCELS = (BERSERK, BLOOD_SUCK, CONFUSION, CHARM, CHARGING, DEATH_SENTENCE,
                  DEFENDING, DONT_MOVE, DONT_ACT, FAITH, FLOAT, HASTE, INNOCENT, PERFORMING,
                  POISON, PROTECT, REFLECT, REGEN, SHELL, SLOW, STOP, TRANSPARENT)
+
+ALL_CONDITIONS = sorted([STOP,
+                         SLEEP,
+                         SLOW,
+                         SHELL,
+                         REGEN,
+                         REFLECT,
+                         PROTECT,
+                         POISON,
+                         INNOCENT,
+                         HASTE,
+                         FAITH,
+                         DONT_MOVE,
+                         DONT_ACT,
+                         CHARM,
+                         CHICKEN,
+                         FROG,
+                         CHARGING,
+                         BERSERK,
+                         PETRIFY,
+                         JUMPING,
+                         BLOOD_SUCK,
+                         CONFUSION,
+                         CRITICAL,
+                         DEATH_SENTENCE,
+                         DEFENDING,
+                         FLOAT,
+                         PERFORMING,
+                         TRANSPARENT])
