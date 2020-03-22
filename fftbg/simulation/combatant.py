@@ -7,13 +7,14 @@ from fftbg.ability import Ability
 from fftbg.combatant import ZODIAC_INDEX, ZODIAC_CHART
 from fftbg.patch import Patch
 from fftbg.simulation.status import TIME_STATUS_LENGTHS, TIME_STATUS_LEN, TIME_STATUS_INDEX, BERSERK, CHARGING, SLEEP, \
-    SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY
+    SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY, REGEN, POISON, CRITICAL
 
 
 class Combatant:
     def __init__(self, combatant: dict, patch: Patch, team: int):
         self.raw_combatant: dict = combatant
         self.team = team
+        self.name: str = combatant['Name']
         self.sign: str = combatant['Sign']
         self.job: str = combatant['Class']
         self.gender: str = combatant['Gender']
@@ -45,6 +46,9 @@ class Combatant:
         self.speed_mod: int = 0
         self.timed_status_conditions: List[int] = [0] * TIME_STATUS_LEN
         self.other_status: Set[str] = set()
+
+        self.ctr: int = 0
+        self.ctr_action = None
 
         for e in self.all_equips:
             for status in e.initial:
@@ -162,45 +166,85 @@ class Combatant:
         else:
             self.other_status.add(status)
 
+    def has_status(self, status: str):
+        if status in TIME_STATUS_LENGTHS:
+            return self.status_time_remaining(status) > 0
+
+        if status == CHARGING:
+            return self.ctr_action is not None
+
+        if status == CRITICAL:
+            return self.hp <= self.max_hp // 5
+
+        return status in self.other_status
+
+    def cancel_status(self, status: str):
+        if status in TIME_STATUS_LENGTHS:
+            self.timed_status_conditions[TIME_STATUS_INDEX[status]] = 0
+            return
+
+        if status == CHARGING:
+            self.ctr_action = None
+            self.ctr = 0
+            return
+
+        self.other_status.discard(status)
+
+    @property
+    def healthy(self) -> bool:
+        return self.hp > 0 and not self.petrified
+
+    @property
+    def critical(self) -> bool:
+        return self.has_status(CRITICAL)
+
     @property
     def charging(self) -> bool:
-        return CHARGING in self.other_status
+        return self.has_status(CHARGING)
 
     @property
     def berserk(self) -> bool:
-        return BERSERK in self.other_status
+        return self.has_status(BERSERK)
 
     @property
     def sleep(self) -> bool:
-        return self.status_time_remaining(SLEEP) > 0
+        return self.has_status(SLEEP)
 
     @property
     def shell(self) -> bool:
-        return self.status_time_remaining(SHELL) > 0
+        return self.has_status(SHELL)
 
     @property
     def protect(self) -> bool:
-        return self.status_time_remaining(PROTECT) > 0
+        return self.has_status(PROTECT)
 
     @property
     def haste(self) -> bool:
-        return self.status_time_remaining(HASTE) > 0
+        return self.has_status(HASTE)
 
     @property
     def slow(self) -> bool:
-        return self.status_time_remaining(SLOW) > 0
+        return self.has_status(SLOW)
+
+    @property
+    def regen(self) -> bool:
+        return self.has_status(REGEN)
+
+    @property
+    def poison(self) -> bool:
+        return self.has_status(POISON)
 
     @property
     def chicken(self) -> bool:
-        return CHICKEN in self.other_status
+        return self.has_status(CHICKEN)
 
     @property
     def frog(self) -> bool:
-        return FROG in self.other_status
+        return self.has_status(FROG)
 
     @property
     def petrified(self) -> bool:
-        return PETRIFY in self.other_status
+        return self.has_status(PETRIFY)
 
     @property
     def abandon(self) -> bool:

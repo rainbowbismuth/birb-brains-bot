@@ -5,7 +5,7 @@ from fftbg.equipment import Equipment
 from fftbg.simulation.combatant import Combatant
 
 
-def attack_damage(user: Combatant, weapon: Equipment, target: Combatant, k=0):
+def damage(user: Combatant, weapon: Equipment, target: Combatant, k=0):
     """
 
     :param user: The user making the ATTACK
@@ -105,12 +105,3 @@ def attack_damage(user: Combatant, weapon: Equipment, target: Combatant, k=0):
 
     #   16. The damage done by the attack will be equal to damage3.
     return damage, critical_hit
-
-
-def perform_attack(user: Combatant, target: Combatant):
-    # TODO: Evasion? Status conditions? Etc?
-
-    damage_1, crit = attack_damage(user, user.mainhand, target)
-    # FIXME: Right now assuming crit's always knock the target away out of range
-    if not crit and user.dual_wield:
-        damage_2, crit = attack_damage(user, user.offhand, target)
