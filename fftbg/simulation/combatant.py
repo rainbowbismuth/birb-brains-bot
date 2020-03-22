@@ -1,15 +1,12 @@
 import random
 from math import floor
-from typing import List, Set
+from typing import List
 
 from fftbg import equipment as equipment
 from fftbg.ability import Ability
 from fftbg.combatant import ZODIAC_INDEX, ZODIAC_CHART
 from fftbg.patch import Patch
-from fftbg.simulation.status import TIME_STATUS_LENGTHS, TIME_STATUS_LEN, TIME_STATUS_INDEX, \
-    TIME_STATUS_INDEX_REVERSE, BERSERK, CHARGING, SLEEP, SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY, REGEN, \
-    POISON, CRITICAL, STOP, CONFUSION, CHARM, TRANSPARENT, UNDEAD, DONT_MOVE, DONT_ACT, SILENCE, BLOOD_SUCK, OIL, \
-    FLOAT, RERAISE, WALL, INNOCENT, REFLECT, DEATH_SENTENCE
+from fftbg.simulation.status import *
 
 
 class Combatant:
@@ -40,14 +37,15 @@ class Combatant:
         for ability_name in self.stats.skills:
             self.abilities.append(patch.get_ability(ability_name))
 
-        self.hp: int = self.max_hp
-        self.mp: int = self.max_mp
+        self.raw_hp: int = self.max_hp
+        self.raw_mp: int = self.max_mp
         self.ct: int = 0
         self.pa_mod: int = 0
         self.ma_mod: int = 0
         self.speed_mod: int = 0
+
+        self.status_flags: int = 0
         self.timed_status_conditions: List[int] = [0] * TIME_STATUS_LEN
-        self.other_status: Set[str] = set()
 
         self.ctr: int = 0
         self.ctr_action = None
@@ -86,6 +84,23 @@ class Combatant:
     @property
     def max_mp(self) -> int:
         return self.stats.mp + sum([e.mp_bonus for e in self.all_equips])
+
+    @property
+    def hp(self) -> int:
+        return self.raw_hp
+
+    @hp.setter
+    def hp(self, new_hp: int):
+        self.raw_hp = max(0, min(new_hp, self.max_hp))
+        # TODO: Calculate death statuses here?
+
+    @property
+    def mp(self) -> int:
+        return self.raw_mp
+
+    @mp.setter
+    def mp(self, new_mp: int):
+        self.raw_mp = max(0, min(new_mp, self.max_mp))
 
     @property
     def speed(self) -> int:
@@ -177,48 +192,41 @@ class Combatant:
 
     def add_status(self, status: str):
         # NOTE: This doesn't handle opposing statuses (like Haste/Slow)
+        # NOTE: This doesn't handle Death :(
         if status in TIME_STATUS_LENGTHS:
             self.timed_status_conditions[TIME_STATUS_INDEX[status]] = TIME_STATUS_LENGTHS[status]
-        else:
-            self.other_status.add(status)
+        self.status_flags |= STATUS_FLAGS[status]
 
     def has_status(self, status: str):
-        if status in TIME_STATUS_LENGTHS:
-            return self.status_time_remaining(status) > 0
-
         if status == CHARGING:
             return self.ctr_action is not None
 
         if status == CRITICAL:
             return self.hp <= self.max_hp // 5
 
-        return status in self.other_status
+        if status == DEATH:
+            return self.dead
+
+        return self.status_flags & STATUS_FLAGS[status] != 0
 
     @property
     def all_statuses(self):
-        # NOTE: Optimization for display purposes
-        statuses = list(self.other_status)
-        for i in range(TIME_STATUS_LEN):
-            if self.timed_status_conditions[i] > 0:
-                statuses.append(TIME_STATUS_INDEX_REVERSE[i])
-        if self.ctr_action is not None:
-            statuses.append(CHARGING)
-        if self.hp <= self.max_hp // 5:
-            statuses.append(CRITICAL)
-        statuses.sort()
+        statuses = []
+        for status in ALL_CONDITIONS:
+            if self.has_status(status):
+                statuses.append(status)
         return statuses
 
     def cancel_status(self, status: str):
-        if status in TIME_STATUS_LENGTHS:
-            self.timed_status_conditions[TIME_STATUS_INDEX[status]] = 0
-            return
-
         if status == CHARGING:
             self.ctr_action = None
             self.ctr = 0
             return
 
-        self.other_status.discard(status)
+        if status in TIME_STATUS_LENGTHS:
+            self.timed_status_conditions[TIME_STATUS_INDEX[status]] = 0
+
+        self.status_flags &= ~STATUS_FLAGS[status]
 
     @property
     def healthy(self) -> bool:
@@ -230,15 +238,15 @@ class Combatant:
 
     @property
     def undead(self) -> bool:
-        return self.has_status(UNDEAD)
+        return self.status_flags & UNDEAD_FLAG != 0
 
     @property
     def death_sentence(self) -> bool:
-        return self.has_status(DEATH_SENTENCE)
+        return self.status_flags & DEATH_SENTENCE_FLAG != 0
 
     @property
     def reraise(self) -> bool:
-        return self.has_status(RERAISE)
+        return self.status_flags & RERAISE_FLAG != 0
 
     @property
     def critical(self) -> bool:
@@ -246,23 +254,23 @@ class Combatant:
 
     @property
     def dont_move(self) -> bool:
-        return self.has_status(DONT_MOVE)
+        return self.status_flags & DONT_MOVE_FLAG != 0
 
     @property
     def dont_act(self) -> bool:
-        return self.has_status(DONT_ACT)
+        return self.status_flags & DONT_ACT_FLAG != 0
 
     @property
     def silence(self) -> bool:
-        return self.has_status(SILENCE)
+        return self.status_flags & SILENCE_FLAG != 0
 
     @property
     def innocent(self) -> bool:
-        return self.has_status(INNOCENT)
+        return self.status_flags & INNOCENT_FLAG != 0
 
     @property
     def reflect(self) -> bool:
-        return self.has_status(REFLECT)
+        return self.status_flags & REFLECT_FLAG != 0
 
     @property
     def charging(self) -> bool:
@@ -270,79 +278,79 @@ class Combatant:
 
     @property
     def transparent(self) -> bool:
-        return self.has_status(TRANSPARENT)
+        return self.status_flags & TRANSPARENT_FLAG != 0
 
     @property
     def berserk(self) -> bool:
-        return self.has_status(BERSERK)
+        return self.status_flags & BERSERK_FLAG != 0
 
     @property
     def blood_suck(self) -> bool:
-        return self.has_status(BLOOD_SUCK)
+        return self.status_flags & BLOOD_SUCK_FLAG != 0
 
     @property
     def oil(self) -> bool:
-        return self.has_status(OIL)
+        return self.status_flags & OIL_FLAG != 0
 
     @property
     def float(self) -> bool:
-        return self.has_status(FLOAT)
+        return self.status_flags & FLOAT_FLAG != 0
 
     @property
     def sleep(self) -> bool:
-        return self.has_status(SLEEP)
+        return self.status_flags & SLEEP_FLAG != 0
 
     @property
     def shell(self) -> bool:
-        return self.has_status(SHELL)
+        return self.status_flags & SHELL_FLAG != 0
 
     @property
     def protect(self) -> bool:
-        return self.has_status(PROTECT)
+        return self.status_flags & PROTECT_FLAG != 0
 
     @property
     def wall(self) -> bool:
-        return self.has_status(WALL)
+        return self.status_flags & WALL_FLAG != 0
 
     @property
     def haste(self) -> bool:
-        return self.has_status(HASTE)
+        return self.status_flags & HASTE_FLAG != 0
 
     @property
     def slow(self) -> bool:
-        return self.has_status(SLOW)
+        return self.status_flags & SLOW_FLAG != 0
 
     @property
     def stop(self) -> bool:
-        return self.has_status(STOP)
+        return self.status_flags & STOP_FLAG != 0
 
     @property
     def regen(self) -> bool:
-        return self.has_status(REGEN)
+        return self.status_flags & REGEN_FLAG != 0
 
     @property
     def poison(self) -> bool:
-        return self.has_status(POISON)
+        return self.status_flags & POISON_FLAG != 0
 
     @property
     def chicken(self) -> bool:
-        return self.has_status(CHICKEN)
+        return self.status_flags & CHICKEN_FLAG != 0
 
     @property
     def frog(self) -> bool:
-        return self.has_status(FROG)
+        return self.status_flags & FROG_FLAG != 0
 
     @property
     def petrified(self) -> bool:
-        return self.has_status(PETRIFY)
+        return self.status_flags & PETRIFY_FLAG != 0
 
     @property
     def charm(self) -> bool:
-        return self.has_status(CHARM)
+        return self.status_flags & CHARM_FLAG != 0
 
     @property
     def confusion(self) -> bool:
-        return self.has_status(CONFUSION)
+        return self.status_flags & CONFUSION_FLAG != 0
 
     @property
     def abandon(self) -> bool:

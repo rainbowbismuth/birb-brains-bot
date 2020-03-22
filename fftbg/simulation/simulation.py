@@ -104,6 +104,7 @@ class Simulation:
                     combatant.timed_status_conditions[i] -= 1
                 if has_condition and combatant.timed_status_conditions[i] == 0:
                     condition = TIME_STATUS_INDEX_REVERSE[i]
+                    combatant.cancel_status(condition)  # To clear flag
                     self.unit_report(combatant, f'no longer has {condition}')
 
     def phase_slow_action_charging(self):
@@ -148,12 +149,15 @@ class Simulation:
             if combatant.ct >= 100:
                 self.active_turns.append(combatant)
 
-    def active_turn_status_bar(self, combatant: Combatant):
+    def set_active_turn_status_bar(self, combatant: Combatant):
+        if not self.log_report:
+            return
+
         condition_str = ', '.join(combatant.all_statuses)
         if condition_str:
-            return f'{self.colored_name(combatant)} ({combatant.hp} HP, {condition_str})'
+            self.prepend = f'{self.colored_name(combatant)} ({combatant.hp} HP, {condition_str})'
         else:
-            return f'{self.colored_name(combatant)} ({combatant.hp} HP)'
+            self.prepend = f'{self.colored_name(combatant)} ({combatant.hp} HP)'
 
     def clear_active_turn_flags(self):
         for combatant in self.combatants:
@@ -194,7 +198,7 @@ class Simulation:
             self.clear_active_turn_flags()
             combatant.on_active_turn = True
 
-            self.prepend = self.active_turn_status_bar(combatant)
+            self.set_active_turn_status_bar(combatant)
 
             if combatant.regen:
                 self.change_target_hp(combatant, -(combatant.max_hp // 8), 'regen')
