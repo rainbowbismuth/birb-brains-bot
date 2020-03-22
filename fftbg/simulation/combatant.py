@@ -46,6 +46,7 @@ class Combatant:
 
         self.status_flags: int = 0
         self.timed_status_conditions: List[int] = [0] * TIME_STATUS_LEN
+        self.broken_items: int = 0
 
         self.ctr: int = 0
         self.ctr_action = None
@@ -56,6 +57,9 @@ class Combatant:
         self.took_damage_during_active_turn = False
 
         self.location: int = 0
+
+        self.num_mp_using_abilities: int = len([ab for ab in self.abilities if ab.mp > 0])
+        self.lowest_mp_cost_ability: int = min([999] + [ab.mp for ab in self.abilities if ab.mp > 0])
 
         for e in self.all_equips:
             for status in e.initial:
@@ -101,6 +105,12 @@ class Combatant:
     @mp.setter
     def mp(self, new_mp: int):
         self.raw_mp = max(0, min(new_mp, self.max_mp))
+
+    @property
+    def can_cast_mp_ability(self) -> bool:
+        if self.num_mp_using_abilities == 0:
+            return False
+        return self.raw_mp >= self.lowest_mp_cost_ability
 
     @property
     def speed(self) -> int:

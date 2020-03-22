@@ -215,7 +215,7 @@ class Simulation:
         user.ct = new_amount
 
     def ai_thirteen_rule(self) -> bool:
-        return random.random() <= 0.13
+        return random.random() <= 0.137
 
     def roll_brave_reaction(self, user: Combatant) -> bool:
         if user.berserk:
@@ -296,15 +296,20 @@ class Simulation:
     def ai_calculate_target_value(self, user: Combatant, target: Combatant) -> float:
         priority = target.hp / target.max_hp
 
-        # TODO: Number of broken items
-        # TODO: Caster hate
-        # TODO: Golem fear
-
+        priority += 0.51 * target.broken_items
         priority += self.ai_calculate_status_target_value_mod(target)
+        priority += self.ai_calculate_caster_hate_mod(target)
+        # TODO: Golem fear
 
         if user.is_foe(target):
             return -priority
         return priority
+
+    def ai_calculate_caster_hate_mod(self, target: Combatant) -> float:
+        if not target.can_cast_mp_ability:
+            return 0.0
+        mp_percent = target.mp / target.max_mp
+        return (mp_percent / 16.0) * target.num_mp_using_abilities
 
     def ai_calculate_status_target_value_mod(self, target: Combatant) -> float:
         total = 0.0
@@ -574,8 +579,6 @@ class Simulation:
 
         for target in targets:
             priority = self.ai_calculate_target_value(user, target)
-            if priority <= -0.5:
-                continue
             if priority < lowest_priority:
                 lowest_priority = priority
                 lowest_priority_target = target
