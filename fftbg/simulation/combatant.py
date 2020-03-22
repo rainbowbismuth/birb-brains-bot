@@ -56,6 +56,8 @@ class Combatant:
         self.acted_during_active_turn = False
         self.took_damage_during_active_turn = False
 
+        self.crystal_counter: int = 4
+
         self.location: int = 0
 
         self.num_mp_using_abilities: int = len([ab for ab in self.abilities if ab.mp > 0])
@@ -65,7 +67,7 @@ class Combatant:
 
         for e in self.all_equips:
             for status in e.initial:
-                self.add_status(status)
+                self.add_status_flag(status)
 
     def __repr__(self):
         return f'<{self.name} ({self.hp} HP) team: {self.team}>'
@@ -208,9 +210,10 @@ class Combatant:
         return self.ma_bang + sum([e.ma_bonus for e in self.all_equips])
 
     def status_time_remaining(self, status: str) -> int:
+        # TODO: No longer called? Could be useful though.
         return self.timed_status_conditions[TIME_STATUS_INDEX[status]]
 
-    def add_status(self, status: str):
+    def add_status_flag(self, status: str):
         # NOTE: This doesn't handle opposing statuses (like Haste/Slow)
         # NOTE: This doesn't handle Death :(
         if status in TIME_STATUS_LENGTHS:
@@ -255,6 +258,10 @@ class Combatant:
     @property
     def dead(self) -> bool:
         return self.hp == 0
+
+    @property
+    def crystal(self) -> bool:
+        return self.crystal_counter == 0
 
     @property
     def undead(self) -> bool:

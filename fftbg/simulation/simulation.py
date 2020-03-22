@@ -1,7 +1,7 @@
 import logging
 import random
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import colored
 
@@ -14,7 +14,7 @@ from fftbg.equipment import Equipment
 from fftbg.simulation.combatant import Combatant
 from fftbg.simulation.commands import attack
 from fftbg.simulation.status import TIME_STATUS_LEN, TIME_STATUS_INDEX_REVERSE, DAMAGE_CANCELS, DEATH_CANCELS, \
-    TRANSPARENT
+    TRANSPARENT, RERAISE, UNDEAD, DEATH
 
 LOG = logging.getLogger(__name__)
 
@@ -189,10 +189,26 @@ class Simulation:
         self.set_phase('Active Turn Resolve')
         while self.active_turns:
             combatant = self.active_turns.pop(0)
-            if not combatant.healthy:
+
+            if combatant.petrified or combatant.crystal or combatant.stop or combatant.sleep:
                 continue
 
-            if combatant.stop or combatant.sleep:
+            if combatant.dead and combatant.reraise and not combatant.undead:
+                self.change_target_hp(combatant, combatant.max_hp // 10, RERAISE)
+                self.cancel_status(combatant, RERAISE)
+
+            if combatant.dead and combatant.crystal_counter > 0:
+                combatant.crystal_counter -= 1
+
+                if combatant.crystal_counter == 0 and combatant.undead and random.randint(1, 2) == 2:
+                    self.change_target_hp(combatant, random.randint(1, combatant.max_hp), UNDEAD)
+                    combatant.crystal_counter = 4
+
+                elif combatant.crystal_counter == 0:
+                    self.unit_report(combatant, 'has become a crystal')
+                    continue
+
+            if combatant.dead:
                 continue
 
             self.clear_active_turn_flags()
@@ -500,6 +516,7 @@ class Simulation:
 
         for target in targets:
             if not target.healthy:
+                # TODO: Fix crystal/undead
                 self.ai_try_raise(user, target)
                 if user.acted_during_active_turn:
                     return
@@ -642,16 +659,27 @@ class Simulation:
         return damage, crit
 
     def add_status(self, target: Combatant, status: str, src: str):
+        if target.immune_to(status):
+            return
+
+        if status == DEATH:
+            self.target_died(target)
+            self.unit_report(target, f'was killed by {status} from {src}')
+            return
+
         had_status = target.has_status(status)
-        target.add_status(status)
+        target.add_status_flag(status)
         if not had_status:
             self.unit_report(target, f'now has {status} from {src}')
 
-    def cancel_status(self, target: Combatant, status: str, src: str):
+    def cancel_status(self, target: Combatant, status: str, src: Optional[str] = None):
         if not target.has_status(status):
             return
         target.cancel_status(status)
-        self.unit_report(target, f'had {status} cancelled by {src}')
+        if src:
+            self.unit_report(target, f'had {status} cancelled by {src}')
+        else:
+            self.unit_report(target, f'had {status} cancelled')
 
     def weapon_chance_to_add_or_cancel_status(self, user: Combatant, weapon: Equipment, target: Combatant):
         if not target.healthy:
@@ -712,9 +740,24 @@ class Simulation:
             return
 
     def target_died(self, target: Combatant):
+        target.hp = 0
         self.unit_report(target, 'died')
         for status in DEATH_CANCELS:
             self.cancel_status(target, status, 'death')
+        target.crystal_counter = 4
+
+
+# IDEAS:
+#
+#  So it's still hard to judge exactly how the AI works, is this target value simply that, or is it
+#  something used to determine what action to take? If so I really need to rethink the structure here.
+#
+#  Current idea:
+#  - Calculate all target values for all units from my perspective
+#  - Go through each ability I have
+#    - Discard based on 13% rule, other factors (is that per target? idk)
+#    - Pair up with possible targets
+#  -
 
 
 def main():
