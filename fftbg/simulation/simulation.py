@@ -209,7 +209,9 @@ class Simulation:
         return random.random() <= user.brave
 
     def ai_can_be_cowardly(self, user: Combatant):
-        return any([c.healthy for c in self.combatants if user.team == c.team and user is not c])
+        any_healthy = any([c.healthy for c in self.combatants if user.team == c.team and user is not c])
+        all_critical = all([c.critical for c in self.combatants if user.team == c.team and user is not c])
+        return any_healthy and not all_critical
 
     def can_move_into_range(self, user: Combatant, range: int, target: Combatant):
         return user.distance(target) <= range + user.move
@@ -217,6 +219,8 @@ class Simulation:
     def do_move_with_bounds(self, user: Combatant, new_location: int):
         old_location = user.location
         user.location = max(-self.arena.max_dimension, min(new_location, self.arena.max_dimension))
+        if old_location == user.location:
+            return
         user.moved_during_active_turn = True
         self.report(f'moved to from {old_location} to {user.location}')
 
@@ -520,29 +524,31 @@ def main():
     tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
     patch = fftbg.patch.get_patch(tourny.modified)
 
+    num_sims = 100
     correct = 0
     total = 0
 
     for match_up in tourny.match_ups:
-        LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
-        combatants = []
-        for d in match_up.left.combatants:
-            combatants.append(Combatant(d, patch, 0))
-        for d in match_up.right.combatants:
-            combatants.append(Combatant(d, patch, 1))
-        arena = fftbg.arena.get_arena(match_up.game_map)
-        sim = Simulation(combatants, arena)
-        sim.run()
-        if sim.left_wins:
-            LOG.info('Left team wins!')
-        else:
-            LOG.info('Right team wins!')
+        for _ in range(num_sims):
+            LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
+            combatants = []
+            for d in match_up.left.combatants:
+                combatants.append(Combatant(d, patch, 0))
+            for d in match_up.right.combatants:
+                combatants.append(Combatant(d, patch, 1))
+            arena = fftbg.arena.get_arena(match_up.game_map)
+            sim = Simulation(combatants, arena)
+            sim.run()
+            if sim.left_wins:
+                LOG.info('Left team wins!')
+            else:
+                LOG.info('Right team wins!')
 
-        if sim.left_wins and match_up.left_wins:
-            correct += 1
-            total += 1
-        else:
-            total += 1
+            if sim.left_wins and match_up.left_wins:
+                correct += 1
+                total += 1
+            else:
+                total += 1
 
     LOG.info(f'Total correct: {correct}/{total}')
 
