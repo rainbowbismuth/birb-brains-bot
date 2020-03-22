@@ -28,7 +28,15 @@ class Simulation:
         self.slow_actions = []
         self.active_turns = []
         self.left_wins = None
-        self.prepend = ''
+        self.prepend = self.colored_phase('Init')
+
+        # initialize location based on arena
+        for combatant in self.combatants:
+            if combatant.team == 0:
+                combatant.location = int(-arena.max_dimension * arena.team_distance)
+            else:
+                combatant.location = int(arena.max_dimension * arena.team_distance)
+        self.report(f'Fighting on {arena.name}')
 
     def run(self):
         while self.left_wins is None:
@@ -130,7 +138,7 @@ class Simulation:
         for condition in ALL_CONDITIONS:
             if combatant.has_status(condition):
                 conditions.append(condition)
-        condition_str = ','.join(conditions)
+        condition_str = ', '.join(conditions)
         if condition_str:
             return f'{self.colored_name(combatant)} ({combatant.hp} HP, {condition_str})'
         else:
@@ -138,13 +146,29 @@ class Simulation:
 
     def clear_active_turn_flags(self):
         for combatant in self.combatants:
+            combatant.on_active_turn = False
+            combatant.moved_during_active_turn = False
             combatant.acted_during_active_turn = False
             combatant.took_damage_during_active_turn = False
 
     def end_of_active_turn_checks(self):
         for combatant in self.combatants:
+
             if combatant.acted_during_active_turn or combatant.took_damage_during_active_turn:
                 combatant.cancel_status(TRANSPARENT)
+
+            if combatant.on_active_turn:
+                minus_ct = 60
+                if combatant.moved_during_active_turn:
+                    minus_ct += 20
+                if combatant.acted_during_active_turn:
+                    minus_ct += 20
+                self.set_ct_from_acting(combatant, -minus_ct)
+
+                if not (combatant.moved_during_active_turn or combatant.acted_during_active_turn):
+                    self.unit_report(combatant, 'did nothing')
+
+            combatant.on_active_turn = False
 
     def phase_active_turn_resolve(self):
         self.prepend = self.colored_phase('Active Turn Resolve')
@@ -157,6 +181,7 @@ class Simulation:
                 continue
 
             self.clear_active_turn_flags()
+            combatant.on_active_turn = True
 
             self.prepend = self.active_turn_status_bar(combatant)
 
@@ -184,6 +209,38 @@ class Simulation:
 
     def ai_can_be_cowardly(self, user: Combatant):
         return any([c.healthy for c in self.combatants if user.team == c.team and user is not c])
+
+    def can_move_into_range(self, user: Combatant, range: int, target: Combatant):
+        return user.distance(target) <= range + user.move
+
+    def move_to_range(self, user: Combatant, range: int, target: Combatant):
+        # TODO: Charm?
+        old_location = user.location
+        if user.team == 0:
+            desired = target.location - range
+        else:
+            desired = target.location + range
+
+        if user.location == desired:
+            return
+
+        v = desired - user.location
+        diff = min(user.move, abs(v))
+        if v > 0:
+            sign = 1
+        else:
+            sign = -1
+        user.location += diff * sign
+        user.moved_during_active_turn = True
+        self.report(f'moved to from {old_location} to {user.location}')
+
+    def move_into_combat(self, user: Combatant):
+        if user.team == 0:
+            user.location += user.move
+        else:
+            user.location -= user.move
+        user.moved_during_active_turn = True
+        self.report(f'moved to {user.location}')
 
     def ai_calculate_friendly_targets(self, user: Combatant):
         if user.confusion:
@@ -214,20 +271,13 @@ class Simulation:
         if user.acted_during_active_turn:
             return
         elif not user.acted_during_active_turn and acting_cowardly:
-            self.unit_report(user, 'is cowardly skipping their turn')
-            self.set_ct_from_acting(user, -80)
             return
 
         enemy_targets = self.ai_calculate_enemy_targets(user)
         if not enemy_targets:
-            self.unit_report(user, 'did nothing')
-            self.set_ct_from_acting(user, -80)
             return
 
         self.ai_try_enemy_action(user, enemy_targets)
-        if not user.acted_during_active_turn:
-            self.unit_report(user, 'did nothing')
-            self.set_ct_from_acting(user, -80)
 
     def ai_try_friendly_action(self, user: Combatant, targets: List[Combatant]):
         if user.berserk:
@@ -255,7 +305,6 @@ class Simulation:
                     continue
                 self.change_target_hp(target, -random.randint(1, 20), ability.name)
                 user.acted_during_active_turn = True
-                self.set_ct_from_acting(user, -100)
                 return
 
     def ai_try_heal(self, user, target):
@@ -269,28 +318,24 @@ class Simulation:
                     continue
                 self.change_target_hp(target, -target.max_hp, ability.name)
                 user.acted_during_active_turn = True
-                self.set_ct_from_acting(user, -100)
 
             elif ability.name == 'X-Potion':
                 if self.ai_thirteen_rule():
                     continue
                 self.change_target_hp(target, -150, ability.name)
                 user.acted_during_active_turn = True
-                self.set_ct_from_acting(user, -100)
 
             elif ability.name == 'Hi-Potion':
                 if self.ai_thirteen_rule():
                     continue
                 self.change_target_hp(target, -120, ability.name)
                 user.acted_during_active_turn = True
-                self.set_ct_from_acting(user, -100)
 
             elif ability.name == 'Potion':
                 if self.ai_thirteen_rule():
                     continue
                 self.change_target_hp(target, -100, ability.name)
                 user.acted_during_active_turn = True
-                self.set_ct_from_acting(user, -100)
 
         return
 
@@ -303,10 +348,15 @@ class Simulation:
 
         # Target critical enemies first
         for target in targets:
-            if target.critical:
-                self.do_cmd_attack(user, target)
-                user.acted_during_active_turn = True
-                return
+            if not target.critical:
+                continue
+
+            if not self.can_move_into_range(user, user.mainhand.range, target):
+                continue
+
+            self.move_to_range(user, user.mainhand.range, target)
+            self.do_cmd_attack(user, target)
+            return
 
         # Otherwise target the tankiest enemy
         highest_hp = targets[0]
@@ -314,10 +364,16 @@ class Simulation:
             if target.hp > highest_hp.hp:
                 highest_hp = target
 
-        self.do_cmd_attack(user, highest_hp)
-        user.acted_during_active_turn = True
+        self.move_to_range(user, user.mainhand.range, highest_hp)
+        if self.in_range(user, user.mainhand.range, highest_hp):
+            self.do_cmd_attack(user, highest_hp)
+
+    def in_range(self, user: Combatant, range: int, target: Combatant):
+        dist = user.distance(target)
+        return dist <= range
 
     def do_cmd_attack(self, user: Combatant, target: Combatant):
+        user.acted_during_active_turn = True
         damage, crit = self.do_single_weapon_attack(user, user.mainhand, target)
         if user.dual_wield and target.healthy:
             if crit and random.randint(1, 2) == 1:
@@ -327,7 +383,6 @@ class Simulation:
         if damage > 0:
             self.after_damage_reaction(target, user, damage)
         user.acted_during_active_turn = True
-        self.set_ct_from_acting(user, -100)
 
     def do_physical_evade(self, user: Combatant, weapon: Equipment, target: Combatant) -> bool:
         if user.transparent or user.concentrate:
@@ -348,6 +403,10 @@ class Simulation:
         return False
 
     def do_single_weapon_attack(self, user: Combatant, weapon: Equipment, target: Combatant) -> (int, bool):
+        if not self.in_range(user, weapon.range, target):
+            self.unit_report(target, 'not in range!')
+            return 0, False
+
         if self.do_physical_evade(user, weapon, target):
             return 0, False
 
@@ -394,7 +453,7 @@ class Simulation:
             return
 
         if target.mana_shield and target.mp > 0 and self.roll_brave_reaction(target):
-            self.change_target_mp(target, amount, source + ' (mana shielded)')
+            self.change_target_mp(target, amount, source + ' (mana shield)')
 
         target.hp = min(target.max_hp, max(0, target.hp - amount))
         if amount >= 0:

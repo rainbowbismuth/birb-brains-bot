@@ -50,8 +50,12 @@ class Combatant:
         self.ctr: int = 0
         self.ctr_action = None
 
+        self.on_active_turn = False
+        self.moved_during_active_turn = False
         self.acted_during_active_turn = False
         self.took_damage_during_active_turn = False
+
+        self.location: int = 0
 
         for e in self.all_equips:
             for status in e.initial:
@@ -65,6 +69,9 @@ class Combatant:
 
     def is_foe(self, other: 'Combatant'):
         return self.team != other.team
+
+    def distance(self, other: 'Combatant'):
+        return abs(self.location - other.location)
 
     @property
     def all_equips(self):
