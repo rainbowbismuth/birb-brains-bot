@@ -14,13 +14,17 @@ from fftbg.equipment import Equipment
 from fftbg.simulation.combatant import Combatant
 from fftbg.simulation.commands import attack
 from fftbg.simulation.status import TIME_STATUS_LEN, TIME_STATUS_INDEX_REVERSE, DAMAGE_CANCELS, DEATH_CANCELS, \
-    ALL_CONDITIONS, TRANSPARENT
+    TRANSPARENT
 
 LOG = logging.getLogger(__name__)
 
+CYAN = colored.fg('cyan')
+RED = colored.fg('red')
+BLUE = colored.fg('blue')
+
 
 class Simulation:
-    def __init__(self, combatants: List[Combatant], arena: Arena):
+    def __init__(self, combatants: List[Combatant], arena: Arena, log_report=False):
         self.combatants = combatants
         self.arena = arena
         self.clock_tick: int = 0
@@ -28,7 +32,9 @@ class Simulation:
         self.slow_actions = []
         self.active_turns = []
         self.left_wins = None
-        self.prepend = self.colored_phase('Init')
+        self.time_out_win = False
+        self.log_report = log_report
+        self.prepend = self.set_phase('Init')
 
         # initialize location based on arena
         for combatant in self.combatants:
@@ -46,6 +52,11 @@ class Simulation:
                 self.left_wins = False
             if not self.team_healthy(1):
                 self.left_wins = True
+
+            # TODO: More involved time out win
+            if self.clock_tick > 10000:
+                self.left_wins = True
+                self.time_out_win = True
 
     def team_healthy(self, team: int):
         return any([combatant.healthy for combatant in self.combatants if combatant.team == team])
@@ -65,24 +76,27 @@ class Simulation:
     def prepend_info(self):
         return f'CT {self.clock_tick}: {self.prepend}'
 
-    def colored_phase(self, phase_name):
-        return colored.stylize(phase_name, colored.fg("cyan"))
+    def set_phase(self, phase_name):
+        if self.log_report:
+            self.prepend = colored.stylize(phase_name, CYAN)
 
     def colored_name(self, combatant: Combatant):
         if combatant.team == 0:
-            return colored.stylize(combatant.name, colored.fg("red"))
+            return colored.stylize(combatant.name, RED)
         else:
-            return colored.stylize(combatant.name, colored.fg("blue"))
+            return colored.stylize(combatant.name, BLUE)
 
     def report(self, s: str):
-        LOG.info(f'{self.prepend_info()}: {s}')
+        if self.log_report:
+            LOG.info(f'{self.prepend_info()}: {s}')
 
     def unit_report(self, combatant: Combatant, s: str):
-        LOG.info(f'{self.prepend_info()}: {combatant.name} ({combatant.hp} HP) {s}')
+        if self.log_report:
+            LOG.info(f'{self.prepend_info()}: {combatant.name} ({combatant.hp} HP) {s}')
 
     def phase_status_check(self):
         self.clock_tick += 1
-        self.prepend = self.colored_phase('Status Check')
+        self.set_phase('Status Check')
         for combatant in self.combatants:
             for i in range(TIME_STATUS_LEN):
                 has_condition = combatant.timed_status_conditions[i] > 0
@@ -93,7 +107,7 @@ class Simulation:
                     self.unit_report(combatant, f'no longer has {condition}')
 
     def phase_slow_action_charging(self):
-        self.prepend = self.colored_phase('Slow Action Charge')
+        self.set_phase('Slow Action Charge')
         for combatant in self.combatants:
             if not combatant.ctr_action:
                 continue
@@ -106,7 +120,7 @@ class Simulation:
                 self.slow_actions.append(combatant)
 
     def phase_slow_action_resolve(self):
-        self.prepend = self.colored_phase('Slow Action Resolve')
+        self.set_phase('Slow Action Resolve')
         while self.slow_actions:
             combatant = self.slow_actions.pop(0)
             if not combatant.healthy:
@@ -117,7 +131,7 @@ class Simulation:
             action()
 
     def phase_ct_charging(self):
-        self.prepend = self.colored_phase('CT Charging')
+        self.set_phase('CT Charging')
         for combatant in self.combatants:
             if combatant.stop or combatant.sleep:
                 continue
@@ -135,11 +149,7 @@ class Simulation:
                 self.active_turns.append(combatant)
 
     def active_turn_status_bar(self, combatant: Combatant):
-        conditions = []
-        for condition in ALL_CONDITIONS:
-            if combatant.has_status(condition):
-                conditions.append(condition)
-        condition_str = ', '.join(conditions)
+        condition_str = ', '.join(combatant.all_statuses)
         if condition_str:
             return f'{self.colored_name(combatant)} ({combatant.hp} HP, {condition_str})'
         else:
@@ -172,7 +182,7 @@ class Simulation:
             combatant.on_active_turn = False
 
     def phase_active_turn_resolve(self):
-        self.prepend = self.colored_phase('Active Turn Resolve')
+        self.set_phase('Active Turn Resolve')
         while self.active_turns:
             combatant = self.active_turns.pop(0)
             if not combatant.healthy:
@@ -278,6 +288,172 @@ class Simulation:
             return [target for target in self.combatants if
                     user.is_friend(target) and target.healthy and target is not user]
         return [target for target in self.combatants if user.is_foe(target) and target.healthy]
+
+    def ai_calculate_target_value(self, user: Combatant, target: Combatant) -> float:
+        priority = target.hp / target.max_hp
+
+        # TODO: Number of broken items
+        # TODO: Caster hate
+        # TODO: Golem fear
+
+        priority += self.ai_calculate_status_target_value_mod(target)
+
+        if user.is_foe(target):
+            return -priority
+        return priority
+
+    def ai_calculate_status_target_value_mod(self, target: Combatant) -> float:
+        total = 0.0
+
+        # 0x0058: Current Statuses 1
+        # 		0x80 - 							0% (0000)
+        # 		0x40 - Crystal					-150% -c0(ff40)
+        # 		0x20 - Dead						-150% -c0(ff40)
+        # 		0x10 - Undead					-30.5% -27(ffd9)
+        # 		0x08 - Charging					0% (0000)
+        # 		0x04 - Jump						0% (0000)
+        # 		0x02 - Defending				0% (0000)
+        # 		0x01 - Performing				0% (0000)
+        if target.dead:
+            total -= 1.5
+
+        if target.undead:
+            total -= 0.305
+
+        # 	0x0059: Current Statuses 2
+        # 		0x80 - Petrify					-90.6% -74(ff8c)
+        if target.petrified:
+            total -= 0.906
+
+        # 		0x40 - Invite					-180.4% -e7(ff19)
+        # NOTE: Skipping Invite because it doesn't exist in FFTBG
+
+        # 		0x20 - Darkness					-50% [-40(ffc0) * Evadable abilities] + 3 / 4
+        # TODO: Add darkness
+
+        # 		0x10 - Confusion				-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
+        if target.confusion:
+            if target.slow or target.stop or target.sleep or target.dont_move or target.dont_act:
+                total += 0.25
+            else:
+                total -= 0.5
+
+        # 		0x08 - Silence					-70.3% [-5a(ffa6) * Silence abilities] + 3 / 4
+        if target.silence:
+            total -= 0.703
+            # TODO: Calculate number of silenced abilities
+
+        # 		0x04 - Blood Suck				-90.6% -74(ff8c) (+1 / 4 if slow/stop/sleep/don't move/act/)
+        if target.blood_suck:
+            if target.slow or target.stop or target.sleep or target.dont_move or target.dont_act:
+                total += 0.25
+            else:
+                total -= 0.906
+
+        # 		0x02 - Cursed					0%(0000)
+        # 		0x01 - Treasure					-150% -c0(ff40)
+        # 	0x005a: Current Statuses 3
+        # 		0x80 - Oil						-5.5% -7(fff9)
+        if target.oil:
+            total -= 0.055
+
+        # 		0x40 - Float					9.4% c(000c)
+        if target.float:
+            total += 0.094
+
+        # 		0x20 - Reraise					39.8% 33(0033)
+        if target.reraise:
+            total += 0.398
+
+        # 		0x10 - Transparent				29.7% 26(0026)
+        if target.transparent:
+            total += 0.297
+
+        # 		0x08 - Berserk					-30.5% -27(ffd9)
+        if target.berserk:
+            total -= 0.305
+
+        # 		0x04 - Chicken					-20.3% -1a(ffe6)
+        if target.chicken:
+            total -= 0.203
+
+        # 		0x02 - Frog						-40.6% -34(ffcc)
+        if target.frog:
+            total -= 0.406
+        # 		0x01 - Critical					-25% -20(ffe0)
+        if target.critical:
+            total -= 0.25
+
+        # 	0x005b: Current Statuses 4
+        # 		0x80 - Poison					-20.3% -1a(ffe6)
+        if target.poison:
+            total -= 0.203
+
+        # 		0x40 - Regen					19.5% 19(0019)
+        if target.regen:
+            total += 0.195
+
+        # 		0x20 - Protect					19.5% 19(0019)
+        if target.protect:
+            total += 0.195
+
+        # 		0x10 - Shell					19.5% 19(0019)
+        if target.shell:
+            total += 0.195
+
+        # 		0x08 - Haste					14.8% 13(0013)
+        if target.haste:
+            total += 0.148
+
+        # 		0x04 - Slow						-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
+        if target.slow and not (target.confusion or target.charm or target.blood_suck):
+            total -= 0.305
+
+        # 		0x02 - Stop						-70.3% -5a(ffa6) 0 if Confusion/Charm/Blood Suck
+        if target.stop and not (target.confusion or target.charm or target.blood_suck):
+            total -= 0.703
+
+        # 		0x01 - Wall						50% 40(0040)
+        if target.wall:
+            total += 0.50
+
+        # 	0x005c: Current Statuses 5
+        # 		0x80 - Faith					4.7% 6(0006)
+        if target.faith:
+            total += 0.047
+
+        # 		0x40 - Innocent					-5.5% -7(fff9)
+        if target.innocent:
+            total -= 0.055
+
+        # 		0x20 - Charm					-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
+        if target.charm:
+            if target.slow or target.stop or target.sleep or target.dont_move or target.dont_act:
+                total += 0.25
+            else:
+                total -= 0.50
+
+        # 		0x10 - Sleep					-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
+        if target.sleep and not (target.confusion or target.charm or target.blood_suck):
+            total -= 0.305
+
+        # 		0x08 - Don't Move				-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
+        if target.dont_move and not (target.confusion or target.charm or target.blood_suck):
+            total -= 0.305
+
+        # 		0x04 - Don't Act				-50% -40(ffc0) 0 if Confusion/Charm/Blood Suck
+        if target.dont_act and not (target.confusion or target.charm or target.blood_suck):
+            total -= 0.50
+
+        # 		0x02 - Reflect					19.5% 19(0019)
+        if target.reflect:
+            total += 0.195
+
+        # 		0x01 - Death Sentence			-80.5% -67(ff99)
+        if target.death_sentence:
+            total -= 0.805
+
+        return total
 
     def ai_do_basic_turn(self, user: Combatant):
         friendly_targets = self.ai_calculate_friendly_targets(user)
@@ -388,15 +564,22 @@ class Simulation:
             self.do_cmd_attack(user, target)
             return
 
-        # Otherwise target the tankiest enemy
-        highest_hp = targets[0]
-        for target in targets:
-            if target.hp > highest_hp.hp:
-                highest_hp = target
+        # Otherwise target an enemy
+        lowest_priority = 100.0
+        lowest_priority_target = targets[0]
 
-        self.move_to_range(user, user.mainhand.range, highest_hp)
-        if self.in_range(user, user.mainhand.range, highest_hp):
-            self.do_cmd_attack(user, highest_hp)
+        for target in targets:
+            priority = self.ai_calculate_target_value(user, target)
+            if priority <= -0.5:
+                continue
+            if priority < lowest_priority:
+                lowest_priority = priority
+                lowest_priority_target = target
+
+        # TODO: Will have to think about picking someone in range
+        self.move_to_range(user, user.mainhand.range, lowest_priority_target)
+        if self.in_range(user, user.mainhand.range, lowest_priority_target):
+            self.do_cmd_attack(user, lowest_priority_target)
 
     def in_range(self, user: Combatant, range: int, target: Combatant):
         dist = user.distance(target)
@@ -405,7 +588,7 @@ class Simulation:
     def do_cmd_attack(self, user: Combatant, target: Combatant):
         user.acted_during_active_turn = True
         damage, crit = self.do_single_weapon_attack(user, user.mainhand, target)
-        if user.dual_wield and target.healthy:
+        if user.dual_wield and user.has_offhand_weapon and target.healthy:
             if crit and random.randint(1, 2) == 1:
                 self.unit_report(target, 'was pushed out of range of a second attack')
             else:
@@ -526,37 +709,48 @@ class Simulation:
 
 
 def main():
+    import tqdm
     fftbg.server.configure_logging('SIMULATION_LOG_LEVEL')
     tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
     patch = fftbg.patch.get_patch(tourny.modified)
 
-    num_sims = 100
+    num_sims = 1
+    time_out_wins = 0
     correct = 0
     total = 0
 
-    for match_up in tourny.match_ups:
-        for _ in range(num_sims):
-            LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
-            combatants = []
-            for d in match_up.left.combatants:
-                combatants.append(Combatant(d, patch, 0))
-            for d in match_up.right.combatants:
-                combatants.append(Combatant(d, patch, 1))
-            arena = fftbg.arena.get_arena(match_up.game_map)
-            sim = Simulation(combatants, arena)
-            sim.run()
-            if sim.left_wins:
-                LOG.info('Left team wins!')
-            else:
-                LOG.info('Right team wins!')
+    # tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
+    for path in tqdm.tqdm(list(Path('data/tournaments').glob('*.json'))):
+        tourny = fftbg.tournament.parse_tournament(path)
+        patch = fftbg.patch.get_patch(tourny.modified)
 
-            if sim.left_wins and match_up.left_wins:
-                correct += 1
-                total += 1
-            else:
-                total += 1
+        for match_up in tourny.match_ups:
+            for _ in range(num_sims):
+                # LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
+                combatants = []
+                for d in match_up.left.combatants:
+                    combatants.append(Combatant(d, patch, 0))
+                for d in match_up.right.combatants:
+                    combatants.append(Combatant(d, patch, 1))
+                arena = fftbg.arena.get_arena(match_up.game_map)
+                sim = Simulation(combatants, arena)
+                sim.run()
+                # if sim.left_wins:
+                #     LOG.info('Left team wins!')
+                # else:
+                #     LOG.info('Right team wins!')
+
+                if sim.left_wins and match_up.left_wins:
+                    correct += 1
+                    total += 1
+                else:
+                    total += 1
+                if sim.time_out_win:
+                    time_out_wins += 1
 
     LOG.info(f'Total correct: {correct}/{total}')
+    LOG.info(f'Percent correct: {correct / total:.1%}')
+    LOG.info(f'Time outs: {time_out_wins}')
 
 
 if __name__ == '__main__':

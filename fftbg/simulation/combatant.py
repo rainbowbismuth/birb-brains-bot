@@ -6,8 +6,10 @@ from fftbg import equipment as equipment
 from fftbg.ability import Ability
 from fftbg.combatant import ZODIAC_INDEX, ZODIAC_CHART
 from fftbg.patch import Patch
-from fftbg.simulation.status import TIME_STATUS_LENGTHS, TIME_STATUS_LEN, TIME_STATUS_INDEX, BERSERK, CHARGING, SLEEP, \
-    SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY, REGEN, POISON, CRITICAL, STOP, CONFUSION, CHARM, TRANSPARENT
+from fftbg.simulation.status import TIME_STATUS_LENGTHS, TIME_STATUS_LEN, TIME_STATUS_INDEX, \
+    TIME_STATUS_INDEX_REVERSE, BERSERK, CHARGING, SLEEP, SHELL, PROTECT, HASTE, SLOW, FROG, CHICKEN, PETRIFY, REGEN, \
+    POISON, CRITICAL, STOP, CONFUSION, CHARM, TRANSPARENT, UNDEAD, DONT_MOVE, DONT_ACT, SILENCE, BLOOD_SUCK, OIL, \
+    FLOAT, RERAISE, WALL, INNOCENT, REFLECT, DEATH_SENTENCE
 
 
 class Combatant:
@@ -192,6 +194,20 @@ class Combatant:
 
         return status in self.other_status
 
+    @property
+    def all_statuses(self):
+        # NOTE: Optimization for display purposes
+        statuses = list(self.other_status)
+        for i in range(TIME_STATUS_LEN):
+            if self.timed_status_conditions[i] > 0:
+                statuses.append(TIME_STATUS_INDEX_REVERSE[i])
+        if self.ctr_action is not None:
+            statuses.append(CHARGING)
+        if self.hp <= self.max_hp // 5:
+            statuses.append(CRITICAL)
+        statuses.sort()
+        return statuses
+
     def cancel_status(self, status: str):
         if status in TIME_STATUS_LENGTHS:
             self.timed_status_conditions[TIME_STATUS_INDEX[status]] = 0
@@ -209,8 +225,44 @@ class Combatant:
         return self.hp > 0 and not self.petrified
 
     @property
+    def dead(self) -> bool:
+        return self.hp == 0
+
+    @property
+    def undead(self) -> bool:
+        return self.has_status(UNDEAD)
+
+    @property
+    def death_sentence(self) -> bool:
+        return self.has_status(DEATH_SENTENCE)
+
+    @property
+    def reraise(self) -> bool:
+        return self.has_status(RERAISE)
+
+    @property
     def critical(self) -> bool:
         return self.has_status(CRITICAL)
+
+    @property
+    def dont_move(self) -> bool:
+        return self.has_status(DONT_MOVE)
+
+    @property
+    def dont_act(self) -> bool:
+        return self.has_status(DONT_ACT)
+
+    @property
+    def silence(self) -> bool:
+        return self.has_status(SILENCE)
+
+    @property
+    def innocent(self) -> bool:
+        return self.has_status(INNOCENT)
+
+    @property
+    def reflect(self) -> bool:
+        return self.has_status(REFLECT)
 
     @property
     def charging(self) -> bool:
@@ -225,6 +277,18 @@ class Combatant:
         return self.has_status(BERSERK)
 
     @property
+    def blood_suck(self) -> bool:
+        return self.has_status(BLOOD_SUCK)
+
+    @property
+    def oil(self) -> bool:
+        return self.has_status(OIL)
+
+    @property
+    def float(self) -> bool:
+        return self.has_status(FLOAT)
+
+    @property
     def sleep(self) -> bool:
         return self.has_status(SLEEP)
 
@@ -235,6 +299,10 @@ class Combatant:
     @property
     def protect(self) -> bool:
         return self.has_status(PROTECT)
+
+    @property
+    def wall(self) -> bool:
+        return self.has_status(WALL)
 
     @property
     def haste(self) -> bool:
@@ -319,6 +387,10 @@ class Combatant:
     @property
     def dual_wield(self) -> bool:
         return 'Dual Wield' in self.skills
+
+    @property
+    def has_offhand_weapon(self) -> bool:
+        return self.offhand.weapon_type is not None
 
     @property
     def mana_shield(self) -> bool:

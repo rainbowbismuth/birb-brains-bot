@@ -20,6 +20,11 @@ BERSERK = 'Berserk'
 
 PETRIFY = 'Petrify'
 JUMPING = 'Jumping'
+UNDEAD = 'Undead'
+SILENCE = 'Silence'
+OIL = 'Oil'
+RERAISE = 'Reraise'
+WALL = 'Wall'
 
 TIME_STATUS_LENGTHS = {
     CHARM: 32,
