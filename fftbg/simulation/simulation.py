@@ -318,6 +318,28 @@ class Simulation:
                     return
         return
 
+    def do_cmd_item_heal(self, user, item: str, target):
+        range = 1
+        if user.throw_item:
+            range = 4
+        if not self.can_move_into_range(user, range, target):
+            return
+        self.move_to_range(user, range, target)
+        if item == 'Phoenix Down':
+            heal_amount = random.randint(1, 20)
+        elif item == 'Elixir':
+            heal_amount = target.max_hp
+        elif item == 'X-Potion':
+            heal_amount = 150
+        elif item == 'Hi-Potion':
+            heal_amount = 120
+        elif item == 'Potion':
+            heal_amount = 100
+        else:
+            raise Exception(f'{item} isn\'t a known healing item')
+        self.change_target_hp(target, -heal_amount, item)
+        user.acted_during_active_turn = True
+
     def ai_try_raise(self, user, target):
         if user.berserk:
             return
@@ -327,40 +349,24 @@ class Simulation:
             if ability.name == 'Phoenix Down':
                 if self.ai_thirteen_rule():
                     continue
-                self.change_target_hp(target, -random.randint(1, 20), ability.name)
-                user.acted_during_active_turn = True
-                return
+                self.do_cmd_item_heal(user, ability.name, target)
+                if user.acted_during_active_turn:
+                    return
 
     def ai_try_heal(self, user, target):
         if user.berserk:
             return
+        if not target.healthy:
+            return
 
         for ability in user.abilities:
             # FIXME: super hack rn
-            if ability.name == 'Elixir':
+            if ability.name in ('Elixir', 'X-Potion', 'Hi-Potion', 'Potion'):
                 if self.ai_thirteen_rule():
                     continue
-                self.change_target_hp(target, -target.max_hp, ability.name)
-                user.acted_during_active_turn = True
-
-            elif ability.name == 'X-Potion':
-                if self.ai_thirteen_rule():
-                    continue
-                self.change_target_hp(target, -150, ability.name)
-                user.acted_during_active_turn = True
-
-            elif ability.name == 'Hi-Potion':
-                if self.ai_thirteen_rule():
-                    continue
-                self.change_target_hp(target, -120, ability.name)
-                user.acted_during_active_turn = True
-
-            elif ability.name == 'Potion':
-                if self.ai_thirteen_rule():
-                    continue
-                self.change_target_hp(target, -100, ability.name)
-                user.acted_during_active_turn = True
-
+                self.do_cmd_item_heal(user, ability.name, target)
+                if user.acted_during_active_turn:
+                    return
         return
 
     def ai_try_enemy_action(self, user: Combatant, targets: List[Combatant]):
@@ -473,11 +479,11 @@ class Simulation:
             self.cancel_status(target, status, f'{user.name}\'s {weapon.weapon_name}')
 
     def change_target_hp(self, target: Combatant, amount, source: str):
-        if not target.healthy:
-            return
-
-        if target.mana_shield and target.mp > 0 and self.roll_brave_reaction(target):
-            self.change_target_mp(target, amount, source + ' (mana shield)')
+        if amount > 0:
+            if not target.healthy:
+                return
+            if target.mana_shield and target.mp > 0 and self.roll_brave_reaction(target):
+                self.change_target_mp(target, amount, source + ' (mana shield)')
 
         target.hp = min(target.max_hp, max(0, target.hp - amount))
         if amount >= 0:

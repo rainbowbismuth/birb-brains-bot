@@ -285,6 +285,10 @@ class Combatant:
         return 'Parry' in self.skills
 
     @property
+    def throw_item(self) -> bool:
+        return 'Throw Item' in self.skills
+
+    @property
     def attack_up(self) -> bool:
         return 'Attack UP' in self.skills
 
