@@ -621,9 +621,17 @@ class Simulation:
                 damage, crit = self.do_single_weapon_attack(user, user.offhand, target)
         if damage > 0:
             self.after_damage_reaction(target, user, damage)
-        user.acted_during_active_turn = True
 
     def do_physical_evade(self, user: Combatant, weapon: Equipment, target: Combatant) -> bool:
+        if target.blade_grasp and not target.berserk and self.roll_brave_reaction(target):
+            self.unit_report(target, f'blade grasped {user.name}\'s attack')
+            return True
+
+        if target.arrow_guard and not target.berserk and weapon.weapon_type in (
+                'Longbow', 'Bow', 'Gun', 'Crossbow') and self.roll_brave_reaction(target):
+            self.unit_report(target, f'arror guarded {user.name}\'s attack')
+            return True
+
         if user.transparent or user.concentrate:
             return False
         # TODO: Arrow Guard, etc?
