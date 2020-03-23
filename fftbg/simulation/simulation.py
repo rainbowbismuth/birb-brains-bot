@@ -510,7 +510,7 @@ class Simulation(AbstractSimulation):
             # TODO: This handles don't move, is there a better way?
             if not self.in_range(user, action.range, action.target):
                 continue
-                
+
             user.acted_during_active_turn = True
             action.perform()
             break
@@ -646,15 +646,18 @@ class Simulation(AbstractSimulation):
 
 # IDEAS:
 #
-#  So it's still hard to judge exactly how the AI works, is this target value simply that, or is it
-#  something used to determine what action to take? If so I really need to rethink the structure here.
-#
-#  Current idea:
-#  - Calculate all target values for all units from my perspective
-#  - Go through each ability I have
-#    - Discard based on 13% rule, other factors (is that per target? idk)
-#    - Pair up with possible targets
-#  -
+#  - Need to account for picking up crystals. I think this will go with expanding the
+#      where do I move to selection function? Because I will want to get out of AoEs I guess?
+#  - Pick up crystal Y/N could just happen after movement.
+#      will need a state for 'no longer exists at all?' can I just remove from combatants? do I want to?
+#  - I still don't entirely understand this target value thing, I should continue to read the docs
+#      if it is used to pick what skills to use, can I separate what is used in that calculation
+#      into a separate AI data block? That will require rewriting these skills and how they work, bluh.
+#  - Add 13% rule skip in the action consideration loop.
+#  - Can I keep statistics on how much different actions happen? Could be a useful part of testing.
+#  - Would be interesting to see if these true positives align with bird's true positives
+#  - If I run many simulations per match I could start calculating log loss as well.
+#  - At that point I should bring in multi-processing :)
 
 def show_one():
     tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
