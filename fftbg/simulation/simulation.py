@@ -507,9 +507,10 @@ class Simulation(AbstractSimulation):
             if not self.in_range(user, action.range, action.target):
                 self.move_to_range(user, action.range, action.target)
 
+            # TODO: This handles don't move, is there a better way?
             if not self.in_range(user, action.range, action.target):
                 continue
-
+                
             user.acted_during_active_turn = True
             action.perform()
             break
