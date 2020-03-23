@@ -86,7 +86,7 @@ def consider_phoenix_down(sim: AbstractSimulation, user: Combatant, target: Comb
             target=target,
             perform=lambda: do_cmd_item_phoenix_down(sim, user, target))
 
-    if user.is_friend(target) and not target.undead and target.dead:
+    if user.is_friend(target) and not target.undead and target.dead and not target.reraise:
         yield Action(
             range=action_range,
             target=target,
