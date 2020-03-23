@@ -254,7 +254,7 @@ def mc_predict(model, X, samples=1):
 def score_model(model, tag, X, y):
     # predictions = model.predict(X)
     LOG.info(f'Running mc_predict')
-    predictions = mc_predict(model, X, samples=20)
+    predictions = mc_predict(model, X, samples=1)
     pred_y = np.argmax(predictions, axis=1)
     LOG.info(f'{tag:>8} accuracy   {accuracy_score(y, pred_y):.1%}')
     LOG.info(f'{tag:>8} precision  {precision_score(y, pred_y):.1%}')
