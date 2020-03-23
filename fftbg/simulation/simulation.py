@@ -16,7 +16,7 @@ from fftbg.equipment import Equipment
 from fftbg.simulation.abc.simulation import AbstractSimulation
 from fftbg.simulation.combatant import Combatant
 from fftbg.simulation.status import TIME_STATUS_LEN, TIME_STATUS_INDEX_REVERSE, DAMAGE_CANCELS, DEATH_CANCELS, \
-    TRANSPARENT, RERAISE, UNDEAD, DEATH
+    TRANSPARENT, RERAISE, UNDEAD, DEATH, CANCELLING_STATUS
 
 LOG = logging.getLogger(__name__)
 
@@ -568,6 +568,9 @@ class Simulation(AbstractSimulation):
         target.add_status_flag(status)
         if not had_status:
             self.unit_report(target, f'now has {status} from {src}')
+
+        for cancelled in CANCELLING_STATUS.get(status, []):
+            self.cancel_status(target, cancelled, status)
 
     def cancel_status(self, target: Combatant, status: str, src: Optional[str] = None):
         if not target.has_status(status):
