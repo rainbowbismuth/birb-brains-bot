@@ -2,10 +2,13 @@ import random
 from math import floor
 
 from fftbg.equipment import Equipment
+from fftbg.simulation.abc.simulation import AbstractSimulation
+from fftbg.simulation.action import Action
 from fftbg.simulation.combatant import Combatant
+from fftbg.simulation.status import DAMAGE_CANCELS
 
 
-def damage(user: Combatant, weapon: Equipment, target: Combatant, k=0):
+def calculate_damage(user: Combatant, weapon: Equipment, target: Combatant, k=0):
     """
 
     :param user: The user making the ATTACK
@@ -105,3 +108,67 @@ def damage(user: Combatant, weapon: Equipment, target: Combatant, k=0):
 
     #   16. The damage done by the attack will be equal to damage3.
     return damage, critical_hit
+
+
+def should_attack_ally(user: Combatant, target: Combatant) -> bool:
+    if any(target.has_status(status) for status in DAMAGE_CANCELS):
+        return True
+    if target.absorbs(user.mainhand.weapon_element):
+        return True
+    return False
+
+
+def should_attack_foe(user: Combatant, target: Combatant) -> bool:
+    if target.absorbs(user.mainhand.weapon_element):
+        return False
+    if target.charm:
+        # TODO: There should be more complicated logic here.
+        return False
+    return True
+
+
+def consider_attack(sim: AbstractSimulation, user: Combatant, target: Combatant):
+    if target.dead or target.crystal or target.petrified:
+        return
+
+    if user.is_friend(target) and not should_attack_ally(user, target):
+        return
+
+    if user.is_foe(target) and not should_attack_foe(user, target):
+        return
+
+    yield Action(
+        range=user.mainhand.range,
+        target=target,
+        perform=lambda: do_cmd_attack(sim, user, target))
+
+
+def do_cmd_attack(sim: AbstractSimulation, user: Combatant, target: Combatant):
+    user.acted_during_active_turn = True
+    damage, crit = do_single_weapon_attack(sim, user, user.mainhand, target)
+    if user.dual_wield and user.has_offhand_weapon and target.healthy:
+        if crit and random.randint(1, 2) == 1:
+            sim.unit_report(target, 'was pushed out of range of a second attack')
+        else:
+            damage, crit = do_single_weapon_attack(sim, user, user.offhand, target)
+    if damage > 0:
+        sim.after_damage_reaction(target, user, damage)
+
+
+def do_single_weapon_attack(
+        sim: AbstractSimulation, user: Combatant, weapon: Equipment, target: Combatant) -> (int, bool):
+    if not sim.in_range(user, weapon.range, target):
+        sim.unit_report(target, 'not in range!')
+        return 0, False
+
+    if sim.do_physical_evade(user, weapon, target):
+        return 0, False
+
+    damage, crit = calculate_damage(user, weapon, target)
+    if not crit:
+        src = f'{user.name}\'s {weapon.weapon_name}'
+    else:
+        src = f'{user.name}\'s {weapon.weapon_name} (critical!)'
+    sim.change_target_hp(target, damage, src)
+    sim.weapon_chance_to_add_or_cancel_status(user, weapon, target)
+    return damage, crit

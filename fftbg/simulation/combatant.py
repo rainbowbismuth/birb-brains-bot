@@ -37,6 +37,10 @@ class Combatant:
         for ability_name in self.stats.skills:
             self.abilities.append(patch.get_ability(ability_name))
 
+        self.ability_by_name = {}
+        for ability in self.abilities:
+            self.ability_by_name[ability.name] = ability
+
         self.raw_hp: int = self.max_hp
         self.raw_mp: int = self.max_mp
         self.ct: int = 0
@@ -70,7 +74,7 @@ class Combatant:
                 self.add_status_flag(status)
 
     def __repr__(self):
-        return f'<{self.name} ({self.hp} HP) team: {self.team}>'
+        return f'<{self.name} ({self.hp} HP) team: {self.team} loc: {self.location}>'
 
     def is_friend(self, other: 'Combatant'):
         return self.team == other.team
@@ -208,6 +212,9 @@ class Combatant:
     @property
     def ma(self) -> int:
         return self.ma_bang + sum([e.ma_bonus for e in self.all_equips])
+
+    def has_ability(self, name: str) -> bool:
+        return name in self.ability_by_name
 
     def status_time_remaining(self, status: str) -> int:
         # TODO: No longer called? Could be useful though.

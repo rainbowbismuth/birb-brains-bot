@@ -8,11 +8,13 @@ import colored
 import fftbg.arena
 import fftbg.patch
 import fftbg.server
+import fftbg.simulation.commands.attack as cmd_attack
+import fftbg.simulation.commands.item as cmd_item
 import fftbg.tournament
 from fftbg.arena import Arena
 from fftbg.equipment import Equipment
+from fftbg.simulation.abc.simulation import AbstractSimulation
 from fftbg.simulation.combatant import Combatant
-from fftbg.simulation.commands import attack
 from fftbg.simulation.status import TIME_STATUS_LEN, TIME_STATUS_INDEX_REVERSE, DAMAGE_CANCELS, DEATH_CANCELS, \
     TRANSPARENT, RERAISE, UNDEAD, DEATH
 
@@ -23,7 +25,7 @@ RED = colored.fg('red')
 BLUE = colored.fg('blue')
 
 
-class Simulation:
+class Simulation(AbstractSimulation):
     def __init__(self, combatants: List[Combatant], arena: Arena, log_report=False):
         self.combatants = combatants
         self.arena = arena
@@ -34,6 +36,7 @@ class Simulation:
         self.left_wins = None
         self.time_out_win = False
         self.log_report = log_report
+        self.prepend = ''
         self.set_phase('Init')
 
         # initialize location based on arena
@@ -62,7 +65,6 @@ class Simulation:
         return any([combatant.healthy for combatant in self.combatants if combatant.team == team])
 
     def tick(self):
-        self.prepend = ''
         self.phase_status_check()
 
         self.phase_slow_action_charging()
@@ -252,10 +254,10 @@ class Simulation:
         if old_location == user.location:
             return
         user.moved_during_active_turn = True
-        self.report(f'moved to from {old_location} to {user.location}')
+        self.report(f'moved from {old_location} to {user.location}')
 
     def move_to_range(self, user: Combatant, range: int, target: Combatant):
-        if user.moved_during_active_turn:
+        if user.moved_during_active_turn or user.dont_move:
             return
         # TODO: Charm?
         if user.team == 0:
@@ -274,40 +276,35 @@ class Simulation:
             sign = -1
         self.do_move_with_bounds(user, user.location + diff * sign)
 
-    def move_into_combat(self, user: Combatant):
-        if user.moved_during_active_turn:
+    # def closest_foe_location(self, user: Combatant):
+    #     foe = None
+    #     for target in self.combatants:
+    #         if not user.is_foe(target):
+    #             continue
+    #         if not target.healthy:
+    #             # TODO: Do I really need this?
+    #             continue
+    #         if foe is None:
+    #             foe = target
+    #         elif user.distance(target) < user.distance(foe):
+    #             foe = target
+    #     return foe.location
+
+    def move_towards_unit(self, user: Combatant, target: Combatant):
+        if user.moved_during_active_turn or user.dont_move:
             return
-        if user.team == 0:
-            self.do_move_with_bounds(user, user.location + user.move)
+        if user.location - target.location > 0:
+            self.do_move_with_bounds(user, max(target.location, user.location - user.move))
         else:
-            self.do_move_with_bounds(user, user.location - user.move)
+            self.do_move_with_bounds(user, min(target.location, user.location + user.move))
 
     def move_out_of_combat(self, user: Combatant):
-        if user.moved_during_active_turn:
+        if user.moved_during_active_turn or user.dont_move:
             return
         if user.team == 0:
             self.do_move_with_bounds(user, user.location - user.move)
         else:
             self.do_move_with_bounds(user, user.location + user.move)
-
-    def ai_calculate_friendly_targets(self, user: Combatant):
-        if user.confusion:
-            all_targets = list(self.combatants)
-            random.shuffle(all_targets)
-            return all_targets
-        if user.charm:
-            return [target for target in self.combatants if user.is_foe(target)]
-        return [target for target in self.combatants if user.is_friend(target)]
-
-    def ai_calculate_enemy_targets(self, user: Combatant):
-        if user.confusion:
-            all_targets = list(self.combatants)
-            random.shuffle(all_targets)
-            return all_targets
-        if user.charm:
-            return [target for target in self.combatants if
-                    user.is_friend(target) and target.healthy and target is not user]
-        return [target for target in self.combatants if user.is_foe(target) and target.healthy]
 
     def ai_calculate_target_value(self, user: Combatant, target: Combatant) -> float:
         priority = target.hp_percent
@@ -485,142 +482,50 @@ class Simulation:
         return total
 
     def ai_do_basic_turn(self, user: Combatant):
+        if user.dont_act:
+            self.move_out_of_combat(user)
+            return
+
         self.ai_calculate_all_target_values(user)
 
-        friendly_targets = self.ai_calculate_friendly_targets(user)
+        targets = self.combatants
         acting_cowardly = user.critical and self.ai_can_be_cowardly(user)
         if acting_cowardly:
-            friendly_targets = [user]
+            targets = [user]
 
-        self.ai_try_friendly_action(user, friendly_targets)
-        if user.acted_during_active_turn:
-            self.move_out_of_combat(user)
-            return
-        elif not user.acted_during_active_turn and acting_cowardly:
-            self.move_out_of_combat(user)
-            return
-
-        enemy_targets = self.ai_calculate_enemy_targets(user)
-        if not enemy_targets:
-            return
-
-        self.ai_try_enemy_action(user, enemy_targets)
-        if user.acted_during_active_turn:
-            self.move_out_of_combat(user)
-        else:
-            self.move_into_combat(user)
-
-    def ai_try_friendly_action(self, user: Combatant, targets: List[Combatant]):
-        if user.berserk:
-            return
-
+        actions = []
         for target in targets:
-            if not target.healthy:
-                # TODO: Fix crystal/undead
-                self.ai_try_raise(user, target)
-                if user.acted_during_active_turn:
-                    return
-            if target.hp_percent <= 0.5:
-                self.ai_try_heal(user, target)
-                if user.acted_during_active_turn:
-                    return
-        return
+            actions.extend(cmd_item.consider_item(self, user, target))
+            actions.extend(cmd_attack.consider_attack(self, user, target))
 
-    def do_cmd_item_heal(self, user, item: str, target):
-        range = 1
-        if user.throw_item:
-            range = 4
-        if not self.can_move_into_range(user, range, target):
-            return
-        self.move_to_range(user, range, target)
-        if item == 'Phoenix Down':
-            heal_amount = random.randint(1, 20)
-        elif item == 'Elixir':
-            heal_amount = target.max_hp
-        elif item == 'X-Potion':
-            heal_amount = 150
-        elif item == 'Hi-Potion':
-            heal_amount = 120
-        elif item == 'Potion':
-            heal_amount = 100
-        else:
-            raise Exception(f'{item} isn\'t a known healing item')
-        self.change_target_hp(target, -heal_amount, item)
-        user.acted_during_active_turn = True
+        actions.sort(key=lambda x: x.target.target_value)
 
-    def ai_try_raise(self, user, target):
-        if user.berserk:
-            return
-
-        for ability in user.abilities:
-            # FIXME: super hack rn
-            if ability.name == 'Phoenix Down':
-                if self.ai_thirteen_rule():
-                    continue
-                self.do_cmd_item_heal(user, ability.name, target)
-                if user.acted_during_active_turn:
-                    return
-
-    def ai_try_heal(self, user, target):
-        if user.berserk:
-            return
-        if not target.healthy:
-            return
-
-        for ability in user.abilities:
-            # FIXME: super hack rn
-            if ability.name in ('Elixir', 'X-Potion', 'Hi-Potion', 'Potion'):
-                if self.ai_thirteen_rule():
-                    continue
-                self.do_cmd_item_heal(user, ability.name, target)
-                if user.acted_during_active_turn:
-                    return
-        return
-
-    def ai_try_enemy_action(self, user: Combatant, targets: List[Combatant]):
-        # TODO: Skipping thirteen rule here for now.
-        # if self.ai_thirteen_rule() or not targets:
-        #     return
-        if not targets:
-            return
-
-        # Target critical enemies first
-        for target in targets:
-            if not target.critical:
+        for action in actions:
+            if not self.can_move_into_range(user, action.range, action.target):
                 continue
 
-            if not self.can_move_into_range(user, user.mainhand.range, target):
+            if not self.in_range(user, action.range, action.target):
+                self.move_to_range(user, action.range, action.target)
+
+            if not self.in_range(user, action.range, action.target):
                 continue
 
-            self.move_to_range(user, user.mainhand.range, target)
-            self.do_cmd_attack(user, target)
+            user.acted_during_active_turn = True
+            action.perform()
+            break
+
+        if user.moved_during_active_turn:
             return
 
-        # Otherwise target an enemy
-        priority_target = targets[0]
-        for target in targets:
-            if target.target_value < priority_target.target_value:
-                priority_target = target
+        if actions:
+            self.move_towards_unit(user, actions[0].target)
+            return
 
-        # TODO: Will have to think about picking someone in range
-        self.move_to_range(user, user.mainhand.range, priority_target)
-        if self.in_range(user, user.mainhand.range, priority_target):
-            self.do_cmd_attack(user, priority_target)
+        self.move_out_of_combat(user)
 
     def in_range(self, user: Combatant, range: int, target: Combatant):
         dist = user.distance(target)
         return dist <= range
-
-    def do_cmd_attack(self, user: Combatant, target: Combatant):
-        user.acted_during_active_turn = True
-        damage, crit = self.do_single_weapon_attack(user, user.mainhand, target)
-        if user.dual_wield and user.has_offhand_weapon and target.healthy:
-            if crit and random.randint(1, 2) == 1:
-                self.unit_report(target, 'was pushed out of range of a second attack')
-            else:
-                damage, crit = self.do_single_weapon_attack(user, user.offhand, target)
-        if damage > 0:
-            self.after_damage_reaction(target, user, damage)
 
     def do_physical_evade(self, user: Combatant, weapon: Equipment, target: Combatant) -> bool:
         if target.blade_grasp and not target.berserk and self.roll_brave_reaction(target):
@@ -648,23 +553,6 @@ class Simulation:
             self.unit_report(target, f'evaded {user.name}\'s attack')
             return True
         return False
-
-    def do_single_weapon_attack(self, user: Combatant, weapon: Equipment, target: Combatant) -> (int, bool):
-        if not self.in_range(user, weapon.range, target):
-            self.unit_report(target, 'not in range!')
-            return 0, False
-
-        if self.do_physical_evade(user, weapon, target):
-            return 0, False
-
-        damage, crit = attack.damage(user, weapon, target)
-        if not crit:
-            src = f'{user.name}\'s {weapon.weapon_name}'
-        else:
-            src = f'{user.name}\'s {weapon.weapon_name} (critical!)'
-        self.change_target_hp(target, damage, src)
-        self.weapon_chance_to_add_or_cancel_status(user, weapon, target)
-        return damage, crit
 
     def add_status(self, target: Combatant, status: str, src: str):
         if target.immune_to(status):
@@ -734,7 +622,7 @@ class Simulation:
             self.unit_report(target, f'recovered {abs(amount)} MP from {source}')
 
     def after_damage_reaction(self, target: Combatant, inflicter: Combatant, amount: int):
-        if amount == 0:
+        if amount == 0 or target.dead:
             return
 
         if target.auto_potion and self.roll_brave_reaction(target):
@@ -767,26 +655,41 @@ class Simulation:
 #    - Pair up with possible targets
 #  -
 
+def show_one():
+    tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
+    patch = fftbg.patch.get_patch(tourny.modified)
+
+    for match_up in tourny.match_ups:
+        LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
+        combatants = []
+        for d in match_up.left.combatants:
+            combatants.append(Combatant(d, patch, 0))
+        for d in match_up.right.combatants:
+            combatants.append(Combatant(d, patch, 1))
+        arena = fftbg.arena.get_arena(match_up.game_map)
+        sim = Simulation(combatants, arena, log_report=True)
+        sim.run()
+        if sim.left_wins:
+            LOG.info('Left team wins!')
+        else:
+            LOG.info('Right team wins!')
+
 
 def main():
     import tqdm
     fftbg.server.configure_logging('SIMULATION_LOG_LEVEL')
-    tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
-    patch = fftbg.patch.get_patch(tourny.modified)
 
     num_sims = 1
     time_out_wins = 0
     correct = 0
     total = 0
 
-    # tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
     for path in tqdm.tqdm(list(Path('data/tournaments').glob('*.json'))):
         tourny = fftbg.tournament.parse_tournament(path)
         patch = fftbg.patch.get_patch(tourny.modified)
 
         for match_up in tourny.match_ups:
             for _ in range(num_sims):
-                # LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
                 combatants = []
                 for d in match_up.left.combatants:
                     combatants.append(Combatant(d, patch, 0))
@@ -795,10 +698,6 @@ def main():
                 arena = fftbg.arena.get_arena(match_up.game_map)
                 sim = Simulation(combatants, arena, log_report=False)
                 sim.run()
-                # if sim.left_wins:
-                #     LOG.info('Left team wins!')
-                # else:
-                #     LOG.info('Right team wins!')
 
                 if sim.left_wins and match_up.left_wins:
                     correct += 1
