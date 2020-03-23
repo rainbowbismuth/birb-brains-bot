@@ -1,34 +1,72 @@
 import random
 from math import floor
-from typing import List
+
+cimport cython
 
 from fftbg import equipment as equipment
-from fftbg.ability import Ability
 from fftbg.combatant import ZODIAC_INDEX, ZODIAC_CHART
 from fftbg.patch import Patch
 from fftbg.simulation.status import *
 
+@cython.final
+cdef class Combatant:
+    cdef readonly dict raw_combatant
+    cdef readonly object stats
+    cdef readonly str name
+    cdef readonly str sign
+    cdef readonly str job
+    cdef readonly str gender
+    cdef readonly int team
+    cdef public object mainhand
+    cdef public object offhand
+    cdef public object headgear
+    cdef public object armor
+    cdef public object accessory
+    cdef public set skills
+    cdef public list abilities
+    cdef public dict ability_by_name
+    cdef float raw_brave
+    cdef float raw_faith
+    cdef int raw_hp
+    cdef int raw_mp
+    cdef public int ct
+    cdef int pa_mod
+    cdef int ma_mod
+    cdef int speed_mod
+    cdef public long status_flags
+    cdef public int[14] timed_status_conditions
+    cdef public int broken_items
+    cdef public int ctr
+    cdef public object ctr_action
+    cdef public int crystal_counter
+    cdef public int location
+    cdef public float target_value
+    cdef public int num_mp_using_abilities
+    cdef public int lowest_mp_cost_ability
+    cdef public object on_active_turn
+    cdef public object moved_during_active_turn
+    cdef public object acted_during_active_turn
+    cdef public object took_damage_during_active_turn
 
-class Combatant:
     def __init__(self, combatant: dict, patch: Patch, team: int):
-        self.raw_combatant: dict = combatant
+        self.raw_combatant = combatant
         self.team = team
-        self.name: str = combatant['Name']
-        self.sign: str = combatant['Sign']
-        self.job: str = combatant['Class']
-        self.gender: str = combatant['Gender']
+        self.name = combatant['Name']
+        self.sign = combatant['Sign']
+        self.job = combatant['Class']
+        self.gender = combatant['Gender']
         self.stats = patch.get_base_stats(self.job, self.gender)
         self.mainhand = patch.get_equipment(combatant['Mainhand'])
         self.offhand = patch.get_equipment(combatant['Offhand'])
         self.headgear = patch.get_equipment(combatant['Head'])
         self.armor = patch.get_equipment(combatant['Armor'])
         self.accessory = patch.get_equipment(combatant['Accessory'])
-        self.raw_brave: float = combatant['Brave'] / 100.0
-        self.raw_faith: float = combatant['Faith'] / 100.0
+        self.raw_brave = combatant['Brave'] / 100.0
+        self.raw_faith = combatant['Faith'] / 100.0
         self.skills = {combatant['ReactionSkill'], combatant['SupportSkill'], combatant['MoveSkill']}
         self.skills.update(self.stats.innates)
 
-        self.abilities: List[Ability] = []
+        self.abilities = []
         for ability_name in self.raw_combatant['ClassSkills']:
             self.abilities.append(patch.get_ability(ability_name))
         for ability_name in self.raw_combatant['ExtraSkills']:
@@ -41,18 +79,19 @@ class Combatant:
         for ability in self.abilities:
             self.ability_by_name[ability.name] = ability
 
-        self.raw_hp: int = self.max_hp
-        self.raw_mp: int = self.max_mp
-        self.ct: int = 0
-        self.pa_mod: int = 0
-        self.ma_mod: int = 0
-        self.speed_mod: int = 0
+        self.raw_hp = self.max_hp
+        self.raw_mp = self.max_mp
+        self.ct = 0
+        self.pa_mod = 0
+        self.ma_mod = 0
+        self.speed_mod = 0
 
-        self.status_flags: int = 0
-        self.timed_status_conditions: List[int] = [0] * TIME_STATUS_LEN
-        self.broken_items: int = 0
+        self.status_flags = 0
+        for i in range(14):
+            self.timed_status_conditions[i] = 0
+        self.broken_items = 0
 
-        self.ctr: int = 0
+        self.ctr = 0
         self.ctr_action = None
 
         self.on_active_turn = False
@@ -60,14 +99,14 @@ class Combatant:
         self.acted_during_active_turn = False
         self.took_damage_during_active_turn = False
 
-        self.crystal_counter: int = 4
+        self.crystal_counter = 4
 
-        self.location: int = 0
+        self.location = 0
 
-        self.num_mp_using_abilities: int = len([ab for ab in self.abilities if ab.mp > 0])
-        self.lowest_mp_cost_ability: int = min([999] + [ab.mp for ab in self.abilities if ab.mp > 0])
+        self.num_mp_using_abilities = len([ab for ab in self.abilities if ab.mp > 0])
+        self.lowest_mp_cost_ability = min([999] + [ab.mp for ab in self.abilities if ab.mp > 0])
 
-        self.target_value: float = 0.0
+        self.target_value = 0.0
 
         for e in self.all_equips:
             for status in e.initial:
@@ -90,15 +129,15 @@ class Combatant:
         return [self.mainhand, self.offhand, self.headgear, self.armor, self.accessory]
 
     @property
-    def max_hp(self) -> int:
+    def max_hp(self):
         return self.stats.hp + sum([e.hp_bonus for e in self.all_equips])
 
     @property
-    def max_mp(self) -> int:
+    def max_mp(self):
         return self.stats.mp + sum([e.mp_bonus for e in self.all_equips])
 
     @property
-    def hp(self) -> int:
+    def hp(self):
         return self.raw_hp
 
     @hp.setter
@@ -107,11 +146,11 @@ class Combatant:
         # TODO: Calculate death statuses here?
 
     @property
-    def hp_percent(self) -> float:
+    def hp_percent(self):
         return self.raw_hp / self.max_hp
 
     @property
-    def mp(self) -> int:
+    def mp(self):
         return self.raw_mp
 
     @mp.setter
@@ -119,29 +158,29 @@ class Combatant:
         self.raw_mp = max(0, min(new_mp, self.max_mp))
 
     @property
-    def mp_percent(self) -> float:
+    def mp_percent(self):
         return self.raw_mp / self.max_mp
 
     @property
-    def can_cast_mp_ability(self) -> bool:
+    def can_cast_mp_ability(self):
         if self.num_mp_using_abilities == 0:
             return False
         return self.raw_mp >= self.lowest_mp_cost_ability
 
     @property
-    def speed(self) -> int:
+    def speed(self):
         return self.stats.speed + self.speed_mod + sum([e.speed_bonus for e in self.all_equips])
 
     @property
-    def brave(self) -> float:
+    def brave(self):
         return self.raw_brave
 
     @property
-    def faith(self) -> float:
+    def faith(self):
         return self.raw_faith
 
     @property
-    def evasion_multiplier(self) -> float:
+    def evasion_multiplier(self):
         # TODO: This is how sleep works right?
         if self.charging or self.sleep:
             return 0.0
@@ -151,25 +190,25 @@ class Combatant:
             return 1.0
 
     @property
-    def class_evasion(self) -> float:
+    def class_evasion(self):
         return self.evasion_multiplier * (self.stats.c_ev / 100.0)
 
     @property
-    def weapon_evasion(self) -> float:
+    def weapon_evasion(self):
         if not self.parry:
             return 0.0
         # TODO: Pretty sure this is wrong
         return self.evasion_multiplier * (max([e.w_ev for e in self.all_equips]) / 100.0)
 
     @property
-    def move(self) -> int:
+    def move(self):
         move = self.stats.move + sum([e.move_bonus for e in self.all_equips])
         if self.raw_combatant['MoveSkill'].startswith('Move+'):
             move += int(self.raw_combatant['MoveSkill'][-1])
         return move
 
     @property
-    def jump(self) -> int:
+    def jump(self):
         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
             jump += int(self.raw_combatant['MoveSkill'][-1])
@@ -182,52 +221,52 @@ class Combatant:
         return jump
 
     @property
-    def physical_shield_evasion(self) -> float:
+    def physical_shield_evasion(self):
         return self.evasion_multiplier * (sum([e.phys_ev for e in (self.mainhand, self.offhand)]) / 100.0)
 
     @property
-    def magical_shield_evasion(self) -> float:
+    def magical_shield_evasion(self):
         return self.evasion_multiplier * (sum([e.phys_ev for e in (self.mainhand, self.offhand)]) / 100.0)
 
     @property
-    def physical_accessory_evasion(self) -> float:
+    def physical_accessory_evasion(self):
         return self.evasion_multiplier * (self.accessory.phys_ev / 100.0)
 
     @property
-    def magical_accessory_evasion(self) -> float:
+    def magical_accessory_evasion(self):
         return self.evasion_multiplier * (self.accessory.magic_ev / 100.0)
 
     @property
-    def pa_bang(self) -> int:
+    def pa_bang(self):
         return self.stats.pa + self.pa_mod
 
     @property
-    def ma_bang(self) -> int:
+    def ma_bang(self):
         return self.stats.ma + self.ma_mod
 
     @property
-    def pa(self) -> int:
+    def pa(self):
         return self.pa_bang + sum([e.pa_bonus for e in self.all_equips])
 
     @property
-    def ma(self) -> int:
+    def ma(self):
         return self.ma_bang + sum([e.ma_bonus for e in self.all_equips])
 
     def has_ability(self, name: str) -> bool:
         return name in self.ability_by_name
 
-    def status_time_remaining(self, status: str) -> int:
+    def status_time_remaining(self, status: str):
         # TODO: No longer called? Could be useful though.
         return self.timed_status_conditions[TIME_STATUS_INDEX[status]]
 
-    def add_status_flag(self, status: str):
+    cpdef add_status_flag(self, status: str):
         # NOTE: This doesn't handle opposing statuses (like Haste/Slow)
         # NOTE: This doesn't handle Death :(
         if status in TIME_STATUS_LENGTHS:
             self.timed_status_conditions[TIME_STATUS_INDEX[status]] = TIME_STATUS_LENGTHS[status]
         self.status_flags |= STATUS_FLAGS[status]
 
-    def has_status(self, status: str):
+    cpdef int has_status(self, status: str):
         if status == CHARGING:
             return self.ctr_action is not None
 
@@ -247,7 +286,7 @@ class Combatant:
                 statuses.append(status)
         return statuses
 
-    def cancel_status(self, status: str):
+    cpdef cancel_status(self, status: str):
         if status == CHARGING:
             self.ctr_action = None
             self.ctr = 0

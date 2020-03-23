@@ -1,3 +1,5 @@
+import pyximport; pyximport.install()
+
 import logging
 import random
 from pathlib import Path
