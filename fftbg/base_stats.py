@@ -44,11 +44,11 @@ class BaseStats:
 
 @dataclass
 class BaseStatsData:
-    by_job_gender: {(str, str): BaseStats}
+    by_job_gender: {str: BaseStats}
 
     def get_base_stats(self, job: str, gender: str) -> BaseStats:
         job = job.replace(' ', '')
-        return self.by_job_gender[(job, gender)]
+        return self.by_job_gender[f'{job},{gender}']
 
 
 def parse_base_stats(class_help_path, monster_skills_path) -> BaseStatsData:
@@ -90,7 +90,7 @@ def parse_base_stats(class_help_path, monster_skills_path) -> BaseStatsData:
         weaknesses = element_match(WEAK_RE, class_job)
         cancels = element_match(CANCEL_RE, class_job)
 
-        by_job_gender[(job, gender)] = BaseStats(
+        by_job_gender[f'{job},{gender}'] = BaseStats(
             job, gender, hp, mp, move, jump, speed, pa, ma, c_ev,
             innates, skills, absorbs, halves, weaknesses, cancels)
     return BaseStatsData(by_job_gender)

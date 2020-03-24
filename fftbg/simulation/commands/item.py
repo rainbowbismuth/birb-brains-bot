@@ -53,8 +53,9 @@ def consider_item_heal(sim: AbstractSimulation, user: Combatant, target: Combata
         action_range = item_range(user)
         yield Action(
             range=action_range,
+            user=user,
             target=target,
-            perform=lambda: do_cmd_item_heal(sim, user, item, target))
+            perform=lambda sim, user, target: do_cmd_item_heal(sim, user, item, target))
         break
 
 
@@ -83,14 +84,16 @@ def consider_phoenix_down(sim: AbstractSimulation, user: Combatant, target: Comb
     if user.is_foe(target) and target.undead and not target.dead:
         yield Action(
             range=action_range,
+            user=user,
             target=target,
-            perform=lambda: do_cmd_item_phoenix_down(sim, user, target))
+            perform=do_cmd_item_phoenix_down)
 
     if user.is_friend(target) and not target.undead and target.dead and not target.reraise:
         yield Action(
             range=action_range,
+            user=user,
             target=target,
-            perform=lambda: do_cmd_item_phoenix_down(sim, user, target))
+            perform=do_cmd_item_phoenix_down)
 
 
 def do_cmd_item_phoenix_down(sim: AbstractSimulation, user: Combatant, target: Combatant):

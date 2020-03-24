@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas
+from dataclasses_json import dataclass_json
 
 import fftbg.patch
 from fftbg.arena import get_arena
@@ -157,6 +158,7 @@ class MatchUp:
         return out
 
 
+@dataclass_json
 @dataclass
 class Tournament:
     id: int

@@ -7,5 +7,6 @@ from fftbg.simulation.combatant import Combatant
 @dataclass
 class Action:
     range: int
+    user: Combatant
     target: Combatant
     perform: Callable

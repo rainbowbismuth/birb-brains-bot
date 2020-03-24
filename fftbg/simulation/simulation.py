@@ -1,3 +1,4 @@
+import copy
 import logging
 import random
 from pathlib import Path
@@ -36,6 +37,7 @@ class Simulation(AbstractSimulation):
         self.left_wins = None
         self.time_out_win = False
         self.log_report = log_report
+        self.trigger_reactions = True
         self.prepend = ''
         self.set_phase('Init')
 
@@ -57,7 +59,7 @@ class Simulation(AbstractSimulation):
                 self.left_wins = True
 
             # TODO: More involved time out win
-            if self.clock_tick > 10000:
+            if self.clock_tick > 1000:
                 self.left_wins = True
                 self.time_out_win = True
 
@@ -157,9 +159,9 @@ class Simulation(AbstractSimulation):
 
         condition_str = ', '.join(combatant.all_statuses)
         if condition_str:
-            self.prepend = f'{self.colored_name(combatant)} ({combatant.hp} HP, {condition_str})'
+            self.prepend = f'{self.colored_name(combatant)} @ {combatant.location} ({combatant.hp} HP, {condition_str})'
         else:
-            self.prepend = f'{self.colored_name(combatant)} ({combatant.hp} HP)'
+            self.prepend = f'{self.colored_name(combatant)} @ {combatant.location} ({combatant.hp} HP)'
 
     def clear_active_turn_flags(self):
         for combatant in self.combatants:
@@ -481,12 +483,13 @@ class Simulation(AbstractSimulation):
 
         return total
 
+    def ai_target_value_sum(self):
+        return sum([combatant.target_value for combatant in self.combatants])
+
     def ai_do_basic_turn(self, user: Combatant):
         if user.dont_act:
             self.move_out_of_combat(user)
             return
-
-        self.ai_calculate_all_target_values(user)
 
         targets = self.combatants
         acting_cowardly = user.critical and self.ai_can_be_cowardly(user)
@@ -498,12 +501,29 @@ class Simulation(AbstractSimulation):
             actions.extend(cmd_item.consider_item(self, user, target))
             actions.extend(cmd_attack.consider_attack(self, user, target))
 
-        actions.sort(key=lambda x: x.target.target_value)
-
+        self.ai_calculate_all_target_values(user)
+        basis = self.ai_target_value_sum()
+        considered_actions = []
         for action in actions:
             if not self.can_move_into_range(user, action.range, action.target):
                 continue
 
+            simulated_world = copy.copy(self)
+            simulated_world.combatants = [copy.copy(combatant) for combatant in simulated_world.combatants]
+
+            simulated_world.log_report = False
+            simulated_world.trigger_reactions = False
+            simulated_user = simulated_world.combatants[action.user.index]
+            simulated_target = simulated_world.combatants[action.target.index]
+            action.perform(simulated_world, simulated_user, simulated_target)
+            simulated_world.ai_calculate_all_target_values(simulated_user)
+            new_value = simulated_world.ai_target_value_sum()
+            if new_value < basis:
+                continue
+            considered_actions.append((new_value, action))
+
+        considered_actions.sort(key=lambda x: x[0], reverse=True)
+        for _, action in considered_actions:
             if not self.in_range(user, action.range, action.target):
                 self.move_to_range(user, action.range, action.target)
 
@@ -512,14 +532,19 @@ class Simulation(AbstractSimulation):
                 continue
 
             user.acted_during_active_turn = True
-            action.perform()
+            action.perform(self, action.user, action.target)
             break
 
         if user.moved_during_active_turn:
             return
 
-        if actions:
-            self.move_towards_unit(user, actions[0].target)
+        first_foe_in_action = None
+        for action in actions:
+            if user.is_foe(action.target):
+                first_foe_in_action = action.target
+                break
+        if first_foe_in_action:
+            self.move_towards_unit(user, first_foe_in_action)
             return
 
         self.move_out_of_combat(user)
@@ -626,6 +651,9 @@ class Simulation(AbstractSimulation):
             self.unit_report(target, f'recovered {abs(amount)} MP from {source}')
 
     def after_damage_reaction(self, target: Combatant, inflicter: Combatant, amount: int):
+        if not self.trigger_reactions:
+            return
+
         if amount == 0 or target.dead:
             return
 
@@ -661,6 +689,10 @@ class Simulation(AbstractSimulation):
 #  - Would be interesting to see if these true positives align with bird's true positives
 #  - If I run many simulations per match I could start calculating log loss as well.
 #  - At that point I should bring in multi-processing :)
+#
+#  - Need a hard fail & hard succeed rolling function for the sim-within-a-sim!
+#  - I'm guessing generally things like weapon adding status are assumed to hard fail
+#  - While your own abilities are a hard succeed
 
 def show_one():
     tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
@@ -669,10 +701,10 @@ def show_one():
     for match_up in tourny.match_ups:
         LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
         combatants = []
-        for d in match_up.left.combatants:
-            combatants.append(Combatant(d, patch, 0))
-        for d in match_up.right.combatants:
-            combatants.append(Combatant(d, patch, 1))
+        for i, d in enumerate(match_up.left.combatants):
+            combatants.append(Combatant(d, patch, 0, i))
+        for i, d in enumerate(match_up.right.combatants):
+            combatants.append(Combatant(d, patch, 1, i + 4))
         arena = fftbg.arena.get_arena(match_up.game_map)
         sim = Simulation(combatants, arena, log_report=True)
         sim.run()
@@ -698,10 +730,10 @@ def main():
         for match_up in tourny.match_ups:
             for _ in range(num_sims):
                 combatants = []
-                for d in match_up.left.combatants:
-                    combatants.append(Combatant(d, patch, 0))
-                for d in match_up.right.combatants:
-                    combatants.append(Combatant(d, patch, 1))
+                for i, d in enumerate(match_up.left.combatants):
+                    combatants.append(Combatant(d, patch, 0, i))
+                for i, d in enumerate(match_up.right.combatants):
+                    combatants.append(Combatant(d, patch, 1, i + 4))
                 arena = fftbg.arena.get_arena(match_up.game_map)
                 sim = Simulation(combatants, arena, log_report=False)
                 sim.run()

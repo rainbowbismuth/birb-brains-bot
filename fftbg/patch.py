@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+from dataclasses_json import dataclass_json
 from pytz import timezone
 
 import fftbg.ability as ability
@@ -14,6 +15,7 @@ from fftbg.config import DATA_PATH
 from fftbg.equipment import Equipment, EquipmentData
 
 
+@dataclass_json
 @dataclass
 class Patch:
     ability: AbilityData

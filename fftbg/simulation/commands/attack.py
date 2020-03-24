@@ -138,9 +138,10 @@ def consider_attack(sim: AbstractSimulation, user: Combatant, target: Combatant)
         return
 
     yield Action(
-        range=min(1, user.mainhand.range),  # TODO: This min hack accounts for barehanded
+        range=min(1, user.mainhand.range),
+        user=user,  # TODO: This min hack accounts for barehanded
         target=target,
-        perform=lambda: do_cmd_attack(sim, user, target))
+        perform=do_cmd_attack)
 
 
 def do_cmd_attack(sim: AbstractSimulation, user: Combatant, target: Combatant):

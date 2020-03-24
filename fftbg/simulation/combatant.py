@@ -10,9 +10,10 @@ from fftbg.simulation.status import *
 
 
 class Combatant:
-    def __init__(self, combatant: dict, patch: Patch, team: int):
+    def __init__(self, combatant: dict, patch: Patch, team: int, index: int):
         self.raw_combatant: dict = combatant
         self.team = team
+        self.index = index
         self.name: str = combatant['Name']
         self.sign: str = combatant['Sign']
         self.job: str = combatant['Class']
