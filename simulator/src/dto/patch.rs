@@ -8,6 +8,7 @@ use crate::sim::weapon::WeaponType;
 
 #[derive(Serialize, Deserialize)]
 pub struct Patch {
+    pub time: f32,
     pub ability: AbilityData,
     pub equipment: EquipmentData,
     pub base_stats: BaseStatsData,

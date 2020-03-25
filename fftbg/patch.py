@@ -18,6 +18,7 @@ from fftbg.equipment import Equipment, EquipmentData
 @dataclass_json
 @dataclass
 class Patch:
+    time: datetime
     ability: AbilityData
     equipment: EquipmentData
     base_stats: BaseStatsData
@@ -52,15 +53,18 @@ def get_patch(when: datetime):
         year, month, day = [int(x) for x in patch_dir.name.split('-')]
         time = datetime(year=year, month=month, day=day, tzinfo=EASTERN_TZ)
         if when > time:
-            return get_patch_from_file(patch_dir)
+            return get_patch_from_file(patch_dir, time)
     raise Exception(f'unable to find patch directory for {str(when)}')
 
 
-def get_patch_from_file(patch_dir: Path):
+def get_patch_from_file(patch_dir: Path, time: datetime):
     if patch_dir.name in PATCH_MAP:
         return PATCH_MAP[patch_dir.name]
     base_stat_data = base_stats.parse_base_stats(patch_dir / 'classhelp.txt', patch_dir / 'MonsterSkills.txt')
     ability_data = ability.parse_abilities(patch_dir / 'infoability.txt')
     equipment_data = equipment.parse_equipment(patch_dir / 'infoitem.txt')
-    PATCH_MAP[patch_dir.name] = Patch(ability=ability_data, equipment=equipment_data, base_stats=base_stat_data)
+    PATCH_MAP[patch_dir.name] = Patch(time=time,
+                                      ability=ability_data,
+                                      equipment=equipment_data,
+                                      base_stats=base_stat_data)
     return PATCH_MAP[patch_dir.name]
