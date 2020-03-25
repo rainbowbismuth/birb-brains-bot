@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::sim::condition::Condition;
+use crate::sim::weapon::WeaponType;
 
 #[derive(Deserialize)]
 pub struct Patch {
@@ -63,7 +64,7 @@ pub struct Equipment {
     w_ev: isize,
     phys_ev: isize,
     magic_ev: isize,
-    weapon_type: Option<String>,
+    weapon_type: Option<WeaponType>,
     weapon_element: Option<String>,
     move_bonus: isize,
     jump_bonus: isize,
