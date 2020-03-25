@@ -1,9 +1,9 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sim::gender::Gender;
 use crate::sim::sign::Sign;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct MatchUp {
     pub tournament_id: isize,
     pub modified: f64,
@@ -13,13 +13,13 @@ pub struct MatchUp {
     pub game_map: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Team {
     pub color: String,
     pub combatants: Vec<Combatant>,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Combatant {
     pub name: String,

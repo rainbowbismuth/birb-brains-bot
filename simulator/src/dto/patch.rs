@@ -1,24 +1,24 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::sim::condition::Condition;
 use crate::sim::element::Element;
 use crate::sim::weapon::WeaponType;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Patch {
     pub ability: AbilityData,
     pub equipment: EquipmentData,
     pub base_stats: BaseStatsData,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct AbilityData {
     pub by_name: HashMap<String, Ability>
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Ability {
     pub name: String,
     pub name_with_tag: String,
@@ -38,7 +38,7 @@ pub struct Ability {
     pub chance_to_cancel: Vec<Condition>,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct HitChance {
     pub ma_plus: Option<isize>,
     pub pa_plus: Option<isize>,
@@ -47,12 +47,12 @@ pub struct HitChance {
     pub times_faith: bool,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct EquipmentData {
     pub by_name: HashMap<String, Equipment>
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Equipment {
     pub name: String,
     pub hp_bonus: isize,
@@ -81,12 +81,12 @@ pub struct Equipment {
     pub immune_to: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct BaseStatsData {
     pub by_job_gender: HashMap<String, BaseStats>
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct BaseStats {
     pub job: String,
     pub gender: String,

@@ -1,8 +1,9 @@
 use std::fmt;
 
 use serde::de::{self, Deserialize, Deserializer, Visitor};
+use serde::Serialize;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Serialize)]
 #[repr(u8)]
 pub enum Gender {
     Male = 0,
