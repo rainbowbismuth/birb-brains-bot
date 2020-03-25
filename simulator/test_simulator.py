@@ -1,3 +1,4 @@
+import json
 import subprocess
 from pathlib import Path
 
@@ -31,9 +32,9 @@ def main():
             match_text = match_up.to_json()
             simulator.stdin.writelines([patch_text, '\n', match_text, '\n'])
 
-            output = simulator.stdout.readline()
-            if 'Success' not in output:
-                raise Exception(output)
+            output = json.loads(simulator.stdout.readline())
+            if output['error']:
+                raise Exception(output['error'])
 
 
 if __name__ == '__main__':

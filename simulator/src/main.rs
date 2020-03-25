@@ -23,6 +23,8 @@ fn main() -> io::Result<()> {
         }
         let match_up: MatchUp = serde_json::from_str(&buffer).unwrap();
         buffer.clear();
-        println!("Success");
+
+        let result = dto::output::Output { error: None };
+        println!("{}", serde_json::to_string(&result)?);
     }
 }

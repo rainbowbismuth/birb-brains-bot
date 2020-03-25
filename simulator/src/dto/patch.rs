@@ -8,101 +8,101 @@ use crate::sim::weapon::WeaponType;
 
 #[derive(Deserialize)]
 pub struct Patch {
-    ability: AbilityData,
-    equipment: EquipmentData,
-    base_stats: BaseStatsData,
+    pub ability: AbilityData,
+    pub equipment: EquipmentData,
+    pub base_stats: BaseStatsData,
 }
 
 #[derive(Deserialize)]
 pub struct AbilityData {
-    by_name: HashMap<String, Ability>
+    pub by_name: HashMap<String, Ability>
 }
 
 #[derive(Deserialize)]
 pub struct Ability {
-    name: String,
-    name_with_tag: String,
-    multiplier: Option<String>,
-    hit_chance: HitChance,
-    damage: bool,
-    heals: bool,
-    element: Option<Element>,
-    range: isize,
-    aoe: Option<isize>,
-    ct: isize,
-    mp: isize,
-    ma_constant: Option<isize>,
-    adds: Vec<Condition>,
-    cancels: Vec<Condition>,
-    chance_to_add: Vec<Condition>,
-    chance_to_cancel: Vec<Condition>,
+    pub name: String,
+    pub name_with_tag: String,
+    pub multiplier: Option<String>,
+    pub hit_chance: HitChance,
+    pub damage: bool,
+    pub heals: bool,
+    pub element: Option<Element>,
+    pub range: isize,
+    pub aoe: Option<isize>,
+    pub ct: isize,
+    pub mp: isize,
+    pub ma_constant: Option<isize>,
+    pub adds: Vec<Condition>,
+    pub cancels: Vec<Condition>,
+    pub chance_to_add: Vec<Condition>,
+    pub chance_to_cancel: Vec<Condition>,
 }
 
 #[derive(Deserialize)]
 pub struct HitChance {
-    ma_plus: Option<isize>,
-    pa_plus: Option<isize>,
-    speed_plus: Option<isize>,
-    pa_wp_plus: Option<isize>,
-    times_faith: bool,
+    pub ma_plus: Option<isize>,
+    pub pa_plus: Option<isize>,
+    pub speed_plus: Option<isize>,
+    pub pa_wp_plus: Option<isize>,
+    pub times_faith: bool,
 }
 
 #[derive(Deserialize)]
 pub struct EquipmentData {
-    by_name: HashMap<String, Equipment>
+    pub by_name: HashMap<String, Equipment>
 }
 
 #[derive(Deserialize)]
 pub struct Equipment {
-    name: String,
-    hp_bonus: isize,
-    mp_bonus: isize,
-    speed_bonus: isize,
-    pa_bonus: isize,
-    ma_bonus: isize,
-    wp: isize,
-    range: isize,
-    w_ev: isize,
-    phys_ev: isize,
-    magic_ev: isize,
-    weapon_type: Option<WeaponType>,
-    weapon_element: Option<Element>,
-    move_bonus: isize,
-    jump_bonus: isize,
-    strengthens: Vec<Element>,
-    absorbs: Vec<Element>,
-    halves: Vec<Element>,
-    weaknesses: Vec<Element>,
-    cancels: Vec<Condition>,
-    cancels_element: Vec<Element>,
-    initial: Vec<Condition>,
-    chance_to_add: Vec<Condition>,
-    chance_to_cancel: Vec<Condition>,
-    immune_to: Vec<String>,
+    pub name: String,
+    pub hp_bonus: isize,
+    pub mp_bonus: isize,
+    pub speed_bonus: isize,
+    pub pa_bonus: isize,
+    pub ma_bonus: isize,
+    pub wp: isize,
+    pub range: isize,
+    pub w_ev: isize,
+    pub phys_ev: isize,
+    pub magic_ev: isize,
+    pub weapon_type: Option<WeaponType>,
+    pub weapon_element: Option<Element>,
+    pub move_bonus: isize,
+    pub jump_bonus: isize,
+    pub strengthens: Vec<Element>,
+    pub absorbs: Vec<Element>,
+    pub halves: Vec<Element>,
+    pub weaknesses: Vec<Element>,
+    pub cancels: Vec<Condition>,
+    pub cancels_element: Vec<Element>,
+    pub initial: Vec<Condition>,
+    pub chance_to_add: Vec<Condition>,
+    pub chance_to_cancel: Vec<Condition>,
+    pub immune_to: Vec<String>,
 }
 
 #[derive(Deserialize)]
 pub struct BaseStatsData {
-    by_job_gender: HashMap<String, BaseStats>
+    pub by_job_gender: HashMap<String, BaseStats>
 }
 
 #[derive(Deserialize)]
 pub struct BaseStats {
-    job: String,
-    gender: String,
-    hp: isize,
-    mp: isize,
+    pub job: String,
+    pub gender: String,
+    pub hp: isize,
+    pub mp: isize,
     #[serde(rename = "move")]
-    movement: isize,
-    jump: isize,
-    speed: isize,
-    pa: isize,
-    ma: isize,
-    c_ev: isize,
-    innates: Vec<String>,
-    skills: Vec<String>,
-    absorbs: Vec<Element>,
-    halves: Vec<Element>,
-    weaknesses: Vec<Element>,
-    cancels: Vec<Element>,
+    pub movement: isize,
+    pub jump: isize,
+    pub speed: isize,
+    pub pa: isize,
+    pub ma: isize,
+    pub c_ev: isize,
+    pub innates: Vec<String>,
+    pub skills: Vec<String>,
+    pub absorbs: Vec<Element>,
+    pub halves: Vec<Element>,
+    pub weaknesses: Vec<Element>,
+    pub cancels: Vec<Element>,
 }
