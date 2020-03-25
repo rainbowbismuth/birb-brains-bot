@@ -1,16 +1,6 @@
-// import random
-// from math import floor
-// from typing import List
-//
-// from fftbg import equipment as equipment
-// from fftbg.ability import Ability
-// from fftbg.combatant import ZODIAC_INDEX, ZODIAC_CHART
-// from fftbg.patch import Patch
-// from fftbg.simulation.status import *
-//
-
 use crate::dto::patch::{Ability, BaseStats, Equipment};
-use crate::sim::enums::{Condition, ConditionBlock, Element, Gender, Sign, Team, TIMED_CONDITIONS_LEN, WeaponType};
+use crate::sim::{Condition, ConditionBlock, Distance, Element, Gender, Location, Sign, Team,
+                 TIMED_CONDITIONS_LEN, WeaponType};
 
 #[derive(Clone)]
 pub struct Combatant<'a> {
@@ -47,199 +37,250 @@ pub struct Combatant<'a> {
     pub took_damage_during_active_turn: bool,
 
     pub crystal_counter: i8,
-    pub location: i8,
+    pub location: Location,
     // TODO: Add location module
 
     pub number_of_mp_using_abilities: i16,
     pub lowest_mp_cost_ability: i16,
 }
 
-//
-//     def __repr__(self):
-//         return f'<{self.name} ({self.hp} HP) team: {self.team} loc: {self.location}>'
-//
-//     def is_friend(self, other: 'Combatant'):
-//         return self.team == other.team
-//
-//     def is_foe(self, other: 'Combatant'):
-//         return self.team != other.team
-//
-//     def distance(self, other: 'Combatant'):
-//         return abs(self.location - other.location)
-//
-//     @property
-//     def all_equips(self):
-//         return [self.mainhand, self.offhand, self.headgear, self.armor, self.accessory]
-//
-//     @property
-//     def max_hp(self) -> int:
-//         return self.stats.hp + sum([e.hp_bonus for e in self.all_equips])
-//
-//     @property
-//     def max_mp(self) -> int:
-//         return self.stats.mp + sum([e.mp_bonus for e in self.all_equips])
-//
-//     @property
-//     def hp(self) -> int:
-//         return self.raw_hp
-//
-//     @hp.setter
-//     def hp(self, new_hp: int):
-//         self.raw_hp = max(0, min(new_hp, self.max_hp))
-//         # TODO: Calculate death statuses here?
-//
-//     @property
-//     def hp_percent(self) -> float:
-//         return self.raw_hp / self.max_hp
-//
-//     @property
-//     def mp(self) -> int:
-//         return self.raw_mp
-//
-//     @mp.setter
-//     def mp(self, new_mp: int):
-//         self.raw_mp = max(0, min(new_mp, self.max_mp))
-//
-//     @property
-//     def mp_percent(self) -> float:
-//         return self.raw_mp / self.max_mp
-//
-//     @property
-//     def can_cast_mp_ability(self) -> bool:
-//         if self.num_mp_using_abilities == 0:
-//             return False
-//         return self.raw_mp >= self.lowest_mp_cost_ability
-//
-//     @property
-//     def speed(self) -> int:
-//         return self.stats.speed + self.speed_mod + sum([e.speed_bonus for e in self.all_equips])
-//
-//     @property
-//     def brave(self) -> float:
-//         return self.raw_brave
-//
-//     @property
-//     def faith(self) -> float:
-//         return self.raw_faith
-//
-//     @property
-//     def evasion_multiplier(self) -> float:
-//         # TODO: This is how sleep works right?
-//         if self.charging or self.sleep:
-//             return 0.0
-//         elif self.abandon:
-//             return 2.0
-//         else:
-//             return 1.0
-//
-//     @property
-//     def class_evasion(self) -> float:
-//         return self.evasion_multiplier * (self.stats.c_ev / 100.0)
-//
-//     @property
-//     def weapon_evasion(self) -> float:
-//         if not self.parry:
-//             return 0.0
-//         # TODO: Pretty sure this is wrong
-//         return self.evasion_multiplier * (max([e.w_ev for e in self.all_equips]) / 100.0)
-//
-//     @property
-//     def move(self) -> int:
-//         move = self.stats.move + sum([e.move_bonus for e in self.all_equips])
-//         if self.raw_combatant['MoveSkill'].startswith('Move+'):
-//             move += int(self.raw_combatant['MoveSkill'][-1])
-//         return move
-//
-//     @property
-//     def jump(self) -> int:
-//         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
-//         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
-//             jump += int(self.raw_combatant['MoveSkill'][-1])
-//         elif self.raw_combatant['MoveSkill'] == 'Ignore Height':
-//             jump = 20
-//         elif self.raw_combatant['MoveSkill'].startswith('Teleport'):
-//             jump = 20
-//         elif 'Fly' in self.stats.innates or 'Fly' == self.raw_combatant['MoveSkill']:
-//             jump = 20
-//         return jump
-//
-//     @property
-//     def physical_shield_evasion(self) -> float:
-//         return self.evasion_multiplier * (sum([e.phys_ev for e in (self.mainhand, self.offhand)]) / 100.0)
-//
-//     @property
-//     def magical_shield_evasion(self) -> float:
-//         return self.evasion_multiplier * (sum([e.phys_ev for e in (self.mainhand, self.offhand)]) / 100.0)
-//
-//     @property
-//     def physical_accessory_evasion(self) -> float:
-//         return self.evasion_multiplier * (self.accessory.phys_ev / 100.0)
-//
-//     @property
-//     def magical_accessory_evasion(self) -> float:
-//         return self.evasion_multiplier * (self.accessory.magic_ev / 100.0)
-//
-//     @property
-//     def pa_bang(self) -> int:
-//         return self.stats.pa + self.pa_mod
-//
-//     @property
-//     def ma_bang(self) -> int:
-//         return self.stats.ma + self.ma_mod
-//
-//     @property
-//     def pa(self) -> int:
-//         return self.pa_bang + sum([e.pa_bonus for e in self.all_equips])
-//
-//     @property
-//     def ma(self) -> int:
-//         return self.ma_bang + sum([e.ma_bonus for e in self.all_equips])
-//
+impl<'a> Combatant<'a> {
+    pub fn same_team(&self, other: &Combatant) -> bool {
+        self.team == other.team
+    }
+
+    pub fn different_team(&self, other: &Combatant) -> bool {
+        self.team != other.team
+    }
+
+    pub fn distance(&self, other: &Combatant) -> Distance {
+        self.location.distance(&other.location)
+    }
+
+    pub fn max_hp(&self) -> i16 {
+        self.base_stats.hp
+            + self.headgear.map_or(0, |e| e.hp_bonus)
+            + self.armor.map_or(0, |e| e.hp_bonus)
+    }
+
+    pub fn max_mp(&self) -> i16 {
+        self.base_stats.mp
+            + self.headgear.map_or(0, |e| e.mp_bonus)
+            + self.armor.map_or(0, |e| e.mp_bonus)
+    }
+
+    pub fn hp(&self) -> i16 {
+        self.raw_hp
+    }
+
+    pub fn set_hp_within_bounds(&mut self, new_hp: i16) {
+        self.raw_hp = 0.max(new_hp.min(self.max_hp()));
+    }
+
+    pub fn hp_percent(&self) -> f32 {
+        return self.hp() as f32 / self.max_hp() as f32;
+    }
+
+    pub fn mp(&self) -> i16 {
+        self.raw_mp
+    }
+
+    pub fn set_mp_within_bounds(&mut self, new_mp: i16) {
+        self.raw_mp = 0.max(new_mp.min(self.max_mp()));
+    }
+
+    pub fn mp_percent(&self) -> f32 {
+        return self.mp() as f32 / self.max_mp() as f32;
+    }
+
+    pub fn can_cast_mp_ability(&self) -> bool {
+        if self.number_of_mp_using_abilities == 0 {
+            false
+        } else {
+            self.mp() >= self.lowest_mp_cost_ability
+        }
+    }
+
+    pub fn speed(&self) -> i16 {
+        self.base_stats.speed
+            + self.speed_mod
+            + self.main_hand.map_or(0, |e| e.speed_bonus)
+            + self.off_hand.map_or(0, |e| e.speed_bonus)
+            + self.headgear.map_or(0, |e| e.speed_bonus)
+            + self.armor.map_or(0, |e| e.speed_bonus)
+            + self.accessory.map_or(0, |e| e.speed_bonus)
+    }
+
+    pub fn brave_percent(&self) -> f32 {
+        self.raw_brave as f32 / 100.0
+    }
+
+    pub fn faith_percent(&self) -> f32 {
+        self.raw_faith as f32 / 100.0
+    }
+
+    fn evasion_multiplier(&self) -> f32 {
+        if self.charging() || self.sleep() {
+            0.0
+        } else if self.abandon() {
+            2.0
+        } else {
+            1.0
+        }
+    }
+
+    pub fn class_evasion(&self) -> f32 {
+        self.evasion_multiplier() * (self.base_stats.c_ev as f32 / 100.0)
+    }
+
+    pub fn weapon_evasion(&self) -> f32 {
+        if !self.parry() {
+            0.0
+        } else {
+            // TODO: Pretty sure this is wrong
+            let base_w_ev = self.main_hand.map_or(0, |e| e.w_ev)
+                .max(self.off_hand.map_or(0, |e| e.w_ev));
+            self.evasion_multiplier() * (base_w_ev as f32 / 100.0)
+        }
+    }
+
+    pub fn physical_shield_evasion(&self) -> f32 {
+        let base_phys_ev = self.main_hand.map_or(0, |e| e.phys_ev)
+            + self.off_hand.map_or(0, |e| e.phys_ev);
+        self.evasion_multiplier() * (base_phys_ev as f32 / 100.0)
+    }
+
+    pub fn magical_shield_evasion(&self) -> f32 {
+        let base_magical_ev = self.main_hand.map_or(0, |e| e.magic_ev)
+            + self.off_hand.map_or(0, |e| e.magic_ev);
+        self.evasion_multiplier() * (base_magical_ev as f32 / 100.0)
+    }
+
+    pub fn physical_accessory_evasion(&self) -> f32 {
+        self.evasion_multiplier() *
+            (self.accessory.map_or(0, |e| e.phys_ev) as f32 / 100.0)
+    }
+
+    pub fn magical_accessory_evasion(&self) -> f32 {
+        self.evasion_multiplier() *
+            (self.accessory.map_or(0, |e| e.magic_ev) as f32 / 100.0)
+    }
+
+    pub fn movement(&self) -> i16 {
+        // TODO: Move+ skills
+        self.base_stats.movement
+            + self.headgear.map_or(0, |e| e.move_bonus)
+            + self.armor.map_or(0, |e| e.move_bonus)
+            + self.accessory.map_or(0, |e| e.move_bonus)
+    }
+
+    pub fn pa_bang(&self) -> i16 {
+        self.base_stats.pa + self.pa_mod
+    }
+
+    pub fn ma_bang(&self) -> i16 {
+        self.base_stats.ma + self.ma_mod
+    }
+
+    pub fn pa(&self) -> i16 {
+        self.pa_bang()
+            + self.main_hand.map_or(0, |e| e.pa_bonus)
+            + self.off_hand.map_or(0, |e| e.pa_bonus)
+            + self.headgear.map_or(0, |e| e.pa_bonus)
+            + self.armor.map_or(0, |e| e.pa_bonus)
+            + self.accessory.map_or(0, |e| e.pa_bonus)
+    }
+
+    pub fn ma(&self) -> i16 {
+        self.ma_bang()
+            + self.main_hand.map_or(0, |e| e.ma_bonus)
+            + self.off_hand.map_or(0, |e| e.ma_bonus)
+            + self.headgear.map_or(0, |e| e.ma_bonus)
+            + self.armor.map_or(0, |e| e.ma_bonus)
+            + self.accessory.map_or(0, |e| e.ma_bonus)
+    }
+
+    //     @property
+    //     def jump(self) -> int:
+    //         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
+    //         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
+    //             jump += int(self.raw_combatant['MoveSkill'][-1])
+    //         elif self.raw_combatant['MoveSkill'] == 'Ignore Height':
+    //             jump = 20
+    //         elif self.raw_combatant['MoveSkill'].startswith('Teleport'):
+    //             jump = 20
+    //         elif 'Fly' in self.stats.innates or 'Fly' == self.raw_combatant['MoveSkill']:
+    //             jump = 20
+    //         return jump
+
+    pub fn abandon(&self) -> bool {
+        // TODO: implement
+        false
+    }
+
+    pub fn parry(&self) -> bool {
+        // TODO: implement
+        false
+    }
+
+    pub fn has_condition(&self, condition: Condition) -> bool {
+        match condition {
+            Condition::Critical => self.hp() <= self.max_hp() / 5,
+            Condition::Death => self.dead(),
+            _ => self.conditions.has(condition)
+        }
+    }
+
+    pub fn cancel_condition(&mut self, condition: Condition) {
+        // TODO: Special handling of charging/performing/etc
+        self.conditions.remove(condition);
+    }
+
+    pub fn dead(&self) -> bool {
+        self.hp() == 0
+    }
+
+    pub fn charging(&self) -> bool {
+        self.conditions.has(Condition::Charging)
+    }
+
+    pub fn sleep(&self) -> bool {
+        self.conditions.has(Condition::Sleep)
+    }
+
+    pub fn barehanded(&self) -> bool {
+        self.main_hand.map_or(false, |e| e.weapon_type.is_none())
+    }
+
+    pub fn calculate_weapon_xa(&self, weapon: Option<&Equipment>, k: i16) -> i16 {
+        let weapon_type = weapon.and_then(|e| e.weapon_type);
+        match weapon_type {
+            None => (self.pa() + k * self.raw_brave) / 100,
+            Some(WeaponType::Knife) | Some(WeaponType::NinjaSword) | Some(WeaponType::Bow) =>
+                (self.pa() + k + self.speed() + k) / 2,
+            Some(WeaponType::KnightSword) | Some(WeaponType::Katana) =>
+                (self.pa() + k * self.raw_brave) / 100,
+            Some(WeaponType::Sword) | Some(WeaponType::Pole) | Some(WeaponType::Spear) | Some(WeaponType::Crossbow) =>
+                self.pa() + k,
+            Some(WeaponType::Staff) =>
+                self.ma() + k,
+            // TODO: Random roll here!!
+            Some(WeaponType::Flail) | Some(WeaponType::Bag) =>
+                self.pa() + k,
+            Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) =>
+                (self.pa() + k + self.ma() + k) / 2,
+            // TODO: Magical guns
+            Some(WeaponType::Gun) =>
+                weapon.unwrap().wp + k
+        }
+    }
+}
+
+
 //     def has_ability(self, name: str) -> bool:
 //         return name in self.ability_by_name
 //
-//     def status_time_remaining(self, status: str) -> int:
-//         # TODO: No longer called? Could be useful though.
-//         return self.timed_status_conditions[TIME_STATUS_INDEX[status]]
-//
-//     def add_status_flag(self, status: str):
-//         # NOTE: This doesn't handle opposing statuses (like Haste/Slow)
-//         # NOTE: This doesn't handle Death :(
-//         if status in TIME_STATUS_LENGTHS:
-//             self.timed_status_conditions[TIME_STATUS_INDEX[status]] = TIME_STATUS_LENGTHS[status]
-//         self.status_flags |= STATUS_FLAGS[status]
-//
-//     def has_status(self, status: str):
-//         if status == CHARGING:
-//             return self.ctr_action is not None
-//
-//         if status == CRITICAL:
-//             return self.hp <= self.max_hp // 5
-//
-//         if status == DEATH:
-//             return self.dead
-//
-//         return self.status_flags & STATUS_FLAGS[status] != 0
-//
-//     @property
-//     def all_statuses(self):
-//         statuses = []
-//         for status in ALL_CONDITIONS:
-//             if self.has_status(status):
-//                 statuses.append(status)
-//         return statuses
-//
-//     def cancel_status(self, status: str):
-//         if status == CHARGING:
-//             self.ctr_action = None
-//             self.ctr = 0
-//             return
-//
-//         if status in TIME_STATUS_LENGTHS:
-//             self.timed_status_conditions[TIME_STATUS_INDEX[status]] = 0
-//
-//         self.status_flags &= ~STATUS_FLAGS[status]
-//
+
 //     @property
 //     def healthy(self) -> bool:
 //         return self.hp > 0 and not self.petrified
@@ -309,8 +350,8 @@ pub struct Combatant<'a> {
 //         return self.status_flags & OIL_FLAG != 0
 //
 //     @property
-//     def float(self) -> bool:
-//         return self.status_flags & FLOAT_FLAG != 0
+//     def f32(self) -> bool:
+//         return self.status_flags & f32_FLAG != 0
 //
 //     @property
 //     def sleep(self) -> bool:
@@ -432,7 +473,7 @@ pub struct Combatant<'a> {
 //     def damage_split(self) -> bool:
 //         return 'Damage Split' in self.skills
 //
-//     def zodiac_compatibility(self, other: 'Combatant') -> float:
+//     def zodiac_compatibility(self, other: 'Combatant') -> f32:
 //         s1 = ZODIAC_INDEX[self.sign]
 //         s2 = ZODIAC_INDEX[other.sign]
 //         if ZODIAC_CHART[s1][s2] == 'O':
@@ -467,23 +508,4 @@ pub struct Combatant<'a> {
 //     def immune_to(self, element) -> bool:
 //         return any((element in e.immune_to for e in self.all_equips))
 //
-//     def calculate_weapon_xa(self, weapon: equipment.Equipment, k=0):
-//         if self.barehanded:
-//             xa = floor((self.pa + k) * self.brave)
-//         elif weapon.weapon_type in ('Knife', 'Ninja Sword', 'Ninja Blade', 'Longbow', 'Bow'):
-//             xa = ((self.pa + k) + (self.speed + k)) // 2
-//         elif weapon.weapon_type in ('Knight Sword', 'Katana'):
-//             xa = floor((self.pa + k) * self.brave)
-//         elif weapon.weapon_type in ('Sword', 'Rod', 'Pole', 'Spear', 'Crossbow'):
-//             xa = self.pa + k
-//         elif weapon.weapon_type in ('Staff', 'Stick'):
-//             xa = self.ma + k
-//         elif weapon.weapon_type in ('Flail', 'Axe', 'Bag'):
-//             xa = random.randint(1, self.pa + k)
-//         elif weapon.weapon_type in ('Cloth', 'Fabric', 'Musical Instrument', 'Harp', 'Dictionary', 'Book'):
-//             xa = (self.pa + k + self.ma + k) // 2
-//         elif weapon.weapon_type == 'Gun':
-//             xa = weapon.wp + k
-//         else:
-//             raise Exception('Missing weapon type in damage calc: ' + weapon.weapon_type)
-//         return xa
+
