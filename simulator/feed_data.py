@@ -1,4 +1,3 @@
-import json
 import subprocess
 from pathlib import Path
 
@@ -31,10 +30,6 @@ def main():
         for match_up in tourny.match_ups:
             match_text = match_up.to_json()
             simulator.stdin.writelines([patch_text, '\n', match_text, '\n'])
-
-            output = json.loads(simulator.stdout.readline())
-            if output['error']:
-                raise Exception(output['error'])
 
 
 if __name__ == '__main__':

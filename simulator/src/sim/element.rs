@@ -1,9 +1,9 @@
 use std::fmt;
 
 use serde::de::{self, Deserialize, Deserializer, Visitor};
-use serde::Serialize;
+use serde_repr::Serialize_repr;
 
-#[derive(PartialEq, Eq, Debug, Serialize)]
+#[derive(PartialEq, Eq, Debug, Serialize_repr)]
 #[repr(u8)]
 pub enum Element {
     Weapon = 1,
@@ -45,7 +45,15 @@ impl<'de> Deserialize<'de> for Element {
             type Value = Element;
 
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                f.write_str("WeaponType must be a string")
+                f.write_str("WeaponType must be a string or u8")
+            }
+
+            fn visit_u8<E>(self, code: u8) -> Result<Self::Value, E>
+                where E: de::Error
+            {
+                unsafe {
+                    Ok(std::mem::transmute_copy(&code))
+                }
             }
 
             fn visit_str<E>(self, name: &str) -> Result<Self::Value, E>
