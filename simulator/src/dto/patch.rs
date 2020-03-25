@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::sim::condition::Condition;
+use crate::sim::element::Element;
 use crate::sim::weapon::WeaponType;
 
 #[derive(Deserialize)]
@@ -25,7 +26,7 @@ pub struct Ability {
     hit_chance: HitChance,
     damage: bool,
     heals: bool,
-    element: Option<String>,
+    element: Option<Element>,
     range: isize,
     aoe: Option<isize>,
     ct: isize,
@@ -65,15 +66,15 @@ pub struct Equipment {
     phys_ev: isize,
     magic_ev: isize,
     weapon_type: Option<WeaponType>,
-    weapon_element: Option<String>,
+    weapon_element: Option<Element>,
     move_bonus: isize,
     jump_bonus: isize,
-    strengthens: Vec<String>,
-    absorbs: Vec<String>,
-    halves: Vec<String>,
-    weaknesses: Vec<String>,
+    strengthens: Vec<Element>,
+    absorbs: Vec<Element>,
+    halves: Vec<Element>,
+    weaknesses: Vec<Element>,
     cancels: Vec<Condition>,
-    cancels_element: Vec<String>,
+    cancels_element: Vec<Element>,
     initial: Vec<Condition>,
     chance_to_add: Vec<Condition>,
     chance_to_cancel: Vec<Condition>,
@@ -100,8 +101,8 @@ pub struct BaseStats {
     c_ev: isize,
     innates: Vec<String>,
     skills: Vec<String>,
-    absorbs: Vec<String>,
-    halves: Vec<String>,
-    weaknesses: Vec<String>,
-    cancels: Vec<String>,
+    absorbs: Vec<Element>,
+    halves: Vec<Element>,
+    weaknesses: Vec<Element>,
+    cancels: Vec<Element>,
 }
