@@ -1,5 +1,8 @@
 use serde::Deserialize;
 
+use crate::sim::gender::Gender;
+use crate::sim::sign::Sign;
+
 #[derive(Deserialize)]
 pub struct MatchUp {
     tournament_id: isize,
@@ -20,8 +23,8 @@ pub struct Team {
 #[serde(rename_all = "PascalCase")]
 pub struct Combatant {
     name: String,
-    gender: String,
-    sign: String,
+    gender: Gender,
+    sign: Sign,
     brave: isize,
     faith: isize,
     class: String,

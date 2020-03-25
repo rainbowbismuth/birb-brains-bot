@@ -23,6 +23,7 @@ def main():
             # Cut out some of the bulk that I don't use on the other side
             patch.ability.by_adds = None
             patch.ability.by_cancels = None
+
             patch_json = patch.to_json()
             patch_texts[id(patch)] = patch_json
         patch_text = patch_texts[id(patch)]
