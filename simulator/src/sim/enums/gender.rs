@@ -3,7 +3,7 @@ use std::fmt;
 use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde_repr::Serialize_repr;
 
-#[derive(PartialEq, Eq, Debug, Serialize_repr)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr)]
 #[repr(u8)]
 pub enum Gender {
     Male = 0,

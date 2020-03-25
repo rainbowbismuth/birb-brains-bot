@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::sim::condition::Condition;
-use crate::sim::element::Element;
-use crate::sim::weapon::WeaponType;
+use crate::sim::{Condition, Element, WeaponType};
 
 #[derive(Serialize, Deserialize)]
 pub struct Patch {

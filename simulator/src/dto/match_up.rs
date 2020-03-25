@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::sim::gender::Gender;
-use crate::sim::sign::Sign;
+use crate::sim::{Gender, Sign};
 
 #[derive(Serialize, Deserialize)]
 pub struct MatchUp {
