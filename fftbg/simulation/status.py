@@ -113,6 +113,8 @@ ALL_CONDITIONS = sorted([STOP,
                          DEATH
                          ])
 
+ALL_CONDITIONS_SET = set(ALL_CONDITIONS)
+
 assert len(ALL_CONDITIONS) < 64
 
 STATUS_FLAGS = {}

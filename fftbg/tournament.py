@@ -77,8 +77,11 @@ class Team:
         return [combatant_to_dict(combatant, patch) for combatant in self.combatants]
 
 
+@dataclass_json
 @dataclass
 class MatchUp:
+    tournament_id: int
+    modified: datetime
     left: Team
     right: Team
     left_wins: Optional[bool]
@@ -185,7 +188,7 @@ def parse_hypothetical_tournament(tournament: dict) -> Tournament:
     for (left_color, right_color, map_index) in HYPOTHETICAL_MATCHES:
         left = teams[left_color]
         right = teams[right_color]
-        match_ups.append(MatchUp(left, right, None, maps[map_index]))
+        match_ups.append(MatchUp(tid, modified, left, right, None, maps[map_index]))
 
     return Tournament(tid, modified, teams, match_ups)
 
@@ -213,7 +216,7 @@ def parse_tournament(path: Path) -> Tournament:
             right = teams[bracket[i * 2 + 1]]
             assert winner == left.color or winner == right.color
             left_wins = winner == left.color
-            match_up = MatchUp(left, right, left_wins, game_map)
+            match_up = MatchUp(tid, modified, left, right, left_wins, game_map)
             match_ups.append(match_up)
             if left_wins:
                 new_bracket.append(left.color)
@@ -226,7 +229,7 @@ def parse_tournament(path: Path) -> Tournament:
     right = teams['champion']
     assert winner == left.color or winner == right.color
     left_wins = winner == left.color
-    match_up = MatchUp(left, right, left_wins, game_map)
+    match_up = MatchUp(tid, modified, left, right, left_wins, game_map)
     match_ups.append(match_up)
     return Tournament(tid, modified, teams, match_ups)
 

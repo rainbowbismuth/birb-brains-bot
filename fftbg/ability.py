@@ -59,6 +59,8 @@ class Ability:
     ma_constant: Optional[int] = None
     adds: Tuple[str] = tuple()
     cancels: Tuple[str] = tuple()
+    chance_to_add: Tuple[str] = tuple()
+    chance_to_cancel: Tuple[str] = tuple()
 
     def multiply(self, brave, faith, pa, pa_bang, ma, wp, speed):
         if self.multiplier == MULT_BRAVE:
@@ -119,6 +121,8 @@ HIT_SPEED_PLUS_RE = re.compile(r'Hit:(?:\s*Undead;)?\s*\(Speed\s?\+\s?(\d+)\)%')
 HIT_PA_WP_PLUS_RE = re.compile(r'Hit: \(PA \+ WP \+ (\d+)\)%')
 ADD_STATUS_RE = re.compile(r'Add ([\w,\s\']+)')
 CANCEL_STATUS_RE = re.compile(r'Cancel ([\w,\s\']+)')
+CHANCE_TO_ADD_RE = re.compile(r'Chance to Add ([\w,\s\']+)', re.IGNORECASE)
+CHANCE_TO_CANCEL_RE = re.compile(r'Chance to Cancel ([\w,\s\']+)', re.IGNORECASE)
 
 
 def parse_hit_chance(desc) -> Optional[HitChance]:
@@ -192,8 +196,17 @@ def parse_abilities(abillity_help_path) -> AbilityData:
 
         hit_chance = parse_hit_chance(desc)
 
-        adds = tuple(try_list(ADD_STATUS_RE, desc))
-        cancels = tuple(try_list(CANCEL_STATUS_RE, desc))
+        # TODO: This is a huge hack
+        #  Cancel statuses on target and Add them to self
+        bad_strings = {'statuses on target and Add them to self', 'them to self', 'status on target'}
+
+        chance_to_add = tuple(status for status in try_list(CHANCE_TO_ADD_RE, desc) if status not in bad_strings)
+        chance_to_cancel = tuple(status for status in try_list(CHANCE_TO_CANCEL_RE, desc) if status not in bad_strings)
+
+        adds, cancels = tuple(), tuple()
+        if not chance_to_add or chance_to_cancel:
+            adds = tuple(status for status in try_list(ADD_STATUS_RE, desc) if status not in bad_strings)
+            cancels = tuple(status for status in try_list(CANCEL_STATUS_RE, desc) if status not in bad_strings)
 
         ab = Ability(name=name,
                      name_with_tag=SKILL_TAG + name,
@@ -208,7 +221,9 @@ def parse_abilities(abillity_help_path) -> AbilityData:
                      element=element,
                      ma_constant=ma_constant,
                      adds=adds,
-                     cancels=cancels)
+                     cancels=cancels,
+                     chance_to_add=chance_to_add,
+                     chance_to_cancel=chance_to_cancel)
         by_name[name.lower()] = ab
         for status in ab.adds:
             by_adds.setdefault(status, []).append(ab)

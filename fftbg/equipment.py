@@ -2,6 +2,8 @@ import re
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+from fftbg.simulation.status import ALL_CONDITIONS_SET
+
 WEAPON_RE = re.compile(r'(.+?): (\d+) WP(.+)?, (\d+) range, (\d+)% evade, (.+?)\.(.*)')
 ARMOR_RE = re.compile(r'(.+?): \+(\d+) HP.*(\d+) MP,.(.*)')
 ACCESSORY_RE = re.compile(r'(.+?):(.*)')
@@ -18,7 +20,7 @@ STRENGTHEN_RE = re.compile(r'Strengthen ([\w,\s]+)')
 ABSORB_RE = re.compile(r'Absorb ([\w,\s]+)')
 HALF_RE = re.compile(r'Half ([\w,\s]+)')
 WEAK_RE = re.compile(r'Weak ([\w,\s]+)')
-CANCEL_RE = re.compile(r'Cancel ([\w,\s]+)')
+CANCEL_RE = re.compile(r'Cancel ([\w,\s\']+)')
 
 INITIAL_RE = re.compile(r'Initial ([\w,\s\']+)', re.IGNORECASE)
 CHANCE_TO_ADD_RE = re.compile(r'Chance to Add ([\w,\s\']+)', re.IGNORECASE)
@@ -48,6 +50,7 @@ class Equipment:
     halves: Tuple[str] = tuple()
     weaknesses: Tuple[str] = tuple()
     cancels: Tuple[str] = tuple()
+    cancels_element: Tuple[str] = tuple()
     initial: Tuple[str] = tuple()
     chance_to_add: Tuple[str] = tuple()
     chance_to_cancel: Tuple[str] = tuple()
@@ -101,7 +104,17 @@ def parse_equipment(info_item_path) -> EquipmentData:
         absorbs = try_list(ABSORB_RE, item)
         halves = try_list(HALF_RE, item)
         weaknesses = try_list(WEAK_RE, item)
-        cancels = try_list(CANCEL_RE, item)
+        all_cancels = try_list(CANCEL_RE, item)
+
+        cancels = []
+        cancels_element = []
+        for cancel in all_cancels:
+            if cancel in ALL_CONDITIONS_SET:
+                cancels.append(cancel)
+            else:
+                cancels_element.append(cancel)
+        cancels = tuple(cancels)
+        cancels_element = tuple(cancels_element)
 
         initial = try_list(INITIAL_RE, item)
         chance_to_add = try_list(CHANCE_TO_ADD_RE, item)
@@ -129,6 +142,7 @@ def parse_equipment(info_item_path) -> EquipmentData:
                                       halves=halves,
                                       weaknesses=weaknesses,
                                       cancels=cancels,
+                                      cancels_element=cancels_element,
                                       initial=initial,
                                       chance_to_add=chance_to_add,
                                       chance_to_cancel=chance_to_cancel,
@@ -158,6 +172,7 @@ def parse_equipment(info_item_path) -> EquipmentData:
                                       halves=halves,
                                       weaknesses=weaknesses,
                                       cancels=cancels,
+                                      cancels_element=cancels_element,
                                       initial=initial,
                                       chance_to_add=chance_to_add,
                                       chance_to_cancel=chance_to_cancel,
@@ -187,6 +202,7 @@ def parse_equipment(info_item_path) -> EquipmentData:
                                       halves=halves,
                                       weaknesses=weaknesses,
                                       cancels=cancels,
+                                      cancels_element=cancels_element,
                                       initial=initial,
                                       chance_to_add=chance_to_add,
                                       chance_to_cancel=chance_to_cancel,
