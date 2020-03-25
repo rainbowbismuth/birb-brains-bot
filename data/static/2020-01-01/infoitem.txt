@@ -214,7 +214,7 @@ Rubber Costume: +115 HP, +30 MP, Clothes. Effect: Cancel Lightning; Immune Don't
 Linen Robe: +36 HP, +12 MP, Robe. Effect: +1 MA.
 Silk Robe: +40 HP, +16 MP, Robe. Effect: +1 Speed.
 Wizard Robe: +45 HP, +22 MP, Robe. Effect: +2 MA.
-Chameleon Robe: +51 HP, +28 MP, Robe. Effect: Absorb Holy, Strengthen Water; Immune Death.
+Chameleon Robe: +51 HP, +28 MP, Robe. Effect: Absorb Holy; Strengthen Water; Immune Death.
 White Robe: +58 HP, +34 MP, Robe. Effect: Half Fire, Lightning, Ice.
 Black Robe: +66 HP, +30 MP, Robe. Effect: Strengthen Fire, Lightning, Ice.
 Light Robe: +75 HP, +50 MP, Robe. Effect: +1 MA; Absorb Dark; Strengthen Holy.

@@ -267,7 +267,7 @@ Gather Power: 0 range, 0 AoE. Effect: +2 PA.
 Blow Fire: 2 range, 2 AoE (line). Element: Fire. Effect: Damage (MA * 4).
 Tendrils: 1 range, 0 AoE. Effect: Normal Attack; Chance to Add Slow.
 Lick: 1 range, 0 AoE. Effect: Add Reflect.
-Goo: 1 range, 0 AoE. Hit: (MA + 60)%. Effect: Add Add Stop, Don't Act, Don't Move (All).
+Goo: 1 range, 0 AoE. Hit: (MA + 60)%. Effect: Add Stop, Don't Act, Don't Move (All).
 Bad Breath: 0 range, 2 AoE. Effect: Add Petrify, Darkness, Confusion, Silence, Oil, Frog, Poison, Sleep (Separate).
 Moldball Virus: 1 range, 0 AoE. Hit: (MA + 6)%. Effect: Transform Human into Malboro.
 Stab Up: 1 range, 0 AoE. Effect: Normal Attack.
