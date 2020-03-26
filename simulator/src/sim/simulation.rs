@@ -5,7 +5,7 @@ use rand::{random, Rng};
 use rand::prelude::SmallRng;
 
 use crate::dto::patch::Equipment;
-use crate::sim::{ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, Location, Log, Team, TIMED_CONDITIONS, WeaponType};
+use crate::sim::{ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, Location, Log, Team, TIMED_CONDITIONS, WeaponType};
 
 const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
@@ -72,7 +72,6 @@ impl<'a> Simulation<'a> {
             self.phase_active_turn_resolve();
         }
     }
-
 
     pub fn phase_status_check(&mut self) {
         self.clock_tick += 1;
@@ -209,11 +208,16 @@ impl<'a> Simulation<'a> {
         //         if target.immune_to(status):
         //             return
 
-        // TODO: Death
-        //         if status == DEATH:
-        //             self.target_died(target)
-        //             self.unit_report(target, f'was killed by {status} from {src}')
-        //             return
+        if condition == Condition::Death {
+            self.target_died(target_id);
+            let target = self.combatant(target_id);
+
+            // TODO: rethink src still.
+            if let Some(src_str) = src {
+                self.log.unit_report(target, || format!("was killed by {} from {}", condition.name(), src_str));
+            }
+            return;
+        }
 
         let target = self.combatant_mut(target_id);
         let had_status = target.has_condition(condition);
@@ -228,9 +232,10 @@ impl<'a> Simulation<'a> {
             };
         }
 
-        // TODO: Cancelling statuses
-        //         for cancelled in CANCELLING_STATUS.get(status, []):
-        //             self.cancel_status(target, cancelled, status)
+        for cancelled_condition in condition.cancels() {
+            // TODO: Fix up String::from stuff
+            self.cancel_condition(target_id, *cancelled_condition, Some(String::from(condition.name())));
+        }
     }
 
     pub fn phase_active_turn_resolve(&mut self) {
@@ -559,11 +564,15 @@ impl<'a> Simulation<'a> {
             // TODO: Do I really want this unwrap style? :|
             target.took_damage_during_active_turn = true;
             let target = self.combatant(target_id);
-            if let Some(src_str) = src {
+
+            // TODO: Remove these clones :(
+            if let Some(src_str) = src.clone() {
                 self.log.unit_report(target, || format!("took {} damage from {}", amount, src_str));
             }
-//             for status in DAMAGE_CANCELS:
-//                 self.cancel_status(target, status, source)
+
+            for condition in &DAMAGE_CANCELS {
+                self.cancel_condition(target_id, *condition, src.clone())
+            }
         } else {
             let target = self.combatant(target_id);
             if let Some(src_str) = src {
@@ -593,8 +602,10 @@ impl<'a> Simulation<'a> {
         target.reset_crystal_counter();
         let target = self.combatant(target_id);
         self.log.unit_report(target, || String::from("died"));
-        //         for status in DEATH_CANCELS:
-        //             self.cancel_status(target, status, 'death')
+        for condition in &DEATH_CANCELS {
+            // TODO: Remove this String from non-sense
+            self.cancel_condition(target_id, *condition, Some(String::from("death")));
+        }
     }
 
     fn after_damage_reaction(&mut self, user_id: CombatantId, target_id: CombatantId, amount: i16) {

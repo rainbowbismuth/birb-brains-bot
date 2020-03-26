@@ -143,6 +143,45 @@ lazy_static! {
     ];
 }
 
+pub const DAMAGE_CANCELS: [Condition; 3] = [
+    Condition::Charm,
+    Condition::Confusion,
+    Condition::Sleep,
+];
+
+pub const DEATH_CANCELS: [Condition; 22] = [
+    Condition::Berserk,
+    Condition::BloodSuck,
+    Condition::Confusion,
+    Condition::Charm,
+    Condition::Charging,
+    Condition::DeathSentence,
+    Condition::Defending,
+    Condition::DontMove,
+    Condition::DontAct,
+    Condition::Faith,
+    Condition::Float,
+    Condition::Haste,
+    Condition::Innocent,
+    Condition::Performing,
+    Condition::Poison,
+    Condition::Protect,
+    Condition::Reflect,
+    Condition::Regen,
+    Condition::Shell,
+    Condition::Slow,
+    Condition::Stop,
+    Condition::Transparent,
+];
+
+const HASTE_CANCELS: [Condition; 1] = [Condition::Slow];
+const SLOW_CANCELS: [Condition; 1] = [Condition::Haste];
+const POISON_CANCELS: [Condition; 1] = [Condition::Regen];
+const REGEN_CANCELS: [Condition; 1] = [Condition::Poison];
+const PETRIFY_CANCELS: [Condition; 2] = [Condition::DeathSentence, Condition::Transparent];
+const FAITH_CANCELS: [Condition; 1] = [Condition::Innocent];
+const INNOCENT_CANCELS: [Condition; 1] = [Condition::Faith];
+
 impl Condition {
     pub fn parse(name: &str) -> Option<Condition> {
         match name {
@@ -224,6 +263,19 @@ impl Condition {
     pub const fn index(self) -> usize { (self as usize) - 1 }
 
     pub const fn is_timed_condition(self) -> bool { self.index() < TIMED_CONDITIONS_LEN }
+
+    pub fn cancels(self) -> &'static [Condition] {
+        match self {
+            Condition::Haste => &HASTE_CANCELS,
+            Condition::Slow => &SLOW_CANCELS,
+            Condition::Poison => &POISON_CANCELS,
+            Condition::Regen => &REGEN_CANCELS,
+            Condition::Petrify => &PETRIFY_CANCELS,
+            Condition::Faith => &FAITH_CANCELS,
+            Condition::Innocent => &INNOCENT_CANCELS,
+            _ => &[],
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
