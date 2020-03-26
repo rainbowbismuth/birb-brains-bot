@@ -27,13 +27,26 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
 
 #[derive(Clone)]
 pub struct Combatant<'a> {
-    pub name: String,
-    pub team: Team,
+    pub base_stats: &'a BaseStats,
     pub id: CombatantId,
+    pub raw_hp: i16,
+    pub raw_mp: i16,
+    pub ct: i16,
+    pub speed_mod: i16,
+    pub team: Team,
+    pub conditions: ConditionBlock,
+    pub broken_items: i8,
+    pub number_of_mp_using_abilities: i16,
+    pub lowest_mp_cost_ability: i16,
+    pub location: Location,
+    pub on_active_turn: bool,
+    pub moved_during_active_turn: bool,
+    pub acted_during_active_turn: bool,
+    pub took_damage_during_active_turn: bool,
+    pub name: String,
     pub sign: Sign,
     pub job: String,
     pub gender: Gender,
-    pub base_stats: &'a BaseStats,
     pub main_hand: Option<&'a Equipment>,
     pub off_hand: Option<&'a Equipment>,
     pub headgear: Option<&'a Equipment>,
@@ -43,27 +56,11 @@ pub struct Combatant<'a> {
     pub raw_faith: i16,
     pub skill_flags: u64,
     pub abilities: &'a [&'a Ability],
-    pub raw_hp: i16,
-    pub raw_mp: i16,
-    pub ct: i16,
+    pub ctr: i8,
+    // TODO: ctr_action
     pub pa_mod: i16,
     pub ma_mod: i16,
-    pub speed_mod: i16,
-    pub conditions: ConditionBlock,
-    pub broken_items: i8,
-    pub ctr: i8,
-// TODO: ctr_action
-
-    pub on_active_turn: bool,
-    pub moved_during_active_turn: bool,
-    pub acted_during_active_turn: bool,
-    pub took_damage_during_active_turn: bool,
     pub crystal_counter: i8,
-    pub location: Location,
-// TODO: Add location module
-
-    pub number_of_mp_using_abilities: i16,
-    pub lowest_mp_cost_ability: i16,
 }
 
 impl<'a> Combatant<'a> {
@@ -159,7 +156,7 @@ impl<'a> Combatant<'a> {
         if !self.parry() {
             0.0
         } else {
-// TODO: Pretty sure this is wrong
+            // TODO: Pretty sure this is wrong
             let base_w_ev = self.main_hand.map_or(0, |e| e.w_ev)
                 .max(self.off_hand.map_or(0, |e| e.w_ev));
             self.evasion_multiplier() * (base_w_ev as f32 / 100.0)
@@ -189,7 +186,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn movement(&self) -> i16 {
-// TODO: Move+ skills
+        // TODO: Move+ skills
         self.base_stats.movement
             + self.headgear.map_or(0, |e| e.move_bonus)
             + self.armor.map_or(0, |e| e.move_bonus)
@@ -236,12 +233,12 @@ impl<'a> Combatant<'a> {
 //         return jump
 
     pub fn abandon(&self) -> bool {
-// TODO: implement
+        // TODO: implement
         false
     }
 
     pub fn parry(&self) -> bool {
-// TODO: implement
+        // TODO: implement
         false
     }
 
@@ -258,7 +255,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn cancel_condition(&mut self, condition: Condition) {
-// TODO: Special handling of charging/performing/etc
+        // TODO: Special handling of charging/performing/etc
         self.conditions.remove(condition);
     }
 
@@ -412,37 +409,6 @@ impl<'a> Combatant<'a> {
 
     pub fn barehanded(&self) -> bool {
         self.main_hand.map_or(false, |e| e.weapon_type.is_none())
-    }
-
-    pub fn calculate_weapon_xa(&self, weapon: Option<&Equipment>, k: i16) -> i16 {
-        let weapon_type = weapon.and_then(|e| e.weapon_type);
-        match weapon_type {
-            None =>
-                (self.pa() + k * self.raw_brave) / 100,
-
-            Some(WeaponType::Knife) | Some(WeaponType::NinjaSword) | Some(WeaponType::Bow) =>
-                (self.pa() + k + self.speed() + k) / 2,
-
-            Some(WeaponType::KnightSword) | Some(WeaponType::Katana) =>
-                (self.pa() + k * self.raw_brave) / 100,
-
-            Some(WeaponType::Sword) | Some(WeaponType::Pole) | Some(WeaponType::Spear) | Some(WeaponType::Crossbow) =>
-                self.pa() + k,
-
-            Some(WeaponType::Staff) =>
-                self.ma() + k,
-
-// TODO: Random roll here!!
-            Some(WeaponType::Flail) | Some(WeaponType::Bag) =>
-                self.pa() + k,
-
-            Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) =>
-                (self.pa() + k + self.ma() + k) / 2,
-
-// TODO: Magical guns
-            Some(WeaponType::Gun) =>
-                weapon.unwrap().wp + k
-        }
     }
 }
 
