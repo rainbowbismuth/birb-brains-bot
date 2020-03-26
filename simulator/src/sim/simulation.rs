@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use crate::sim::{ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, Team, TIMED_CONDITIONS};
+use crate::sim::{ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, Log, Team, TIMED_CONDITIONS};
 
 const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
@@ -16,98 +16,6 @@ pub struct Simulation<'a> {
     pub active_turns: bool,
     pub left_wins: Option<bool>,
     pub time_out_win: Option<bool>,
-}
-
-#[derive(Clone)]
-struct LogData {
-    pub clock_tick: usize,
-    pub log: Option<Vec<String>>,
-    pub prepend: String,
-}
-
-#[derive(Clone)]
-pub struct Log {
-    interior: RefCell<LogData>
-}
-
-impl Log {
-    pub fn set_clock_tick(&self, clock_tick: usize) {
-        self.interior.borrow_mut().set_clock_tick(clock_tick);
-    }
-
-    pub fn phase(&self, phase_name: &'static str) {
-        self.interior.borrow_mut().phase(phase_name);
-    }
-
-    pub fn report<F>(&self, f: F)
-        where F: Fn() -> String {
-        self.interior.borrow_mut().report(f);
-    }
-
-    pub fn unit_report<F>(&self, combatant: &Combatant, f: F)
-        where F: Fn() -> String {
-        self.interior.borrow_mut().unit_report(combatant, f)
-    }
-
-    pub fn active_turn_bar(&self, combatant: &Combatant) {
-        self.interior.borrow_mut().active_turn_bar(combatant)
-    }
-}
-
-impl LogData {
-    pub fn set_clock_tick(&mut self, clock_tick: usize) {
-        self.clock_tick = clock_tick;
-    }
-
-    fn prepend_info(&self) -> String {
-        format!("CT {}: {}", self.clock_tick, self.prepend)
-    }
-
-    pub fn phase(&mut self, phase_name: &'static str) {
-        if self.log.is_some() {
-            self.prepend = String::from(phase_name)
-        }
-    }
-
-    pub fn add(&mut self, s: String) {
-        match self.log.as_mut() {
-            Some(log) => log.push(s),
-            None => {}
-        }
-    }
-
-    pub fn report<F>(&mut self, f: F)
-        where F: Fn() -> String {
-        if self.log.is_some() {
-            let prepend = self.prepend_info();
-            self.add(format!("{}: {}", prepend, f()));
-        }
-    }
-
-    pub fn unit_report<F>(&mut self, combatant: &Combatant, f: F)
-        where F: Fn() -> String {
-        if self.log.is_some() {
-            let prepend = self.prepend_info();
-            self.add(format!("{}: {} ({} HP) {}", prepend, combatant.name, combatant.hp(), f()));
-        }
-    }
-
-    pub fn active_turn_bar(&mut self, combatant: &Combatant) {
-        if self.log.is_some() {
-            let mut all_conditions = vec![];
-            for condition in ALL_CONDITIONS.iter() {
-                if combatant.has_condition(*condition) {
-                    all_conditions.push(condition.name());
-                }
-            }
-            // TODO: Add location
-            if !all_conditions.is_empty() {
-                self.prepend = format!("{} ({} HP, {})", combatant.name, combatant.hp(), all_conditions.join(", "));
-            } else {
-                self.prepend = format!("{} ({} HP)", combatant.name, combatant.hp());
-            }
-        }
-    }
 }
 
 impl<'a> Simulation<'a> {
