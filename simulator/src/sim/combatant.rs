@@ -410,6 +410,11 @@ impl<'a> Combatant<'a> {
     pub fn barehanded(&self) -> bool {
         self.main_hand.map_or(false, |e| e.weapon_type.is_none())
     }
+
+    pub fn immune_to(&self, condition: Condition) -> bool {
+        // TODO: Implement this
+        false
+    }
 }
 
 

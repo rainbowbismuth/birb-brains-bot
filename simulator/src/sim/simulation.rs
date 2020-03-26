@@ -5,9 +5,9 @@ use rand::{random, Rng};
 use rand::prelude::SmallRng;
 
 use crate::dto::patch::Equipment;
-use crate::sim::{ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, Location, Log, Team, TIMED_CONDITIONS, WeaponType};
+use crate::sim::{ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, Phase, Source, Team, TIMED_CONDITIONS, WeaponType};
 
-const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
+pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
 
 #[derive(Clone)]
@@ -17,7 +17,7 @@ pub struct Simulation<'a> {
     pub arena_length: i16,
     pub clock_tick: usize,
     pub prediction_mode: bool,
-    pub log: Log,
+    pub log: Log<'a>,
     pub slow_actions: bool,
     pub active_turns: bool,
     pub left_wins: Option<bool>,
@@ -25,6 +25,10 @@ pub struct Simulation<'a> {
 }
 
 impl<'a> Simulation<'a> {
+    pub fn log_event(&self, event: Event<'a>) {
+        self.log.add(&self.combatants, event);
+    }
+
     pub fn combatant(&self, cid: CombatantId) -> &Combatant<'a> {
         &self.combatants[cid.index()]
     }
@@ -76,14 +80,12 @@ impl<'a> Simulation<'a> {
     pub fn phase_status_check(&mut self) {
         self.clock_tick += 1;
         self.log.set_clock_tick(self.clock_tick);
-        self.log.phase("Status Check");
-        for combatant in &mut self.combatants {
+        self.log.set_phase(Phase::StatusCheck);
+        for cid in &COMBATANT_IDS {
             for condition in &TIMED_CONDITIONS {
-                let removed = combatant.tick_condition(*condition).unwrap();
+                let removed = self.combatant_mut(*cid).tick_condition(*condition).unwrap();
                 if removed {
-                    self.log.unit_report(
-                        combatant,
-                        || format!("no longer has {}", condition.name()));
+                    self.log_event(Event::LostCondition(*cid, *condition, Source::Phase));
                 }
             }
         }
@@ -103,7 +105,7 @@ impl<'a> Simulation<'a> {
     //                 self.slow_actions.append(combatant)
     //
     pub fn phase_slow_action_charging(&mut self) {
-        self.log.phase("Slow Action Charge");
+        self.log.set_phase(Phase::SlowActionCharging);
         for combatant in &mut self.combatants {
             // TODO: Implement slow actions
         }
@@ -120,7 +122,7 @@ impl<'a> Simulation<'a> {
     //             combatant.ctr_action = None
     //             action()
     pub fn phase_slow_action_resolve(&mut self) {
-        self.log.phase("Slow Action Resolve");
+        // self.log.set_phase(Phase::SlowAction())
         for combatant in &self.combatants {
             // TODO: Implement slow action resolve
         }
@@ -128,7 +130,7 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn phase_ct_charging(&mut self) {
-        self.log.phase("CT Charging");
+        self.log.set_phase(Phase::CtCharging);
         for combatant in &mut self.combatants {
             if combatant.stop() || combatant.sleep() || combatant.petrify() {
                 continue;
@@ -162,7 +164,7 @@ impl<'a> Simulation<'a> {
         for cid in &COMBATANT_IDS {
             let combatant = self.combatant(*cid);
             if combatant.acted_during_active_turn || combatant.took_damage_during_active_turn {
-                self.cancel_condition(*cid, Condition::Transparent, None);
+                self.cancel_condition(*cid, Condition::Transparent, Source::Phase);
             }
 
             let combatant = self.combatant(*cid);
@@ -181,41 +183,29 @@ impl<'a> Simulation<'a> {
 
             let combatant = self.combatant(*cid);
             if !(combatant.acted_during_active_turn || combatant.acted_during_active_turn) {
-                self.log.unit_report(combatant, || String::from("did nothing"));
+                self.log_event(Event::DidNothing(*cid));
             }
 
             self.combatant_mut(*cid).on_active_turn = false;
         }
     }
 
-    pub fn cancel_condition(&mut self, target_id: CombatantId, condition: Condition, src: Option<String>) {
+    pub fn cancel_condition(&mut self, target_id: CombatantId, condition: Condition, src: Source<'a>) {
         let target = self.combatant_mut(target_id);
         if !target.has_condition(condition) {
             return;
         }
         target.cancel_condition(condition);
-        let target = self.combatant(target_id);
-        match src {
-            Some(src_str) => self.log.unit_report(
-                target, || format!("had {} cancelled by {}", condition.name(), src_str)),
-            None => self.log.unit_report(
-                target, || format!("had {} cancelled", condition.name()))
-        }
+        self.log_event(Event::LostCondition(target_id, condition, src));
     }
 
-    pub fn add_condition(&mut self, target_id: CombatantId, condition: Condition, src: Option<String>) {
-        // TODO: Immunity
-        //         if target.immune_to(status):
-        //             return
+    pub fn add_condition(&mut self, target_id: CombatantId, condition: Condition, src: Source<'a>) {
+        if self.combatant(target_id).immune_to(condition) {
+            return;
+        }
 
         if condition == Condition::Death {
-            self.target_died(target_id);
-            let target = self.combatant(target_id);
-
-            // TODO: rethink src still.
-            if let Some(src_str) = src {
-                self.log.unit_report(target, || format!("was killed by {} from {}", condition.name(), src_str));
-            }
+            self.target_died(target_id, src);
             return;
         }
 
@@ -224,22 +214,15 @@ impl<'a> Simulation<'a> {
         target.add_condition(condition);
         let target = self.combatant(target_id);
         if !had_status {
-            match src {
-                Some(src_str) => self.log.unit_report(
-                    target, || format!("now has {} from {}", condition.name(), src_str)),
-                None => self.log.unit_report(
-                    target, || format!("now has {}", condition.name()))
-            };
+            self.log_event(Event::AddedCondition(target_id, condition, src));
         }
 
         for cancelled_condition in condition.cancels() {
-            // TODO: Fix up String::from stuff
-            self.cancel_condition(target_id, *cancelled_condition, Some(String::from(condition.name())));
+            self.cancel_condition(target_id, *cancelled_condition, Source::Condition(condition));
         }
     }
 
     pub fn phase_active_turn_resolve(&mut self) {
-        self.log.phase("Active Turn Resolve");
         loop {
             let combatant = self.combatants.iter().find(|c| c.ct >= 100);
             if combatant.is_none() {
@@ -247,6 +230,8 @@ impl<'a> Simulation<'a> {
             }
             let combatant = combatant.unwrap();
             let cid = combatant.id;
+            self.log.set_phase(Phase::ActiveTurn(cid));
+
             if combatant.petrify() || combatant.crystal() || combatant.stop() || combatant.sleep() {
                 continue;
             }
@@ -269,7 +254,7 @@ impl<'a> Simulation<'a> {
 
                 let combatant = self.combatant(cid);
                 if combatant.crystal() {
-                    self.log.unit_report(combatant, || String::from("has become a crystal"));
+                    self.log_event(Event::BecameCrystal(cid));
                     continue;
                 }
             }
@@ -283,8 +268,6 @@ impl<'a> Simulation<'a> {
             self.combatant_mut(cid).on_active_turn = true;
 
             let combatant = self.combatant(cid);
-            self.log.active_turn_bar(combatant);
-
             if combatant.regen() {
                 // TODO: Do the heal
                 //                 self.change_target_hp(combatant, -(combatant.max_hp // 8), 'regen')
@@ -356,7 +339,7 @@ impl<'a> Simulation<'a> {
             return;
         }
         user.moved_during_active_turn = true;
-        self.log.report(|| format!("moved from {} to {}", old_location.x, new_location.x));
+        self.log_event(Event::Moved(user_id, old_location, new_location));
     }
 
     fn do_move_to_range(&mut self, user_id: CombatantId, range: i16, target_id: CombatantId) {
@@ -490,7 +473,7 @@ impl<'a> Simulation<'a> {
 //             self.unit_report(target, f'evaded {user.name}\'s attack')
 //             return True
 //         return False
-    pub fn do_physical_evade(&self, user: &Combatant, weapon: Option<&Equipment>, target: &Combatant) -> bool {
+    pub fn do_physical_evade(&self, user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
 //         if target.blade_grasp and not target.berserk and self.roll_brave_reaction(target):
 //             self.unit_report(target, f'blade grasped {user.name}\'s attack')
 //             return True
@@ -504,23 +487,23 @@ impl<'a> Simulation<'a> {
 //             return False
 
         if self.roll_auto_fail() < target.physical_accessory_evasion() {
-            self.log.unit_report(target, || format!("guarded {}\'s attack", user.name));
+            self.log_event(Event::Evaded(target.id, EvasionType::Guarded, src));
             true
         } else if self.roll_auto_fail() < target.physical_shield_evasion() / 2.0 {
-            self.log.unit_report(target, || format!("blocked {}\'s attack", user.name));
+            self.log_event(Event::Evaded(target.id, EvasionType::Blocked, src));
             true
         } else if self.roll_auto_fail() < target.weapon_evasion() / 2.0 {
-            self.log.unit_report(target, || format!("parried {}\'s attack", user.name));
+            self.log_event(Event::Evaded(target.id, EvasionType::Parried, src));
             true
         } else if self.roll_auto_fail() < target.class_evasion() / 2.0 {
-            self.log.unit_report(target, || format!("evaded {}\'s attack", user.name));
+            self.log_event(Event::Evaded(target.id, EvasionType::Evaded, src));
             true
         } else {
             false
         }
     }
 
-    pub fn weapon_chance_to_add_or_cancel_status(&mut self, user_id: CombatantId, weapon: Option<&Equipment>, target_id: CombatantId) {
+    pub fn weapon_chance_to_add_or_cancel_status(&mut self, user_id: CombatantId, weapon: Option<&'a Equipment>, target_id: CombatantId) {
         let target = self.combatant(target_id);
         if !target.healthy() {
             return; // TODO: this doesn't strictly make sense I don't think...
@@ -532,24 +515,18 @@ impl<'a> Simulation<'a> {
                 if self.roll_auto_fail() < (1.0 - 0.19) {
                     continue;
                 }
-                let user = self.combatant(user_id);
-                // TODO: fix this always formatting silliness
-                let src = format!("{}\'s {}", user.name, equip.name);
-                self.add_condition(target_id, *condition, Some(src));
+                self.add_condition(target_id, *condition, Source::Weapon(user_id, weapon));
             }
             for condition in &equip.chance_to_cancel {
                 if self.roll_auto_fail() < (1.0 - 0.19) {
                     continue;
                 }
-                let user = self.combatant(user_id);
-                // TODO: fix this always formatting silliness
-                let src = format!("{}\'s {}", user.name, equip.name);
-                self.cancel_condition(target_id, *condition, Some(src));
+                self.cancel_condition(target_id, *condition, Source::Weapon(user_id, weapon));
             }
         }
     }
 
-    pub fn chance_target_hp(&mut self, target_id: CombatantId, amount: i16, src: Option<String>) {
+    pub fn chance_target_hp(&mut self, target_id: CombatantId, amount: i16, src: Source<'a>) {
         let target = self.combatant_mut(target_id);
         if amount > 0 {
             if !target.healthy() {
@@ -561,27 +538,18 @@ impl<'a> Simulation<'a> {
         target.set_hp_within_bounds(target.hp() - amount);
         let now_dead = target.dead();
         if amount > 0 {
-            // TODO: Do I really want this unwrap style? :|
             target.took_damage_during_active_turn = true;
-            let target = self.combatant(target_id);
 
-            // TODO: Remove these clones :(
-            if let Some(src_str) = src.clone() {
-                self.log.unit_report(target, || format!("took {} damage from {}", amount, src_str));
-            }
-
+            self.log_event(Event::HpDamage(target_id, amount, src));
             for condition in &DAMAGE_CANCELS {
-                self.cancel_condition(target_id, *condition, src.clone())
+                self.cancel_condition(target_id, *condition, src)
             }
         } else {
-            let target = self.combatant(target_id);
-            if let Some(src_str) = src {
-                self.log.unit_report(target, || format!("was healed for {} from {}", amount.abs(), src_str));
-            }
+            self.log_event(Event::HpHeal(target_id, amount.abs(), src));
         }
 
         if now_dead {
-            self.target_died(target_id)
+            self.target_died(target_id, src);
         }
     }
 
@@ -595,16 +563,14 @@ impl<'a> Simulation<'a> {
 //             self.unit_report(target, f'recovered {abs(amount)} MP from {source}')
 //
 
-    pub fn target_died(&mut self, target_id: CombatantId) {
+    pub fn target_died(&mut self, target_id: CombatantId, src: Source<'a>) {
         let target = self.combatant_mut(target_id);
         target.set_hp_within_bounds(0);
 
         target.reset_crystal_counter();
-        let target = self.combatant(target_id);
-        self.log.unit_report(target, || String::from("died"));
+        self.log_event(Event::Died(target_id, src));
         for condition in &DEATH_CANCELS {
-            // TODO: Remove this String from non-sense
-            self.cancel_condition(target_id, *condition, Some(String::from("death")));
+            self.cancel_condition(target_id, *condition, Source::Condition(Condition::Death));
         }
     }
 
@@ -625,7 +591,7 @@ impl<'a> Simulation<'a> {
 //             return
     }
 
-    pub fn calculate_weapon_xa(&self, user: &Combatant, weapon: Option<&Equipment>, k: i16) -> i16 {
+    pub fn calculate_weapon_xa(&self, user: &Combatant, weapon: Option<&'a Equipment>, k: i16) -> i16 {
         let weapon_type = weapon.and_then(|e| e.weapon_type);
         match weapon_type {
             None =>
