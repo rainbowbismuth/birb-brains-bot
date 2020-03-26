@@ -2,11 +2,34 @@ use crate::dto::patch::{Ability, BaseStats, Equipment};
 use crate::sim::{Condition, ConditionBlock, Distance, Element, Gender, Location, Sign, Team,
                  TIMED_CONDITIONS_LEN, WeaponType};
 
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct CombatantId {
+    pub id: u8
+}
+
+impl CombatantId {
+    pub fn index(&self) -> usize {
+        self.id as usize
+    }
+}
+
+pub const COMBATANT_IDS_LEN: usize = 8;
+pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
+    CombatantId { id: 0 },
+    CombatantId { id: 1 },
+    CombatantId { id: 2 },
+    CombatantId { id: 3 },
+    CombatantId { id: 4 },
+    CombatantId { id: 5 },
+    CombatantId { id: 6 },
+    CombatantId { id: 7 },
+];
+
 #[derive(Clone)]
 pub struct Combatant<'a> {
     pub name: String,
     pub team: Team,
-    pub index: usize,
+    pub id: CombatantId,
     pub sign: Sign,
     pub job: String,
     pub gender: Gender,
@@ -19,7 +42,7 @@ pub struct Combatant<'a> {
     pub raw_brave: i16,
     pub raw_faith: i16,
     pub skill_flags: u64,
-    pub abilities: Vec<&'a Ability>,
+    pub abilities: &'a [&'a Ability],
     pub raw_hp: i16,
     pub raw_mp: i16,
     pub ct: i16,
@@ -29,16 +52,15 @@ pub struct Combatant<'a> {
     pub conditions: ConditionBlock,
     pub broken_items: i8,
     pub ctr: i8,
-    // TODO: ctr_action
+// TODO: ctr_action
 
     pub on_active_turn: bool,
     pub moved_during_active_turn: bool,
     pub acted_during_active_turn: bool,
     pub took_damage_during_active_turn: bool,
-
     pub crystal_counter: i8,
     pub location: Location,
-    // TODO: Add location module
+// TODO: Add location module
 
     pub number_of_mp_using_abilities: i16,
     pub lowest_mp_cost_ability: i16,
@@ -137,7 +159,7 @@ impl<'a> Combatant<'a> {
         if !self.parry() {
             0.0
         } else {
-            // TODO: Pretty sure this is wrong
+// TODO: Pretty sure this is wrong
             let base_w_ev = self.main_hand.map_or(0, |e| e.w_ev)
                 .max(self.off_hand.map_or(0, |e| e.w_ev));
             self.evasion_multiplier() * (base_w_ev as f32 / 100.0)
@@ -167,7 +189,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn movement(&self) -> i16 {
-        // TODO: Move+ skills
+// TODO: Move+ skills
         self.base_stats.movement
             + self.headgear.map_or(0, |e| e.move_bonus)
             + self.armor.map_or(0, |e| e.move_bonus)
@@ -200,27 +222,31 @@ impl<'a> Combatant<'a> {
             + self.accessory.map_or(0, |e| e.ma_bonus)
     }
 
-    //     @property
-    //     def jump(self) -> int:
-    //         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
-    //         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
-    //             jump += int(self.raw_combatant['MoveSkill'][-1])
-    //         elif self.raw_combatant['MoveSkill'] == 'Ignore Height':
-    //             jump = 20
-    //         elif self.raw_combatant['MoveSkill'].startswith('Teleport'):
-    //             jump = 20
-    //         elif 'Fly' in self.stats.innates or 'Fly' == self.raw_combatant['MoveSkill']:
-    //             jump = 20
-    //         return jump
+//     @property
+//     def jump(self) -> int:
+//         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
+//         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
+//             jump += int(self.raw_combatant['MoveSkill'][-1])
+//         elif self.raw_combatant['MoveSkill'] == 'Ignore Height':
+//             jump = 20
+//         elif self.raw_combatant['MoveSkill'].startswith('Teleport'):
+//             jump = 20
+//         elif 'Fly' in self.stats.innates or 'Fly' == self.raw_combatant['MoveSkill']:
+//             jump = 20
+//         return jump
 
     pub fn abandon(&self) -> bool {
-        // TODO: implement
+// TODO: implement
         false
     }
 
     pub fn parry(&self) -> bool {
-        // TODO: implement
+// TODO: implement
         false
+    }
+
+    pub fn tick_condition(&mut self, condition: Condition) -> Option<bool> {
+        self.conditions.tick(condition)
     }
 
     pub fn has_condition(&self, condition: Condition) -> bool {
@@ -232,8 +258,12 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn cancel_condition(&mut self, condition: Condition) {
-        // TODO: Special handling of charging/performing/etc
+// TODO: Special handling of charging/performing/etc
         self.conditions.remove(condition);
+    }
+
+    pub fn add_condition(&mut self, condition: Condition) {
+        self.conditions.add(condition);
     }
 
     pub fn dead(&self) -> bool {
@@ -244,8 +274,59 @@ impl<'a> Combatant<'a> {
         self.conditions.has(Condition::Charging)
     }
 
+    pub fn reset_crystal_counter(&mut self) {
+        self.crystal_counter = 4;
+    }
+
+    pub fn tick_crystal_counter(&mut self) -> bool {
+        if self.crystal_counter > 0 {
+            self.crystal_counter -= 1;
+        }
+        self.crystal()
+    }
+
+    pub fn crystal(&self) -> bool {
+        self.crystal_counter == 0
+    }
+
+    pub fn reraise(&self) -> bool {
+        self.conditions.has(Condition::Reraise)
+    }
+
+    pub fn undead(&self) -> bool {
+        self.conditions.has(Condition::Undead)
+    }
+
     pub fn sleep(&self) -> bool {
         self.conditions.has(Condition::Sleep)
+    }
+
+    pub fn petrify(&self) -> bool {
+        self.conditions.has(Condition::Petrify)
+    }
+
+    pub fn haste(&self) -> bool {
+        self.conditions.has(Condition::Haste)
+    }
+
+    pub fn slow(&self) -> bool {
+        self.conditions.has(Condition::Slow)
+    }
+
+    pub fn stop(&self) -> bool {
+        self.conditions.has(Condition::Stop)
+    }
+
+    pub fn regen(&self) -> bool {
+        self.conditions.has(Condition::Regen)
+    }
+
+    pub fn poison(&self) -> bool {
+        self.conditions.has(Condition::Poison)
+    }
+
+    pub fn blood_suck(&self) -> bool {
+        self.conditions.has(Condition::BloodSuck)
     }
 
     pub fn barehanded(&self) -> bool {
@@ -255,21 +336,29 @@ impl<'a> Combatant<'a> {
     pub fn calculate_weapon_xa(&self, weapon: Option<&Equipment>, k: i16) -> i16 {
         let weapon_type = weapon.and_then(|e| e.weapon_type);
         match weapon_type {
-            None => (self.pa() + k * self.raw_brave) / 100,
+            None =>
+                (self.pa() + k * self.raw_brave) / 100,
+
             Some(WeaponType::Knife) | Some(WeaponType::NinjaSword) | Some(WeaponType::Bow) =>
                 (self.pa() + k + self.speed() + k) / 2,
+
             Some(WeaponType::KnightSword) | Some(WeaponType::Katana) =>
                 (self.pa() + k * self.raw_brave) / 100,
+
             Some(WeaponType::Sword) | Some(WeaponType::Pole) | Some(WeaponType::Spear) | Some(WeaponType::Crossbow) =>
                 self.pa() + k,
+
             Some(WeaponType::Staff) =>
                 self.ma() + k,
-            // TODO: Random roll here!!
+
+// TODO: Random roll here!!
             Some(WeaponType::Flail) | Some(WeaponType::Bag) =>
                 self.pa() + k,
+
             Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) =>
                 (self.pa() + k + self.ma() + k) / 2,
-            // TODO: Magical guns
+
+// TODO: Magical guns
             Some(WeaponType::Gun) =>
                 weapon.unwrap().wp + k
         }

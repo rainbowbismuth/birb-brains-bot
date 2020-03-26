@@ -64,6 +64,85 @@ pub const TIMED_CONDITIONS: [Condition; TIMED_CONDITIONS_LEN] = [
     Condition::Charm,
 ];
 
+const CONDITIONS_LEN: usize = LAST_CONDITION.index() + 1;
+const CONDITION_NAMES: [&'static str; CONDITIONS_LEN] = [
+    "Stop",
+    "Sleep",
+    "Slow",
+    "Shell",
+    "Regen",
+    "Reflect",
+    "Protect",
+    "Poison",
+    "Innocent",
+    "Haste",
+    "Faith",
+    "Don't Move",
+    "Don't Act",
+    "Charm",
+    "Chicken",
+    "Frog",
+    "Charging",
+    "Berserk",
+    "Petrify",
+    "Jumping",
+    "Undead",
+    "Silence",
+    "Oil",
+    "Reraise",
+    "Wall",
+    "Darkness",
+    "Death",
+    "Blood Suck",
+    "Confusion",
+    "Critical",
+    "Death Sentence",
+    "Defending",
+    "Float",
+    "Performing",
+    "Transparent",
+];
+
+lazy_static! {
+    pub static ref ALL_CONDITIONS: Vec<Condition> = vec![
+        Condition::Stop,
+        Condition::Sleep,
+        Condition::Slow,
+        Condition::Shell,
+        Condition::Regen,
+        Condition::Reflect,
+        Condition::Protect,
+        Condition::Poison,
+        Condition::Innocent,
+        Condition::Haste,
+        Condition::Faith,
+        Condition::DontMove,
+        Condition::DontAct,
+        Condition::Charm,
+        Condition::Chicken,
+        Condition::Frog,
+        Condition::Charging,
+        Condition::Berserk,
+        Condition::Petrify,
+        Condition::Jumping,
+        Condition::Undead,
+        Condition::Silence,
+        Condition::Oil,
+        Condition::Reraise,
+        Condition::Wall,
+        Condition::Darkness,
+        Condition::Death,
+        Condition::BloodSuck,
+        Condition::Confusion,
+        Condition::Critical,
+        Condition::DeathSentence,
+        Condition::Defending,
+        Condition::Float,
+        Condition::Performing,
+        Condition::Transparent,
+    ];
+}
+
 impl Condition {
     pub fn parse(name: &str) -> Option<Condition> {
         match name {
@@ -104,6 +183,10 @@ impl Condition {
             "Transparent" => Some(Condition::Transparent),
             _ => None
         }
+    }
+
+    pub fn name(self) -> &'static str {
+        CONDITION_NAMES[self.index()]
     }
 
     pub fn from_num(code: u8) -> Option<Condition> {
