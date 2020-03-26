@@ -266,8 +266,16 @@ impl<'a> Combatant<'a> {
         self.conditions.add(condition);
     }
 
+    pub fn healthy(&self) -> bool {
+        !self.dead() && !self.crystal() && !self.petrify()
+    }
+
     pub fn dead(&self) -> bool {
         self.hp() == 0
+    }
+
+    pub fn critical(&self) -> bool {
+        self.has_condition(Condition::Critical)
     }
 
     pub fn charging(&self) -> bool {
@@ -327,6 +335,79 @@ impl<'a> Combatant<'a> {
 
     pub fn blood_suck(&self) -> bool {
         self.conditions.has(Condition::BloodSuck)
+    }
+
+    pub fn berserk(&self) -> bool {
+        self.conditions.has(Condition::Berserk)
+    }
+
+    pub fn dont_move(&self) -> bool {
+        self.conditions.has(Condition::DontMove)
+    }
+
+    pub fn dont_act(&self) -> bool {
+        self.conditions.has(Condition::DontAct)
+    }
+
+    pub fn confusion(&self) -> bool {
+        self.conditions.has(Condition::Confusion)
+    }
+
+    pub fn silence(&self) -> bool {
+        self.conditions.has(Condition::Silence)
+    }
+
+    pub fn oil(&self) -> bool {
+        self.conditions.has(Condition::Oil)
+    }
+
+    pub fn float(&self) -> bool {
+        self.conditions.has(Condition::Float)
+    }
+
+    pub fn transparent(&self) -> bool {
+        self.conditions.has(Condition::Transparent)
+    }
+
+    pub fn chicken(&self) -> bool {
+        // TODO: Handle specially like critical?
+        self.conditions.has(Condition::Chicken)
+    }
+
+    pub fn frog(&self) -> bool {
+        self.conditions.has(Condition::Frog)
+    }
+
+    pub fn protect(&self) -> bool {
+        self.conditions.has(Condition::Protect)
+    }
+
+    pub fn shell(&self) -> bool {
+        self.conditions.has(Condition::Shell)
+    }
+
+    pub fn charm(&self) -> bool {
+        self.conditions.has(Condition::Charm)
+    }
+
+    pub fn wall(&self) -> bool {
+        self.conditions.has(Condition::Wall)
+    }
+
+    pub fn faith(&self) -> bool {
+        self.conditions.has(Condition::Faith)
+    }
+
+    pub fn innocent(&self) -> bool {
+        self.conditions.has(Condition::Innocent)
+    }
+
+    pub fn reflect(&self) -> bool {
+        self.conditions.has(Condition::Reflect)
+    }
+
+    pub fn death_sentence(&self) -> bool {
+        self.conditions.has(Condition::DeathSentence)
     }
 
     pub fn barehanded(&self) -> bool {

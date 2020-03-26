@@ -1,12 +1,17 @@
 use std::cell::RefCell;
 
-use crate::sim::{ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, Log, Team, TIMED_CONDITIONS};
+use rand;
+use rand::{random, Rng};
+use rand::prelude::SmallRng;
+
+use crate::sim::{ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, Location, Log, Team, TIMED_CONDITIONS};
 
 const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
 
 #[derive(Clone)]
 pub struct Simulation<'a> {
+    pub rng: RefCell<SmallRng>,
     pub combatants: [Combatant<'a>; MAX_COMBATANTS],
     pub arena_length: i16,
     pub clock_tick: usize,
@@ -270,6 +275,7 @@ impl<'a> Simulation<'a> {
 
             self.clear_active_turn_flags();
             self.combatant_mut(cid).on_active_turn = true;
+
             let combatant = self.combatant(cid);
             self.log.active_turn_bar(combatant);
 
@@ -279,8 +285,8 @@ impl<'a> Simulation<'a> {
             }
 
             self.ai_do_active_turn(cid);
-            let combatant = self.combatant(cid);
 
+            let combatant = self.combatant(cid);
             if combatant.poison() {
                 // TODO: Do the poison
                 //                 self.change_target_hp(combatant, combatant.max_hp // 8, 'poison')
@@ -290,246 +296,317 @@ impl<'a> Simulation<'a> {
         }
     }
 
+    fn roll_brave_reaction(&self, combatant: &Combatant) -> bool {
+        if combatant.berserk() || !self.trigger_reactions {
+            false
+        } else {
+            let roll: f32 = self.rng.borrow_mut().gen();
+            roll <= combatant.brave_percent()
+        }
+    }
+
+    fn ai_thirteen_rule(&self) -> bool {
+        let roll: f32 = self.rng.borrow_mut().gen();
+        roll <= 0.137
+    }
+
+    fn ai_can_be_cowardly(&self, user: &Combatant) -> bool {
+        let any_healthy = self.combatants.iter()
+            .filter(|c| user.team == c.team && user.id != c.id)
+            .any(|c| c.healthy());
+        let all_critical = self.combatants.iter()
+            .filter(|c| user.team == c.team && user.id != c.id)
+            .all(|c| c.critical());
+        any_healthy && !all_critical
+    }
+
+    fn do_move_with_bounds(&mut self, user_id: CombatantId, new_location: Location) {
+        let arena_length = self.arena_length;
+        let user = self.combatant_mut(user_id);
+        let old_location = user.location;
+        user.location = Location::new(
+            -arena_length.max(new_location.x.min(arena_length)));
+        if old_location == new_location {
+            return;
+        }
+        user.moved_during_active_turn = true;
+        self.log.report(|| format!("moved from {} to {}", old_location.x, new_location.x));
+    }
+
+    fn do_move_to_range(&mut self, user_id: CombatantId, range: i16, target_id: CombatantId) {
+        let target_location = self.combatant(target_id).location;
+        let user = self.combatant(user_id);
+        if user.moved_during_active_turn || user.dont_move() {
+            return;
+        }
+        // TODO: Charm?
+        let desired = match user.team {
+            Team::Left => target_location.x - range,
+            Team::Right => target_location.x + range
+        };
+        let v = desired - user.location.x;
+        let diff = user.movement().min(v.abs());
+        let sign = if v > 0 { 1 } else { -1 };
+        let new_location = Location::new(user.location.x + diff * sign);
+        self.do_move_with_bounds(user_id, new_location);
+    }
+
+    fn do_move_towards_unit(&mut self, user_id: CombatantId, target_id: CombatantId) {
+        let target_location = self.combatant(target_id).location;
+        let user = self.combatant(user_id);
+        if user.moved_during_active_turn || user.dont_move() {
+            return;
+        }
+        if user.location.x - target_location.x > 0 {
+            let new_location = Location::new(target_location.x.max(user.location.x - user.movement()));
+            self.do_move_with_bounds(user_id, new_location);
+        } else {
+            let new_location = Location::new(target_location.x.min(user.location.x + user.movement()));
+            self.do_move_with_bounds(user_id, new_location);
+        }
+    }
+
+    fn do_move_out_of_combat(&mut self, user_id: CombatantId) {
+        let user = self.combatant(user_id);
+        if user.moved_during_active_turn || user.dont_move() {
+            return;
+        }
+        match user.team {
+            Team::Left => {
+                let new_location = Location::new(user.location.x - user.movement());
+                self.do_move_with_bounds(user_id, new_location);
+            }
+            Team::Right => {
+                let new_location = Location::new(user.location.x + user.movement());
+                self.do_move_with_bounds(user_id, new_location);
+            }
+        }
+    }
+
     fn ai_do_active_turn(&mut self, cid: CombatantId) {}
 }
 
-//     def ai_thirteen_rule(self) -> bool:
-//         return random.random() <= 0.137
-//
-//     def roll_brave_reaction(self, user: Combatant) -> bool:
-//         if user.berserk:
-//             return False
-//         return random.random() <= user.brave
-//
-//     def ai_can_be_cowardly(self, user: Combatant):
-//         any_healthy = any([c.healthy for c in self.combatants if user.team == c.team and user is not c])
-//         all_critical = all([c.critical for c in self.combatants if user.team == c.team and user is not c])
-//         return any_healthy and not all_critical
-//
-//     def can_move_into_range(self, user: Combatant, range: int, target: Combatant):
-//         return user.distance(target) <= range + user.move
-//
-//     def do_move_with_bounds(self, user: Combatant, new_location: int):
-//         old_location = user.location
-//         user.location = max(-self.arena.max_dimension, min(new_location, self.arena.max_dimension))
-//         if old_location == user.location:
-//             return
-//         user.moved_during_active_turn = True
-//         self.report(f'moved from {old_location} to {user.location}')
-//
-//     def move_to_range(self, user: Combatant, range: int, target: Combatant):
-//         if user.moved_during_active_turn or user.dont_move:
-//             return
-//         # TODO: Charm?
-//         if user.team == 0:
-//             desired = target.location - range
-//         else:
-//             desired = target.location + range
-//
-//         if user.location == desired:
-//             return
-//
-//         v = desired - user.location
-//         diff = min(user.move, abs(v))
-//         if v > 0:
-//             sign = 1
-//         else:
-//             sign = -1
-//         self.do_move_with_bounds(user, user.location + diff * sign)
-//
-//     def move_towards_unit(self, user: Combatant, target: Combatant):
-//         if user.moved_during_active_turn or user.dont_move:
-//             return
-//         if user.location - target.location > 0:
-//             self.do_move_with_bounds(user, max(target.location, user.location - user.move))
-//         else:
-//             self.do_move_with_bounds(user, min(target.location, user.location + user.move))
-//
-//     def move_out_of_combat(self, user: Combatant):
-//         if user.moved_during_active_turn or user.dont_move:
-//             return
-//         if user.team == 0:
-//             self.do_move_with_bounds(user, user.location - user.move)
-//         else:
-//             self.do_move_with_bounds(user, user.location + user.move)
-//
-//     def ai_calculate_target_value(self, user: Combatant, target: Combatant) -> float:
-//         priority = target.hp_percent
-//
-//         priority += 0.51 * target.broken_items
-//         priority += self.ai_calculate_status_target_value_mod(target)
-//         priority += self.ai_calculate_caster_hate_mod(target)
-//         # TODO: Golem fear
-//
-//         if user.is_foe(target):
-//             return -priority
-//         return priority
-//
-//     def ai_calculate_all_target_values(self, user: Combatant):
-//         for target in self.combatants:
-//             target.target_value = self.ai_calculate_target_value(user, target)
-//
-//     def ai_calculate_caster_hate_mod(self, target: Combatant) -> float:
-//         if not target.can_cast_mp_ability:
-//             return 0.0
-//         mp_percent = target.mp / target.max_mp
-//         return (mp_percent / 16.0) * target.num_mp_using_abilities
-//
-//     def ai_calculate_status_target_value_mod(self, target: Combatant) -> float:
-//         total = 0.0
-//
-//         # 0x0058: Current Statuses 1
-//         # 		0x80 - 							0% (0000)
-//         # 		0x40 - Crystal					-150% -c0(ff40)
-//         # 		0x20 - Dead						-150% -c0(ff40)
-//         # 		0x10 - Undead					-30.5% -27(ffd9)
-//         # 		0x08 - Charging					0% (0000)
-//         # 		0x04 - Jump						0% (0000)
-//         # 		0x02 - Defending				0% (0000)
-//         # 		0x01 - Performing				0% (0000)
-//         if target.dead:
-//             total -= 1.5
-//
-//         if target.undead:
-//             total -= 0.305
-//
-//         # 	0x0059: Current Statuses 2
-//         # 		0x80 - Petrify					-90.6% -74(ff8c)
-//         if target.petrified:
-//             total -= 0.906
-//
-//         # 		0x40 - Invite					-180.4% -e7(ff19)
-//         # NOTE: Skipping Invite because it doesn't exist in FFTBG
-//
-//         # 		0x20 - Darkness					-50% [-40(ffc0) * Evadable abilities] + 3 / 4
-//         # TODO: Add darkness
-//
-//         # 		0x10 - Confusion				-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
-//         if target.confusion:
-//             if target.slow or target.stop or target.sleep or target.dont_move or target.dont_act:
-//                 total += 0.25
-//             else:
-//                 total -= 0.5
-//
-//         # 		0x08 - Silence					-70.3% [-5a(ffa6) * Silence abilities] + 3 / 4
-//         if target.silence:
-//             total -= 0.703
-//             # TODO: Calculate number of silenced abilities
-//
-//         # 		0x04 - Blood Suck				-90.6% -74(ff8c) (+1 / 4 if slow/stop/sleep/don't move/act/)
-//         if target.blood_suck:
-//             if target.slow or target.stop or target.sleep or target.dont_move or target.dont_act:
-//                 total += 0.25
-//             else:
-//                 total -= 0.906
-//
-//         # 		0x02 - Cursed					0%(0000)
-//         # 		0x01 - Treasure					-150% -c0(ff40)
-//         # 	0x005a: Current Statuses 3
-//         # 		0x80 - Oil						-5.5% -7(fff9)
-//         if target.oil:
-//             total -= 0.055
-//
-//         # 		0x40 - Float					9.4% c(000c)
-//         if target.float:
-//             total += 0.094
-//
-//         # 		0x20 - Reraise					39.8% 33(0033)
-//         if target.reraise:
-//             total += 0.398
-//
-//         # 		0x10 - Transparent				29.7% 26(0026)
-//         if target.transparent:
-//             total += 0.297
-//
-//         # 		0x08 - Berserk					-30.5% -27(ffd9)
-//         if target.berserk:
-//             total -= 0.305
-//
-//         # 		0x04 - Chicken					-20.3% -1a(ffe6)
-//         if target.chicken:
-//             total -= 0.203
-//
-//         # 		0x02 - Frog						-40.6% -34(ffcc)
-//         if target.frog:
-//             total -= 0.406
-//         # 		0x01 - Critical					-25% -20(ffe0)
-//         if target.critical:
-//             total -= 0.25
-//
-//         # 	0x005b: Current Statuses 4
-//         # 		0x80 - Poison					-20.3% -1a(ffe6)
-//         if target.poison:
-//             total -= 0.203
-//
-//         # 		0x40 - Regen					19.5% 19(0019)
-//         if target.regen:
-//             total += 0.195
-//
-//         # 		0x20 - Protect					19.5% 19(0019)
-//         if target.protect:
-//             total += 0.195
-//
-//         # 		0x10 - Shell					19.5% 19(0019)
-//         if target.shell:
-//             total += 0.195
-//
-//         # 		0x08 - Haste					14.8% 13(0013)
-//         if target.haste:
-//             total += 0.148
-//
-//         # 		0x04 - Slow						-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
-//         if target.slow and not (target.confusion or target.charm or target.blood_suck):
-//             total -= 0.305
-//
-//         # 		0x02 - Stop						-70.3% -5a(ffa6) 0 if Confusion/Charm/Blood Suck
-//         if target.stop and not (target.confusion or target.charm or target.blood_suck):
-//             total -= 0.703
-//
-//         # 		0x01 - Wall						50% 40(0040)
-//         if target.wall:
-//             total += 0.50
-//
-//         # 	0x005c: Current Statuses 5
-//         # 		0x80 - Faith					4.7% 6(0006)
-//         if target.faith:
-//             total += 0.047
-//
-//         # 		0x40 - Innocent					-5.5% -7(fff9)
-//         if target.innocent:
-//             total -= 0.055
-//
-//         # 		0x20 - Charm					-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
-//         if target.charm:
-//             if target.slow or target.stop or target.sleep or target.dont_move or target.dont_act:
-//                 total += 0.25
-//             else:
-//                 total -= 0.50
-//
-//         # 		0x10 - Sleep					-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
-//         if target.sleep and not (target.confusion or target.charm or target.blood_suck):
-//             total -= 0.305
-//
-//         # 		0x08 - Don't Move				-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
-//         if target.dont_move and not (target.confusion or target.charm or target.blood_suck):
-//             total -= 0.305
-//
-//         # 		0x04 - Don't Act				-50% -40(ffc0) 0 if Confusion/Charm/Blood Suck
-//         if target.dont_act and not (target.confusion or target.charm or target.blood_suck):
-//             total -= 0.50
-//
-//         # 		0x02 - Reflect					19.5% 19(0019)
-//         if target.reflect:
-//             total += 0.195
-//
-//         # 		0x01 - Death Sentence			-80.5% -67(ff99)
-//         if target.death_sentence:
-//             total -= 0.805
-//
-//         return total
-//
-//     def ai_target_value_sum(self):
-//         return sum([combatant.target_value for combatant in self.combatants])
+pub fn can_move_into_range(user: &Combatant, range: i16, target: &Combatant) -> bool {
+    user.distance(target) <= range + user.movement()
+}
+
+fn ai_calculate_target_value(user: &Combatant, target: &Combatant) -> f32 {
+    let mut priority = target.hp_percent();
+    priority += 0.51 * target.broken_items as f32;
+    priority += ai_calculate_status_target_value_mod(target);
+    priority += ai_calculate_caster_hate_mod(target);
+    // TODO: Golem fear
+    // TODO: Charm
+
+    if user.different_team(target) {
+        -priority
+    } else {
+        priority
+    }
+}
+
+fn ai_calculate_caster_hate_mod(target: &Combatant) -> f32 {
+    if !target.can_cast_mp_ability() {
+        0.0
+    } else {
+        (target.mp_percent() / 16.0) * (target.number_of_mp_using_abilities as f32)
+    }
+}
+
+fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
+    let mut total = 0.0;
+
+    // # 0x0058: Current Statuses 1
+    // # 		0x80 - 							0% (0000)
+    // # 		0x40 - Crystal					-150% -c0(ff40)
+    // # 		0x20 - Dead						-150% -c0(ff40)
+    // # 		0x10 - Undead					-30.5% -27(ffd9)
+    // # 		0x08 - Charging					0% (0000)
+    // # 		0x04 - Jump						0% (0000)
+    // # 		0x02 - Defending				0% (0000)
+    // # 		0x01 - Performing				0% (0000)
+    if target.dead() {
+        total -= 1.5;
+    }
+
+    if target.undead() {
+        total -= 0.305;
+    }
+
+    // # 	0x0059: Current Statuses 2
+    // # 		0x80 - Petrify					-90.6% -74(ff8c)
+    if target.petrify() {
+        total -= 0.906;
+    }
+
+    // # 		0x40 - Invite					-180.4% -e7(ff19)
+    // # NOTE: Skipping Invite because it doesn't exist in FFTBG
+
+    // # 		0x20 - Darkness					-50% [-40(ffc0) * Evadable abilities] + 3 / 4
+    // # TODO: Add darkness
+
+    // # 		0x10 - Confusion				-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
+    if target.confusion() {
+        if target.slow() || target.stop() || target.sleep() || target.dont_move() || target.dont_act() {
+            total += 0.25;
+        } else {
+            total -= 0.5;
+        }
+    }
+
+    // # 		0x08 - Silence					-70.3% [-5a(ffa6) * Silence abilities] + 3 / 4
+    if target.silence() {
+        total -= 0.703;
+        // # TODO: Calculate number of silenced abilities
+    }
+
+    // # 		0x04 - Blood Suck				-90.6% -74(ff8c) (+1 / 4 if slow/stop/sleep/don't move/act/)
+    if target.blood_suck() {
+        if target.slow() || target.stop() || target.sleep() || target.dont_move() || target.dont_act() {
+            total += 0.25;
+        } else {
+            total -= 0.906;
+        }
+    }
+
+    // # 		0x02 - Cursed					0%(0000)
+    // # 		0x01 - Treasure					-150% -c0(ff40)
+    // # 	0x005a: Current Statuses 3
+    // # 		0x80 - Oil						-5.5% -7(fff9)
+    if target.oil() {
+        total -= 0.055;
+    }
+
+    // # 		0x40 - Float					9.4% c(000c)
+    if target.float() {
+        total += 0.094;
+    }
+
+    // # 		0x20 - Reraise					39.8% 33(0033)
+    if target.reraise() {
+        total += 0.398;
+    }
+
+    // # 		0x10 - Transparent				29.7% 26(0026)
+    if target.transparent() {
+        total += 0.297;
+    }
+
+    // # 		0x08 - Berserk					-30.5% -27(ffd9)
+    if target.berserk() {
+        total -= 0.305;
+    }
+
+    // # 		0x04 - Chicken					-20.3% -1a(ffe6)
+    if target.chicken() {
+        total -= 0.203;
+    }
+
+    // # 		0x02 - Frog						-40.6% -34(ffcc)
+    if target.frog() {
+        total -= 0.406;
+    }
+    // # 		0x01 - Critical					-25% -20(ffe0)
+    if target.critical() {
+        total -= 0.25;
+    }
+
+    // # 	0x005b: Current Statuses 4
+    // # 		0x80 - Poison					-20.3% -1a(ffe6)
+    if target.poison() {
+        total -= 0.203;
+    }
+
+    // # 		0x40 - Regen					19.5% 19(0019)
+    if target.regen() {
+        total += 0.195;
+    }
+
+    // # 		0x20 - Protect					19.5% 19(0019)
+    if target.protect() {
+        total += 0.195;
+    }
+
+    // # 		0x10 - Shell					19.5% 19(0019)
+    if target.shell() {
+        total += 0.195;
+    }
+
+    // # 		0x08 - Haste					14.8% 13(0013)
+    if target.haste() {
+        total += 0.148;
+    }
+
+    // # 		0x04 - Slow						-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
+    if target.slow() && !(target.confusion() || target.charm() || target.blood_suck()) {
+        total -= 0.305;
+    }
+
+    // # 		0x02 - Stop						-70.3% -5a(ffa6) 0 if Confusion/Charm/Blood Suck
+    if target.stop() && !(target.confusion() || target.charm() || target.blood_suck()) {
+        total -= 0.703;
+    }
+
+    // # 		0x01 - Wall						50% 40(0040)
+    if target.wall() {
+        total += 0.50;
+    }
+
+
+    // # 	0x005c: Current Statuses 5
+    // # 		0x80 - Faith					4.7% 6(0006)
+    if target.faith() {
+        total += 0.047;
+    }
+
+    // # 		0x40 - Innocent					-5.5% -7(fff9)
+    if target.innocent() {
+        total -= 0.055;
+    }
+
+    // # 		0x20 - Charm					-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
+    if target.charm() {
+        if target.slow() || target.stop() || target.sleep() || target.dont_move() || target.dont_act() {
+            total += 0.25;
+        } else {
+            total -= 0.50;
+        }
+    }
+
+    // # 		0x10 - Sleep					-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
+    if target.sleep() && !(target.confusion() || target.charm() || target.blood_suck()) {
+        total -= 0.305;
+    }
+
+    // # 		0x08 - Don't Move				-30.5% -27(ffd9) 0 if Confusion/Charm/Blood Suck
+    if target.dont_move() && !(target.confusion() || target.charm() || target.blood_suck()) {
+        total -= 0.305;
+    }
+
+    // # 		0x04 - Don't Act				-50% -40(ffc0) 0 if Confusion/Charm/Blood Suck
+    if target.dont_act() && !(target.confusion() || target.charm() || target.blood_suck()) {
+        total -= 0.50;
+    }
+
+    // # 		0x02 - Reflect					19.5% 19(0019)
+    if target.reflect() {
+        total += 0.195;
+    }
+
+    // # 		0x01 - Death Sentence			-80.5% -67(ff99)
+    if target.death_sentence() {
+        total -= 0.805;
+    }
+
+    total
+}
+
+fn ai_target_value_sum(user: &Combatant, combatants: &[Combatant]) -> f32 {
+    combatants.iter()
+        .map(|target| ai_calculate_target_value(user, target))
+        .sum()
+}
+
 //
 //     def ai_do_basic_turn(self, user: Combatant):
 //         if user.dont_act:

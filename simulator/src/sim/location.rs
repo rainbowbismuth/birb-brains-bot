@@ -1,6 +1,6 @@
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Location {
-    x: i16
+    pub x: i16
 }
 
 pub type Distance = i16;

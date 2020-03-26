@@ -12,3 +12,4 @@ serde_repr = "0.1"
 rmp-serde = "0.14.3"
 indicatif = "0.14.0"
 lazy_static = "1.4.0"
+rand = {version = "0.7.3", features = ["small_rng"]}
