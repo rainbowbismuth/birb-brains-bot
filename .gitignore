@@ -12,6 +12,7 @@ data/*.pickle
 data/*.db
 data/*.tar.gz
 data/sim
+simulator/target
 *.rdb
 logs
 venv
