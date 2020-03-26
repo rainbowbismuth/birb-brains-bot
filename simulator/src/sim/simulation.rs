@@ -4,6 +4,7 @@ use rand;
 use rand::{random, Rng};
 use rand::prelude::SmallRng;
 
+use crate::dto::patch::Equipment;
 use crate::sim::{ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, Location, Log, Team, TIMED_CONDITIONS};
 
 const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -15,7 +16,7 @@ pub struct Simulation<'a> {
     pub combatants: [Combatant<'a>; MAX_COMBATANTS],
     pub arena_length: i16,
     pub clock_tick: usize,
-    pub trigger_reactions: bool,
+    pub prediction_mode: bool,
     pub log: Log,
     pub slow_actions: bool,
     pub active_turns: bool,
@@ -296,12 +297,28 @@ impl<'a> Simulation<'a> {
         }
     }
 
+    fn roll_auto_succeed(&self) -> f32 {
+        if self.prediction_mode {
+            0.0
+        } else {
+            self.rng.borrow_mut().gen()
+        }
+    }
+
+    fn roll_auto_fail(&self) -> f32 {
+        if self.prediction_mode {
+            1.0
+        } else {
+            self.rng.borrow_mut().gen()
+        }
+    }
+
+    // NOTE: I flipped this bool to be true when in prediction mode
     fn roll_brave_reaction(&self, combatant: &Combatant) -> bool {
-        if combatant.berserk() || !self.trigger_reactions {
+        if combatant.berserk() {
             false
         } else {
-            let roll: f32 = self.rng.borrow_mut().gen();
-            roll <= combatant.brave_percent()
+            self.roll_auto_fail() <= combatant.brave_percent()
         }
     }
 
@@ -383,7 +400,220 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn ai_do_active_turn(&mut self, cid: CombatantId) {}
+    fn ai_do_active_turn(&mut self, user_id: CombatantId) {
+        let user = self.combatant(user_id);
+        if user.dont_act() {
+            self.do_move_out_of_combat(user_id);
+            return;
+        }
+
+        let acting_cowarldy = user.critical() && self.ai_can_be_cowardly(user);
+        let targets = if acting_cowarldy {
+            &self.combatants[user_id.index()..user_id.index() + 1]
+        } else {
+            &self.combatants
+        };
+
+        //         actions = []
+        //         for target in targets:
+        //             actions.extend(cmd_item.consider_item(self, user, target))
+        //             actions.extend(cmd_attack.consider_attack(self, user, target))
+        //
+        let basis = ai_target_value_sum(user, &self.combatants);
+
+//         considered_actions = []
+//         for action in actions:
+//             if not self.can_move_into_range(user, action.range, action.target):
+//                 continue
+//
+//             simulated_world = copy.copy(self)
+//             simulated_world.combatants = [copy.copy(combatant) for combatant in simulated_world.combatants]
+//
+//             simulated_world.log_report = False
+//             simulated_world.trigger_reactions = False
+//             simulated_user = simulated_world.combatants[action.user.index]
+//             simulated_target = simulated_world.combatants[action.target.index]
+//             action.perform(simulated_world, simulated_user, simulated_target)
+//             simulated_world.ai_calculate_all_target_values(simulated_user)
+//             new_value = simulated_world.ai_target_value_sum()
+//             if new_value < basis:
+//                 continue
+//             considered_actions.append((new_value, action))
+//
+//         considered_actions.sort(key=lambda x: x[0], reverse=True)
+//         for _, action in considered_actions:
+//             if not self.in_range(user, action.range, action.target):
+//                 self.move_to_range(user, action.range, action.target)
+//
+//             # TODO: This handles don't move, is there a better way?
+//             if not self.in_range(user, action.range, action.target):
+//                 continue
+//
+//             user.acted_during_active_turn = True
+//             action.perform(self, action.user, action.target)
+//             break
+//
+//         if user.moved_during_active_turn:
+//             return
+//
+//         first_foe_in_action = None
+//         for action in actions:
+//             if user.is_foe(action.target):
+//                 first_foe_in_action = action.target
+//                 break
+//         if first_foe_in_action:
+//             self.move_towards_unit(user, first_foe_in_action)
+//             return
+//
+//         self.move_out_of_combat(user)
+    }
+
+    //         if random.random() < target.physical_accessory_evasion:
+//             self.unit_report(target, f'guarded {user.name}\'s attack')
+//             return True
+//         if random.random() < target.physical_shield_evasion / 2.0:
+//             self.unit_report(target, f'blocked {user.name}\'s attack')
+//             return True
+//         if random.random() < target.weapon_evasion / 2.0:
+//             self.unit_report(target, f'parried {user.name}\'s attack')
+//             return True
+//         if random.random() < target.class_evasion / 2.0:
+//             self.unit_report(target, f'evaded {user.name}\'s attack')
+//             return True
+//         return False
+    pub fn do_physical_evade(&self, user: &Combatant, weapon: Option<&Equipment>, target: &Combatant) -> bool {
+//         if target.blade_grasp and not target.berserk and self.roll_brave_reaction(target):
+//             self.unit_report(target, f'blade grasped {user.name}\'s attack')
+//             return True
+//
+//         if target.arrow_guard and not target.berserk and weapon.weapon_type in (
+//                 'Longbow', 'Bow', 'Gun', 'Crossbow') and self.roll_brave_reaction(target):
+//             self.unit_report(target, f'arror guarded {user.name}\'s attack')
+//             return True
+
+//         if user.transparent or user.concentrate:
+//             return False
+
+        if self.roll_auto_fail() < target.physical_accessory_evasion() {
+            self.log.unit_report(target, || format!("guarded {}\'s attack", user.name));
+            true
+        } else if self.roll_auto_fail() < target.physical_shield_evasion() / 2.0 {
+            self.log.unit_report(target, || format!("blocked {}\'s attack", user.name));
+            true
+        } else if self.roll_auto_fail() < target.weapon_evasion() / 2.0 {
+            self.log.unit_report(target, || format!("parried {}\'s attack", user.name));
+            true
+        } else if self.roll_auto_fail() < target.class_evasion() / 2.0 {
+            self.log.unit_report(target, || format!("evaded {}\'s attack", user.name));
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn weapon_chance_to_add_or_cancel_status(&mut self, user_id: CombatantId, weapon: Option<&Equipment>, target_id: CombatantId) {
+        let target = self.combatant(target_id);
+        if !target.healthy() {
+            return; // TODO: this doesn't strictly make sense I don't think...
+        }
+        // TODO: Handle poisoner ability.
+
+        if let Some(equip) = weapon {
+            for condition in &equip.chance_to_add {
+                if self.roll_auto_fail() < (1.0 - 0.19) {
+                    continue;
+                }
+                let user = self.combatant(user_id);
+                // TODO: fix this always formatting silliness
+                let src = format!("{}\'s {}", user.name, equip.name);
+                self.add_condition(target_id, *condition, Some(src));
+            }
+            for condition in &equip.chance_to_cancel {
+                if self.roll_auto_fail() < (1.0 - 0.19) {
+                    continue;
+                }
+                let user = self.combatant(user_id);
+                // TODO: fix this always formatting silliness
+                let src = format!("{}\'s {}", user.name, equip.name);
+                self.cancel_condition(target_id, *condition, Some(src));
+            }
+        }
+    }
+
+    pub fn chance_target_hp(&mut self, target_id: CombatantId, amount: i16, src: Option<String>) {
+        let target = self.combatant_mut(target_id);
+        if amount > 0 {
+            if !target.healthy() {
+                return;
+            }
+//             if target.mana_shield and target.mp > 0 and self.roll_brave_reaction(target):
+//                 self.change_target_mp(target, amount, source + ' (mana shield)')
+        }
+        target.set_hp_within_bounds(target.hp() - amount);
+        let now_dead = target.dead();
+        if amount > 0 {
+            // TODO: Do I really want this unwrap style? :|
+            target.took_damage_during_active_turn = true;
+            let target = self.combatant(target_id);
+            if let Some(src_str) = src {
+                self.log.unit_report(target, || format!("took {} damage from {}", amount, src_str));
+            }
+//             for status in DAMAGE_CANCELS:
+//                 self.cancel_status(target, status, source)
+        } else {
+            let target = self.combatant(target_id);
+            if let Some(src_str) = src {
+                self.log.unit_report(target, || format!("was healed for {} from {}", amount.abs(), src_str));
+            }
+        }
+
+        if now_dead {
+            self.target_died(target_id)
+        }
+    }
+
+//     def change_target_mp(self, target: Combatant, amount, source: str):
+//         if not target.healthy:
+//             return
+//         target.mp = min(target.max_mp, max(0, target.mp - amount))
+//         if amount >= 0 and source:
+//             self.unit_report(target, f'took {amount} MP damage from {source}')
+//         elif amount < 0 and source:
+//             self.unit_report(target, f'recovered {abs(amount)} MP from {source}')
+//
+
+    pub fn target_died(&mut self, target_id: CombatantId) {
+        let target = self.combatant_mut(target_id);
+        target.set_hp_within_bounds(0);
+
+        target.reset_crystal_counter();
+        let target = self.combatant(target_id);
+        self.log.unit_report(target, || String::from("died"));
+        //         for status in DEATH_CANCELS:
+        //             self.cancel_status(target, status, 'death')
+    }
+
+    fn after_damage_reaction(&mut self, user_id: CombatantId, target_id: CombatantId, amount: i16) {
+        let target = self.combatant(target_id);
+        if amount == 0 || target.dead() {
+            return;
+        }
+
+//         if target.auto_potion and self.roll_brave_reaction(target):
+//             # FIXME: Need to consider UNDEAD
+//             self.change_target_hp(target, -100, 'auto potion')
+//             return
+
+//         if target.damage_split and self.roll_brave_reaction(target):
+//             self.change_target_hp(target, -(amount // 2), 'damage split')
+//             self.change_target_hp(inflicter, amount // 2, 'damage split')
+//             return
+    }
+}
+
+pub fn in_range(user: &Combatant, range: i16, target: &Combatant) -> bool {
+    let dist = user.distance(target);
+    dist <= range
 }
 
 pub fn can_move_into_range(user: &Combatant, range: i16, target: &Combatant) -> bool {
@@ -607,194 +837,7 @@ fn ai_target_value_sum(user: &Combatant, combatants: &[Combatant]) -> f32 {
         .sum()
 }
 
-//
-//     def ai_do_basic_turn(self, user: Combatant):
-//         if user.dont_act:
-//             self.move_out_of_combat(user)
-//             return
-//
-//         targets = self.combatants
-//         acting_cowardly = user.critical and self.ai_can_be_cowardly(user)
-//         if acting_cowardly:
-//             targets = [user]
-//
-//         actions = []
-//         for target in targets:
-//             actions.extend(cmd_item.consider_item(self, user, target))
-//             actions.extend(cmd_attack.consider_attack(self, user, target))
-//
-//         self.ai_calculate_all_target_values(user)
-//         basis = self.ai_target_value_sum()
-//         considered_actions = []
-//         for action in actions:
-//             if not self.can_move_into_range(user, action.range, action.target):
-//                 continue
-//
-//             simulated_world = copy.copy(self)
-//             simulated_world.combatants = [copy.copy(combatant) for combatant in simulated_world.combatants]
-//
-//             simulated_world.log_report = False
-//             simulated_world.trigger_reactions = False
-//             simulated_user = simulated_world.combatants[action.user.index]
-//             simulated_target = simulated_world.combatants[action.target.index]
-//             action.perform(simulated_world, simulated_user, simulated_target)
-//             simulated_world.ai_calculate_all_target_values(simulated_user)
-//             new_value = simulated_world.ai_target_value_sum()
-//             if new_value < basis:
-//                 continue
-//             considered_actions.append((new_value, action))
-//
-//         considered_actions.sort(key=lambda x: x[0], reverse=True)
-//         for _, action in considered_actions:
-//             if not self.in_range(user, action.range, action.target):
-//                 self.move_to_range(user, action.range, action.target)
-//
-//             # TODO: This handles don't move, is there a better way?
-//             if not self.in_range(user, action.range, action.target):
-//                 continue
-//
-//             user.acted_during_active_turn = True
-//             action.perform(self, action.user, action.target)
-//             break
-//
-//         if user.moved_during_active_turn:
-//             return
-//
-//         first_foe_in_action = None
-//         for action in actions:
-//             if user.is_foe(action.target):
-//                 first_foe_in_action = action.target
-//                 break
-//         if first_foe_in_action:
-//             self.move_towards_unit(user, first_foe_in_action)
-//             return
-//
-//         self.move_out_of_combat(user)
-//
-//     def in_range(self, user: Combatant, range: int, target: Combatant):
-//         dist = user.distance(target)
-//         return dist <= range
-//
-//     def do_physical_evade(self, user: Combatant, weapon: Equipment, target: Combatant) -> bool:
-//         if target.blade_grasp and not target.berserk and self.roll_brave_reaction(target):
-//             self.unit_report(target, f'blade grasped {user.name}\'s attack')
-//             return True
-//
-//         if target.arrow_guard and not target.berserk and weapon.weapon_type in (
-//                 'Longbow', 'Bow', 'Gun', 'Crossbow') and self.roll_brave_reaction(target):
-//             self.unit_report(target, f'arror guarded {user.name}\'s attack')
-//             return True
-//
-//         if user.transparent or user.concentrate:
-//             return False
-//         # TODO: Arrow Guard, etc?
-//         if random.random() < target.physical_accessory_evasion:
-//             self.unit_report(target, f'guarded {user.name}\'s attack')
-//             return True
-//         if random.random() < target.physical_shield_evasion / 2.0:
-//             self.unit_report(target, f'blocked {user.name}\'s attack')
-//             return True
-//         if random.random() < target.weapon_evasion / 2.0:
-//             self.unit_report(target, f'parried {user.name}\'s attack')
-//             return True
-//         if random.random() < target.class_evasion / 2.0:
-//             self.unit_report(target, f'evaded {user.name}\'s attack')
-//             return True
-//         return False
-//
-//     def add_status(self, target: Combatant, status: str, src: str):
-//         if target.immune_to(status):
-//             return
-//
-//         if status == DEATH:
-//             self.target_died(target)
-//             self.unit_report(target, f'was killed by {status} from {src}')
-//             return
-//
-//         had_status = target.has_status(status)
-//         target.add_status_flag(status)
-//         if not had_status:
-//             self.unit_report(target, f'now has {status} from {src}')
-//
-//         for cancelled in CANCELLING_STATUS.get(status, []):
-//             self.cancel_status(target, cancelled, status)
-//
-//     def cancel_status(self, target: Combatant, status: str, src: Optional[str] = None):
-//         if not target.has_status(status):
-//             return
-//         target.cancel_status(status)
-//         if src:
-//             self.unit_report(target, f'had {status} cancelled by {src}')
-//         else:
-//             self.unit_report(target, f'had {status} cancelled')
-//
-//     def weapon_chance_to_add_or_cancel_status(self, user: Combatant, weapon: Equipment, target: Combatant):
-//         if not target.healthy:
-//             return  # FIXME: this doesn't strictly make sense I don't think...
-//
-//         if not (weapon.chance_to_add or weapon.chance_to_cancel):
-//             return
-//
-//         for status in weapon.chance_to_add:
-//             if random.random() >= 0.19:
-//                 continue
-//             self.add_status(target, status, f'{user.name}\'s {weapon.weapon_name}')
-//
-//         for status in weapon.chance_to_cancel:
-//             if random.random() >= 0.19:
-//                 continue
-//             self.cancel_status(target, status, f'{user.name}\'s {weapon.weapon_name}')
-//
-//     def change_target_hp(self, target: Combatant, amount, source: str):
-//         if amount > 0:
-//             if not target.healthy:
-//                 return
-//             if target.mana_shield and target.mp > 0 and self.roll_brave_reaction(target):
-//                 self.change_target_mp(target, amount, source + ' (mana shield)')
-//
-//         target.hp = min(target.max_hp, max(0, target.hp - amount))
-//         if amount >= 0:
-//             self.unit_report(target, f'took {amount} damage from {source}')
-//             target.took_damage_during_active_turn = True
-//             for status in DAMAGE_CANCELS:
-//                 self.cancel_status(target, status, source)
-//         else:
-//             self.unit_report(target, f'was healed for {abs(amount)} from {source}')
-//         if target.hp == 0:
-//             self.target_died(target)
-//
-//     def change_target_mp(self, target: Combatant, amount, source: str):
-//         if not target.healthy:
-//             return
-//         target.mp = min(target.max_mp, max(0, target.mp - amount))
-//         if amount >= 0 and source:
-//             self.unit_report(target, f'took {amount} MP damage from {source}')
-//         elif amount < 0 and source:
-//             self.unit_report(target, f'recovered {abs(amount)} MP from {source}')
-//
-//     def after_damage_reaction(self, target: Combatant, inflicter: Combatant, amount: int):
-//         if not self.trigger_reactions:
-//             return
-//
-//         if amount == 0 or target.dead:
-//             return
-//
-//         if target.auto_potion and self.roll_brave_reaction(target):
-//             # FIXME: Need to consider UNDEAD
-//             self.change_target_hp(target, -100, 'auto potion')
-//             return
-//
-//         if target.damage_split and self.roll_brave_reaction(target):
-//             self.change_target_hp(target, -(amount // 2), 'damage split')
-//             self.change_target_hp(inflicter, amount // 2, 'damage split')
-//             return
-//
-//     def target_died(self, target: Combatant):
-//         target.hp = 0
-//         self.unit_report(target, 'died')
-//         for status in DEATH_CANCELS:
-//             self.cancel_status(target, status, 'death')
-//         target.crystal_counter = 4
+
 //
 //
 // # IDEAS:
@@ -815,63 +858,3 @@ fn ai_target_value_sum(user: &Combatant, combatants: &[Combatant]) -> f32 {
 // #  - Need a hard fail & hard succeed rolling function for the sim-within-a-sim!
 // #  - I'm guessing generally things like weapon adding status are assumed to hard fail
 // #  - While your own abilities are a hard succeed
-//
-// def show_one():
-//     tourny = fftbg.tournament.parse_tournament(Path('data/tournaments/1584818551017.json'))
-//     patch = fftbg.patch.get_patch(tourny.modified)
-//
-//     for match_up in tourny.match_ups:
-//         LOG.info(f'Starting match, {match_up.left.color} vs {match_up.right.color}')
-//         combatants = []
-//         for i, d in enumerate(match_up.left.combatants):
-//             combatants.append(Combatant(d, patch, 0, i))
-//         for i, d in enumerate(match_up.right.combatants):
-//             combatants.append(Combatant(d, patch, 1, i + 4))
-//         arena = fftbg.arena.get_arena(match_up.game_map)
-//         sim = Simulation(combatants, arena, log_report=True)
-//         sim.run()
-//         if sim.left_wins:
-//             LOG.info('Left team wins!')
-//         else:
-//             LOG.info('Right team wins!')
-//
-//
-// def main():
-//     import tqdm
-//     fftbg.server.configure_logging('SIMULATION_LOG_LEVEL')
-//
-//     num_sims = 1
-//     time_out_wins = 0
-//     correct = 0
-//     total = 0
-//
-//     for path in tqdm.tqdm(list(Path('data/tournaments').glob('*.json'))):
-//         tourny = fftbg.tournament.parse_tournament(path)
-//         patch = fftbg.patch.get_patch(tourny.modified)
-//
-//         for match_up in tourny.match_ups:
-//             for _ in range(num_sims):
-//                 combatants = []
-//                 for i, d in enumerate(match_up.left.combatants):
-//                     combatants.append(Combatant(d, patch, 0, i))
-//                 for i, d in enumerate(match_up.right.combatants):
-//                     combatants.append(Combatant(d, patch, 1, i + 4))
-//                 arena = fftbg.arena.get_arena(match_up.game_map)
-//                 sim = Simulation(combatants, arena, log_report=False)
-//                 sim.run()
-//
-//                 if sim.left_wins and match_up.left_wins:
-//                     correct += 1
-//                     total += 1
-//                 else:
-//                     total += 1
-//                 if sim.time_out_win:
-//                     time_out_wins += 1
-//
-//     LOG.info(f'Total correct: {correct}/{total}')
-//     LOG.info(f'Percent correct: {correct / total:.1%}')
-//     LOG.info(f'Time outs: {time_out_wins}')
-//
-//
-// if __name__ == '__main__':
-//     main()
