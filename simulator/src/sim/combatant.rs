@@ -237,6 +237,10 @@ impl<'a> Combatant<'a> {
 //             jump = 20
 //         return jump
 
+    pub fn monster(&self) -> bool {
+        self.gender == Gender::Monster
+    }
+
     pub fn abandon(&self) -> bool {
         // TODO: implement
         false
@@ -416,145 +420,76 @@ impl<'a> Combatant<'a> {
         self.main_hand.map_or(false, |e| e.weapon_type.is_none())
     }
 
+    // FIXME: temporary solution, want to remove this allocation
+    pub fn all_equips(&self) -> Vec<&Equipment> {
+        let mut out = vec![];
+        out.extend(self.main_hand);
+        out.extend(self.off_hand);
+        out.extend(self.headgear);
+        out.extend(self.armor);
+        out.extend(self.accessory);
+        out
+    }
+
+    pub fn absorbs(&self, element: Element) -> bool {
+        self.base_stats.absorbs.contains(&element) ||
+            self.all_equips()
+                .iter()
+                .any(|eq| eq.absorbs.contains(&element))
+    }
+
+    pub fn halves(&self, element: Element) -> bool {
+        self.base_stats.halves.contains(&element) ||
+            self.all_equips()
+                .iter()
+                .any(|eq| eq.halves.contains(&element))
+    }
+
+    pub fn weak(&self, element: Element) -> bool {
+        self.base_stats.weaknesses.contains(&element) ||
+            self.all_equips()
+                .iter()
+                .any(|eq| eq.weaknesses.contains(&element))
+    }
+
+    pub fn strengthens(&self, element: Element) -> bool {
+        self.all_equips()
+            .iter()
+            .any(|eq| eq.strengthens.contains(&element))
+    }
+
     pub fn immune_to(&self, condition: Condition) -> bool {
-        // TODO: Implement this
+        self.all_equips()
+            .iter()
+            .any(|eq| eq.immune_to.contains(&condition))
+    }
+
+    pub fn dual_wield(&self) -> bool {
+        // TODO: Implement
+        false
+    }
+
+    pub fn double_hand(&self) -> bool {
+        // TOOD: Implement
+        false
+    }
+
+    pub fn martial_arts(&self) -> bool {
+        // TODO: Implement
+        false
+    }
+
+    pub fn attack_up(&self) -> bool {
+        // TODO: Implement
+        false
+    }
+
+    pub fn defense_up(&self) -> bool {
+        // TODO: Implement
         false
     }
 }
 
-
-//     def has_ability(self, name: str) -> bool:
-//         return name in self.ability_by_name
-//
-
-//     @property
-//     def healthy(self) -> bool:
-//         return self.hp > 0 and not self.petrified
-//
-//     @property
-//     def dead(self) -> bool:
-//         return self.hp == 0
-//
-//     @property
-//     def crystal(self) -> bool:
-//         return self.crystal_counter == 0
-//
-//     @property
-//     def undead(self) -> bool:
-//         return self.status_flags & UNDEAD_FLAG != 0
-//
-//     @property
-//     def death_sentence(self) -> bool:
-//         return self.status_flags & DEATH_SENTENCE_FLAG != 0
-//
-//     @property
-//     def reraise(self) -> bool:
-//         return self.status_flags & RERAISE_FLAG != 0
-//
-//     @property
-//     def critical(self) -> bool:
-//         return self.has_status(CRITICAL)
-//
-//     @property
-//     def dont_move(self) -> bool:
-//         return self.status_flags & DONT_MOVE_FLAG != 0
-//
-//     @property
-//     def dont_act(self) -> bool:
-//         return self.status_flags & DONT_ACT_FLAG != 0
-//
-//     @property
-//     def silence(self) -> bool:
-//         return self.status_flags & SILENCE_FLAG != 0
-//
-//     @property
-//     def innocent(self) -> bool:
-//         return self.status_flags & INNOCENT_FLAG != 0
-//
-//     @property
-//     def reflect(self) -> bool:
-//         return self.status_flags & REFLECT_FLAG != 0
-//
-//     @property
-//     def charging(self) -> bool:
-//         return self.has_status(CHARGING)
-//
-//     @property
-//     def transparent(self) -> bool:
-//         return self.status_flags & TRANSPARENT_FLAG != 0
-//
-//     @property
-//     def berserk(self) -> bool:
-//         return self.status_flags & BERSERK_FLAG != 0
-//
-//     @property
-//     def blood_suck(self) -> bool:
-//         return self.status_flags & BLOOD_SUCK_FLAG != 0
-//
-//     @property
-//     def oil(self) -> bool:
-//         return self.status_flags & OIL_FLAG != 0
-//
-//     @property
-//     def f32(self) -> bool:
-//         return self.status_flags & f32_FLAG != 0
-//
-//     @property
-//     def sleep(self) -> bool:
-//         return self.status_flags & SLEEP_FLAG != 0
-//
-//     @property
-//     def shell(self) -> bool:
-//         return self.status_flags & SHELL_FLAG != 0
-//
-//     @property
-//     def protect(self) -> bool:
-//         return self.status_flags & PROTECT_FLAG != 0
-//
-//     @property
-//     def wall(self) -> bool:
-//         return self.status_flags & WALL_FLAG != 0
-//
-//     @property
-//     def haste(self) -> bool:
-//         return self.status_flags & HASTE_FLAG != 0
-//
-//     @property
-//     def slow(self) -> bool:
-//         return self.status_flags & SLOW_FLAG != 0
-//
-//     @property
-//     def stop(self) -> bool:
-//         return self.status_flags & STOP_FLAG != 0
-//
-//     @property
-//     def regen(self) -> bool:
-//         return self.status_flags & REGEN_FLAG != 0
-//
-//     @property
-//     def poison(self) -> bool:
-//         return self.status_flags & POISON_FLAG != 0
-//
-//     @property
-//     def chicken(self) -> bool:
-//         return self.status_flags & CHICKEN_FLAG != 0
-//
-//     @property
-//     def frog(self) -> bool:
-//         return self.status_flags & FROG_FLAG != 0
-//
-//     @property
-//     def petrified(self) -> bool:
-//         return self.status_flags & PETRIFY_FLAG != 0
-//
-//     @property
-//     def charm(self) -> bool:
-//         return self.status_flags & CHARM_FLAG != 0
-//
-//     @property
-//     def confusion(self) -> bool:
-//         return self.status_flags & CONFUSION_FLAG != 0
-//
 //     @property
 //     def abandon(self) -> bool:
 //         return 'Abandon' in self.skills
@@ -638,20 +573,3 @@ impl<'a> Combatant<'a> {
 //         else:
 //             raise Exception(f"Missing case in zodiac compatibility calculation\
 //              {self.sign} {self.gender} vs {other.sign} {other.gender}")
-//
-//     def absorbs(self, element) -> bool:
-//         return element in self.stats.absorbs or any((element in e.absorbs for e in self.all_equips))
-//
-//     def halves(self, element) -> bool:
-//         return element in self.stats.halves or any((element in e.halves for e in self.all_equips))
-//
-//     def weak(self, element) -> bool:
-//         return element in self.stats.weaknesses or any((element in e.weaknesses for e in self.all_equips))
-//
-//     def strengthens(self, element) -> bool:
-//         return any((element in e.strengthens for e in self.all_equips))
-//
-//     def immune_to(self, element) -> bool:
-//         return any((element in e.immune_to for e in self.all_equips))
-//
-

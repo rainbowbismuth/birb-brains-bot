@@ -77,7 +77,7 @@ pub struct Equipment {
     pub initial: Vec<Condition>,
     pub chance_to_add: Vec<Condition>,
     pub chance_to_cancel: Vec<Condition>,
-    pub immune_to: Vec<String>,
+    pub immune_to: Vec<Condition>,
 }
 
 #[derive(Serialize, Deserialize)]

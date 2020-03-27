@@ -1,12 +1,12 @@
 use crate::dto::patch::Equipment;
-use crate::sim::{Combatant, CombatantId, Condition, Location, MAX_COMBATANTS, Phase};
+use crate::sim::{Action, ActionKind, Combatant, CombatantId, Condition, Location, MAX_COMBATANTS, Phase};
 
 #[derive(Clone)]
 pub struct Entry<'a> {
     pub clock_tick: usize,
     pub phase: Phase,
     pub combatants: Vec<Combatant<'a>>,
-    pub event: Event<'a>,
+    pub event: Event<'a>
 }
 
 #[derive(Clone)]

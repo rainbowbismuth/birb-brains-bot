@@ -300,11 +300,11 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn roll_inclusive(&self, min: i16, max: i16) -> i16 {
+    pub fn roll_inclusive(&self, min: i16, max: i16) -> i16 {
         self.rng.borrow_mut().gen_range(min, max + 1)
     }
 
-    fn roll_auto_succeed(&self) -> f32 {
+    pub fn roll_auto_succeed(&self) -> f32 {
         if self.prediction_mode {
             0.0
         } else {
@@ -312,7 +312,7 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn roll_auto_fail(&self) -> f32 {
+    pub fn roll_auto_fail(&self) -> f32 {
         if self.prediction_mode {
             1.0
         } else {
@@ -435,7 +435,7 @@ impl<'a> Simulation<'a> {
             }
 
             // FIXME: A hack to get around the whole partial ord thing
-            let ordered_val = new_value as isize * 1_000_000;
+            let ordered_val = (new_value * 1_000_000.0) as i64;
             Some((ordered_val, *action))
         }).min_by_key(|pair| pair.0);
 
@@ -519,7 +519,7 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    pub fn chance_target_hp(&mut self, target_id: CombatantId, amount: i16, src: Source<'a>) {
+    pub fn change_target_hp(&mut self, target_id: CombatantId, amount: i16, src: Source<'a>) {
         let target = self.combatant_mut(target_id);
         if amount > 0 {
             if !target.healthy() {
@@ -567,7 +567,8 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn after_damage_reaction(&mut self, user_id: CombatantId, target_id: CombatantId, amount: i16) {
+    // TODO: Make this private, rework the flow, etc etc
+    pub fn after_damage_reaction(&mut self, user_id: CombatantId, target_id: CombatantId, amount: i16) {
         let target = self.combatant(target_id);
         if amount == 0 || target.dead() {
             return;
