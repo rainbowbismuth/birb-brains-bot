@@ -1,5 +1,6 @@
 pub use actions::*;
 pub use combatant::*;
+pub use condition_block::*;
 pub use enums::*;
 pub use location::*;
 pub use log::*;
@@ -15,3 +16,4 @@ pub mod log;
 pub mod target_value;
 pub mod phase;
 pub mod actions;
+pub mod condition_block;
