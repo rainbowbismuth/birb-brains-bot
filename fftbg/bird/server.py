@@ -15,8 +15,8 @@ from fftbg.event_stream import EventStream
 LOG = logging.getLogger(__name__)
 
 REMINDER_MIN = 90
-MIN_BET = 200000
-MAX_BET = 250000
+MIN_BET = 250000
+MAX_BET = 300000
 
 
 class Server:
@@ -63,8 +63,8 @@ class Server:
         LOG.info(f'Sending message: {text}')
 
     async def all_in_ready(self):
+        await asyncio.sleep(60 * 10)
         while True:
-            await asyncio.sleep(60 * REMINDER_MIN)
             cur_bal = self.bird.balance
             if cur_bal == 0 or cur_bal < MIN_BET or self.go_all_in:
                 return
@@ -73,6 +73,7 @@ class Server:
                 return
             self.say_message(
                 f'Kweh-kweh!! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in! kwehWink )')
+            await asyncio.sleep(60 * REMINDER_MIN)
 
     def update_balance(self, new_balance):
         if new_balance < MIN_BET and self.go_all_in:
@@ -135,11 +136,20 @@ class Server:
                     left_total = int(msg['left_team_amount'])
                     right_total = int(msg['right_team_amount'])
                     if final:
-                        self.bird.final_odds(left_total, right_total)
+                        self.bird.final_odds(left_total, right_total, self.go_all_in)
                     elif self.waiting_for_odds:
                         color, wager = self.bird.make_bet(left_total, right_total, self.go_all_in)
                         self.publish_bet(color, wager)
                         self.waiting_for_odds = False
+
+
+def handle_exception(loop, context):
+    if 'exception' in context:
+        LOG.critical('uncaught exception', exc_info=context['exception'])
+    else:
+        LOG.critical(f'exception {context["message"]}')
+    import os
+    os._exit(1)
 
 
 def run_server():
@@ -151,6 +161,7 @@ def run_server():
     bird = Bird(db, event_stream)
     bird.load_current_tournament()
     loop = asyncio.get_event_loop()
+    loop.set_exception_handler(handle_exception)
 
     server = Server(db, event_stream, bird, loop)
 

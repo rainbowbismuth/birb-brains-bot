@@ -79,11 +79,14 @@ class Bird:
             right_total_final=self.right_total_final,
             left_wins=left_wins)
 
-    def final_odds(self, left_total, right_total):
+    def final_odds(self, left_total, right_total, all_in=False):
         self.left_total_final = left_total
         self.right_total_final = right_total
 
         if not self.betting_on:
+            return
+
+        if all_in:
             return
 
         old_increase = self.moving_increase
