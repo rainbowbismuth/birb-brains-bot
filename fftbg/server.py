@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from typing import cast
@@ -39,3 +40,19 @@ def configure_logging(env_var: str):
     else:
         import sys
         logging.basicConfig(stream=sys.stdout, level=log_level)
+
+
+def get_loop() -> asyncio.AbstractEventLoop:
+    LOG = logging.getLogger(__name__)
+
+    def handle_exception(_loop, context):
+        if 'exception' in context:
+            LOG.critical('uncaught exception', exc_info=context['exception'])
+        else:
+            LOG.critical(f'exception {context["message"]}')
+        import os
+        os._exit(1)
+
+    loop = asyncio.get_event_loop()
+    loop.set_exception_handler(handle_exception)
+    return loop

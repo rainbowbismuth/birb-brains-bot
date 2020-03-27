@@ -143,15 +143,6 @@ class Server:
                         self.waiting_for_odds = False
 
 
-def handle_exception(loop, context):
-    if 'exception' in context:
-        LOG.critical('uncaught exception', exc_info=context['exception'])
-    else:
-        LOG.critical(f'exception {context["message"]}')
-    import os
-    os._exit(1)
-
-
 def run_server():
     fftbg.server.set_name(__package__)
     fftbg.server.configure_logging(env_var='BIRD_LOG_LEVEL')
@@ -160,8 +151,7 @@ def run_server():
 
     bird = Bird(db, event_stream)
     bird.load_current_tournament()
-    loop = asyncio.get_event_loop()
-    loop.set_exception_handler(handle_exception)
+    loop = fftbg.server.get_loop()
 
     server = Server(db, event_stream, bird, loop)
 

@@ -13,8 +13,9 @@ LOG = logging.getLogger(__name__)
 
 
 class IRCBot(commands.Bot):
-    def __init__(self, irc_token, client_id, nick, prefix, fftbg_channel, event_stream: EventStream, mute=True):
+    def __init__(self, loop, irc_token, client_id, nick, prefix, fftbg_channel, event_stream: EventStream, mute=True):
         super().__init__(
+            loop=loop,
             irc_token=irc_token,
             client_id=client_id,
             nick=nick,

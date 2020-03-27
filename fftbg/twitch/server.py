@@ -21,7 +21,9 @@ def run_server():
 
     redis = fftbg.server.get_redis()
     event_stream = fftbg.event_stream.EventStream(redis)
+    loop = fftbg.server.get_loop()
     bot = IRCBot(
+        loop=loop,
         irc_token=tmi_token,
         client_id=client_id,
         prefix=prefix,
