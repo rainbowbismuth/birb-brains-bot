@@ -1,8 +1,8 @@
 use crate::dto::patch::{Ability, BaseStats, Equipment};
-use crate::sim::{Condition, ConditionBlock, Distance, Element, Gender, Location, Sign, Team,
+use crate::sim::{Action, Condition, ConditionBlock, Distance, Element, Gender, Location, Sign, Team,
                  TIMED_CONDITIONS_LEN, WeaponType};
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
     pub id: u8
 }
@@ -24,6 +24,12 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
     CombatantId { id: 6 },
     CombatantId { id: 7 },
 ];
+
+#[derive(Copy, Clone)]
+pub struct SlowAction {
+    ctr: i8,
+    action: Action,
+}
 
 #[derive(Clone)]
 pub struct Combatant<'a> {
@@ -56,8 +62,7 @@ pub struct Combatant<'a> {
     pub raw_faith: i16,
     pub skill_flags: u64,
     pub abilities: &'a [&'a Ability],
-    pub ctr: i8,
-    // TODO: ctr_action
+    pub ctr_action: Option<SlowAction>,
     pub pa_mod: i16,
     pub ma_mod: i16,
     pub crystal_counter: i8,

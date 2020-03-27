@@ -5,7 +5,7 @@ use rand::{random, Rng};
 use rand::prelude::SmallRng;
 
 use crate::dto::patch::Equipment;
-use crate::sim::{ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, Phase, Source, Team, TIMED_CONDITIONS, WeaponType};
+use crate::sim::{ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, perform_action, Phase, Source, Team, TIMED_CONDITIONS, WeaponType};
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
@@ -25,6 +25,21 @@ pub struct Simulation<'a> {
 }
 
 impl<'a> Simulation<'a> {
+    fn prediction_clone(&self) -> Simulation<'a> {
+        Simulation {
+            rng: self.rng.clone(),
+            combatants: self.combatants.clone(),
+            arena_length: self.arena_length,
+            clock_tick: self.clock_tick,
+            prediction_mode: true,
+            log: Log::new_no_log(),
+            slow_actions: self.slow_actions,
+            active_turns: self.active_turns,
+            left_wins: self.left_wins,
+            time_out_win: self.time_out_win,
+        }
+    }
+
     pub fn log_event(&self, event: Event<'a>) {
         self.log.add(&self.combatants, event);
     }
@@ -399,80 +414,58 @@ impl<'a> Simulation<'a> {
             return;
         }
 
-        let acting_cowarldy = user.critical() && self.ai_can_be_cowardly(user);
-        let targets = if acting_cowarldy {
+        let acting_cowardly = user.critical() && self.ai_can_be_cowardly(user);
+        let targets = if acting_cowardly {
             &self.combatants[user_id.index()..user_id.index() + 1]
         } else {
             &self.combatants
         };
 
-        //         actions = []
-        //         for target in targets:
-        //             actions.extend(cmd_item.consider_item(self, user, target))
-        //             actions.extend(cmd_attack.consider_attack(self, user, target))
-        //
+        let actions = ai_consider_actions(self, user, targets);
         let basis = ai_target_value_sum(user, &self.combatants);
+        let best_action = actions.iter().flat_map(|action| {
+            if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
+                return None;
+            }
+            let mut simulated_world = self.prediction_clone();
+            perform_action(&mut simulated_world, user_id, *action);
+            let new_value = ai_target_value_sum(simulated_world.combatant(user_id), &simulated_world.combatants);
+            if new_value < basis {
+                return None;
+            }
 
-//         considered_actions = []
-//         for action in actions:
-//             if not self.can_move_into_range(user, action.range, action.target):
-//                 continue
-//
-//             simulated_world = copy.copy(self)
-//             simulated_world.combatants = [copy.copy(combatant) for combatant in simulated_world.combatants]
-//
-//             simulated_world.log_report = False
-//             simulated_world.trigger_reactions = False
-//             simulated_user = simulated_world.combatants[action.user.index]
-//             simulated_target = simulated_world.combatants[action.target.index]
-//             action.perform(simulated_world, simulated_user, simulated_target)
-//             simulated_world.ai_calculate_all_target_values(simulated_user)
-//             new_value = simulated_world.ai_target_value_sum()
-//             if new_value < basis:
-//                 continue
-//             considered_actions.append((new_value, action))
-//
-//         considered_actions.sort(key=lambda x: x[0], reverse=True)
-//         for _, action in considered_actions:
-//             if not self.in_range(user, action.range, action.target):
-//                 self.move_to_range(user, action.range, action.target)
-//
-//             # TODO: This handles don't move, is there a better way?
-//             if not self.in_range(user, action.range, action.target):
-//                 continue
-//
-//             user.acted_during_active_turn = True
-//             action.perform(self, action.user, action.target)
-//             break
-//
-//         if user.moved_during_active_turn:
-//             return
-//
-//         first_foe_in_action = None
-//         for action in actions:
-//             if user.is_foe(action.target):
-//                 first_foe_in_action = action.target
-//                 break
-//         if first_foe_in_action:
-//             self.move_towards_unit(user, first_foe_in_action)
-//             return
-//
-//         self.move_out_of_combat(user)
+            // FIXME: A hack to get around the whole partial ord thing
+            let ordered_val = new_value as isize * 1_000_000;
+            Some((ordered_val, *action))
+        }).min_by_key(|pair| pair.0);
+
+        if let Some((_, action)) = best_action {
+            let user = self.combatant(user_id);
+            let target = self.combatant(action.target_id);
+            if !in_range(user, action.range, target) {
+                self.do_move_to_range(user_id, action.range, action.target_id);
+            }
+            perform_action(self, user_id, action);
+            self.combatant_mut(user_id).acted_during_active_turn = true;
+        }
+
+        let user = self.combatant(user_id);
+        if user.moved_during_active_turn {
+            return;
+        }
+
+        let first_action_with_foe = actions.iter().filter(|action| {
+            user.different_team(self.combatant(action.target_id))
+        }).next();
+
+        if let Some(action) = first_action_with_foe {
+            self.do_move_towards_unit(user_id, action.target_id);
+            return;
+        }
+
+        self.do_move_out_of_combat(user_id);
     }
 
-    //         if random.random() < target.physical_accessory_evasion:
-//             self.unit_report(target, f'guarded {user.name}\'s attack')
-//             return True
-//         if random.random() < target.physical_shield_evasion / 2.0:
-//             self.unit_report(target, f'blocked {user.name}\'s attack')
-//             return True
-//         if random.random() < target.weapon_evasion / 2.0:
-//             self.unit_report(target, f'parried {user.name}\'s attack')
-//             return True
-//         if random.random() < target.class_evasion / 2.0:
-//             self.unit_report(target, f'evaded {user.name}\'s attack')
-//             return True
-//         return False
     pub fn do_physical_evade(&self, user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
 //         if target.blade_grasp and not target.berserk and self.roll_brave_reaction(target):
 //             self.unit_report(target, f'blade grasped {user.name}\'s attack')
