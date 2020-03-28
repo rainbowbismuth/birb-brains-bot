@@ -1,7 +1,7 @@
 use crate::dto::match_up;
 use crate::dto::patch::{Ability, BaseStats, Equipment, Patch};
 use crate::sim::{Action, ALL_CONDITIONS, Condition, ConditionBlock, Distance, Element, Gender, Location, Sign,
-                 Team, TIMED_CONDITIONS_LEN, WeaponType};
+                 SkillBlock, Team, TIMED_CONDITIONS_LEN, WeaponType};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
@@ -60,6 +60,7 @@ pub struct Combatant<'a> {
     pub sign: Sign,
     pub job: &'a str,
     pub gender: Gender,
+    pub skill_block: SkillBlock,
     pub main_hand: Option<&'a Equipment>,
     pub off_hand: Option<&'a Equipment>,
     pub headgear: Option<&'a Equipment>,
@@ -76,8 +77,14 @@ pub struct Combatant<'a> {
 impl<'a> Combatant<'a> {
     pub fn new(id: CombatantId, team: Team, src: &'a match_up::Combatant, patch: &'a Patch) -> Combatant<'a> {
         let job_gender = format!("{},{}", src.class.replace(" ", ""), src.gender.to_string());
+        let base_stats = &patch.base_stats.by_job_gender.get(&job_gender).unwrap();
+        let mut skills = vec![];
+        skills.extend(&base_stats.innates);
+        skills.push(&src.reaction_skill);
+        skills.push(&src.support_skill);
+        skills.push(&src.move_skill);
         let mut out = Combatant {
-            base_stats: &patch.base_stats.by_job_gender.get(&job_gender).unwrap(),
+            base_stats,
             id,
             raw_hp: 0,
             raw_mp: 0,
@@ -97,6 +104,7 @@ impl<'a> Combatant<'a> {
             sign: src.sign,
             job: &src.class,
             gender: src.gender,
+            skill_block: SkillBlock::new(skills.as_slice()),
             main_hand: patch.equipment.by_name.get(&src.mainhand),
             off_hand: patch.equipment.by_name.get(&src.offhand),
             headgear: patch.equipment.by_name.get(&src.head),
@@ -298,16 +306,6 @@ impl<'a> Combatant<'a> {
 
     pub fn monster(&self) -> bool {
         self.gender == Gender::Monster
-    }
-
-    pub fn abandon(&self) -> bool {
-        // TODO: implement
-        false
-    }
-
-    pub fn parry(&self) -> bool {
-        // TODO: implement
-        false
     }
 
     pub fn tick_condition(&mut self, condition: Condition) -> Option<bool> {
@@ -523,44 +521,43 @@ impl<'a> Combatant<'a> {
             .any(|eq| eq.immune_to.contains(&condition))
     }
 
+    pub fn abandon(&self) -> bool {
+        self.skill_block.abandon()
+    }
+
+    pub fn parry(&self) -> bool {
+        self.skill_block.parry()
+    }
+
+    pub fn blade_grasp(&self) -> bool {
+        self.skill_block.blade_grasp()
+    }
+
+    pub fn concentrate(&self) -> bool {
+        self.skill_block.concentrate()
+    }
+
     pub fn dual_wield(&self) -> bool {
-        // TODO: Implement
-        false
+        self.skill_block.dual_wield()
     }
 
     pub fn double_hand(&self) -> bool {
-        // TOOD: Implement
-        false
+        self.skill_block.double_hand()
     }
 
     pub fn martial_arts(&self) -> bool {
-        // TODO: Implement
-        false
+        self.skill_block.martial_arts()
     }
 
     pub fn attack_up(&self) -> bool {
-        // TODO: Implement
-        false
+        self.skill_block.attack_up()
     }
 
     pub fn defense_up(&self) -> bool {
-        // TODO: Implement
-        false
+        self.skill_block.defense_up()
     }
 }
 
-//     @property
-//     def abandon(self) -> bool:
-//         return 'Abandon' in self.skills
-//
-//     @property
-//     def parry(self) -> bool:
-//         return 'Parry' in self.skills
-//
-//     @property
-//     def blade_grasp(self) -> bool:
-//         return 'Blade Grasp' in self.skills
-//
 //     @property
 //     def arrow_guard(self) -> bool:
 //         return 'Arrow Guard' in self.skills
@@ -568,31 +565,7 @@ impl<'a> Combatant<'a> {
 //     @property
 //     def throw_item(self) -> bool:
 //         return 'Throw Item' in self.skills
-//
-//     @property
-//     def attack_up(self) -> bool:
-//         return 'Attack UP' in self.skills
-//
-//     @property
-//     def defense_up(self) -> bool:
-//         return 'Defense UP' in self.skills
-//
-//     @property
-//     def concentrate(self) -> bool:
-//         return 'Concentrate' in self.skills
-//
-//     @property
-//     def martial_arts(self) -> bool:
-//         return 'Martial Arts' in self.skills
-//
-//     @property
-//     def barehanded(self) -> bool:
-//         return self.mainhand.weapon_type is None or self.mainhand.weapon_type == 'Shield'
-//
-//     @property
-//     def double_hand(self) -> bool:
-//         return 'Doublehand' in self.skills
-//
+
 //     @property
 //     def auto_potion(self) -> bool:
 //         return 'Auto Potion' in self.skills

@@ -41,6 +41,7 @@ pub enum EvasionType {
     Blocked,
     Parried,
     Evaded,
+    BladeGrasp,
 }
 
 pub fn describe_entry(entry: &Entry) -> String {
@@ -130,6 +131,11 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
 
         Event::Evaded(target_id, EvasionType::Evaded, src) =>
             format!("{} evaded {}",
+                    describe_combatant(*target_id, combatants),
+                    describe_source(*src, combatants)),
+
+        Event::Evaded(target_id, EvasionType::BladeGrasp, src) =>
+            format!("{} blade grasped {}",
                     describe_combatant(*target_id, combatants),
                     describe_source(*src, combatants)),
 

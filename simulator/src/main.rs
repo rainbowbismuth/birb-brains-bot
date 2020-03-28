@@ -4,7 +4,7 @@ extern crate lazy_static;
 use std::io;
 
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
-use rand::{SeedableRng, thread_rng};
+use rand::{Rng, SeedableRng, thread_rng};
 use rand::rngs::SmallRng;
 
 use sim::{Combatant, CombatantId, Simulation, Team};
@@ -30,6 +30,9 @@ fn main() -> io::Result<()> {
     let mut correct = 0;
     let total = 12391;
     let mut time_outs = 0;
+
+    let random_replay = thread_rng.gen_range(0, total);
+    let mut replay_data = vec![];
 
     let bar = ProgressBar::new(total);
     bar.set_style(ProgressStyle::default_bar()
@@ -60,15 +63,22 @@ fn main() -> io::Result<()> {
         if sim.time_out_win.unwrap() {
             time_outs += 1;
         }
+
+        if random_replay == match_num {
+            for entry in sim.log.entries() {
+                replay_data.push(format!("{}", describe_entry(&entry)));
+            }
+        }
     }
     bar.finish();
 
     let correct_percent = (correct as f32 / total as f32) * 100.0;
     println!("correct: {:.1}%, time_outs: {}", correct_percent, time_outs);
 
-    // for entry in sim.log.entries() {
-    //     println!("{}", describe_entry(&entry));
-    // }
+    println!("\nmatch {}:", random_replay);
+    for line in replay_data {
+        println!("{}", line);
+    }
 
     return Ok(());
 }

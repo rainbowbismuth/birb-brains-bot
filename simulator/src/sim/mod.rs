@@ -6,6 +6,7 @@ pub use location::*;
 pub use log::*;
 pub use phase::*;
 pub use simulation::*;
+pub use skill_block::*;
 pub use target_value::*;
 
 pub mod combatant;
@@ -17,3 +18,4 @@ pub mod target_value;
 pub mod phase;
 pub mod actions;
 pub mod condition_block;
+pub mod skill_block;
