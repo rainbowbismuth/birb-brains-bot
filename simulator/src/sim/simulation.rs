@@ -275,7 +275,7 @@ impl<'a> Simulation<'a> {
             }
 
             if combatant.dead() && combatant.reraise() && !combatant.undead() {
-                self.change_target_hp(*c_id, combatant.max_hp() / 10, Source::Condition(Condition::Reraise));
+                self.change_target_hp(*c_id, -(combatant.max_hp() / 10), Source::Condition(Condition::Reraise));
                 self.cancel_condition(*c_id, Condition::Reraise, Source::Condition(Condition::Reraise));
             }
 
