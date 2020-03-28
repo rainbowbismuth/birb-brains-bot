@@ -9,7 +9,7 @@ use crate::sim::{Action, ActionKind, Combatant, CombatantId, Condition, Location
 pub struct Entry<'a> {
     pub clock_tick: usize,
     pub phase: Phase,
-    pub combatants: Vec<Combatant<'a>>,
+    pub combatants: [Combatant<'a>; MAX_COMBATANTS],
     pub event: Event<'a>,
 }
 

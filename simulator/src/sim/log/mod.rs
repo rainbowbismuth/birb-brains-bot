@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 pub use entry::*;
 
-use crate::sim::{ALL_CONDITIONS, Combatant, CombatantId, Phase, Simulation};
+use crate::sim::{ALL_CONDITIONS, Combatant, CombatantId, MAX_COMBATANTS, Phase, Simulation};
 
 pub mod entry;
 
@@ -35,7 +35,7 @@ impl<'a> Log<'a> {
         self.interior.borrow_mut().set_phase(phase);
     }
 
-    pub fn add(&self, combatants: &[Combatant<'a>], event: Event<'a>) {
+    pub fn add(&self, combatants: &[Combatant<'a>; MAX_COMBATANTS], event: Event<'a>) {
         self.interior.borrow_mut().add(combatants, event);
     }
 
@@ -69,12 +69,12 @@ impl<'a> LogData<'a> {
         self.phase = phase;
     }
 
-    fn add(&mut self, combatants: &[Combatant<'a>], event: Event<'a>) {
+    fn add(&mut self, combatants: &[Combatant<'a>; 8], event: Event<'a>) {
         if let Some(log) = &mut self.log {
             let entry = Entry {
                 clock_tick: self.clock_tick,
                 phase: self.phase,
-                combatants: Vec::from(combatants),
+                combatants: combatants.clone(),
                 event,
             };
             // println!("{}", describe_entry(&entry)); // For intermixing with debugging, should flag.

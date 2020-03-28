@@ -504,37 +504,36 @@ impl<'a> Combatant<'a> {
         out
     }
 
+    pub fn any_equip<P>(&self, p: P) -> bool
+        where P: Fn(&'a Equipment) -> bool {
+        self.main_hand.map_or(false, &p)
+            || self.off_hand.map_or(false, &p)
+            || self.headgear.map_or(false, &p)
+            || self.armor.map_or(false, &p)
+            || self.accessory.map_or(false, &p)
+    }
+
     pub fn absorbs(&self, element: Element) -> bool {
         self.base_stats.absorbs.contains(&element) ||
-            self.all_equips()
-                .iter()
-                .any(|eq| eq.absorbs.contains(&element))
+            self.any_equip(|eq| eq.absorbs.contains(&element))
     }
 
     pub fn halves(&self, element: Element) -> bool {
         self.base_stats.halves.contains(&element) ||
-            self.all_equips()
-                .iter()
-                .any(|eq| eq.halves.contains(&element))
+            self.any_equip(|eq| eq.halves.contains(&element))
     }
 
     pub fn weak(&self, element: Element) -> bool {
         self.base_stats.weaknesses.contains(&element) ||
-            self.all_equips()
-                .iter()
-                .any(|eq| eq.weaknesses.contains(&element))
+            self.any_equip(|eq| eq.weaknesses.contains(&element))
     }
 
     pub fn strengthens(&self, element: Element) -> bool {
-        self.all_equips()
-            .iter()
-            .any(|eq| eq.strengthens.contains(&element))
+        self.any_equip(|eq| eq.strengthens.contains(&element))
     }
 
     pub fn immune_to(&self, condition: Condition) -> bool {
-        self.all_equips()
-            .iter()
-            .any(|eq| eq.immune_to.contains(&condition))
+        self.any_equip(|eq| eq.immune_to.contains(&condition))
     }
 
     pub fn abandon(&self) -> bool {

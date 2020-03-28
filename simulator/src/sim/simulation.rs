@@ -25,14 +25,14 @@ pub struct Simulation<'a> {
 }
 
 impl<'a> Simulation<'a> {
-    pub fn new(combatants: [Combatant<'a>; MAX_COMBATANTS], arena_length: i16, rng: SmallRng) -> Simulation<'a> {
+    pub fn new(combatants: [Combatant<'a>; MAX_COMBATANTS], arena_length: i16, rng: SmallRng, event_log: bool) -> Simulation<'a> {
         let mut sim = Simulation {
             rng: RefCell::new(rng),
             combatants,
             arena_length,
             clock_tick: 0,
             prediction_mode: false,
-            log: Log::new(),
+            log: if event_log { Log::new() } else { Log::new_no_log() },
             slow_actions: false,
             active_turns: false,
             left_wins: None,

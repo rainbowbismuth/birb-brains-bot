@@ -22,7 +22,7 @@ fn run_many_sims(combatants: &[Combatant; 8]) -> (f64, u64) {
     let mut time_outs = 0;
     for _ in 0..num_runs {
         let rng = SmallRng::from_rng(&mut thread_rng).unwrap();
-        let mut sim = Simulation::new(combatants.clone(), 10, rng);
+        let mut sim = Simulation::new(combatants.clone(), 10, rng, false);
         sim.run();
         if sim.left_wins.unwrap() {
             left_wins += 1;
@@ -101,7 +101,7 @@ fn main() -> io::Result<()> {
 
         if random_replay == match_num {
             let rng = SmallRng::from_rng(&mut thread_rng).unwrap();
-            let mut sim = Simulation::new(combatants.clone(), 10, rng);
+            let mut sim = Simulation::new(combatants.clone(), 10, rng, true);
             sim.run();
             for entry in sim.log.entries() {
                 replay_data.push(format!("{}", describe_entry(&entry)));
