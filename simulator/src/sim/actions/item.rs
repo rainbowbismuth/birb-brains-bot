@@ -15,6 +15,10 @@ fn item_range(user: &Combatant) -> i16 {
 }
 
 pub fn consider_item(actions: &mut Vec<Action>, sim: &Simulation, user: &Combatant, target: &Combatant) {
+    if !user.skill_set_item() {
+        return;
+    }
+
     if user.berserk() {
         return;
     }

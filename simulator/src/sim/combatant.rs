@@ -81,6 +81,7 @@ impl<'a> Combatant<'a> {
         let base_stats = &patch.base_stats.by_job_gender.get(&job_gender).unwrap();
         let mut skills = vec![];
         skills.extend(&base_stats.innates);
+        skills.push(&src.action_skill);
         skills.push(&src.reaction_skill);
         skills.push(&src.support_skill);
         skills.push(&src.move_skill);
@@ -602,6 +603,10 @@ impl<'a> Combatant<'a> {
 
     pub fn throw_item(&self) -> bool {
         self.skill_block.throw_item()
+    }
+
+    pub fn skill_set_item(&self) -> bool {
+        self.skill_block.skill_set_item()
     }
 }
 
