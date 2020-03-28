@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use colored::Colorize;
 
-use crate::dto::patch::Equipment;
+use crate::dto::rust::Equipment;
 use crate::sim::{Action, ActionKind, Combatant, CombatantId, Condition, Location, MAX_COMBATANTS, Phase, Team};
 
 #[derive(Clone, Debug)]

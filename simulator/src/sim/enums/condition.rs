@@ -1,9 +1,9 @@
 use std::fmt;
 
 use serde::de::{self, Deserialize, Deserializer, Visitor};
-use serde_repr::Serialize_repr;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
 pub enum Condition {
     Stop = 1,
@@ -42,6 +42,8 @@ pub enum Condition {
     Performing,
     Transparent,
 }
+
+pub type ConditionFlags = u64;
 
 const FIRST_CONDITION: Condition = Condition::Stop;
 const LAST_CONDITION: Condition = Condition::Transparent;
@@ -275,42 +277,5 @@ impl Condition {
             Condition::Innocent => &INNOCENT_CANCELS,
             _ => &[],
         }
-    }
-}
-
-
-impl<'de> Deserialize<'de> for Condition {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
-    {
-        struct ConditionVisitor;
-
-        impl<'de> Visitor<'de> for ConditionVisitor {
-            type Value = Condition;
-
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                f.write_str("Condition must be a string or u8")
-            }
-
-            fn visit_u8<E>(self, code: u8) -> Result<Self::Value, E>
-                where E: de::Error
-            {
-                match Condition::from_num(code) {
-                    Some(cond) => Ok(cond),
-                    None => Err(de::Error::custom(format!("{} is not a valid Condition code", code)))
-                }
-            }
-
-            fn visit_str<E>(self, name: &str) -> Result<Self::Value, E>
-                where E: de::Error
-            {
-                match Condition::parse(name) {
-                    Some(cond) => Ok(cond),
-                    None => Err(de::Error::custom(String::from(name)))
-                }
-            }
-        }
-
-        deserializer.deserialize_any(ConditionVisitor)
     }
 }

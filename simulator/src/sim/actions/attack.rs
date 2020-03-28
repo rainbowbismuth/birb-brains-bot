@@ -1,4 +1,4 @@
-use crate::dto::patch::Equipment;
+use crate::dto::rust::Equipment;
 use crate::sim::{Combatant, CombatantId, DAMAGE_CANCELS, Simulation, Source, WeaponType};
 use crate::sim::actions::{Action, ActionKind};
 

@@ -67,13 +67,14 @@ fn run_sims() -> io::Result<()> {
     let random_replay = thread_rng.gen_range(0, total);
     let mut replay_data = vec![];
 
+    let mut buffer = vec![];
     let bar = ProgressBar::new(total);
     bar.set_style(ProgressStyle::default_bar()
         .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg} {per_sec} {eta}")
         .progress_chars("##-"));
     for match_num in 0..total {
         bar.inc(1);
-        let (patch_num, match_up) = data::read_match(match_num as usize)?;
+        let (patch_num, match_up) = data::read_match(match_num as usize, &mut buffer)?;
         let patch = patches.iter().find(|p| p.time as usize == patch_num).unwrap();
 
         let combatant_infos = [

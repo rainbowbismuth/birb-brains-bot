@@ -1,7 +1,6 @@
-use crate::dto::match_up;
-use crate::dto::patch::{Ability, BaseStats, Equipment, Patch};
-use crate::sim::{Action, ALL_CONDITIONS, Condition, ConditionBlock, Distance, Element, Gender, Location, Sign,
-                 SkillBlock, Team, TIMED_CONDITIONS_LEN, WeaponType};
+use crate::dto::rust::{Ability, BaseStats, Equipment, Patch};
+use crate::dto::rust;
+use crate::sim::{Action, ALL_CONDITIONS, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign, SkillBlock, Team, TIMED_CONDITIONS_LEN, WeaponType};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
@@ -60,9 +59,9 @@ pub struct CombatantInfo<'a> {
 }
 
 impl<'a> CombatantInfo<'a> {
-    pub fn new(id: CombatantId, team: Team, src: &'a match_up::Combatant, patch: &'a Patch) -> CombatantInfo<'a> {
-        let job_gender = format!("{},{}", src.class.replace(" ", ""), src.gender.to_string());
-        let base_stats = &patch.base_stats.by_job_gender.get(&job_gender).unwrap();
+    pub fn new(id: CombatantId, team: Team, src: &'a rust::Combatant, patch: &'a Patch) -> CombatantInfo<'a> {
+        let short_class = src.class.replace(" ", "");
+        let base_stats = &patch.base_stats.by_job_gender.get(&(short_class, src.gender)).unwrap();
         let mut skills = vec![];
         skills.extend(&base_stats.innates);
         skills.push(&src.action_skill);
@@ -80,8 +79,8 @@ impl<'a> CombatantInfo<'a> {
             job: &src.class,
             gender: src.gender,
             skill_block: SkillBlock::new(skills.as_slice()),
-            main_hand: patch.equipment.by_name.get(&src.mainhand),
-            off_hand: patch.equipment.by_name.get(&src.offhand),
+            main_hand: patch.equipment.by_name.get(&src.main_hand),
+            off_hand: patch.equipment.by_name.get(&src.off_hand),
             headgear: patch.equipment.by_name.get(&src.head),
             armor: patch.equipment.by_name.get(&src.armor),
             accessory: patch.equipment.by_name.get(&src.accessory),
@@ -97,7 +96,7 @@ pub struct Combatant<'a> {
     pub conditions: ConditionBlock,
     pub raw_hp: i16,
     pub crystal_counter: i8,
-    pub ct: i8,
+    pub ct: u8,
     pub speed_mod: i8,
     pub raw_mp: i16,
     pub broken_items: i8,
@@ -139,10 +138,16 @@ impl<'a> Combatant<'a> {
         };
         out.raw_hp = out.max_hp();
         out.raw_mp = out.max_mp();
-        let equips = out.all_equips();
-        equips.iter()
-            .flat_map(|eq| eq.initial.iter())
-            .for_each(|condition| out.add_condition(*condition));
+
+        let mut initial_flags: ConditionFlags = 0;
+        for eq in out.all_equips() {
+            initial_flags |= eq.initial;
+        }
+        for condition in ALL_CONDITIONS.iter() {
+            if initial_flags & condition.flag() != 0 {
+                out.add_condition(*condition);
+            }
+        }
         out
     }
 
@@ -576,26 +581,26 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn absorbs(&self, element: Element) -> bool {
-        self.base_stats().absorbs.contains(&element) ||
-            self.any_equip(|eq| eq.absorbs.contains(&element))
+        self.base_stats().absorbs & element.flag() != 0 ||
+            self.any_equip(|eq| eq.absorbs & element.flag() != 0)
     }
 
     pub fn halves(&self, element: Element) -> bool {
-        self.base_stats().halves.contains(&element) ||
-            self.any_equip(|eq| eq.halves.contains(&element))
+        self.base_stats().halves & element.flag() != 0 ||
+            self.any_equip(|eq| eq.halves & element.flag() != 0)
     }
 
     pub fn weak(&self, element: Element) -> bool {
-        self.base_stats().weaknesses.contains(&element) ||
-            self.any_equip(|eq| eq.weaknesses.contains(&element))
+        self.base_stats().weaknesses & element.flag() != 0 ||
+            self.any_equip(|eq| eq.weaknesses & element.flag() != 0)
     }
 
     pub fn strengthens(&self, element: Element) -> bool {
-        self.any_equip(|eq| eq.strengthens.contains(&element))
+        self.any_equip(|eq| eq.strengthens & element.flag() != 0)
     }
 
     pub fn immune_to(&self, condition: Condition) -> bool {
-        self.any_equip(|eq| eq.immune_to.contains(&condition))
+        self.any_equip(|eq| eq.immune_to & condition.flag() != 0)
     }
 
     pub fn abandon(&self) -> bool {

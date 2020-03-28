@@ -4,7 +4,7 @@ use rand;
 use rand::{random, Rng};
 use rand::prelude::SmallRng;
 
-use crate::dto::patch::Equipment;
+use crate::dto::rust::Equipment;
 use crate::sim::{Action, ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, perform_action, Phase, Source, Team, TIMED_CONDITIONS, WeaponType};
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -183,8 +183,7 @@ impl<'a> Simulation<'a> {
             if combatant.slow() {
                 speed = (speed * 2) / 3;
             }
-
-            combatant.ct += speed;
+            combatant.ct += speed as u8;
             if combatant.ct >= 100 {
                 self.active_turns = true;
             }
@@ -271,6 +270,8 @@ impl<'a> Simulation<'a> {
             self.log.set_phase(Phase::ActiveTurn(*c_id));
 
             if combatant.petrify() || combatant.crystal() || combatant.stop() || combatant.sleep() {
+                // TODO: What should really go here?
+                self.combatant_mut(*c_id).ct = 0;
                 continue;
             }
 
@@ -552,17 +553,24 @@ impl<'a> Simulation<'a> {
         }
 
         if let Some(equip) = weapon {
-            for condition in &equip.chance_to_add {
-                if self.roll_auto_fail() < (1.0 - 0.19) {
-                    continue;
-                }
-                self.add_condition(target_id, *condition, Source::Weapon(user_id, weapon));
+            // FIXME: Out of all my flag refactoring, this is the part that sucks
+            if equip.chance_to_cancel == 0 && equip.chance_to_cancel == 0 {
+                return;
             }
-            for condition in &equip.chance_to_cancel {
-                if self.roll_auto_fail() < (1.0 - 0.19) {
-                    continue;
+
+            for condition in ALL_CONDITIONS.iter() {
+                if equip.chance_to_add & condition.flag() != 0 {
+                    if self.roll_auto_fail() < (1.0 - 0.19) {
+                        continue;
+                    }
+                    self.add_condition(target_id, *condition, Source::Weapon(user_id, weapon));
                 }
-                self.cancel_condition(target_id, *condition, Source::Weapon(user_id, weapon));
+                if equip.chance_to_cancel & condition.flag() != 0 {
+                    if self.roll_auto_fail() < (1.0 - 0.19) {
+                        continue;
+                    }
+                    self.cancel_condition(target_id, *condition, Source::Weapon(user_id, weapon));
+                }
             }
         }
     }

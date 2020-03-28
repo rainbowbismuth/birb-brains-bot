@@ -1,9 +1,9 @@
 use std::fmt;
 
 use serde::de::{self, Deserialize, Deserializer, Visitor};
-use serde_repr::Serialize_repr;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
 pub enum Element {
     Weapon = 1,
@@ -16,6 +16,8 @@ pub enum Element {
     Dark,
     Holy,
 }
+
+pub type ElementFlags = u16;
 
 impl Element {
     pub fn parse(name: &str) -> Option<Element> {
@@ -32,40 +34,8 @@ impl Element {
             _ => None
         }
     }
-}
 
-
-impl<'de> Deserialize<'de> for Element {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
-    {
-        struct ElementVisitor;
-
-        impl<'de> Visitor<'de> for ElementVisitor {
-            type Value = Element;
-
-            fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result {
-                f.write_str("WeaponType must be a string or u8")
-            }
-
-            fn visit_u8<E>(self, code: u8) -> Result<Self::Value, E>
-                where E: de::Error
-            {
-                unsafe {
-                    Ok(std::mem::transmute_copy(&code))
-                }
-            }
-
-            fn visit_str<E>(self, name: &str) -> Result<Self::Value, E>
-                where E: de::Error
-            {
-                match Element::parse(name) {
-                    Some(cond) => Ok(cond),
-                    None => Err(de::Error::custom(String::from(name)))
-                }
-            }
-        }
-
-        deserializer.deserialize_any(ElementVisitor)
+    pub fn flag(self) -> ElementFlags {
+        1 << (self as u16)
     }
 }
