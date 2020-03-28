@@ -11,12 +11,6 @@ def test_to_combatants():
     assert len(t.to_combatants(patch)) == 4 * 2 * 8
 
 
-def test_tournament_conversions():
-    tournaments = tournament.parse_tournaments()[:10]
-    combatants = tournament.tournament_to_combatants(tournaments)
-    assert len(combatants) >= 70 * 8
-
-
 def test_hypothetical_tournament():
     fp = config.TOURNAMENTS_ROOT / '1580897292273.json'
     js = json.loads(fp.read_text())
