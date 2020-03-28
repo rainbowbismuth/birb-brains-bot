@@ -25,7 +25,7 @@ fn ai_calculate_caster_hate_mod(target: &Combatant) -> f32 {
     if !target.can_cast_mp_ability() {
         0.0
     } else {
-        (target.mp_percent() / 16.0) * (target.number_of_mp_using_abilities as f32)
+        (target.mp_percent() / 16.0) * (target.info.number_of_mp_using_abilities as f32)
     }
 }
 
@@ -60,6 +60,9 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
 
     // # 		0x20 - Darkness					-50% [-40(ffc0) * Evadable abilities] + 3 / 4
     // # TODO: Add darkness
+    if target.darkness() {
+        total -= 0.50;
+    }
 
     // # 		0x10 - Confusion				-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
     if target.confusion() {

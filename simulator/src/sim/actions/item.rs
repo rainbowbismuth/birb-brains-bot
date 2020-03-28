@@ -10,7 +10,7 @@ pub enum Item {
     PhoenixDown,
 }
 
-fn item_range(user: &Combatant) -> i16 {
+fn item_range(user: &Combatant) -> i8 {
     if user.throw_item() { 4 } else { 1 }
 }
 
@@ -62,7 +62,7 @@ pub fn consider_item_heal(actions: &mut Vec<Action>, sim: &Simulation, user: &Co
         actions.push(Action {
             kind: ActionKind::Item(Item::Potion),
             range: item_range(user),
-            target_id: target.id,
+            target_id: target.id(),
         });
     }
 }
@@ -107,13 +107,13 @@ pub fn consider_phoenix_down(actions: &mut Vec<Action>, sim: &Simulation, user: 
         actions.push(Action {
             kind: ActionKind::Item(Item::PhoenixDown),
             range: item_range(user),
-            target_id: target.id,
+            target_id: target.id(),
         });
     } else if user.same_team(target) && !target.undead() && target.dead() && !target.reraise() {
         actions.push(Action {
             kind: ActionKind::Item(Item::PhoenixDown),
             range: item_range(user),
-            target_id: target.id,
+            target_id: target.id(),
         });
     }
 }

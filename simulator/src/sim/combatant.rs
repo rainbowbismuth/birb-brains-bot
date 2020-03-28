@@ -39,24 +39,13 @@ pub struct SlowAction {
 }
 
 #[derive(Clone, Debug)]
-pub struct Combatant<'a> {
-    pub team: Team,
-    pub conditions: ConditionBlock,
-    pub skill_block: SkillBlock,
-    pub raw_hp: i16,
+pub struct CombatantInfo<'a> {
     pub id: CombatantId,
+    pub team: Team,
+    pub skill_block: SkillBlock,
     pub base_stats: &'a BaseStats,
-    pub raw_mp: i16,
-    pub ct: i16,
-    pub speed_mod: i16,
-    pub broken_items: i8,
     pub number_of_mp_using_abilities: i16,
     pub lowest_mp_cost_ability: i16,
-    pub location: Location,
-    pub on_active_turn: bool,
-    pub moved_during_active_turn: bool,
-    pub acted_during_active_turn: bool,
-    pub took_damage_during_active_turn: bool,
     pub name: &'a str,
     pub sign: Sign,
     pub job: &'a str,
@@ -66,17 +55,12 @@ pub struct Combatant<'a> {
     pub headgear: Option<&'a Equipment>,
     pub armor: Option<&'a Equipment>,
     pub accessory: Option<&'a Equipment>,
-    pub raw_brave: i16,
-    pub raw_faith: i16,
-    pub ctr_action: Option<SlowAction>,
-    pub pa_mod: i16,
-    pub ma_mod: i16,
-    pub crystal_counter: i8,
-    pub death_sentence_counter: i8,
+    pub starting_brave: i8,
+    pub starting_faith: i8,
 }
 
-impl<'a> Combatant<'a> {
-    pub fn new(id: CombatantId, team: Team, src: &'a match_up::Combatant, patch: &'a Patch) -> Combatant<'a> {
+impl<'a> CombatantInfo<'a> {
+    pub fn new(id: CombatantId, team: Team, src: &'a match_up::Combatant, patch: &'a Patch) -> CombatantInfo<'a> {
         let job_gender = format!("{},{}", src.class.replace(" ", ""), src.gender.to_string());
         let base_stats = &patch.base_stats.by_job_gender.get(&job_gender).unwrap();
         let mut skills = vec![];
@@ -85,23 +69,12 @@ impl<'a> Combatant<'a> {
         skills.push(&src.reaction_skill);
         skills.push(&src.support_skill);
         skills.push(&src.move_skill);
-        let mut out = Combatant {
+        CombatantInfo {
             base_stats,
             id,
-            raw_hp: 0,
-            raw_mp: 0,
-            ct: 0,
-            speed_mod: 0,
             team,
-            conditions: ConditionBlock::new(),
-            broken_items: 0,
             number_of_mp_using_abilities: 0,
             lowest_mp_cost_ability: 0,
-            location: Location::new(0),
-            on_active_turn: false,
-            moved_during_active_turn: false,
-            acted_during_active_turn: false,
-            took_damage_during_active_turn: false,
             name: &src.name,
             sign: src.sign,
             job: &src.class,
@@ -112,8 +85,52 @@ impl<'a> Combatant<'a> {
             headgear: patch.equipment.by_name.get(&src.head),
             armor: patch.equipment.by_name.get(&src.armor),
             accessory: patch.equipment.by_name.get(&src.accessory),
-            raw_brave: src.brave,
-            raw_faith: src.faith,
+            starting_brave: src.brave,
+            starting_faith: src.faith,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Combatant<'a> {
+    pub info: &'a CombatantInfo<'a>,
+    pub conditions: ConditionBlock,
+    pub raw_hp: i16,
+    pub crystal_counter: i8,
+    pub ct: i8,
+    pub speed_mod: i8,
+    pub raw_mp: i16,
+    pub broken_items: i8,
+    pub location: Location,
+    pub on_active_turn: bool,
+    pub moved_during_active_turn: bool,
+    pub acted_during_active_turn: bool,
+    pub took_damage_during_active_turn: bool,
+    pub raw_brave: i8,
+    pub raw_faith: i8,
+    pub pa_mod: i8,
+    pub ma_mod: i8,
+    pub death_sentence_counter: i8,
+    pub ctr_action: Option<SlowAction>,
+}
+
+impl<'a> Combatant<'a> {
+    pub fn new(info: &'a CombatantInfo<'a>) -> Combatant<'a> {
+        let mut out = Combatant {
+            info,
+            raw_hp: 0,
+            raw_mp: 0,
+            ct: 0,
+            speed_mod: 0,
+            conditions: ConditionBlock::new(),
+            broken_items: 0,
+            location: Location::new(0),
+            on_active_turn: false,
+            moved_during_active_turn: false,
+            acted_during_active_turn: false,
+            took_damage_during_active_turn: false,
+            raw_brave: info.starting_brave,
+            raw_faith: info.starting_faith,
             ctr_action: None,
             pa_mod: 0,
             ma_mod: 0,
@@ -129,12 +146,28 @@ impl<'a> Combatant<'a> {
         out
     }
 
+    pub fn id(&self) -> CombatantId {
+        self.info.id
+    }
+
+    pub fn name(&self) -> &'a str {
+        self.info.name
+    }
+
+    pub fn team(&self) -> Team {
+        self.info.team
+    }
+
     pub fn same_team(&self, other: &Combatant) -> bool {
-        self.team == other.team
+        self.team() == other.team()
     }
 
     pub fn different_team(&self, other: &Combatant) -> bool {
-        self.team != other.team
+        self.team() != other.team()
+    }
+
+    pub fn base_stats(&self) -> &'a BaseStats {
+        self.info.base_stats
     }
 
     pub fn distance(&self, other: &Combatant) -> Distance {
@@ -142,15 +175,15 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn max_hp(&self) -> i16 {
-        self.base_stats.hp
-            + self.headgear.map_or(0, |e| e.hp_bonus)
-            + self.armor.map_or(0, |e| e.hp_bonus)
+        self.base_stats().hp
+            + self.headgear().map_or(0, |e| e.hp_bonus)
+            + self.armor().map_or(0, |e| e.hp_bonus)
     }
 
     pub fn max_mp(&self) -> i16 {
-        self.base_stats.mp
-            + self.headgear.map_or(0, |e| e.mp_bonus)
-            + self.armor.map_or(0, |e| e.mp_bonus)
+        self.base_stats().mp
+            + self.headgear().map_or(0, |e| e.mp_bonus)
+            + self.armor().map_or(0, |e| e.mp_bonus)
     }
 
     pub fn hp(&self) -> i16 {
@@ -178,10 +211,10 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn can_cast_mp_ability(&self) -> bool {
-        if self.number_of_mp_using_abilities == 0 {
+        if self.info.number_of_mp_using_abilities == 0 {
             false
         } else {
-            self.mp() >= self.lowest_mp_cost_ability
+            self.mp() >= self.info.lowest_mp_cost_ability
         }
     }
 
@@ -195,14 +228,34 @@ impl<'a> Combatant<'a> {
         conditions
     }
 
-    pub fn speed(&self) -> i16 {
-        self.base_stats.speed
+    pub fn main_hand(&self) -> Option<&'a Equipment> {
+        self.info.main_hand
+    }
+
+    pub fn off_hand(&self) -> Option<&'a Equipment> {
+        self.info.off_hand
+    }
+
+    pub fn headgear(&self) -> Option<&'a Equipment> {
+        self.info.headgear
+    }
+
+    pub fn armor(&self) -> Option<&'a Equipment> {
+        self.info.armor
+    }
+
+    pub fn accessory(&self) -> Option<&'a Equipment> {
+        self.info.accessory
+    }
+
+    pub fn speed(&self) -> i8 {
+        self.base_stats().speed
             + self.speed_mod
-            + self.main_hand.map_or(0, |e| e.speed_bonus)
-            + self.off_hand.map_or(0, |e| e.speed_bonus)
-            + self.headgear.map_or(0, |e| e.speed_bonus)
-            + self.armor.map_or(0, |e| e.speed_bonus)
-            + self.accessory.map_or(0, |e| e.speed_bonus)
+            + self.main_hand().map_or(0, |e| e.speed_bonus)
+            + self.off_hand().map_or(0, |e| e.speed_bonus)
+            + self.headgear().map_or(0, |e| e.speed_bonus)
+            + self.armor().map_or(0, |e| e.speed_bonus)
+            + self.accessory().map_or(0, |e| e.speed_bonus)
     }
 
     pub fn brave_percent(&self) -> f32 {
@@ -224,7 +277,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn class_evasion(&self) -> f32 {
-        self.evasion_multiplier() * (self.base_stats.c_ev as f32 / 100.0)
+        self.evasion_multiplier() * (self.base_stats().c_ev as f32 / 100.0)
     }
 
     pub fn weapon_evasion(&self) -> f32 {
@@ -232,66 +285,66 @@ impl<'a> Combatant<'a> {
             0.0
         } else {
             // TODO: Pretty sure this is wrong
-            let base_w_ev = self.main_hand.map_or(0, |e| e.w_ev)
-                .max(self.off_hand.map_or(0, |e| e.w_ev));
+            let base_w_ev = self.main_hand().map_or(0, |e| e.w_ev)
+                .max(self.off_hand().map_or(0, |e| e.w_ev));
             self.evasion_multiplier() * (base_w_ev as f32 / 100.0)
         }
     }
 
     pub fn physical_shield_evasion(&self) -> f32 {
-        let base_phys_ev = self.main_hand.map_or(0, |e| e.phys_ev)
-            + self.off_hand.map_or(0, |e| e.phys_ev);
+        let base_phys_ev = self.main_hand().map_or(0, |e| e.phys_ev)
+            + self.off_hand().map_or(0, |e| e.phys_ev);
         self.evasion_multiplier() * (base_phys_ev as f32 / 100.0)
     }
 
     pub fn magical_shield_evasion(&self) -> f32 {
-        let base_magical_ev = self.main_hand.map_or(0, |e| e.magic_ev)
-            + self.off_hand.map_or(0, |e| e.magic_ev);
+        let base_magical_ev = self.main_hand().map_or(0, |e| e.magic_ev)
+            + self.off_hand().map_or(0, |e| e.magic_ev);
         self.evasion_multiplier() * (base_magical_ev as f32 / 100.0)
     }
 
     pub fn physical_accessory_evasion(&self) -> f32 {
         self.evasion_multiplier() *
-            (self.accessory.map_or(0, |e| e.phys_ev) as f32 / 100.0)
+            (self.accessory().map_or(0, |e| e.phys_ev) as f32 / 100.0)
     }
 
     pub fn magical_accessory_evasion(&self) -> f32 {
         self.evasion_multiplier() *
-            (self.accessory.map_or(0, |e| e.magic_ev) as f32 / 100.0)
+            (self.accessory().map_or(0, |e| e.magic_ev) as f32 / 100.0)
     }
 
-    pub fn movement(&self) -> i16 {
+    pub fn movement(&self) -> i8 {
         // TODO: Move+ skills
-        self.base_stats.movement
-            + self.headgear.map_or(0, |e| e.move_bonus)
-            + self.armor.map_or(0, |e| e.move_bonus)
-            + self.accessory.map_or(0, |e| e.move_bonus)
+        self.base_stats().movement
+            + self.headgear().map_or(0, |e| e.move_bonus)
+            + self.armor().map_or(0, |e| e.move_bonus)
+            + self.accessory().map_or(0, |e| e.move_bonus)
     }
 
-    pub fn pa_bang(&self) -> i16 {
-        self.base_stats.pa + self.pa_mod
+    pub fn pa_bang(&self) -> i8 {
+        self.base_stats().pa + self.pa_mod
     }
 
-    pub fn ma_bang(&self) -> i16 {
-        self.base_stats.ma + self.ma_mod
+    pub fn ma_bang(&self) -> i8 {
+        self.base_stats().ma + self.ma_mod
     }
 
-    pub fn pa(&self) -> i16 {
+    pub fn pa(&self) -> i8 {
         self.pa_bang()
-            + self.main_hand.map_or(0, |e| e.pa_bonus)
-            + self.off_hand.map_or(0, |e| e.pa_bonus)
-            + self.headgear.map_or(0, |e| e.pa_bonus)
-            + self.armor.map_or(0, |e| e.pa_bonus)
-            + self.accessory.map_or(0, |e| e.pa_bonus)
+            + self.main_hand().map_or(0, |e| e.pa_bonus)
+            + self.off_hand().map_or(0, |e| e.pa_bonus)
+            + self.headgear().map_or(0, |e| e.pa_bonus)
+            + self.armor().map_or(0, |e| e.pa_bonus)
+            + self.accessory().map_or(0, |e| e.pa_bonus)
     }
 
-    pub fn ma(&self) -> i16 {
+    pub fn ma(&self) -> i8 {
         self.ma_bang()
-            + self.main_hand.map_or(0, |e| e.ma_bonus)
-            + self.off_hand.map_or(0, |e| e.ma_bonus)
-            + self.headgear.map_or(0, |e| e.ma_bonus)
-            + self.armor.map_or(0, |e| e.ma_bonus)
-            + self.accessory.map_or(0, |e| e.ma_bonus)
+            + self.main_hand().map_or(0, |e| e.ma_bonus)
+            + self.off_hand().map_or(0, |e| e.ma_bonus)
+            + self.headgear().map_or(0, |e| e.ma_bonus)
+            + self.armor().map_or(0, |e| e.ma_bonus)
+            + self.accessory().map_or(0, |e| e.ma_bonus)
     }
 
 //     @property
@@ -307,8 +360,12 @@ impl<'a> Combatant<'a> {
 //             jump = 20
 //         return jump
 
+    pub fn gender(&self) -> Gender {
+        self.info.gender
+    }
+
     pub fn monster(&self) -> bool {
-        self.gender == Gender::Monster
+        self.gender() == Gender::Monster
     }
 
     pub fn tick_condition(&mut self, condition: Condition) -> Option<bool> {
@@ -382,7 +439,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn undead(&self) -> bool {
-        self.skill_block.innate_undead() || self.conditions.has(Condition::Undead)
+        self.info.skill_block.innate_undead() || self.conditions.has(Condition::Undead)
     }
 
     pub fn sleep(&self) -> bool {
@@ -427,6 +484,10 @@ impl<'a> Combatant<'a> {
 
     pub fn dont_act(&self) -> bool {
         self.conditions.has(Condition::DontAct)
+    }
+
+    pub fn darkness(&self) -> bool {
+        self.conditions.has(Condition::Darkness)
     }
 
     pub fn confusion(&self) -> bool {
@@ -491,41 +552,41 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn barehanded(&self) -> bool {
-        self.main_hand.map_or(true, |e| e.weapon_type.is_none())
+        self.main_hand().map_or(true, |e| e.weapon_type.is_none())
     }
 
     // FIXME: temporary solution, want to remove this allocation
     pub fn all_equips(&self) -> Vec<&'a Equipment> {
         let mut out = vec![];
-        out.extend(self.main_hand);
-        out.extend(self.off_hand);
-        out.extend(self.headgear);
-        out.extend(self.armor);
-        out.extend(self.accessory);
+        out.extend(self.main_hand());
+        out.extend(self.off_hand());
+        out.extend(self.headgear());
+        out.extend(self.armor());
+        out.extend(self.accessory());
         out
     }
 
     pub fn any_equip<P>(&self, p: P) -> bool
         where P: Fn(&'a Equipment) -> bool {
-        self.main_hand.map_or(false, &p)
-            || self.off_hand.map_or(false, &p)
-            || self.headgear.map_or(false, &p)
-            || self.armor.map_or(false, &p)
-            || self.accessory.map_or(false, &p)
+        self.main_hand().map_or(false, &p)
+            || self.off_hand().map_or(false, &p)
+            || self.headgear().map_or(false, &p)
+            || self.armor().map_or(false, &p)
+            || self.accessory().map_or(false, &p)
     }
 
     pub fn absorbs(&self, element: Element) -> bool {
-        self.base_stats.absorbs.contains(&element) ||
+        self.base_stats().absorbs.contains(&element) ||
             self.any_equip(|eq| eq.absorbs.contains(&element))
     }
 
     pub fn halves(&self, element: Element) -> bool {
-        self.base_stats.halves.contains(&element) ||
+        self.base_stats().halves.contains(&element) ||
             self.any_equip(|eq| eq.halves.contains(&element))
     }
 
     pub fn weak(&self, element: Element) -> bool {
-        self.base_stats.weaknesses.contains(&element) ||
+        self.base_stats().weaknesses.contains(&element) ||
             self.any_equip(|eq| eq.weaknesses.contains(&element))
     }
 
@@ -538,75 +599,75 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn abandon(&self) -> bool {
-        self.skill_block.abandon()
+        self.info.skill_block.abandon()
     }
 
     pub fn parry(&self) -> bool {
-        self.skill_block.parry()
+        self.info.skill_block.parry()
     }
 
     pub fn blade_grasp(&self) -> bool {
-        self.skill_block.blade_grasp()
+        self.info.skill_block.blade_grasp()
     }
 
     pub fn concentrate(&self) -> bool {
-        self.skill_block.concentrate()
+        self.info.skill_block.concentrate()
     }
 
     pub fn dual_wield(&self) -> bool {
-        self.skill_block.dual_wield()
+        self.info.skill_block.dual_wield()
     }
 
     pub fn double_hand(&self) -> bool {
-        self.skill_block.double_hand()
+        self.info.skill_block.double_hand()
     }
 
     pub fn martial_arts(&self) -> bool {
-        self.skill_block.martial_arts()
+        self.info.skill_block.martial_arts()
     }
 
     pub fn attack_up(&self) -> bool {
-        self.skill_block.attack_up()
+        self.info.skill_block.attack_up()
     }
 
     pub fn defense_up(&self) -> bool {
-        self.skill_block.defense_up()
+        self.info.skill_block.defense_up()
     }
 
     pub fn counter(&self) -> bool {
-        self.skill_block.counter()
+        self.info.skill_block.counter()
     }
 
     pub fn move_hp_up(&self) -> bool {
-        self.skill_block.move_hp_up()
+        self.info.skill_block.move_hp_up()
     }
 
     pub fn move_mp_up(&self) -> bool {
-        self.skill_block.move_hp_up()
+        self.info.skill_block.move_hp_up()
     }
 
     pub fn sicken(&self) -> bool {
-        self.skill_block.sicken()
+        self.info.skill_block.sicken()
     }
 
     pub fn mana_shield(&self) -> bool {
-        self.skill_block.mana_shield()
+        self.info.skill_block.mana_shield()
     }
 
     pub fn damage_split(&self) -> bool {
-        self.skill_block.damage_split()
+        self.info.skill_block.damage_split()
     }
 
     pub fn auto_potion(&self) -> bool {
-        self.skill_block.auto_potion()
+        self.info.skill_block.auto_potion()
     }
 
     pub fn throw_item(&self) -> bool {
-        self.skill_block.throw_item()
+        self.info.skill_block.throw_item()
     }
 
     pub fn skill_set_item(&self) -> bool {
-        self.skill_block.skill_set_item()
+        self.info.skill_block.skill_set_item()
     }
 }
 

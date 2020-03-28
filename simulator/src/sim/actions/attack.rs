@@ -6,7 +6,7 @@ fn should_attack_ally(user: &Combatant, target: &Combatant) -> bool {
     if DAMAGE_CANCELS.iter().any(|condition| target.has_condition(*condition)) {
         return true;
     }
-    if let Some(element) = user.main_hand.and_then(|w| w.weapon_element) {
+    if let Some(element) = user.main_hand().and_then(|w| w.weapon_element) {
         target.absorbs(element)
     } else {
         false
@@ -14,7 +14,7 @@ fn should_attack_ally(user: &Combatant, target: &Combatant) -> bool {
 }
 
 fn should_attack_foe(user: &Combatant, target: &Combatant) -> bool {
-    if let Some(element) = user.main_hand.and_then(|w| w.weapon_element)
+    if let Some(element) = user.main_hand().and_then(|w| w.weapon_element)
     {
         if target.absorbs(element) {
             return false;
@@ -39,20 +39,20 @@ pub fn consider_attack(actions: &mut Vec<Action>, _sim: &Simulation, user: &Comb
         actions.push(Action {
             kind: ActionKind::FrogAttack,
             range: 1,
-            target_id: target.id,
+            target_id: target.id(),
         });
     } else {
         actions.push(Action {
             kind: ActionKind::Attack,
-            range: user.main_hand.map_or(1, |eq| eq.range),
-            target_id: target.id,
+            range: user.main_hand().map_or(1, |eq| eq.range),
+            target_id: target.id(),
         });
     }
 }
 
 pub fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
-    let weapon1 = sim.combatant(user_id).main_hand;
-    let weapon2 = sim.combatant(user_id).off_hand;
+    let weapon1 = sim.combatant(user_id).main_hand();
+    let weapon2 = sim.combatant(user_id).off_hand();
     let (mut damage, mut crit) = do_single_weapon_attack(sim, user_id, weapon1, target_id);
     if sim.combatant(user_id).dual_wield() && weapon2.is_some() {
         if sim.roll_auto_succeed() < 0.05 {
@@ -68,8 +68,8 @@ pub fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Com
 
 pub fn perform_frog_attack(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
     let pa = sim.combatant(user_id).pa_bang();
-    sim.change_target_hp(target_id, pa, Source::Weapon(user_id, None));
-    sim.after_damage_reaction(user_id, target_id, pa);
+    sim.change_target_hp(target_id, pa.into(), Source::Weapon(user_id, None));
+    sim.after_damage_reaction(user_id, target_id, pa.into());
 }
 
 fn do_single_weapon_attack<'a, 'b>(sim: &'a mut Simulation<'b>,
@@ -153,10 +153,10 @@ fn calculate_damage<'a, 'b>(sim: &'a Simulation<'b>,
 //     xa = floor(xa * user.zodiac_compatibility(target))
 
     if user.barehanded() {
-        damage = xa * user.pa_bang();
+        damage = xa * user.pa_bang() as i16;
     } else {
         let weapon = weapon.unwrap();
-        damage = xa * weapon.wp;
+        damage = xa * weapon.wp as i16;
 
         if user.double_hand() && weapon.weapon_type != Some(WeaponType::Gun) {
             damage *= 2;

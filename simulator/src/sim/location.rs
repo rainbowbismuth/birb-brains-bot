@@ -1,12 +1,12 @@
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Location {
-    pub x: i16
+    pub x: i8
 }
 
-pub type Distance = i16;
+pub type Distance = i8;
 
 impl Location {
-    pub fn new(location: i16) -> Location {
+    pub fn new(location: i8) -> Location {
         Location { x: location }
     }
 

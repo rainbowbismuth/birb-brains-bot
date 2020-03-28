@@ -13,7 +13,7 @@ pub enum ActionKind {
 #[derive(Copy, Clone, Debug)]
 pub struct Action {
     pub kind: ActionKind,
-    pub range: i16,
+    pub range: i8,
     pub target_id: CombatantId,
 }
 

@@ -61,13 +61,13 @@ pub fn describe_phase(phase: &Phase, combatants: &[Combatant]) -> String {
             "Slow Action Charging".cyan().to_string(),
 
         Phase::SlowAction(cid) =>
-            format!("{}'s SA", combatants[cid.index()].name).cyan().to_string(),
+            format!("{}'s SA", combatants[cid.index()].name()).cyan().to_string(),
 
         Phase::CtCharging =>
             "CT Charging".cyan().to_string(),
 
         Phase::ActiveTurn(cid) =>
-            format!("{}'s AT", combatants[cid.index()].name).cyan().to_string()
+            format!("{}'s AT", combatants[cid.index()].name()).cyan().to_string()
     }
 }
 
@@ -163,12 +163,12 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
         format!(", {}", conditions.iter().map(|c| c.name()).collect::<Vec<_>>().join(", "))
     };
 
-    match combatant.team {
+    match combatant.team() {
         Team::Left =>
-            format!("{} ({} HP, loc: {}{})", combatant.name.red(), combatant.hp(), combatant.location.x, cond_str),
+            format!("{} ({} HP, loc: {}{})", combatant.name().red(), combatant.hp(), combatant.location.x, cond_str),
 
         Team::Right =>
-            format!("{} ({} HP, loc: {}{})", combatant.name.blue(), combatant.hp(), combatant.location.x, cond_str)
+            format!("{} ({} HP, loc: {}{})", combatant.name().blue(), combatant.hp(), combatant.location.x, cond_str)
     }
 }
 

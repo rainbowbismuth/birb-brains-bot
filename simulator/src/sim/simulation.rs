@@ -15,7 +15,7 @@ pub struct Simulation<'a> {
     pub rng: RefCell<SmallRng>,
     pub combatants: [Combatant<'a>; MAX_COMBATANTS],
     pub actions: RefCell<Vec<Action>>,
-    pub arena_length: i16,
+    pub arena_length: i8,
     pub clock_tick: usize,
     pub prediction_mode: bool,
     pub log: Log<'a>,
@@ -26,7 +26,7 @@ pub struct Simulation<'a> {
 }
 
 impl<'a> Simulation<'a> {
-    pub fn new(combatants: [Combatant<'a>; MAX_COMBATANTS], arena_length: i16, rng: SmallRng, event_log: bool) -> Simulation<'a> {
+    pub fn new(combatants: [Combatant<'a>; MAX_COMBATANTS], arena_length: i8, rng: SmallRng, event_log: bool) -> Simulation<'a> {
         let mut sim = Simulation {
             rng: RefCell::new(rng),
             combatants,
@@ -100,7 +100,7 @@ impl<'a> Simulation<'a> {
 
     pub fn team_healthy(&self, team: Team) -> bool {
         self.combatants.iter()
-            .filter(|combatant| combatant.team == team)
+            .filter(|combatant| combatant.team() == team)
             .any(|combatant|
                 !combatant.dead() && !combatant.petrify() && !combatant.blood_suck())
     }
@@ -367,10 +367,10 @@ impl<'a> Simulation<'a> {
 
     fn ai_can_be_cowardly(&self, user: &Combatant) -> bool {
         let any_healthy = self.combatants.iter()
-            .filter(|c| user.team == c.team && user.id != c.id)
+            .filter(|c| user.team() == c.team() && user.id() != c.id())
             .any(|c| c.healthy());
         let all_critical = self.combatants.iter()
-            .filter(|c| user.team == c.team && user.id != c.id)
+            .filter(|c| user.team() == c.team() && user.id() != c.id())
             .all(|c| c.critical());
         any_healthy && !all_critical
     }
@@ -389,14 +389,14 @@ impl<'a> Simulation<'a> {
         self.log_event(Event::Moved(user_id, old_location, new_location));
     }
 
-    fn do_move_to_range(&mut self, user_id: CombatantId, range: i16, target_id: CombatantId) {
+    fn do_move_to_range(&mut self, user_id: CombatantId, range: i8, target_id: CombatantId) {
         let target_location = self.combatant(target_id).location;
         let user = self.combatant(user_id);
         if user.moved_during_active_turn || user.dont_move() {
             return;
         }
         // TODO: Charm?
-        let desired = match user.team {
+        let desired = match user.team() {
             Team::Left => target_location.x - range,
             Team::Right => target_location.x + range
         };
@@ -427,7 +427,7 @@ impl<'a> Simulation<'a> {
         if user.moved_during_active_turn || user.dont_move() {
             return;
         }
-        match user.team {
+        match user.team() {
             Team::Left => {
                 let new_location = Location::new(user.location.x - user.movement());
                 self.do_move_with_bounds(user_id, new_location);
@@ -510,7 +510,7 @@ impl<'a> Simulation<'a> {
 
     pub fn do_physical_evade(&self, user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
         if target.blade_grasp() && self.roll_brave_reaction(target) {
-            self.log_event(Event::Evaded(target.id, EvasionType::BladeGrasp, src));
+            self.log_event(Event::Evaded(target.id(), EvasionType::BladeGrasp, src));
             return true;
         }
 
@@ -524,16 +524,16 @@ impl<'a> Simulation<'a> {
         }
 
         if self.roll_auto_fail() < target.physical_accessory_evasion() {
-            self.log_event(Event::Evaded(target.id, EvasionType::Guarded, src));
+            self.log_event(Event::Evaded(target.id(), EvasionType::Guarded, src));
             true
         } else if self.roll_auto_fail() < target.physical_shield_evasion() / 2.0 {
-            self.log_event(Event::Evaded(target.id, EvasionType::Blocked, src));
+            self.log_event(Event::Evaded(target.id(), EvasionType::Blocked, src));
             true
         } else if self.roll_auto_fail() < target.weapon_evasion() / 2.0 {
-            self.log_event(Event::Evaded(target.id, EvasionType::Parried, src));
+            self.log_event(Event::Evaded(target.id(), EvasionType::Parried, src));
             true
         } else if self.roll_auto_fail() < target.class_evasion() / 2.0 {
-            self.log_event(Event::Evaded(target.id, EvasionType::Evaded, src));
+            self.log_event(Event::Evaded(target.id(), EvasionType::Evaded, src));
             true
         } else {
             false
@@ -645,39 +645,39 @@ impl<'a> Simulation<'a> {
         let weapon_type = weapon.and_then(|e| e.weapon_type);
         match weapon_type {
             None =>
-                ((user.pa() + k) * user.raw_brave) / 100,
+                ((user.pa() as i16 + k as i16) * user.raw_brave as i16) / 100,
 
             Some(WeaponType::Knife) | Some(WeaponType::NinjaSword) | Some(WeaponType::Bow) =>
-                (user.pa() + k + user.speed() + k) / 2,
+                (user.pa() as i16 + k + user.speed() as i16 + k) / 2,
 
             Some(WeaponType::KnightSword) | Some(WeaponType::Katana) =>
-                ((user.pa() + k) * user.raw_brave) / 100,
+                ((user.pa() as i16 + k) * user.raw_brave as i16) / 100,
 
             Some(WeaponType::Sword) | Some(WeaponType::Pole) | Some(WeaponType::Spear) | Some(WeaponType::Crossbow) =>
-                user.pa() + k,
+                user.pa() as i16 + k,
 
             Some(WeaponType::Staff) =>
-                user.ma() + k,
+                user.ma() as i16 + k,
 
             Some(WeaponType::Flail) | Some(WeaponType::Bag) =>
-                self.roll_inclusive(1, (user.pa() + k).max(1)),
+                self.roll_inclusive(1, (user.pa() as i16 + k).max(1)),
 
             Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) =>
-                (user.pa() + k + user.ma() + k) / 2,
+                (user.pa() as i16 + k + user.ma() as i16 + k) / 2,
 
             // TODO: Magical guns
             Some(WeaponType::Gun) =>
-                weapon.unwrap().wp + k
+                weapon.unwrap().wp as i16 + k
         }
     }
 }
 
-pub fn in_range(user: &Combatant, range: i16, target: &Combatant) -> bool {
+pub fn in_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
     let dist = user.distance(target);
     dist <= range
 }
 
-pub fn can_move_into_range(user: &Combatant, range: i16, target: &Combatant) -> bool {
+pub fn can_move_into_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
     let movement = if user.dont_move() { 0 } else { user.movement() };
     user.distance(target) <= range + movement
 }

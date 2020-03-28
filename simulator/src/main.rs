@@ -9,7 +9,7 @@ use rand::rngs::{SmallRng, ThreadRng};
 
 use sim::{Combatant, CombatantId, Simulation, Team};
 
-use crate::sim::describe_entry;
+use crate::sim::{CombatantInfo, describe_entry};
 
 mod dto;
 mod sim;
@@ -48,7 +48,11 @@ fn clamp(mut n: f64, min: f64, max: f64) -> f64 {
 }
 
 fn main() -> io::Result<()> {
-    // data::convert_data_from_feed()?;
+    // data::convert_data_from_feed()
+    run_sims()
+}
+
+fn run_sims() -> io::Result<()> {
     let patches = data::read_all_patches()?;
     // let matches = data::read_all_match_ups()?;
 
@@ -72,15 +76,26 @@ fn main() -> io::Result<()> {
         let (patch_num, match_up) = data::read_match(match_num as usize)?;
         let patch = patches.iter().find(|p| p.time as usize == patch_num).unwrap();
 
+        let combatant_infos = [
+            CombatantInfo::new(CombatantId::new(0), Team::Left, &match_up.left.combatants[0], patch),
+            CombatantInfo::new(CombatantId::new(1), Team::Left, &match_up.left.combatants[1], patch),
+            CombatantInfo::new(CombatantId::new(2), Team::Left, &match_up.left.combatants[2], patch),
+            CombatantInfo::new(CombatantId::new(3), Team::Left, &match_up.left.combatants[3], patch),
+            CombatantInfo::new(CombatantId::new(4), Team::Right, &match_up.right.combatants[0], patch),
+            CombatantInfo::new(CombatantId::new(5), Team::Right, &match_up.right.combatants[1], patch),
+            CombatantInfo::new(CombatantId::new(6), Team::Right, &match_up.right.combatants[2], patch),
+            CombatantInfo::new(CombatantId::new(7), Team::Right, &match_up.right.combatants[3], patch),
+        ];
+
         let combatants = [
-            Combatant::new(CombatantId::new(0), Team::Left, &match_up.left.combatants[0], patch),
-            Combatant::new(CombatantId::new(1), Team::Left, &match_up.left.combatants[1], patch),
-            Combatant::new(CombatantId::new(2), Team::Left, &match_up.left.combatants[2], patch),
-            Combatant::new(CombatantId::new(3), Team::Left, &match_up.left.combatants[3], patch),
-            Combatant::new(CombatantId::new(4), Team::Right, &match_up.right.combatants[0], patch),
-            Combatant::new(CombatantId::new(5), Team::Right, &match_up.right.combatants[1], patch),
-            Combatant::new(CombatantId::new(6), Team::Right, &match_up.right.combatants[2], patch),
-            Combatant::new(CombatantId::new(7), Team::Right, &match_up.right.combatants[3], patch),
+            Combatant::new(&combatant_infos[0]),
+            Combatant::new(&combatant_infos[1]),
+            Combatant::new(&combatant_infos[2]),
+            Combatant::new(&combatant_infos[3]),
+            Combatant::new(&combatant_infos[4]),
+            Combatant::new(&combatant_infos[5]),
+            Combatant::new(&combatant_infos[6]),
+            Combatant::new(&combatant_infos[7]),
         ];
 
         let (left_wins_percent, new_time_outs) = run_many_sims(&combatants);
