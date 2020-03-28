@@ -77,7 +77,7 @@ impl<'a> LogData<'a> {
                 combatants: Vec::from(combatants),
                 event,
             };
-            println!("{}", describe_entry(&entry)); // For intermixing with debugging, should flag.
+            // println!("{}", describe_entry(&entry)); // For intermixing with debugging, should flag.
             log.push(entry);
         }
     }

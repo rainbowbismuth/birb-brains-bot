@@ -626,7 +626,7 @@ impl<'a> Simulation<'a> {
                 user.ma() + k,
 
             Some(WeaponType::Flail) | Some(WeaponType::Bag) =>
-                self.roll_inclusive(1, (user.pa() + k).min(1)),
+                self.roll_inclusive(1, (user.pa() + k).max(1)),
 
             Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) =>
                 (user.pa() + k + user.ma() + k) / 2,
