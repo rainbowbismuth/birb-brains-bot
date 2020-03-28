@@ -1,0 +1,1209 @@
+{
+  "Type": "main",
+  "ID": 1580897292273,
+  "LastMod": "2020-02-05T05:17:00-08:00",
+  "Teams": {
+    "black": {
+      "Player": "!Black",
+      "Name": "Black Team",
+      "Palettes": "Black/Red",
+      "Units": [
+        {
+          "Name": "Duckshut",
+          "Gender": "Male",
+          "Sign": "Aries",
+          "Brave": 67,
+          "Faith": 64,
+          "Class": "Oracle",
+          "ActionSkill": "Black Magic",
+          "ReactionSkill": "Hamedo",
+          "SupportSkill": "Attack UP",
+          "MoveSkill": "Levitate",
+          "Mainhand": "Iron Fan",
+          "Offhand": "",
+          "Head": "Golden Hairpin",
+          "Armor": "Chameleon Robe",
+          "Accessory": "Magic Gauntlet",
+          "ClassSkills": [
+            "Pray Faith",
+            "Blind Rage",
+            "Dispel Magic",
+            "Sleep"
+          ],
+          "ExtraSkills": [
+            "Fire",
+            "Fire 2",
+            "Fire 4",
+            "Bolt",
+            "Bolt 3",
+            "Ice"
+          ]
+        },
+        {
+          "Name": "BandsWithLegends",
+          "Gender": "Male",
+          "Sign": "Pisces",
+          "Brave": 42,
+          "Faith": 77,
+          "Class": "Lancer",
+          "ActionSkill": "Punch Art",
+          "ReactionSkill": "Counter Magic",
+          "SupportSkill": "Dual Wield",
+          "MoveSkill": "Jump+1",
+          "Mainhand": "Spear",
+          "Offhand": "Mythril Spear",
+          "Head": "Platinum Helmet",
+          "Armor": "Linen Cuirass",
+          "Accessory": "Magic Gauntlet",
+          "ClassSkills": [
+            "Level Jump8",
+            "Vertical Jump6"
+          ],
+          "ExtraSkills": [
+            "Pummel",
+            "Wave Fist",
+            "Purification",
+            "Chakra",
+            "Revive"
+          ]
+        },
+        {
+          "Name": "Yowakusuru",
+          "Gender": "Female",
+          "Sign": "Aries",
+          "Brave": 55,
+          "Faith": 54,
+          "Class": "Geomancer",
+          "ActionSkill": "Yin Yang Magic",
+          "ReactionSkill": "Absorb Used MP",
+          "SupportSkill": "Equip Bow",
+          "MoveSkill": "Lava Walking",
+          "Mainhand": "Cross Bow",
+          "Offhand": "Kaiser Plate",
+          "Head": "Holy Miter",
+          "Armor": "Black Costume",
+          "Accessory": "Spike Shoes",
+          "ClassSkills": [
+            "Static Shock",
+            "Will-O-Wisp",
+            "Quicksand",
+            "Blizzard",
+            "Gusty Wind",
+            "Lava Ball"
+          ],
+          "ExtraSkills": [
+            "Blind",
+            "Dispel Magic",
+            "Paralyze",
+            "Sleep",
+            "Dark Holy"
+          ]
+        },
+        {
+          "Name": "BigZeeff",
+          "Gender": "Monster",
+          "Sign": "Sagittarius",
+          "Brave": 50,
+          "Faith": 47,
+          "Class": "Wild Boar",
+          "ActionSkill": "",
+          "ReactionSkill": "",
+          "SupportSkill": "",
+          "MoveSkill": "",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "",
+          "Armor": "",
+          "Accessory": "",
+          "ClassSkills": [],
+          "ExtraSkills": []
+        }
+      ]
+    },
+    "blue": {
+      "Player": "!Blue",
+      "Name": "Blue Team",
+      "Palettes": "Blue/Purple",
+      "Units": [
+        {
+          "Name": "ImXT",
+          "Gender": "Female",
+          "Sign": "Sagittarius",
+          "Brave": 42,
+          "Faith": 61,
+          "Class": "Lancer",
+          "ActionSkill": "Item",
+          "ReactionSkill": "Faith Up",
+          "SupportSkill": "Equip Gun",
+          "MoveSkill": "Retreat",
+          "Mainhand": "Romanda Gun",
+          "Offhand": "Genji Shield",
+          "Head": "Cross Helmet",
+          "Armor": "Chameleon Robe",
+          "Accessory": "Reflect Ring",
+          "ClassSkills": [
+            "Level Jump8",
+            "Vertical Jump7"
+          ],
+          "ExtraSkills": [
+            "X-Potion",
+            "Ether",
+            "Eye Drop",
+            "Phoenix Down"
+          ]
+        },
+        {
+          "Name": "Treapvort",
+          "Gender": "Male",
+          "Sign": "Libra",
+          "Brave": 55,
+          "Faith": 43,
+          "Class": "Calculator",
+          "ActionSkill": "Yin Yang Magic",
+          "ReactionSkill": "Catch",
+          "SupportSkill": "Doublehand",
+          "MoveSkill": "Waterwalking",
+          "Mainhand": "Battle Folio",
+          "Offhand": "",
+          "Head": "Leather Hat",
+          "Armor": "Chameleon Robe",
+          "Accessory": "Elf Mantle",
+          "ClassSkills": [
+            "CT",
+            "Prime Number"
+          ],
+          "ExtraSkills": [
+            "Spell Absorb",
+            "Dispel Magic",
+            "Sleep"
+          ]
+        },
+        {
+          "Name": "Mushywaffles",
+          "Gender": "Female",
+          "Sign": "Aquarius",
+          "Brave": 69,
+          "Faith": 39,
+          "Class": "Lancer",
+          "ActionSkill": "Item",
+          "ReactionSkill": "Caution",
+          "SupportSkill": "Equip Polearm",
+          "MoveSkill": "Move-HP Up",
+          "Mainhand": "Mythril Spear",
+          "Offhand": "Bronze Shield",
+          "Head": "Circlet",
+          "Armor": "White Robe",
+          "Accessory": "N-Kai Armlet",
+          "ClassSkills": [
+            "Level Jump2",
+            "Vertical Jump8"
+          ],
+          "ExtraSkills": [
+            "X-Potion",
+            "Antidote",
+            "Maiden's Kiss",
+            "Holy Water",
+            "Phoenix Down"
+          ]
+        },
+        {
+          "Name": "AndrewSF",
+          "Gender": "Female",
+          "Sign": "Libra",
+          "Brave": 49,
+          "Faith": 54,
+          "Class": "Ninja",
+          "ActionSkill": "Black Magic",
+          "ReactionSkill": "Counter",
+          "SupportSkill": "Concentrate",
+          "MoveSkill": "Waterbreathing",
+          "Mainhand": "Short Edge",
+          "Offhand": "Morning Star",
+          "Head": "Red Hood",
+          "Armor": "Secret Clothes",
+          "Accessory": "108 Gems",
+          "ClassSkills": [
+            "Spear"
+          ],
+          "ExtraSkills": [
+            "Fire 2",
+            "Fire 4",
+            "Bolt 3",
+            "Bolt 4",
+            "Empower",
+            "Frog"
+          ]
+        }
+      ]
+    },
+    "brown": {
+      "Player": "!Brown",
+      "Name": "Brown Team",
+      "Palettes": "Brown/Green",
+      "Units": [
+        {
+          "Name": "JeTfUeL2750F",
+          "Gender": "Male",
+          "Sign": "Scorpio",
+          "Brave": 54,
+          "Faith": 36,
+          "Class": "Summoner",
+          "ActionSkill": "Black Magic",
+          "ReactionSkill": "PA Save",
+          "SupportSkill": "Maintenance",
+          "MoveSkill": "Move-HP Up",
+          "Mainhand": "Oak Staff",
+          "Offhand": "",
+          "Head": "Red Hood",
+          "Armor": "Mythril Vest",
+          "Accessory": "Elf Mantle",
+          "ClassSkills": [
+            "Carbunkle",
+            "Leviathan",
+            "Lich"
+          ],
+          "ExtraSkills": [
+            "Fire 4",
+            "Bolt",
+            "Bolt 2",
+            "Bolt 3",
+            "Ice 3",
+            "Empower"
+          ]
+        },
+        {
+          "Name": "SeniorBunk",
+          "Gender": "Male",
+          "Sign": "Serpentarius",
+          "Brave": 46,
+          "Faith": 51,
+          "Class": "Squire",
+          "ActionSkill": "White Magic",
+          "ReactionSkill": "Distribute",
+          "SupportSkill": "Dual Wield",
+          "MoveSkill": "Waterwalking",
+          "Mainhand": "Morning Star",
+          "Offhand": "Mythril Knife",
+          "Head": "Barette",
+          "Armor": "Power Sleeve",
+          "Accessory": "Leather Mantle",
+          "ClassSkills": [
+            "Throw Stone",
+            "Tickle",
+            "Wish"
+          ],
+          "ExtraSkills": [
+            "Cure 2",
+            "Cure 4",
+            "Shell 2",
+            "Esuna"
+          ]
+        },
+        {
+          "Name": "Silaor",
+          "Gender": "Monster",
+          "Sign": "Aquarius",
+          "Brave": 77,
+          "Faith": 71,
+          "Class": "Dark Behemoth",
+          "ActionSkill": "",
+          "ReactionSkill": "",
+          "SupportSkill": "",
+          "MoveSkill": "",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "",
+          "Armor": "",
+          "Accessory": "",
+          "ClassSkills": [],
+          "ExtraSkills": []
+        },
+        {
+          "Name": "Birdlady420",
+          "Gender": "Female",
+          "Sign": "Pisces",
+          "Brave": 44,
+          "Faith": 64,
+          "Class": "Squire",
+          "ActionSkill": "Elemental",
+          "ReactionSkill": "MA Save",
+          "SupportSkill": "Equip Armor",
+          "MoveSkill": "Swim",
+          "Mainhand": "Flail",
+          "Offhand": "",
+          "Head": "Bronze Helmet",
+          "Armor": "Leather Vest",
+          "Accessory": "Defense Ring",
+          "ClassSkills": [
+            "Accumulate",
+            "Heal"
+          ],
+          "ExtraSkills": [
+            "Water Ball",
+            "Hell Ivy",
+            "Local Quake",
+            "Static Shock",
+            "Will-O-Wisp",
+            "Sand Storm",
+            "Gusty Wind"
+          ]
+        }
+      ]
+    },
+    "champion": {
+      "Player": "!zChamp",
+      "Name": "Champion Team",
+      "Palettes": "Black/Red",
+      "Units": [
+        {
+          "Name": "Belivalan",
+          "Gender": "Male",
+          "Sign": "Virgo",
+          "Brave": 55,
+          "Faith": 44,
+          "Class": "Chemist",
+          "ActionSkill": "Punch Art",
+          "ReactionSkill": "Caution",
+          "SupportSkill": "Attack UP",
+          "MoveSkill": "Move-MP Up",
+          "Mainhand": "Star Bag",
+          "Offhand": "",
+          "Head": "Flash Hat",
+          "Armor": "Leather Vest",
+          "Accessory": "Sprint Shoes",
+          "ClassSkills": [
+            "Potion",
+            "X-Potion",
+            "Ether",
+            "Antidote",
+            "Eye Drop",
+            "Soft",
+            "Remedy",
+            "Phoenix Down"
+          ],
+          "ExtraSkills": [
+            "Pummel",
+            "Secret Fist",
+            "Purification",
+            "Chakra",
+            "Revive"
+          ]
+        },
+        {
+          "Name": "Toka222",
+          "Gender": "Male",
+          "Sign": "Pisces",
+          "Brave": 59,
+          "Faith": 40,
+          "Class": "Lancer",
+          "ActionSkill": "Draw Out",
+          "ReactionSkill": "Speed Save",
+          "SupportSkill": "Dual Wield",
+          "MoveSkill": "Move+1",
+          "Mainhand": "Obelisk",
+          "Offhand": "Ivory Rod",
+          "Head": "Cross Helmet",
+          "Armor": "Genji Armor",
+          "Accessory": "Germinas Boots",
+          "ClassSkills": [
+            "Level Jump4",
+            "Vertical Jump8"
+          ],
+          "ExtraSkills": [
+            "Bizen Boat",
+            "Muramasa",
+            "Kikuichimoji"
+          ]
+        },
+        {
+          "Name": "MuguTheMangler",
+          "Gender": "Female",
+          "Sign": "Pisces",
+          "Brave": 64,
+          "Faith": 73,
+          "Class": "Samurai",
+          "ActionSkill": "Punch Art",
+          "ReactionSkill": "MA Save",
+          "SupportSkill": "Magic Defense UP",
+          "MoveSkill": "Levitate",
+          "Mainhand": "Murasame",
+          "Offhand": "",
+          "Head": "Cross Helmet",
+          "Armor": "Crystal Mail",
+          "Accessory": "Wizard Mantle",
+          "ClassSkills": [
+            "Koutetsu",
+            "Bizen Boat",
+            "Muramasa"
+          ],
+          "ExtraSkills": [
+            "Pummel",
+            "Secret Fist",
+            "Purification",
+            "Chakra",
+            "Revive"
+          ]
+        },
+        {
+          "Name": "Anraiki",
+          "Gender": "Male",
+          "Sign": "Leo",
+          "Brave": 81,
+          "Faith": 73,
+          "Class": "Monk",
+          "ActionSkill": "Basic Skill",
+          "ReactionSkill": "Mana Shield",
+          "SupportSkill": "Throw Item",
+          "MoveSkill": "Move-MP Up",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "Green Beret",
+          "Armor": "Leather Outfit",
+          "Accessory": "Feather Mantle",
+          "ClassSkills": [
+            "Spin Fist",
+            "Wave Fist",
+            "Purification",
+            "Revive"
+          ],
+          "ExtraSkills": [
+            "Accumulate",
+            "Heal",
+            "Tickle"
+          ]
+        }
+      ]
+    },
+    "green": {
+      "Player": "!Green",
+      "Name": "Green Team",
+      "Palettes": "Green/White",
+      "Units": [
+        {
+          "Name": "Edgestream",
+          "Gender": "Male",
+          "Sign": "Pisces",
+          "Brave": 55,
+          "Faith": 76,
+          "Class": "Mime",
+          "ActionSkill": "",
+          "ReactionSkill": "Earplug",
+          "SupportSkill": "Martial Arts",
+          "MoveSkill": "Move+1",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "Flash Hat",
+          "Armor": "Judo Outfit",
+          "Accessory": "Elf Mantle",
+          "ClassSkills": [
+            "Mimic"
+          ],
+          "ExtraSkills": []
+        },
+        {
+          "Name": "Waterwatereverywhere",
+          "Gender": "Male",
+          "Sign": "Sagittarius",
+          "Brave": 45,
+          "Faith": 49,
+          "Class": "Bard",
+          "ActionSkill": "Punch Art",
+          "ReactionSkill": "Dragon Spirit",
+          "SupportSkill": "Equip Polearm",
+          "MoveSkill": "Jump+3",
+          "Mainhand": "Ramia Harp",
+          "Offhand": "",
+          "Head": "Triangle Hat",
+          "Armor": "Leather Vest",
+          "Accessory": "Reflect Ring",
+          "ClassSkills": [
+            "Angel Song",
+            "Cheer Song",
+            "Magic Song",
+            "Sky Demon"
+          ],
+          "ExtraSkills": [
+            "Chakra",
+            "Revive"
+          ]
+        },
+        {
+          "Name": "Ar Tactic",
+          "Gender": "Female",
+          "Sign": "Capricorn",
+          "Brave": 78,
+          "Faith": 77,
+          "Class": "Ninja",
+          "ActionSkill": "Item",
+          "ReactionSkill": "Parry",
+          "SupportSkill": "Defend",
+          "MoveSkill": "Fly",
+          "Mainhand": "Ninja Edge",
+          "Offhand": "Short Edge",
+          "Head": "Headgear",
+          "Armor": "Wizard Outfit",
+          "Accessory": "Dracula Mantle",
+          "ClassSkills": [
+            "Shuriken",
+            "Ninja Sword",
+            "Wand"
+          ],
+          "ExtraSkills": [
+            "Potion",
+            "X-Potion",
+            "Ether",
+            "Holy Water",
+            "Remedy",
+            "Phoenix Down"
+          ]
+        },
+        {
+          "Name": "Gogovachi",
+          "Gender": "Male",
+          "Sign": "Aries",
+          "Brave": 53,
+          "Faith": 44,
+          "Class": "Ninja",
+          "ActionSkill": "Battle Skill",
+          "ReactionSkill": "Faith Up",
+          "SupportSkill": "Equip Sword",
+          "MoveSkill": "Jump+1",
+          "Mainhand": "Ragnarok",
+          "Offhand": "Ninja Edge",
+          "Head": "Twist Headband",
+          "Armor": "Power Sleeve",
+          "Accessory": "Magic Ring",
+          "ClassSkills": [
+            "Bomb"
+          ],
+          "ExtraSkills": [
+            "Magic Break",
+            "Speed Break",
+            "Explosion Sword"
+          ]
+        }
+      ]
+    },
+    "purple": {
+      "Player": "!Purple",
+      "Name": "Purple Team",
+      "Palettes": "Purple/Yellow",
+      "Units": [
+        {
+          "Name": "Shakarak",
+          "Gender": "Male",
+          "Sign": "Aries",
+          "Brave": 70,
+          "Faith": 56,
+          "Class": "Mime",
+          "ActionSkill": "",
+          "ReactionSkill": "Dragon Spirit",
+          "SupportSkill": "Defense UP",
+          "MoveSkill": "Move+2",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "Holy Miter",
+          "Armor": "Secret Clothes",
+          "Accessory": "Diamond Armlet",
+          "ClassSkills": [
+            "Mimic"
+          ],
+          "ExtraSkills": []
+        },
+        {
+          "Name": "Hydragedd0n",
+          "Gender": "Male",
+          "Sign": "Cancer",
+          "Brave": 41,
+          "Faith": 43,
+          "Class": "Archer",
+          "ActionSkill": "Throw",
+          "ReactionSkill": "Earplug",
+          "SupportSkill": "Long Status",
+          "MoveSkill": "Fly",
+          "Mainhand": "Windslash Bow",
+          "Offhand": "",
+          "Head": "Flash Hat",
+          "Armor": "Mythril Vest",
+          "Accessory": "Cursed Ring",
+          "ClassSkills": [
+            "Charge+5",
+            "Charge+7"
+          ],
+          "ExtraSkills": [
+            "Bomb",
+            "Sword"
+          ]
+        },
+        {
+          "Name": "NeonNeptunian",
+          "Gender": "Female",
+          "Sign": "Scorpio",
+          "Brave": 73,
+          "Faith": 36,
+          "Class": "Ninja",
+          "ActionSkill": "Summon Magic",
+          "ReactionSkill": "HP Restore",
+          "SupportSkill": "Equip Gun",
+          "MoveSkill": "Ignore Terrain",
+          "Mainhand": "Blaze Gun",
+          "Offhand": "Blast Gun",
+          "Head": "Feather Hat",
+          "Armor": "Leather Vest",
+          "Accessory": "Bracer",
+          "ClassSkills": [
+            "Shuriken",
+            "Bomb",
+            "Knife",
+            "Staff"
+          ],
+          "ExtraSkills": [
+            "Moogle",
+            "Carbunkle",
+            "Bahamut",
+            "Leviathan",
+            "Salamander",
+            "Fairy",
+            "Lich"
+          ]
+        },
+        {
+          "Name": "Explodincatz",
+          "Gender": "Female",
+          "Sign": "Virgo",
+          "Brave": 56,
+          "Faith": 50,
+          "Class": "Monk",
+          "ActionSkill": "Item",
+          "ReactionSkill": "Catch",
+          "SupportSkill": "Defense UP",
+          "MoveSkill": "Jump+2",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "Flash Hat",
+          "Armor": "Chain Vest",
+          "Accessory": "Defense Armlet",
+          "ClassSkills": [
+            "Spin Fist",
+            "Pummel",
+            "Wave Fist",
+            "Earth Slash",
+            "Secret Fist",
+            "Purification",
+            "Chakra",
+            "Revive"
+          ],
+          "ExtraSkills": [
+            "Potion",
+            "X-Potion",
+            "Eye Drop",
+            "Phoenix Down"
+          ]
+        }
+      ]
+    },
+    "red": {
+      "Player": "!Red",
+      "Name": "Red Team",
+      "Palettes": "Red/Brown",
+      "Units": [
+        {
+          "Name": "Tithonus",
+          "Gender": "Male",
+          "Sign": "Scorpio",
+          "Brave": 68,
+          "Faith": 73,
+          "Class": "Priest",
+          "ActionSkill": "Summon Magic",
+          "ReactionSkill": "Faith Up",
+          "SupportSkill": "Doublehand",
+          "MoveSkill": "Move+3",
+          "Mainhand": "Morning Star",
+          "Offhand": "",
+          "Head": "Triangle Hat",
+          "Armor": "Robe of Lords",
+          "Accessory": "Battle Boots",
+          "ClassSkills": [
+            "Cure 2",
+            "Raise",
+            "Shell",
+            "Shell 2",
+            "Wall",
+            "Esuna"
+          ],
+          "ExtraSkills": [
+            "Moogle",
+            "Carbunkle",
+            "Odin",
+            "Salamander",
+            "Cyclops"
+          ]
+        },
+        {
+          "Name": "Adenis222",
+          "Gender": "Male",
+          "Sign": "Libra",
+          "Brave": 70,
+          "Faith": 68,
+          "Class": "Knight",
+          "ActionSkill": "Steal",
+          "ReactionSkill": "Parry",
+          "SupportSkill": "Attack UP",
+          "MoveSkill": "Move+2",
+          "Mainhand": "Defender",
+          "Offhand": "",
+          "Head": "Genji Helmet",
+          "Armor": "Carabini Mail",
+          "Accessory": "Bracer",
+          "ClassSkills": [
+            "Head Break",
+            "Shield Break",
+            "Power Break"
+          ],
+          "ExtraSkills": [
+            "Steal Heart",
+            "Steal Shield",
+            "Steal Weapon",
+            "Steal Accessory",
+            "Steal Status"
+          ]
+        },
+        {
+          "Name": "Feffle",
+          "Gender": "Male",
+          "Sign": "Taurus",
+          "Brave": 47,
+          "Faith": 63,
+          "Class": "Samurai",
+          "ActionSkill": "Black Magic",
+          "ReactionSkill": "MA Save",
+          "SupportSkill": "Martial Arts",
+          "MoveSkill": "Levitate",
+          "Mainhand": "Asura Knife",
+          "Offhand": "",
+          "Head": "Iron Helmet",
+          "Armor": "Linen Robe",
+          "Accessory": "Feather Mantle",
+          "ClassSkills": [
+            "Koutetsu",
+            "Bizen Boat",
+            "Murasame"
+          ],
+          "ExtraSkills": [
+            "Fire 2",
+            "Fire 4",
+            "Bolt",
+            "Ice",
+            "Ice 4",
+            "Frog"
+          ]
+        },
+        {
+          "Name": "Sypheck",
+          "Gender": "Male",
+          "Sign": "Leo",
+          "Brave": 44,
+          "Faith": 53,
+          "Class": "Geomancer",
+          "ActionSkill": "Time Magic",
+          "ReactionSkill": "Blade Grasp",
+          "SupportSkill": "Maintenance",
+          "MoveSkill": "Lava Walking",
+          "Mainhand": "Battle Axe",
+          "Offhand": "Diamond Shield",
+          "Head": "Thief Hat",
+          "Armor": "Adaman Vest",
+          "Accessory": "Cherche",
+          "ClassSkills": [
+            "Pitfall",
+            "Hell Ivy",
+            "Hallowed Ground",
+            "Local Quake",
+            "Static Shock",
+            "Will-O-Wisp",
+            "Quicksand",
+            "Sand Storm",
+            "Blizzard",
+            "Gusty Wind"
+          ],
+          "ExtraSkills": [
+            "Haste",
+            "Slow 2",
+            "Stop",
+            "Float",
+            "Meteor"
+          ]
+        }
+      ]
+    },
+    "white": {
+      "Player": "!White",
+      "Name": "White Team",
+      "Palettes": "White/Blue",
+      "Units": [
+        {
+          "Name": "EnemyController",
+          "Gender": "Female",
+          "Sign": "Taurus",
+          "Brave": 54,
+          "Faith": 51,
+          "Class": "Monk",
+          "ActionSkill": "Time Magic",
+          "ReactionSkill": "Brave Up",
+          "SupportSkill": "Short Status",
+          "MoveSkill": "Jump+3",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "Black Hood",
+          "Armor": "Brigandine",
+          "Accessory": "Sprint Shoes",
+          "ClassSkills": [
+            "Pummel",
+            "Secret Fist",
+            "Purification",
+            "Revive"
+          ],
+          "ExtraSkills": [
+            "Immobilize",
+            "Float",
+            "Quick",
+            "Meteor"
+          ]
+        },
+        {
+          "Name": "Reamplify",
+          "Gender": "Female",
+          "Sign": "Leo",
+          "Brave": 44,
+          "Faith": 74,
+          "Class": "Priest",
+          "ActionSkill": "Basic Skill",
+          "ReactionSkill": "Parry",
+          "SupportSkill": "Doublehand",
+          "MoveSkill": "Move+2",
+          "Mainhand": "Oak Staff",
+          "Offhand": "",
+          "Head": "Green Beret",
+          "Armor": "Adaman Vest",
+          "Accessory": "Red Shoes",
+          "ClassSkills": [
+            "Cure 3",
+            "Cure 4",
+            "Raise",
+            "Raise 2",
+            "Protect",
+            "Wall",
+            "Esuna"
+          ],
+          "ExtraSkills": [
+            "Throw Stone",
+            "Heal"
+          ]
+        },
+        {
+          "Name": "Fozzington",
+          "Gender": "Female",
+          "Sign": "Virgo",
+          "Brave": 52,
+          "Faith": 42,
+          "Class": "Ninja",
+          "ActionSkill": "Steal",
+          "ReactionSkill": "Regenerator",
+          "SupportSkill": "Halve MP",
+          "MoveSkill": "Fly",
+          "Mainhand": "Cultist Dagger",
+          "Offhand": "Ninja Edge",
+          "Head": "Green Beret",
+          "Armor": "Judo Outfit",
+          "Accessory": "Feather Mantle",
+          "ClassSkills": [
+            "Shuriken",
+            "Wand",
+            "Dictionary"
+          ],
+          "ExtraSkills": [
+            "Gil Taking",
+            "Steal Helmet",
+            "Steal Accessory",
+            "Arm Aim"
+          ]
+        },
+        {
+          "Name": "Quinnotetiquan",
+          "Gender": "Male",
+          "Sign": "Sagittarius",
+          "Brave": 43,
+          "Faith": 69,
+          "Class": "Thief",
+          "ActionSkill": "Talk Skill",
+          "ReactionSkill": "Parry",
+          "SupportSkill": "Secret Hunt",
+          "MoveSkill": "Waterwalking",
+          "Mainhand": "Mythril Knife",
+          "Offhand": "",
+          "Head": "Leather Hat",
+          "Armor": "Adaman Vest",
+          "Accessory": "Defense Armlet",
+          "ClassSkills": [
+            "Steal Shield",
+            "Steal Accessory",
+            "Leg Aim"
+          ],
+          "ExtraSkills": [
+            "Invitation",
+            "Praise",
+            "Threaten",
+            "Preach",
+            "Solution",
+            "Insult",
+            "Refute"
+          ]
+        }
+      ]
+    },
+    "yellow": {
+      "Player": "!Yellow",
+      "Name": "Yellow Team",
+      "Palettes": "Yellow/Black",
+      "Units": [
+        {
+          "Name": "Sinnyil2",
+          "Gender": "Male",
+          "Sign": "Aries",
+          "Brave": 58,
+          "Faith": 72,
+          "Class": "Mediator",
+          "ActionSkill": "Item",
+          "ReactionSkill": "Brave Up",
+          "SupportSkill": "Defend",
+          "MoveSkill": "Jump+1",
+          "Mainhand": "Orichalcum",
+          "Offhand": "",
+          "Head": "Holy Miter",
+          "Armor": "Robe of Lords",
+          "Accessory": "Wizard Mantle",
+          "ClassSkills": [
+            "Persuade",
+            "Negotiate",
+            "Mimic Daravon",
+            "Refute",
+            "Rehabilitate"
+          ],
+          "ExtraSkills": [
+            "Potion",
+            "Hi-Potion",
+            "Echo Grass",
+            "Soft",
+            "Holy Water"
+          ]
+        },
+        {
+          "Name": "Alc Trinity",
+          "Gender": "Female",
+          "Sign": "Virgo",
+          "Brave": 79,
+          "Faith": 68,
+          "Class": "Dancer",
+          "ActionSkill": "Draw Out",
+          "ReactionSkill": "Counter Flood",
+          "SupportSkill": "Equip Shield",
+          "MoveSkill": "Lava Walking",
+          "Mainhand": "Cashmere",
+          "Offhand": "Buckler",
+          "Head": "Barette",
+          "Armor": "Leather Outfit",
+          "Accessory": "Feather Boots",
+          "ClassSkills": [
+            "Witch Hunt",
+            "Wiznaibus",
+            "Slow Dance",
+            "Polka Polka",
+            "Obsidian Blade",
+            "Dragon Pit"
+          ],
+          "ExtraSkills": [
+            "Koutetsu",
+            "Murasame",
+            "Kiyomori",
+            "Kikuichimoji"
+          ]
+        },
+        {
+          "Name": "Arachness",
+          "Gender": "Monster",
+          "Sign": "Virgo",
+          "Brave": 45,
+          "Faith": 60,
+          "Class": "Vampire",
+          "ActionSkill": "",
+          "ReactionSkill": "",
+          "SupportSkill": "",
+          "MoveSkill": "",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "",
+          "Armor": "",
+          "Accessory": "",
+          "ClassSkills": [],
+          "ExtraSkills": []
+        },
+        {
+          "Name": "NotoriousThief",
+          "Gender": "Female",
+          "Sign": "Leo",
+          "Brave": 53,
+          "Faith": 79,
+          "Class": "Samurai",
+          "ActionSkill": "Summon Magic",
+          "ReactionSkill": "Distribute",
+          "SupportSkill": "Martial Arts",
+          "MoveSkill": "Move-HP Up",
+          "Mainhand": "",
+          "Offhand": "",
+          "Head": "Platinum Helmet",
+          "Armor": "Linen Cuirass",
+          "Accessory": "Jade Armlet",
+          "ClassSkills": [
+            "Bizen Boat"
+          ],
+          "ExtraSkills": [
+            "Moogle",
+            "Carbunkle",
+            "Leviathan"
+          ]
+        }
+      ]
+    }
+  },
+  "Maps": [
+    "35) Zaland Fort City",
+    "29) Colliery Underground Second Floor",
+    "125) Checkerboard Stairs",
+    "62) Chapel of Orbonne Monastery",
+    "48) Slums of Zarghidas",
+    "41) Besrodio's House",
+    "30) Colliery Underground Third Floor",
+    "104) Beoulve Residence"
+  ],
+  "Winners": [
+    "red",
+    "yellow",
+    "white",
+    "purple",
+    "red",
+    "purple",
+    "red",
+    "red"
+  ],
+  "SkillDrop": "NeutralZodiac",
+  "Entrants": [
+    "tithonus",
+    "imxt",
+    "edgestream",
+    "sinnyil2",
+    "enemycontroller",
+    "duckshut",
+    "shakarak",
+    "jetfuel2750f",
+    "adenis222",
+    "treapvort",
+    "waterwatereverywhere",
+    "alc_trinity",
+    "reamplify",
+    "bandswithlegends",
+    "hydragedd0n",
+    "seniorbunk",
+    "feffle",
+    "mushywaffles",
+    "ar_tactic",
+    "arachness",
+    "fozzington",
+    "yowakusuru",
+    "neonneptunian",
+    "silaor",
+    "sypheck",
+    "andrewsf",
+    "gogovachi",
+    "notoriousthief",
+    "quinnotetiquan",
+    "bigzeeff",
+    "explodincatz",
+    "birdlady420"
+  ],
+  "Snubs": [
+    "ominnous",
+    "noxegs",
+    "theredmelody",
+    "kasugairoastedpeas",
+    "asimpleobserver",
+    "superdevon1",
+    "kitchtowel",
+    "sun_pixie",
+    "mightygerm1",
+    "noloetazier",
+    "belivalan",
+    "shintaronayaka",
+    "time__mage",
+    "blaqkelectric",
+    "tanookium",
+    "ruvelia_bibei",
+    "nobodyhasone",
+    "spoonstealer",
+    "zephyrtempest",
+    "egil72",
+    "azure_storm",
+    "bryan792",
+    "i3ahamut_prime",
+    "alaylle",
+    "airemlis",
+    "awelltrainedferret",
+    "peebs",
+    "theblobz",
+    "grashmu",
+    "mirapoix",
+    "tsarman",
+    "chocolatetorpedo",
+    "happyfundude",
+    "strumisgod",
+    "wizard_01",
+    "garbagewitchy",
+    "littywhiterock",
+    "ariestris",
+    "kuroda222",
+    "wirelord",
+    "masan001",
+    "dieinobscurity",
+    "diablo549",
+    "benyupoker",
+    "e_tap",
+    "spraycanhitman",
+    "fluffernuff",
+    "damuron",
+    "deciimos",
+    "nanoha272",
+    "zigaming",
+    "salty__rage",
+    "galvior",
+    "hewf_",
+    "insonder",
+    "raitogg",
+    "mquell",
+    "olthid",
+    "koryiaki",
+    "drakerowan",
+    "lydian_c",
+    "davestrider55",
+    "the_pengwin",
+    "zalerah",
+    "weegz",
+    "upvla",
+    "hamborn",
+    "tayuku",
+    "losain",
+    "haplessone",
+    "anraiki",
+    "sasadadafafa",
+    "cpt_qc",
+    "meyples"
+  ]
+}
