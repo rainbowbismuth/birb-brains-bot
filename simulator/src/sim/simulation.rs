@@ -297,6 +297,14 @@ impl<'a> Simulation<'a> {
             }
 
             let combatant = self.combatant(*c_id);
+            if combatant.death_sentence() {
+                let now_dead = self.combatant_mut(*c_id).tick_death_sentence_counter();
+                if now_dead {
+                    self.target_died(*c_id, Source::Condition(Condition::DeathSentence));
+                }
+            }
+
+            let combatant = self.combatant(*c_id);
             if combatant.dead() {
                 continue;
             }
@@ -524,7 +532,11 @@ impl<'a> Simulation<'a> {
         if !target.healthy() {
             return; // TODO: this doesn't strictly make sense I don't think...
         }
-        // TODO: Handle poisoner ability.
+
+        let user = self.combatant(user_id);
+        if user.sicken() {
+            self.add_condition(target_id, Condition::Poison, Source::Constant("Sicken"));
+        }
 
         if let Some(equip) = weapon {
             for condition in &equip.chance_to_add {
@@ -543,14 +555,18 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn change_target_hp(&mut self, target_id: CombatantId, amount: i16, src: Source<'a>) {
-        let target = self.combatant_mut(target_id);
+        let target = self.combatant(target_id);
         if amount > 0 {
             if !target.healthy() {
                 return;
             }
-//             if target.mana_shield and target.mp > 0 and self.roll_brave_reaction(target):
-//                 self.change_target_mp(target, amount, source + ' (mana shield)')
+            if target.mana_shield() && target.mp() > 0 && self.roll_brave_reaction(target) {
+                self.change_target_mp(target_id, amount, src);
+                // TODO: Is this considered damage of DAMAGE_CANCELS?
+                return;
+            }
         }
+        let target = self.combatant_mut(target_id);
         target.set_hp_within_bounds(target.hp() - amount);
         let now_dead = target.dead();
         if amount > 0 {
@@ -569,15 +585,18 @@ impl<'a> Simulation<'a> {
         }
     }
 
-//     def change_target_mp(self, target: Combatant, amount, source: str):
-//         if not target.healthy:
-//             return
-//         target.mp = min(target.max_mp, max(0, target.mp - amount))
-//         if amount >= 0 and source:
-//             self.unit_report(target, f'took {amount} MP damage from {source}')
-//         elif amount < 0 and source:
-//             self.unit_report(target, f'recovered {abs(amount)} MP from {source}')
-//
+    pub fn change_target_mp(&mut self, target_id: CombatantId, amount: i16, src: Source<'a>) {
+        let target = self.combatant_mut(target_id);
+        if target.dead() || target.petrify() || target.crystal() {
+            return;
+        }
+        target.set_mp_within_bounds(target.mp() - amount);
+        if amount >= 0 {
+            self.log_event(Event::MpDamage(target_id, amount, src));
+        } else {
+            self.log_event(Event::MpHeal(target_id, amount, src));
+        }
+    }
 
     pub fn target_died(&mut self, target_id: CombatantId, src: Source<'a>) {
         let target = self.combatant_mut(target_id);
@@ -597,15 +616,16 @@ impl<'a> Simulation<'a> {
             return;
         }
 
-//         if target.auto_potion and self.roll_brave_reaction(target):
-//             # FIXME: Need to consider UNDEAD
-//             self.change_target_hp(target, -100, 'auto potion')
-//             return
+        if target.auto_potion() && self.roll_brave_reaction(target) {
+            let auto_potion_amount = if target.undead() { 100 } else { -100 };
+            self.change_target_hp(target_id, auto_potion_amount, Source::Constant("Auto Potion"));
+            return;
+        }
 
-//         if target.damage_split and self.roll_brave_reaction(target):
-//             self.change_target_hp(target, -(amount // 2), 'damage split')
-//             self.change_target_hp(inflicter, amount // 2, 'damage split')
-//             return
+        if target.damage_split() && self.roll_brave_reaction(target) {
+            self.change_target_hp(target_id, -(amount / 2), Source::Constant("Damage Split"));
+            self.change_target_hp(user_id, amount / 2, Source::Constant("Damage Split"));
+        }
     }
 
     pub fn calculate_weapon_xa(&self, user: &Combatant, weapon: Option<&'a Equipment>, k: i16) -> i16 {

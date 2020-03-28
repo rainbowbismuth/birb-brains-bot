@@ -31,6 +31,7 @@ pub enum Event<'a> {
 #[derive(Copy, Clone, Debug)]
 pub enum Source<'a> {
     Phase,
+    Constant(&'static str),
     Condition(Condition),
     Weapon(CombatantId, Option<&'a Equipment>),
 }
@@ -88,19 +89,25 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
                     describe_source(*src, combatants)),
 
         Event::MpDamage(target_id, amount, src) =>
-            String::from("TODO"),
+            format!("{} lost {} MP from {}",
+                    describe_combatant(*target_id, combatants),
+                    amount,
+                    describe_source(*src, combatants)),
 
         Event::MpHeal(target_id, amount, src) =>
-            String::from("TODO"),
+            format!("{} gained {} MP from {}",
+                    describe_combatant(*target_id, combatants),
+                    amount,
+                    describe_source(*src, combatants)),
 
         Event::AddedCondition(target_id, cond, src) =>
-            format!("{} is now {} because of {}",
+            format!("{} now has {} because of {}",
                     describe_combatant(*target_id, combatants),
                     cond.name(),
                     describe_source(*src, combatants)),
 
         Event::LostCondition(target_id, cond, src) =>
-            format!("{} is no longer {} because of {}",
+            format!("{} no longer has {} because of {}",
                     describe_combatant(*target_id, combatants),
                     cond.name(),
                     describe_source(*src, combatants)),
@@ -168,6 +175,7 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
 pub fn describe_source(src: Source, combatants: &[Combatant]) -> String {
     match src {
         Source::Phase => String::from("the current phase"),
+        Source::Constant(str) => str.to_owned(),
         Source::Condition(cond) => String::from(cond.name()),
         Source::Weapon(c_id, Some(weapon)) =>
             format!("{}\'s {}",

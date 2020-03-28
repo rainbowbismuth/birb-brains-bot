@@ -72,6 +72,7 @@ pub struct Combatant<'a> {
     pub pa_mod: i16,
     pub ma_mod: i16,
     pub crystal_counter: i8,
+    pub death_sentence_counter: i8,
 }
 
 impl<'a> Combatant<'a> {
@@ -116,6 +117,7 @@ impl<'a> Combatant<'a> {
             pa_mod: 0,
             ma_mod: 0,
             crystal_counter: 4,
+            death_sentence_counter: 4,
         };
         out.raw_hp = out.max_hp();
         out.raw_mp = out.max_mp();
@@ -326,6 +328,9 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn add_condition(&mut self, condition: Condition) {
+        if condition == Condition::DeathSentence {
+            self.reset_death_sentence_counter()
+        }
         self.conditions.add(condition);
     }
 
@@ -356,6 +361,17 @@ impl<'a> Combatant<'a> {
         self.crystal()
     }
 
+    fn reset_death_sentence_counter(&mut self) {
+        self.death_sentence_counter = 4;
+    }
+
+    pub fn tick_death_sentence_counter(&mut self) -> bool {
+        if self.death_sentence_counter > 0 {
+            self.death_sentence_counter -= 1;
+        }
+        self.death_sentence_counter == 0
+    }
+
     pub fn crystal(&self) -> bool {
         self.crystal_counter == 0
     }
@@ -365,7 +381,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn undead(&self) -> bool {
-        self.conditions.has(Condition::Undead)
+        self.skill_block.innate_undead() || self.conditions.has(Condition::Undead)
     }
 
     pub fn sleep(&self) -> bool {
@@ -556,6 +572,38 @@ impl<'a> Combatant<'a> {
     pub fn defense_up(&self) -> bool {
         self.skill_block.defense_up()
     }
+
+    pub fn counter(&self) -> bool {
+        self.skill_block.counter()
+    }
+
+    pub fn move_hp_up(&self) -> bool {
+        self.skill_block.move_hp_up()
+    }
+
+    pub fn move_mp_up(&self) -> bool {
+        self.skill_block.move_hp_up()
+    }
+
+    pub fn sicken(&self) -> bool {
+        self.skill_block.sicken()
+    }
+
+    pub fn mana_shield(&self) -> bool {
+        self.skill_block.mana_shield()
+    }
+
+    pub fn damage_split(&self) -> bool {
+        self.skill_block.damage_split()
+    }
+
+    pub fn auto_potion(&self) -> bool {
+        self.skill_block.auto_potion()
+    }
+
+    pub fn throw_item(&self) -> bool {
+        self.skill_block.throw_item()
+    }
 }
 
 //     @property
@@ -567,25 +615,10 @@ impl<'a> Combatant<'a> {
 //         return 'Throw Item' in self.skills
 
 //     @property
-//     def auto_potion(self) -> bool:
-//         return 'Auto Potion' in self.skills
-//
-//     @property
-//     def dual_wield(self) -> bool:
-//         return 'Dual Wield' in self.skills
-//
-//     @property
 //     def has_offhand_weapon(self) -> bool:
 //         return self.offhand.weapon_type is not None
 //
-//     @property
-//     def mana_shield(self) -> bool:
-//         return 'Mana Shield' in self.skills
-//
-//     @property
-//     def damage_split(self) -> bool:
-//         return 'Damage Split' in self.skills
-//
+
 //     def zodiac_compatibility(self, other: 'Combatant') -> f32:
 //         s1 = ZODIAC_INDEX[self.sign]
 //         s2 = ZODIAC_INDEX[other.sign]

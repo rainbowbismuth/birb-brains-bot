@@ -7,6 +7,15 @@ const DOUBLE_HAND_FLAG: u64 = 1 << 5;
 const MARTIAL_ARTS_FLAG: u64 = 1 << 6;
 const ATTACK_UP_FLAG: u64 = 1 << 7;
 const DEFENSE_UP_FLAG: u64 = 1 << 8;
+const INNATE_UNDEAD_FLAG: u64 = 1 << 9;
+const COUNTER_FLAG: u64 = 1 << 10;
+const MOVE_HP_UP_FLAG: u64 = 1 << 11;
+const MOVE_MP_UP_FLAG: u64 = 1 << 12;
+const SICKEN_FLAG: u64 = 1 << 13;
+const MANA_SHIELD_FLAG: u64 = 1 << 14;
+const DAMAGE_SPLIT_FLAG: u64 = 1 << 15;
+const AUTO_POTION_FLAG: u64 = 1 << 16;
+const THROW_ITEM_FLAG: u64 = 1 << 17;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -27,6 +36,15 @@ impl SkillBlock {
                 "Martial Arts" => block.flags |= MARTIAL_ARTS_FLAG,
                 "Attack UP" => block.flags |= ATTACK_UP_FLAG,
                 "Defense UP" => block.flags |= DEFENSE_UP_FLAG,
+                "Undead" => block.flags |= INNATE_UNDEAD_FLAG,
+                "Counter" => block.flags |= COUNTER_FLAG,
+                "Move-HP Up" => block.flags |= MOVE_HP_UP_FLAG,
+                "Move-MP Up" => block.flags |= MOVE_MP_UP_FLAG,
+                "Sicken" => block.flags |= SICKEN_FLAG,
+                "Mana Shield" => block.flags |= MANA_SHIELD_FLAG,
+                "Damage Split" => block.flags |= DAMAGE_SPLIT_FLAG,
+                "Auto Potion" => block.flags |= AUTO_POTION_FLAG,
+                "Throw Item" => block.flags |= THROW_ITEM_FLAG,
                 _ => {}
             }
         }
@@ -67,5 +85,41 @@ impl SkillBlock {
 
     pub fn defense_up(&self) -> bool {
         self.flags & DEFENSE_UP_FLAG != 0
+    }
+
+    pub fn innate_undead(&self) -> bool {
+        self.flags & INNATE_UNDEAD_FLAG != 0
+    }
+
+    pub fn counter(&self) -> bool {
+        self.flags & COUNTER_FLAG != 0
+    }
+
+    pub fn move_hp_up(&self) -> bool {
+        self.flags & MOVE_HP_UP_FLAG != 0
+    }
+
+    pub fn move_mp_up(&self) -> bool {
+        self.flags & MOVE_MP_UP_FLAG != 0
+    }
+
+    pub fn sicken(&self) -> bool {
+        self.flags & SICKEN_FLAG != 0
+    }
+
+    pub fn mana_shield(&self) -> bool {
+        self.flags & MANA_SHIELD_FLAG != 0
+    }
+
+    pub fn damage_split(&self) -> bool {
+        self.flags & DAMAGE_SPLIT_FLAG != 0
+    }
+
+    pub fn auto_potion(&self) -> bool {
+        self.flags & AUTO_POTION_FLAG != 0
+    }
+
+    pub fn throw_item(&self) -> bool {
+        self.flags & THROW_ITEM_FLAG != 0
     }
 }
