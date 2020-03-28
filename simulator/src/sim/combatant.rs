@@ -1,6 +1,7 @@
-use crate::dto::patch::{Ability, BaseStats, Equipment};
-use crate::sim::{Action, Condition, ConditionBlock, Distance, Element, Gender, Location, Sign, Team,
-                 TIMED_CONDITIONS_LEN, WeaponType};
+use crate::dto::match_up;
+use crate::dto::patch::{Ability, BaseStats, Equipment, Patch};
+use crate::sim::{Action, ALL_CONDITIONS, Condition, ConditionBlock, Distance, Element, Gender, Location, Sign,
+                 Team, TIMED_CONDITIONS_LEN, WeaponType};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
@@ -8,6 +9,12 @@ pub struct CombatantId {
 }
 
 impl CombatantId {
+    pub fn new(id: u8) -> CombatantId {
+        CombatantId {
+            id
+        }
+    }
+
     pub fn index(&self) -> usize {
         self.id as usize
     }
@@ -25,13 +32,13 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
     CombatantId { id: 7 },
 ];
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct SlowAction {
     ctr: i8,
     action: Action,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Combatant<'a> {
     pub base_stats: &'a BaseStats,
     pub id: CombatantId,
@@ -49,9 +56,9 @@ pub struct Combatant<'a> {
     pub moved_during_active_turn: bool,
     pub acted_during_active_turn: bool,
     pub took_damage_during_active_turn: bool,
-    pub name: String,
+    pub name: &'a str,
     pub sign: Sign,
-    pub job: String,
+    pub job: &'a str,
     pub gender: Gender,
     pub main_hand: Option<&'a Equipment>,
     pub off_hand: Option<&'a Equipment>,
@@ -60,8 +67,6 @@ pub struct Combatant<'a> {
     pub accessory: Option<&'a Equipment>,
     pub raw_brave: i16,
     pub raw_faith: i16,
-    pub skill_flags: u64,
-    pub abilities: &'a [&'a Ability],
     pub ctr_action: Option<SlowAction>,
     pub pa_mod: i16,
     pub ma_mod: i16,
@@ -69,6 +74,46 @@ pub struct Combatant<'a> {
 }
 
 impl<'a> Combatant<'a> {
+    pub fn new(id: CombatantId, team: Team, src: &'a match_up::Combatant, patch: &'a Patch) -> Combatant<'a> {
+        let job_gender = format!("{},{}", src.class.replace(" ", ""), src.gender.to_string());
+        let mut out = Combatant {
+            base_stats: &patch.base_stats.by_job_gender.get(&job_gender).unwrap(),
+            id,
+            raw_hp: 0,
+            raw_mp: 0,
+            ct: 0,
+            speed_mod: 0,
+            team,
+            conditions: ConditionBlock::new(),
+            broken_items: 0,
+            number_of_mp_using_abilities: 0,
+            lowest_mp_cost_ability: 0,
+            location: Location::new(0),
+            on_active_turn: false,
+            moved_during_active_turn: false,
+            acted_during_active_turn: false,
+            took_damage_during_active_turn: false,
+            name: &src.name,
+            sign: src.sign,
+            job: &src.class,
+            gender: src.gender,
+            main_hand: patch.equipment.by_name.get(&src.mainhand),
+            off_hand: patch.equipment.by_name.get(&src.offhand),
+            headgear: patch.equipment.by_name.get(&src.head),
+            armor: patch.equipment.by_name.get(&src.armor),
+            accessory: patch.equipment.by_name.get(&src.accessory),
+            raw_brave: src.brave,
+            raw_faith: src.faith,
+            ctr_action: None,
+            pa_mod: 0,
+            ma_mod: 0,
+            crystal_counter: 4,
+        };
+        out.raw_hp = out.max_hp();
+        out.raw_mp = out.max_mp();
+        out
+    }
+
     pub fn same_team(&self, other: &Combatant) -> bool {
         self.team == other.team
     }
@@ -123,6 +168,16 @@ impl<'a> Combatant<'a> {
         } else {
             self.mp() >= self.lowest_mp_cost_ability
         }
+    }
+
+    pub fn all_conditions(&self) -> Vec<Condition> {
+        let mut conditions = vec![];
+        for condition in ALL_CONDITIONS.iter() {
+            if self.has_condition(*condition) {
+                conditions.push(*condition)
+            }
+        }
+        conditions
     }
 
     pub fn speed(&self) -> i16 {
@@ -257,7 +312,7 @@ impl<'a> Combatant<'a> {
 
     pub fn has_condition(&self, condition: Condition) -> bool {
         match condition {
-            Condition::Critical => self.hp() <= self.max_hp() / 5,
+            Condition::Critical => !self.dead() && self.hp() <= self.max_hp() / 5,
             Condition::Death => self.dead(),
             _ => self.conditions.has(condition)
         }
@@ -417,7 +472,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn barehanded(&self) -> bool {
-        self.main_hand.map_or(false, |e| e.weapon_type.is_none())
+        self.main_hand.map_or(true, |e| e.weapon_type.is_none())
     }
 
     // FIXME: temporary solution, want to remove this allocation

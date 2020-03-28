@@ -51,7 +51,7 @@ pub struct EquipmentData {
     pub by_name: HashMap<String, Equipment>
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Equipment {
     pub name: String,
     pub hp_bonus: i16,
@@ -85,7 +85,7 @@ pub struct BaseStatsData {
     pub by_job_gender: HashMap<String, BaseStats>
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct BaseStats {
     pub job: String,
     pub gender: String,

@@ -38,6 +38,10 @@ impl<'a> Log<'a> {
     pub fn add(&self, combatants: &[Combatant<'a>], event: Event<'a>) {
         self.interior.borrow_mut().add(combatants, event);
     }
+
+    pub fn entries(&self) -> Vec<Entry<'a>> {
+        Vec::from(self.interior.borrow().entries())
+    }
 }
 
 impl<'a> LogData<'a> {
@@ -73,7 +77,12 @@ impl<'a> LogData<'a> {
                 combatants: Vec::from(combatants),
                 event,
             };
+            println!("{}", describe_entry(&entry)); // For intermixing with debugging, should flag.
             log.push(entry);
         }
+    }
+
+    fn entries(&self) -> &[Entry<'a>] {
+        self.log.as_ref().unwrap().as_slice()
     }
 }

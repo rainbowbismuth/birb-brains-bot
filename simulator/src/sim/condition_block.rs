@@ -1,6 +1,6 @@
 use crate::sim::enums::*;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct ConditionBlock {
     pub status_flags: u64,
     pub timed_conditions: [i8; TIMED_CONDITIONS_LEN],

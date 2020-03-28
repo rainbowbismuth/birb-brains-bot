@@ -18,7 +18,7 @@ pub struct Team {
     pub combatants: Vec<Combatant>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct Combatant {
     pub name: String,

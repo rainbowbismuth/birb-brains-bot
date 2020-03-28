@@ -70,3 +70,8 @@ pub fn read_all_patches() -> io::Result<Vec<Patch>> {
 pub fn read_all_match_ups() -> io::Result<Vec<(usize, MatchUp)>> {
     return read_files_matching("match");
 }
+
+pub fn read_match(id: usize) -> io::Result<(usize, MatchUp)> {
+    let file = fs::File::open(format!("data/sim/{:06}.match", id))?;
+    Ok(rmp_serde::from_read(file).unwrap())
+}

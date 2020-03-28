@@ -1,6 +1,6 @@
 use crate::sim::CombatantId;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Phase {
     StatusCheck,
     SlowActionCharging,

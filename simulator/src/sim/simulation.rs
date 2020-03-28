@@ -25,6 +25,28 @@ pub struct Simulation<'a> {
 }
 
 impl<'a> Simulation<'a> {
+    pub fn new(combatants: [Combatant<'a>; MAX_COMBATANTS], arena_length: i16, rng: SmallRng) -> Simulation<'a> {
+        let mut sim = Simulation {
+            rng: RefCell::new(rng),
+            combatants,
+            arena_length,
+            clock_tick: 0,
+            prediction_mode: false,
+            log: Log::new(),
+            slow_actions: false,
+            active_turns: false,
+            left_wins: None,
+            time_out_win: None,
+        };
+        for combatant in &mut sim.combatants[0..4] {
+            combatant.location = Location::new(-arena_length);
+        }
+        for combatant in &mut sim.combatants[4..8] {
+            combatant.location = Location::new(arena_length);
+        }
+        sim
+    }
+
     fn prediction_clone(&self) -> Simulation<'a> {
         Simulation {
             rng: self.rng.clone(),
@@ -76,7 +98,7 @@ impl<'a> Simulation<'a> {
     pub fn team_healthy(&self, team: Team) -> bool {
         self.combatants.iter()
             .filter(|combatant| combatant.team == team)
-            .all(|combatant|
+            .any(|combatant|
                 !combatant.dead() && !combatant.petrify() && !combatant.blood_suck())
     }
 
@@ -197,7 +219,7 @@ impl<'a> Simulation<'a> {
             }
 
             let combatant = self.combatant(*cid);
-            if !(combatant.acted_during_active_turn || combatant.acted_during_active_turn) {
+            if combatant.on_active_turn && !(combatant.moved_during_active_turn || combatant.acted_during_active_turn) {
                 self.log_event(Event::DidNothing(*cid));
             }
 
@@ -238,14 +260,13 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn phase_active_turn_resolve(&mut self) {
-        loop {
-            let combatant = self.combatants.iter().find(|c| c.ct >= 100);
-            if combatant.is_none() {
-                break;
+        for c_id in &COMBATANT_IDS {
+            let combatant = self.combatant(*c_id);
+            if combatant.ct < 100 {
+                continue;
             }
-            let combatant = combatant.unwrap();
-            let cid = combatant.id;
-            self.log.set_phase(Phase::ActiveTurn(cid));
+
+            self.log.set_phase(Phase::ActiveTurn(*c_id));
 
             if combatant.petrify() || combatant.crystal() || combatant.stop() || combatant.sleep() {
                 continue;
@@ -260,37 +281,37 @@ impl<'a> Simulation<'a> {
 
 
             if combatant.dead() && !combatant.crystal() {
-                let now_crystal = self.combatant_mut(cid).tick_crystal_counter();
-                let combatant = self.combatant(cid);
+                let now_crystal = self.combatant_mut(*c_id).tick_crystal_counter();
+                let combatant = self.combatant(*c_id);
                 // TODO: undead reraise chance
                 if now_crystal && combatant.undead() && false {
-                    self.combatant_mut(cid).reset_crystal_counter();
+                    self.combatant_mut(*c_id).reset_crystal_counter();
                 }
 
-                let combatant = self.combatant(cid);
+                let combatant = self.combatant(*c_id);
                 if combatant.crystal() {
-                    self.log_event(Event::BecameCrystal(cid));
+                    self.log_event(Event::BecameCrystal(*c_id));
                     continue;
                 }
             }
 
-            let combatant = self.combatant(cid);
+            let combatant = self.combatant(*c_id);
             if combatant.dead() {
                 continue;
             }
 
             self.clear_active_turn_flags();
-            self.combatant_mut(cid).on_active_turn = true;
+            self.combatant_mut(*c_id).on_active_turn = true;
 
-            let combatant = self.combatant(cid);
+            let combatant = self.combatant(*c_id);
             if combatant.regen() {
                 // TODO: Do the heal
                 //                 self.change_target_hp(combatant, -(combatant.max_hp // 8), 'regen')
             }
 
-            self.ai_do_active_turn(cid);
+            self.ai_do_active_turn(*c_id);
 
-            let combatant = self.combatant(cid);
+            let combatant = self.combatant(*c_id);
             if combatant.poison() {
                 // TODO: Do the poison
                 //                 self.change_target_hp(combatant, combatant.max_hp // 8, 'poison')
@@ -344,15 +365,16 @@ impl<'a> Simulation<'a> {
         any_healthy && !all_critical
     }
 
-    fn do_move_with_bounds(&mut self, user_id: CombatantId, new_location: Location) {
+    fn do_move_with_bounds(&mut self, user_id: CombatantId, desired_location: Location) {
         let arena_length = self.arena_length;
         let user = self.combatant_mut(user_id);
         let old_location = user.location;
-        user.location = Location::new(
-            -arena_length.max(new_location.x.min(arena_length)));
+        let new_location = Location::new(
+            (-arena_length).max(desired_location.x.min(arena_length)));
         if old_location == new_location {
             return;
         }
+        user.location = new_location;
         user.moved_during_active_turn = true;
         self.log_event(Event::Moved(user_id, old_location, new_location));
     }
@@ -589,13 +611,13 @@ impl<'a> Simulation<'a> {
         let weapon_type = weapon.and_then(|e| e.weapon_type);
         match weapon_type {
             None =>
-                (user.pa() + k * user.raw_brave) / 100,
+                ((user.pa() + k) * user.raw_brave) / 100,
 
             Some(WeaponType::Knife) | Some(WeaponType::NinjaSword) | Some(WeaponType::Bow) =>
                 (user.pa() + k + user.speed() + k) / 2,
 
             Some(WeaponType::KnightSword) | Some(WeaponType::Katana) =>
-                (user.pa() + k * user.raw_brave) / 100,
+                ((user.pa() + k) * user.raw_brave) / 100,
 
             Some(WeaponType::Sword) | Some(WeaponType::Pole) | Some(WeaponType::Spear) | Some(WeaponType::Crossbow) =>
                 user.pa() + k,
@@ -604,7 +626,7 @@ impl<'a> Simulation<'a> {
                 user.ma() + k,
 
             Some(WeaponType::Flail) | Some(WeaponType::Bag) =>
-                self.roll_inclusive(1, user.pa() + k),
+                self.roll_inclusive(1, (user.pa() + k).min(1)),
 
             Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) =>
                 (user.pa() + k + user.ma() + k) / 2,

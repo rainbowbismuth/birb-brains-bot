@@ -84,7 +84,7 @@ fn do_single_weapon_attack<'a, 'b>(sim: &'a mut Simulation<'b>,
         return (0, false);
     }
     let (damage, crit) = calculate_damage(sim, user, weapon, target, 0);
-    sim.change_target_hp(user_id, damage, src);
+    sim.change_target_hp(target_id, damage, src);
     sim.weapon_chance_to_add_or_cancel_status(user_id, weapon, target_id);
     (damage, crit)
 }
@@ -101,7 +101,7 @@ fn calculate_damage<'a, 'b>(sim: &'a Simulation<'b>,
     let mut damage = 0;
 
     if sim.roll_auto_fail() <= 0.05 {
-        xa += sim.roll_inclusive(1, xa) - 1;
+        xa += sim.roll_inclusive(1, xa.max(1)) - 1;
         critical_hit = true;
     }
 

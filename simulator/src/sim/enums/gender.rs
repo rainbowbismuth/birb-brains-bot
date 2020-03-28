@@ -20,6 +20,14 @@ impl Gender {
             _ => None
         }
     }
+
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            Gender::Male => "Male",
+            Gender::Female => "Female",
+            Gender::Monster => "Monster"
+        }
+    }
 }
 
 
