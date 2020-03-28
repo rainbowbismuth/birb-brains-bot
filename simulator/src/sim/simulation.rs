@@ -272,20 +272,21 @@ impl<'a> Simulation<'a> {
                 continue;
             }
 
-            //             if combatant.dead and combatant.reraise and not combatant.undead:
-            //                 self.change_target_hp(combatant, combatant.max_hp // 10, RERAISE)
-            //                 self.cancel_status(combatant, RERAISE)
             if combatant.dead() && combatant.reraise() && !combatant.undead() {
-                // TODO: Do the reraise
+                self.change_target_hp(*c_id, combatant.max_hp() / 10, Source::Condition(Condition::Reraise));
+                self.cancel_condition(*c_id, Condition::Reraise, Source::Condition(Condition::Reraise));
             }
 
-
+            let combatant = self.combatant(*c_id);
             if combatant.dead() && !combatant.crystal() {
                 let now_crystal = self.combatant_mut(*c_id).tick_crystal_counter();
                 let combatant = self.combatant(*c_id);
-                // TODO: undead reraise chance
-                if now_crystal && combatant.undead() && false {
+
+                if now_crystal && combatant.undead() && self.roll_auto_fail() < 0.5 {
+                    let max_hp = combatant.max_hp();
                     self.combatant_mut(*c_id).reset_crystal_counter();
+                    let heal_amount = self.roll_inclusive(1, max_hp);
+                    self.change_target_hp(*c_id, -heal_amount, Source::Condition(Condition::Undead));
                 }
 
                 let combatant = self.combatant(*c_id);
@@ -305,16 +306,14 @@ impl<'a> Simulation<'a> {
 
             let combatant = self.combatant(*c_id);
             if combatant.regen() {
-                // TODO: Do the heal
-                //                 self.change_target_hp(combatant, -(combatant.max_hp // 8), 'regen')
+                self.change_target_hp(*c_id, -(combatant.max_hp() / 8), Source::Condition(Condition::Regen));
             }
 
             self.ai_do_active_turn(*c_id);
 
             let combatant = self.combatant(*c_id);
             if combatant.poison() {
-                // TODO: Do the poison
-                //                 self.change_target_hp(combatant, combatant.max_hp // 8, 'poison')
+                self.change_target_hp(*c_id, combatant.max_hp() / 8, Source::Condition(Condition::Poison));
             }
 
             self.end_of_active_turn_checks()

@@ -111,6 +111,10 @@ impl<'a> Combatant<'a> {
         };
         out.raw_hp = out.max_hp();
         out.raw_mp = out.max_mp();
+        let equips = out.all_equips();
+        equips.iter()
+            .flat_map(|eq| eq.initial.iter())
+            .for_each(|condition| out.add_condition(*condition));
         out
     }
 
@@ -476,7 +480,7 @@ impl<'a> Combatant<'a> {
     }
 
     // FIXME: temporary solution, want to remove this allocation
-    pub fn all_equips(&self) -> Vec<&Equipment> {
+    pub fn all_equips(&self) -> Vec<&'a Equipment> {
         let mut out = vec![];
         out.extend(self.main_hand);
         out.extend(self.off_hand);
