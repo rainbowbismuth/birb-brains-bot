@@ -5,7 +5,7 @@ use std::io;
 
 use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
 use rand::{Rng, SeedableRng, thread_rng};
-use rand::rngs::SmallRng;
+use rand::rngs::{SmallRng, ThreadRng};
 
 use sim::{Combatant, CombatantId, Simulation, Team};
 
@@ -15,22 +15,51 @@ mod dto;
 mod sim;
 mod data;
 
+fn run_many_sims(combatants: &[Combatant; 8]) -> (f64, u64) {
+    let mut thread_rng = thread_rng();
+    let num_runs = 20;
+    let mut left_wins = 0;
+    let mut time_outs = 0;
+    for _ in 0..num_runs {
+        let rng = SmallRng::from_rng(&mut thread_rng).unwrap();
+        let mut sim = Simulation::new(combatants.clone(), 10, rng);
+        sim.run();
+        if sim.left_wins.unwrap() {
+            left_wins += 1;
+        }
+        if sim.time_out_win.unwrap() {
+            time_outs += 1;
+        }
+    }
+    let left_wins_percent = left_wins as f64 / num_runs as f64;
+    (left_wins_percent, time_outs)
+}
+
+fn clamp(mut n: f64, min: f64, max: f64) -> f64 {
+    assert!(min <= max);
+    let mut x = n;
+    if x < min {
+        x = min;
+    }
+    if x > max {
+        x = max;
+    }
+    x
+}
+
 fn main() -> io::Result<()> {
     // data::convert_data_from_feed()?;
     let patches = data::read_all_patches()?;
     // let matches = data::read_all_match_ups()?;
 
     println!("{} patches\n", patches.len());
-    // println!("{} matches", matches.len());
 
-    let mut thread_rng = thread_rng();
-
-    // GOING TO TRY TO RUN A MATCH AAA
-    // let (patch_num, match_up) = &matches[0];
     let mut correct = 0;
     let total = 12391;
     let mut time_outs = 0;
+    let mut log_loss: f64 = 0.0;
 
+    let mut thread_rng = thread_rng();
     let random_replay = thread_rng.gen_range(0, total);
     let mut replay_data = vec![];
 
@@ -54,17 +83,26 @@ fn main() -> io::Result<()> {
             Combatant::new(CombatantId::new(7), Team::Right, &match_up.right.combatants[3], patch),
         ];
 
-        let mut sim = Simulation::new(combatants, 10, SmallRng::from_rng(&mut thread_rng).unwrap());
-        sim.run();
+        let (left_wins_percent, new_time_outs) = run_many_sims(&combatants);
+        time_outs += new_time_outs;
 
-        if sim.left_wins.unwrap() && match_up.left_wins.unwrap() {
+        if match_up.left_wins.unwrap() && left_wins_percent > 0.5 {
+            correct += 1;
+        } else if !match_up.left_wins.unwrap() && left_wins_percent <= 0.5 {
             correct += 1;
         }
-        if sim.time_out_win.unwrap() {
-            time_outs += 1;
+
+        let clamped = clamp(left_wins_percent, 1e-15, 1.0 - 1e-15);
+        if match_up.left_wins.unwrap() {
+            log_loss += -clamped.ln();
+        } else {
+            log_loss += -clamped.ln_1p();
         }
 
         if random_replay == match_num {
+            let rng = SmallRng::from_rng(&mut thread_rng).unwrap();
+            let mut sim = Simulation::new(combatants.clone(), 10, rng);
+            sim.run();
             for entry in sim.log.entries() {
                 replay_data.push(format!("{}", describe_entry(&entry)));
             }
@@ -72,13 +110,15 @@ fn main() -> io::Result<()> {
     }
     bar.finish();
 
-    let correct_percent = (correct as f32 / total as f32) * 100.0;
-    println!("correct: {:.1}%, time_outs: {}", correct_percent, time_outs);
-
     println!("\nmatch {}:", random_replay);
     for line in replay_data {
         println!("{}", line);
     }
+
+    let correct_percent = correct as f32 / total as f32;
+    println!("\ncorrect: {:.1}%, time_outs: {}", correct_percent * 100.0, time_outs);
+    println!("improvement: {:.1}%", (correct_percent - 0.5) * 200.0);
+    println!("log loss: {:.6}", log_loss / total as f64);
 
     return Ok(());
 }
