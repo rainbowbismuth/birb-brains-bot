@@ -678,7 +678,8 @@ pub fn in_range(user: &Combatant, range: i16, target: &Combatant) -> bool {
 }
 
 pub fn can_move_into_range(user: &Combatant, range: i16, target: &Combatant) -> bool {
-    user.distance(target) <= range + user.movement()
+    let movement = if user.dont_move() { 0 } else { user.movement() };
+    user.distance(target) <= range + movement
 }
 
 //

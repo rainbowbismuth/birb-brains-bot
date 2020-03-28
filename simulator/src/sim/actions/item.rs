@@ -1,122 +1,125 @@
-use crate::sim::{Combatant, CombatantId, Simulation};
-use crate::sim::actions::Action;
+use crate::sim::{can_move_into_range, Combatant, CombatantId, Simulation, Source};
+use crate::sim::actions::{Action, ActionKind};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Item {
     Potion,
     HiPotion,
     XPotion,
+    Elixir,
     PhoenixDown,
 }
 
-pub fn consider_item(actions: &mut Vec<Action>, sim: &Simulation, user: &Combatant, target: &Combatant) {
-    return;
+fn item_range(user: &Combatant) -> i16 {
+    if user.throw_item() { 4 } else { 1 }
 }
 
-pub fn perform_item(sim: &mut Simulation, user: CombatantId, target: CombatantId, item: Item) {}
+pub fn consider_item(actions: &mut Vec<Action>, sim: &Simulation, user: &Combatant, target: &Combatant) {
+    if user.berserk() {
+        return;
+    }
 
+    let range = item_range(user);
+    if !can_move_into_range(user, range, target) {
+        return;
+    }
 
-// import random
-//
-// from fftbg.simulation.abc.simulation import AbstractSimulation
-// from fftbg.simulation.action import Action
-// from fftbg.simulation.combatant import Combatant
-//
-//
-// def item_range(user: Combatant) -> int:
-//     if user.throw_item:
-//         return 4
-//     else:
-//         return 1
-//
-//
-// def consider_item(sim: AbstractSimulation, user: Combatant, target: Combatant):
-//     if user.berserk:
-//         return
-//
-//     if not sim.in_range(user, item_range(user), target):
-//         return
-//
-//     yield from consider_phoenix_down(sim, user, target)
-//     yield from consider_item_heal(sim, user, target)
-//
-//
-// def should_item_heal_foe(target: Combatant) -> bool:
-//     if target.undead:
-//         return True
-//     return False
-//
-//
-// def should_item_heal_ally(target: Combatant) -> bool:
-//     if target.undead:
-//         return False
-//     if target.hp_percent > 0.50:
-//         return False
-//     return True
-//
-//
-// def consider_item_heal(sim: AbstractSimulation, user: Combatant, target: Combatant):
-//     if target.petrified or target.crystal or target.dead:
-//         return
-//
-//     if user.is_foe(target) and not should_item_heal_foe(target):
-//         return
-//
-//     if user.is_friend(target) and not should_item_heal_ally(target):
-//         return
-//
-//     for item in ('Elixir', 'X-Potion', 'Hi-Potion', 'Potion'):
-//         if not user.has_ability(item):
-//             continue
-//         action_range = item_range(user)
-//         yield Action(
-//             range=action_range,
-//             user=user,
-//             target=target,
-//             perform=lambda sim, user, target: do_cmd_item_heal(sim, user, item, target))
-//         break
-//
-//
-// def do_cmd_item_heal(sim: AbstractSimulation, user: Combatant, item: str, target: Combatant):
-//     if item == 'Elixir':
-//         heal_amount = target.max_hp
-//     elif item == 'X-Potion':
-//         heal_amount = 150
-//     elif item == 'Hi-Potion':
-//         heal_amount = 120
-//     elif item == 'Potion':
-//         heal_amount = 100
-//     else:
-//         raise Exception(f'{item} isn\'t a known healing item')
-//     sim.change_target_hp(target, -heal_amount, item)
-//
-//
-// def consider_phoenix_down(sim: AbstractSimulation, user: Combatant, target: Combatant):
-//     if not user.has_ability('Phoenix Down'):
-//         return
-//
-//     if target.petrified or target.crystal:
-//         return
-//
-//     action_range = item_range(user)
-//     if user.is_foe(target) and target.undead and not target.dead:
-//         yield Action(
-//             range=action_range,
-//             user=user,
-//             target=target,
-//             perform=do_cmd_item_phoenix_down)
-//
-//     if user.is_friend(target) and not target.undead and target.dead and not target.reraise:
-//         yield Action(
-//             range=action_range,
-//             user=user,
-//             target=target,
-//             perform=do_cmd_item_phoenix_down)
-//
-//
-// def do_cmd_item_phoenix_down(sim: AbstractSimulation, user: Combatant, target: Combatant):
-//     if target.undead and not target.dead:
-//         sim.change_target_hp(target, target.max_hp, 'Phoenix Down')
-//     if not target.undead and target.dead:
-//         heal_amount = random.randint(1, 20)
-//         sim.change_target_hp(target, -heal_amount, 'Phoenix Down')
+    consider_phoenix_down(actions, sim, user, target);
+    consider_item_heal(actions, sim, user, target);
+}
+
+pub fn should_item_heal_foe(target: &Combatant) -> bool {
+    target.undead()
+}
+
+pub fn should_item_heal_ally(target: &Combatant) -> bool {
+    if target.undead() {
+        false
+    } else {
+        target.hp_percent() <= 0.50
+    }
+}
+
+pub fn consider_item_heal(actions: &mut Vec<Action>, sim: &Simulation, user: &Combatant, target: &Combatant) {
+    if target.petrify() || target.crystal() || target.dead() {
+        return;
+    }
+
+    if user.different_team(target) && !should_item_heal_foe(target) {
+        return;
+    }
+
+    if user.same_team(target) && !should_item_heal_ally(target) {
+        return;
+    }
+
+    // TODO: Determine if you even have potion
+    if false {
+        actions.push(Action {
+            kind: ActionKind::Item(Item::Potion),
+            range: item_range(user),
+            target_id: target.id,
+        });
+    }
+}
+
+pub fn perform_item(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId, item: Item) {
+    match item {
+        Item::Potion | Item::HiPotion | Item::XPotion | Item::Elixir =>
+            perform_item_heal(sim, user_id, target_id, item),
+
+        Item::PhoenixDown =>
+            perform_phoenix_down(sim, user_id, target_id)
+    }
+}
+
+pub fn perform_item_heal(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId, item: Item) {
+    let mut heal_amount = match item {
+        Item::Elixir => sim.combatant(target_id).max_hp(),
+        Item::XPotion => 150,
+        Item::HiPotion => 120,
+        Item::Potion => 100,
+        _ => panic!("tried to heal with a non-healing item")
+    };
+    if sim.combatant(target_id).undead() {
+        heal_amount = -heal_amount;
+    }
+
+    // TODO: On this whole source thing, should just add item/ability...
+    sim.change_target_hp(target_id, -heal_amount, Source::Constant("Item"));
+}
+
+pub fn consider_phoenix_down(actions: &mut Vec<Action>, sim: &Simulation, user: &Combatant, target: &Combatant) {
+    if true {
+        // TODO: Check to see if have Phoenix down
+        return;
+    }
+
+    if target.petrify() || target.crystal() {
+        return;
+    }
+
+    if user.different_team(target) && !target.dead() && target.undead() {
+        actions.push(Action {
+            kind: ActionKind::Item(Item::PhoenixDown),
+            range: item_range(user),
+            target_id: target.id,
+        });
+    } else if user.same_team(target) && !target.undead() && target.dead() && !target.reraise() {
+        actions.push(Action {
+            kind: ActionKind::Item(Item::PhoenixDown),
+            range: item_range(user),
+            target_id: target.id,
+        });
+    }
+}
+
+pub fn perform_phoenix_down(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
+    let target = sim.combatant(target_id);
+    if target.undead() && !target.dead() {
+        sim.change_target_hp(target_id, target.max_hp(), Source::Constant("Phoenix Down"));
+    } else if !target.undead() && target.dead() {
+        let heal_amount = sim.roll_inclusive(1, 20);
+        sim.change_target_hp(target_id, -heal_amount, Source::Constant("Phoenix Down"));
+    }
+}

@@ -40,14 +40,15 @@ pub struct SlowAction {
 
 #[derive(Clone, Debug)]
 pub struct Combatant<'a> {
-    pub base_stats: &'a BaseStats,
-    pub id: CombatantId,
+    pub team: Team,
+    pub conditions: ConditionBlock,
+    pub skill_block: SkillBlock,
     pub raw_hp: i16,
+    pub id: CombatantId,
+    pub base_stats: &'a BaseStats,
     pub raw_mp: i16,
     pub ct: i16,
     pub speed_mod: i16,
-    pub team: Team,
-    pub conditions: ConditionBlock,
     pub broken_items: i8,
     pub number_of_mp_using_abilities: i16,
     pub lowest_mp_cost_ability: i16,
@@ -60,7 +61,6 @@ pub struct Combatant<'a> {
     pub sign: Sign,
     pub job: &'a str,
     pub gender: Gender,
-    pub skill_block: SkillBlock,
     pub main_hand: Option<&'a Equipment>,
     pub off_hand: Option<&'a Equipment>,
     pub headgear: Option<&'a Equipment>,
