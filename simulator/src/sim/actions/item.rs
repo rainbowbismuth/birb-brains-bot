@@ -9,8 +9,8 @@ pub enum Item {
     PhoenixDown,
 }
 
-pub fn consider_item(sim: &Simulation, user: &Combatant, target: &Combatant) -> Vec<Action> {
-    vec![]
+pub fn consider_item(actions: &mut Vec<Action>, sim: &Simulation, user: &Combatant, target: &Combatant) {
+    return;
 }
 
 pub fn perform_item(sim: &mut Simulation, user: CombatantId, target: CombatantId, item: Item) {}

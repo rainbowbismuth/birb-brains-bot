@@ -17,13 +17,11 @@ pub struct Action {
     pub target_id: CombatantId,
 }
 
-pub fn ai_consider_actions(sim: &Simulation, user: &Combatant, targets: &[Combatant]) -> Vec<Action> {
-    let mut actions = vec![];
+pub fn ai_consider_actions(actions: &mut Vec<Action>, sim: &Simulation, user: &Combatant, targets: &[Combatant]) {
     for target in targets {
-        actions.extend(attack::consider_attack(sim, user, target));
-        actions.extend(item::consider_item(sim, user, target));
+        attack::consider_attack(actions, sim, user, target);
+        item::consider_item(actions, sim, user, target);
     }
-    actions
 }
 
 pub fn perform_action(sim: &mut Simulation, user_id: CombatantId, action: Action) {

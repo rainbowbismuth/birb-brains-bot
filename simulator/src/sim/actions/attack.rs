@@ -24,29 +24,29 @@ fn should_attack_foe(user: &Combatant, target: &Combatant) -> bool {
     !target.charm()
 }
 
-pub fn consider_attack(_sim: &Simulation, user: &Combatant, target: &Combatant) -> Option<Action> {
+pub fn consider_attack(actions: &mut Vec<Action>, _sim: &Simulation, user: &Combatant, target: &Combatant) {
     if target.dead() || target.crystal() || target.petrify() {
-        return None;
+        return;
     }
     if user.same_team(target) && !should_attack_ally(user, target) {
-        return None;
+        return;
     }
     if user.different_team(target) && !should_attack_foe(user, target) {
-        return None;
+        return;
     }
 
     if user.frog() || user.berserk() && user.monster() {
-        Some(Action {
+        actions.push(Action {
             kind: ActionKind::FrogAttack,
             range: 1,
             target_id: target.id,
-        })
+        });
     } else {
-        Some(Action {
+        actions.push(Action {
             kind: ActionKind::Attack,
             range: user.main_hand.map_or(1, |eq| eq.range),
             target_id: target.id,
-        })
+        });
     }
 }
 

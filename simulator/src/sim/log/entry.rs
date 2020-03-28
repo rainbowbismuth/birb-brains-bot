@@ -46,7 +46,7 @@ pub enum EvasionType {
 }
 
 pub fn describe_entry(entry: &Entry) -> String {
-    format!("{}: {}: {}",
+    format!("CT {}: {}: {}",
             entry.clock_tick,
             describe_phase(&entry.phase, &entry.combatants),
             describe_event(&entry.event, &entry.combatants))

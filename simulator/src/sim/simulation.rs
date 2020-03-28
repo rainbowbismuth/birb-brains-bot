@@ -5,7 +5,7 @@ use rand::{random, Rng};
 use rand::prelude::SmallRng;
 
 use crate::dto::patch::Equipment;
-use crate::sim::{ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, perform_action, Phase, Source, Team, TIMED_CONDITIONS, WeaponType};
+use crate::sim::{Action, ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, perform_action, Phase, Source, Team, TIMED_CONDITIONS, WeaponType};
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
@@ -14,6 +14,7 @@ const TIME_OUT_CT: usize = 1_000;
 pub struct Simulation<'a> {
     pub rng: RefCell<SmallRng>,
     pub combatants: [Combatant<'a>; MAX_COMBATANTS],
+    pub actions: RefCell<Vec<Action>>,
     pub arena_length: i16,
     pub clock_tick: usize,
     pub prediction_mode: bool,
@@ -29,6 +30,7 @@ impl<'a> Simulation<'a> {
         let mut sim = Simulation {
             rng: RefCell::new(rng),
             combatants,
+            actions: RefCell::new(vec![]),
             arena_length,
             clock_tick: 0,
             prediction_mode: false,
@@ -51,6 +53,7 @@ impl<'a> Simulation<'a> {
         Simulation {
             rng: self.rng.clone(),
             combatants: self.combatants.clone(),
+            actions: RefCell::new(vec![]),
             arena_length: self.arena_length,
             clock_tick: self.clock_tick,
             prediction_mode: true,
@@ -249,7 +252,6 @@ impl<'a> Simulation<'a> {
         let target = self.combatant_mut(target_id);
         let had_status = target.has_condition(condition);
         target.add_condition(condition);
-        let target = self.combatant(target_id);
         if !had_status {
             self.log_event(Event::AddedCondition(target_id, condition, src));
         }
@@ -321,6 +323,7 @@ impl<'a> Simulation<'a> {
 
             let combatant = self.combatant(*c_id);
             if combatant.poison() {
+                // TODO: Can poison damage be mana shielded? *think*
                 self.change_target_hp(*c_id, combatant.max_hp() / 8, Source::Condition(Condition::Poison));
             }
 
@@ -450,23 +453,30 @@ impl<'a> Simulation<'a> {
             &self.combatants
         };
 
-        let actions = ai_consider_actions(self, user, targets);
-        let basis = ai_target_value_sum(user, &self.combatants);
-        let best_action = actions.iter().flat_map(|action| {
-            if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
-                return None;
-            }
-            let mut simulated_world = self.prediction_clone();
-            perform_action(&mut simulated_world, user_id, *action);
-            let new_value = ai_target_value_sum(simulated_world.combatant(user_id), &simulated_world.combatants);
-            if new_value < basis {
-                return None;
-            }
+        let basis = {
+            let mut actions = self.actions.borrow_mut();
+            actions.clear();
+            ai_consider_actions(&mut actions, self, user, targets);
+            ai_target_value_sum(user, &self.combatants)
+        };
 
-            // FIXME: A hack to get around the whole partial ord thing
-            let ordered_val = (new_value * 1_000_000.0) as i64;
-            Some((ordered_val, *action))
-        }).min_by_key(|pair| pair.0);
+        let best_action = {
+            self.actions.borrow().iter().flat_map(|action| {
+                if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
+                    return None;
+                }
+                let mut simulated_world = self.prediction_clone();
+                perform_action(&mut simulated_world, user_id, *action);
+                let new_value = ai_target_value_sum(simulated_world.combatant(user_id), &simulated_world.combatants);
+                if new_value < basis {
+                    return None;
+                }
+
+                // FIXME: A hack to get around the whole partial ord thing
+                let ordered_val = (new_value * 1_000_000.0) as i64;
+                Some((ordered_val, *action))
+            }).min_by_key(|pair| pair.0)
+        };
 
         if let Some((_, action)) = best_action {
             let user = self.combatant(user_id);
@@ -483,9 +493,12 @@ impl<'a> Simulation<'a> {
             return;
         }
 
-        let first_action_with_foe = actions.iter().filter(|action| {
-            user.different_team(self.combatant(action.target_id))
-        }).next();
+        let first_action_with_foe = {
+            let actions = self.actions.borrow();
+            actions.iter().filter(|action| {
+                user.different_team(self.combatant(action.target_id))
+            }).next().cloned()
+        };
 
         if let Some(action) = first_action_with_foe {
             self.do_move_towards_unit(user_id, action.target_id);
