@@ -6,10 +6,10 @@ use rand::Rng;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
-    Condition, EvasionType, Event, Location, Log, Phase, SlowAction, Source, Team, WeaponType,
-    ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
-    TIMED_CONDITIONS,
+    Action, ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS,
+    COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, perform_action,
+    Phase, SlowAction, Source, Team, TIMED_CONDITIONS,
+    WeaponType,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -355,8 +355,11 @@ impl<'a> Simulation<'a> {
 
             let combatant = self.combatant(*c_id);
             if combatant.death_sentence() {
+                let is_undead = combatant.undead();
                 let now_dead = self.combatant_mut(*c_id).tick_death_sentence_counter();
-                if now_dead {
+                if now_dead && is_undead {
+                    self.cancel_condition(*c_id, Condition::DeathSentence, Source::Condition(Condition::Undead));
+                } else if now_dead {
                     self.target_died(*c_id, Source::Condition(Condition::DeathSentence));
                 }
             }
