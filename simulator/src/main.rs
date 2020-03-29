@@ -3,17 +3,17 @@ extern crate lazy_static;
 
 use std::io;
 
-use indicatif::{ProgressBar, ProgressIterator, ProgressStyle};
-use rand::{Rng, SeedableRng, thread_rng};
-use rand::rngs::{SmallRng, ThreadRng};
+use indicatif::{ProgressBar, ProgressStyle};
+use rand::rngs::SmallRng;
+use rand::{thread_rng, Rng, SeedableRng};
 
 use sim::{Combatant, CombatantId, Simulation, Team};
 
-use crate::sim::{CombatantInfo, describe_entry};
+use crate::sim::{describe_entry, CombatantInfo};
 
+mod data;
 mod dto;
 mod sim;
-mod data;
 
 fn run_many_sims(combatants: &[Combatant; 8]) -> (f64, u64) {
     let mut thread_rng = thread_rng();
@@ -35,7 +35,7 @@ fn run_many_sims(combatants: &[Combatant; 8]) -> (f64, u64) {
     (left_wins_percent, time_outs)
 }
 
-fn clamp(mut n: f64, min: f64, max: f64) -> f64 {
+fn clamp(n: f64, min: f64, max: f64) -> f64 {
     assert!(min <= max);
     let mut x = n;
     if x < min {
@@ -69,23 +69,70 @@ fn run_sims() -> io::Result<()> {
 
     let mut buffer = vec![];
     let bar = ProgressBar::new(total);
-    bar.set_style(ProgressStyle::default_bar()
-        .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg} {per_sec} {eta}")
-        .progress_chars("##-"));
+    bar.set_style(
+        ProgressStyle::default_bar()
+            .template(
+                "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg} {per_sec} {eta}",
+            )
+            .progress_chars("##-"),
+    );
     for match_num in 0..total {
         bar.inc(1);
         let (patch_num, match_up) = data::read_match(match_num as usize, &mut buffer)?;
-        let patch = patches.iter().find(|p| p.time as usize == patch_num).unwrap();
+        let patch = patches
+            .iter()
+            .find(|p| p.time as usize == patch_num)
+            .unwrap();
 
         let combatant_infos = [
-            CombatantInfo::new(CombatantId::new(0), Team::Left, &match_up.left.combatants[0], patch),
-            CombatantInfo::new(CombatantId::new(1), Team::Left, &match_up.left.combatants[1], patch),
-            CombatantInfo::new(CombatantId::new(2), Team::Left, &match_up.left.combatants[2], patch),
-            CombatantInfo::new(CombatantId::new(3), Team::Left, &match_up.left.combatants[3], patch),
-            CombatantInfo::new(CombatantId::new(4), Team::Right, &match_up.right.combatants[0], patch),
-            CombatantInfo::new(CombatantId::new(5), Team::Right, &match_up.right.combatants[1], patch),
-            CombatantInfo::new(CombatantId::new(6), Team::Right, &match_up.right.combatants[2], patch),
-            CombatantInfo::new(CombatantId::new(7), Team::Right, &match_up.right.combatants[3], patch),
+            CombatantInfo::new(
+                CombatantId::new(0),
+                Team::Left,
+                &match_up.left.combatants[0],
+                patch,
+            ),
+            CombatantInfo::new(
+                CombatantId::new(1),
+                Team::Left,
+                &match_up.left.combatants[1],
+                patch,
+            ),
+            CombatantInfo::new(
+                CombatantId::new(2),
+                Team::Left,
+                &match_up.left.combatants[2],
+                patch,
+            ),
+            CombatantInfo::new(
+                CombatantId::new(3),
+                Team::Left,
+                &match_up.left.combatants[3],
+                patch,
+            ),
+            CombatantInfo::new(
+                CombatantId::new(4),
+                Team::Right,
+                &match_up.right.combatants[0],
+                patch,
+            ),
+            CombatantInfo::new(
+                CombatantId::new(5),
+                Team::Right,
+                &match_up.right.combatants[1],
+                patch,
+            ),
+            CombatantInfo::new(
+                CombatantId::new(6),
+                Team::Right,
+                &match_up.right.combatants[2],
+                patch,
+            ),
+            CombatantInfo::new(
+                CombatantId::new(7),
+                Team::Right,
+                &match_up.right.combatants[3],
+                patch,
+            ),
         ];
 
         let combatants = [
@@ -132,7 +179,11 @@ fn run_sims() -> io::Result<()> {
     }
 
     let correct_percent = correct as f32 / total as f32;
-    println!("\ncorrect: {:.1}%, time_outs: {}", correct_percent * 100.0, time_outs);
+    println!(
+        "\ncorrect: {:.1}%, time_outs: {}",
+        correct_percent * 100.0,
+        time_outs
+    );
     println!("improvement: {:.1}%", (correct_percent - 0.5) * 200.0);
     println!("log loss: {:.6}", log_loss / total as f64);
 

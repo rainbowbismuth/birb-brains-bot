@@ -1,6 +1,3 @@
-use std::fmt;
-
-use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
@@ -145,11 +142,8 @@ lazy_static! {
     ];
 }
 
-pub const DAMAGE_CANCELS: [Condition; 3] = [
-    Condition::Charm,
-    Condition::Confusion,
-    Condition::Sleep,
-];
+pub const DAMAGE_CANCELS: [Condition; 3] =
+    [Condition::Charm, Condition::Confusion, Condition::Sleep];
 
 pub const DEATH_CANCELS: [Condition; 22] = [
     Condition::Berserk,
@@ -222,7 +216,7 @@ impl Condition {
             "Float" => Some(Condition::Float),
             "Performing" => Some(Condition::Performing),
             "Transparent" => Some(Condition::Transparent),
-            _ => None
+            _ => None,
         }
     }
 
@@ -254,7 +248,7 @@ impl Condition {
             Condition::Slow => Some(24),
             Condition::Sleep => Some(60),
             Condition::Stop => Some(20),
-            _ => None
+            _ => None,
         }
     }
 
@@ -262,9 +256,13 @@ impl Condition {
         1 << ((self as u64) - 1)
     }
 
-    pub const fn index(self) -> usize { (self as usize) - 1 }
+    pub const fn index(self) -> usize {
+        (self as usize) - 1
+    }
 
-    pub const fn is_timed_condition(self) -> bool { self.index() < TIMED_CONDITIONS_LEN }
+    pub const fn is_timed_condition(self) -> bool {
+        self.index() < TIMED_CONDITIONS_LEN
+    }
 
     pub fn cancels(self) -> &'static [Condition] {
         match self {

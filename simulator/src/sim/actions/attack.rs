@@ -1,9 +1,12 @@
 use crate::dto::rust::Equipment;
-use crate::sim::{Combatant, CombatantId, DAMAGE_CANCELS, Simulation, Source, WeaponType};
 use crate::sim::actions::{Action, ActionKind};
+use crate::sim::{Combatant, CombatantId, Simulation, Source, WeaponType, DAMAGE_CANCELS};
 
 fn should_attack_ally(user: &Combatant, target: &Combatant) -> bool {
-    if DAMAGE_CANCELS.iter().any(|condition| target.has_condition(*condition)) {
+    if DAMAGE_CANCELS
+        .iter()
+        .any(|condition| target.has_condition(*condition))
+    {
         return true;
     }
     if let Some(element) = user.main_hand().and_then(|w| w.weapon_element) {
@@ -14,8 +17,7 @@ fn should_attack_ally(user: &Combatant, target: &Combatant) -> bool {
 }
 
 fn should_attack_foe(user: &Combatant, target: &Combatant) -> bool {
-    if let Some(element) = user.main_hand().and_then(|w| w.weapon_element)
-    {
+    if let Some(element) = user.main_hand().and_then(|w| w.weapon_element) {
         if target.absorbs(element) {
             return false;
         }
@@ -24,7 +26,12 @@ fn should_attack_foe(user: &Combatant, target: &Combatant) -> bool {
     !target.charm()
 }
 
-pub fn consider_attack(actions: &mut Vec<Action>, _sim: &Simulation, user: &Combatant, target: &Combatant) {
+pub fn consider_attack(
+    actions: &mut Vec<Action>,
+    _sim: &Simulation,
+    user: &Combatant,
+    target: &Combatant,
+) {
     if target.dead() || target.crystal() || target.petrify() {
         return;
     }
@@ -72,11 +79,12 @@ pub fn perform_frog_attack(sim: &mut Simulation, user_id: CombatantId, target_id
     sim.after_damage_reaction(user_id, target_id, pa.into());
 }
 
-fn do_single_weapon_attack<'a, 'b>(sim: &'a mut Simulation<'b>,
-                                   user_id: CombatantId,
-                                   weapon: Option<&'b Equipment>,
-                                   target_id: CombatantId)
-                                   -> (i16, bool) {
+fn do_single_weapon_attack<'a, 'b>(
+    sim: &'a mut Simulation<'b>,
+    user_id: CombatantId,
+    weapon: Option<&'b Equipment>,
+    target_id: CombatantId,
+) -> (i16, bool) {
     let user = sim.combatant(user_id);
     let target = sim.combatant(target_id);
     let src = Source::Weapon(user_id, weapon);
@@ -89,12 +97,13 @@ fn do_single_weapon_attack<'a, 'b>(sim: &'a mut Simulation<'b>,
     (damage, crit)
 }
 
-fn calculate_damage<'a, 'b>(sim: &'a Simulation<'b>,
-                            user: &Combatant,
-                            weapon: Option<&'b Equipment>,
-                            target: &Combatant,
-                            k: i16)
-                            -> (i16, bool) {
+fn calculate_damage<'a, 'b>(
+    sim: &'a Simulation<'b>,
+    user: &Combatant,
+    weapon: Option<&'b Equipment>,
+    target: &Combatant,
+    k: i16,
+) -> (i16, bool) {
     // FIXME: These modifiers do not apply to magical guns
     let mut critical_hit = false;
     let mut xa = sim.calculate_weapon_xa(user, weapon, k);
@@ -143,14 +152,14 @@ fn calculate_damage<'a, 'b>(sim: &'a Simulation<'b>,
         xa = (xa * 3) / 2;
     }
 
-// TODO: ZODIAC
-//     #   11. Apply zodiac multipliers:
-//     #           If compatibility is 'Good', then (XA11 = XA10 + [(XA10)/4]))
-//     #           elseIf compatibility is 'Bad', then (XA11 = XA10 - [(XA10)/4])
-//     #           elseIf compatibility is 'Best', then (XA11 = XA10 + [(XA10)/2])
-//     #           elseIf compatibility is 'Worst', then (XA11 = XA10 - [(XA10)/2])
-//     #           else XA11 = XA10
-//     xa = floor(xa * user.zodiac_compatibility(target))
+    // TODO: ZODIAC
+    //     #   11. Apply zodiac multipliers:
+    //     #           If compatibility is 'Good', then (XA11 = XA10 + [(XA10)/4]))
+    //     #           elseIf compatibility is 'Bad', then (XA11 = XA10 - [(XA10)/4])
+    //     #           elseIf compatibility is 'Best', then (XA11 = XA10 + [(XA10)/2])
+    //     #           elseIf compatibility is 'Worst', then (XA11 = XA10 - [(XA10)/2])
+    //     #           else XA11 = XA10
+    //     xa = floor(xa * user.zodiac_compatibility(target))
 
     if user.barehanded() {
         damage = xa * user.pa_bang() as i16;

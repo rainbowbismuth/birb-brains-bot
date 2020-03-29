@@ -6,7 +6,6 @@ use std::io::{Read, Write};
 
 use bincode;
 use serde::de::DeserializeOwned;
-use serde::Deserialize;
 use serde_json;
 
 use crate::dto::python;
@@ -60,7 +59,7 @@ fn read_files_matching<T: DeserializeOwned>(extension: &str) -> io::Result<Vec<T
             continue;
         }
         buffer.clear();
-        let bin = std::fs::File::open(path)?.read_to_end(&mut buffer)?;
+        let _bin = std::fs::File::open(path)?.read_to_end(&mut buffer)?;
         let val = bincode::deserialize(&buffer).unwrap();
         out.push(val);
     }

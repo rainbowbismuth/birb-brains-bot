@@ -49,10 +49,8 @@ impl ConditionBlock {
     }
 }
 
-
 #[cfg(test)]
-mod test
-{
+mod test {
     use super::*;
 
     #[test]
@@ -77,7 +75,6 @@ mod test
             assert!(!block.has(*condition));
         }
     }
-
 
     #[test]
     pub fn tick_condition_status_until_removal() {

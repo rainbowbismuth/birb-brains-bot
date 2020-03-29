@@ -1,6 +1,3 @@
-use std::fmt;
-
-use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
@@ -31,7 +28,7 @@ impl Element {
             "Wind" => Some(Element::Wind),
             "Dark" => Some(Element::Dark),
             "Holy" => Some(Element::Holy),
-            _ => None
+            _ => None,
         }
     }
 

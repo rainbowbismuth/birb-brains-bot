@@ -1,6 +1,3 @@
-use std::fmt;
-
-use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash, Serialize_repr, Deserialize_repr)]
@@ -17,7 +14,7 @@ impl Gender {
             "Male" => Some(Gender::Male),
             "Female" => Some(Gender::Female),
             "Monster" => Some(Gender::Monster),
-            _ => None
+            _ => None,
         }
     }
 
@@ -25,7 +22,7 @@ impl Gender {
         match self {
             Gender::Male => "Male",
             Gender::Female => "Female",
-            Gender::Monster => "Monster"
+            Gender::Monster => "Monster",
         }
     }
 }

@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 pub use entry::*;
 
-use crate::sim::{ALL_CONDITIONS, Combatant, CombatantId, MAX_COMBATANTS, Phase, Simulation};
+use crate::sim::{Combatant, CombatantId, Phase, Simulation, ALL_CONDITIONS, MAX_COMBATANTS};
 
 pub mod entry;
 
@@ -15,16 +15,20 @@ struct LogData<'a> {
 
 #[derive(Clone)]
 pub struct Log<'a> {
-    interior: RefCell<LogData<'a>>
+    interior: RefCell<LogData<'a>>,
 }
 
 impl<'a> Log<'a> {
     pub fn new() -> Log<'a> {
-        Log { interior: RefCell::new(LogData::new()) }
+        Log {
+            interior: RefCell::new(LogData::new()),
+        }
     }
 
     pub fn new_no_log() -> Log<'a> {
-        Log { interior: RefCell::new(LogData::new_no_log()) }
+        Log {
+            interior: RefCell::new(LogData::new_no_log()),
+        }
     }
 
     pub fn set_clock_tick(&self, clock_tick: usize) {

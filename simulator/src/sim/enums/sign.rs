@@ -1,6 +1,3 @@
-use std::fmt;
-
-use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
@@ -37,7 +34,7 @@ impl Sign {
             "Aquarius" => Some(Sign::Aquarius),
             "Pisces" => Some(Sign::Pisces),
             "Serpentarius" => Some(Sign::Serpentarius),
-            _ => None
+            _ => None,
         }
     }
 }

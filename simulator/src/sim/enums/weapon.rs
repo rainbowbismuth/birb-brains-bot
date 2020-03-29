@@ -1,6 +1,3 @@
-use std::fmt;
-
-use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
@@ -43,7 +40,7 @@ impl WeaponType {
             "Musical Instrument" | "Harp" => Some(WeaponType::Harp),
             "Dictionary" | "Book" => Some(WeaponType::Book),
             "Gun" => Some(WeaponType::Gun),
-            _ => None
+            _ => None,
         }
     }
 }

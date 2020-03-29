@@ -1,17 +1,18 @@
-use crate::dto::rust::{Ability, BaseStats, Equipment, Patch};
 use crate::dto::rust;
-use crate::sim::{Action, ALL_CONDITIONS, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign, SkillBlock, Team, TIMED_CONDITIONS_LEN, WeaponType};
+use crate::dto::rust::{BaseStats, Equipment, Patch};
+use crate::sim::{
+    Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign,
+    SkillBlock, Team, ALL_CONDITIONS,
+};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
-    pub id: u8
+    pub id: u8,
 }
 
 impl CombatantId {
     pub fn new(id: u8) -> CombatantId {
-        CombatantId {
-            id
-        }
+        CombatantId { id }
     }
 
     pub fn index(&self) -> usize {
@@ -59,9 +60,18 @@ pub struct CombatantInfo<'a> {
 }
 
 impl<'a> CombatantInfo<'a> {
-    pub fn new(id: CombatantId, team: Team, src: &'a rust::Combatant, patch: &'a Patch) -> CombatantInfo<'a> {
+    pub fn new(
+        id: CombatantId,
+        team: Team,
+        src: &'a rust::Combatant,
+        patch: &'a Patch,
+    ) -> CombatantInfo<'a> {
         let short_class = src.class.replace(" ", "");
-        let base_stats = &patch.base_stats.by_job_gender.get(&(short_class, src.gender)).unwrap();
+        let base_stats = &patch
+            .base_stats
+            .by_job_gender
+            .get(&(short_class, src.gender))
+            .unwrap();
         let mut skills = vec![];
         skills.extend(&base_stats.innates);
         skills.push(&src.action_skill);
@@ -290,32 +300,32 @@ impl<'a> Combatant<'a> {
             0.0
         } else {
             // TODO: Pretty sure this is wrong
-            let base_w_ev = self.main_hand().map_or(0, |e| e.w_ev)
+            let base_w_ev = self
+                .main_hand()
+                .map_or(0, |e| e.w_ev)
                 .max(self.off_hand().map_or(0, |e| e.w_ev));
             self.evasion_multiplier() * (base_w_ev as f32 / 100.0)
         }
     }
 
     pub fn physical_shield_evasion(&self) -> f32 {
-        let base_phys_ev = self.main_hand().map_or(0, |e| e.phys_ev)
-            + self.off_hand().map_or(0, |e| e.phys_ev);
+        let base_phys_ev =
+            self.main_hand().map_or(0, |e| e.phys_ev) + self.off_hand().map_or(0, |e| e.phys_ev);
         self.evasion_multiplier() * (base_phys_ev as f32 / 100.0)
     }
 
     pub fn magical_shield_evasion(&self) -> f32 {
-        let base_magical_ev = self.main_hand().map_or(0, |e| e.magic_ev)
-            + self.off_hand().map_or(0, |e| e.magic_ev);
+        let base_magical_ev =
+            self.main_hand().map_or(0, |e| e.magic_ev) + self.off_hand().map_or(0, |e| e.magic_ev);
         self.evasion_multiplier() * (base_magical_ev as f32 / 100.0)
     }
 
     pub fn physical_accessory_evasion(&self) -> f32 {
-        self.evasion_multiplier() *
-            (self.accessory().map_or(0, |e| e.phys_ev) as f32 / 100.0)
+        self.evasion_multiplier() * (self.accessory().map_or(0, |e| e.phys_ev) as f32 / 100.0)
     }
 
     pub fn magical_accessory_evasion(&self) -> f32 {
-        self.evasion_multiplier() *
-            (self.accessory().map_or(0, |e| e.magic_ev) as f32 / 100.0)
+        self.evasion_multiplier() * (self.accessory().map_or(0, |e| e.magic_ev) as f32 / 100.0)
     }
 
     pub fn movement(&self) -> i8 {
@@ -352,18 +362,18 @@ impl<'a> Combatant<'a> {
             + self.accessory().map_or(0, |e| e.ma_bonus)
     }
 
-//     @property
-//     def jump(self) -> int:
-//         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
-//         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
-//             jump += int(self.raw_combatant['MoveSkill'][-1])
-//         elif self.raw_combatant['MoveSkill'] == 'Ignore Height':
-//             jump = 20
-//         elif self.raw_combatant['MoveSkill'].startswith('Teleport'):
-//             jump = 20
-//         elif 'Fly' in self.stats.innates or 'Fly' == self.raw_combatant['MoveSkill']:
-//             jump = 20
-//         return jump
+    //     @property
+    //     def jump(self) -> int:
+    //         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
+    //         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
+    //             jump += int(self.raw_combatant['MoveSkill'][-1])
+    //         elif self.raw_combatant['MoveSkill'] == 'Ignore Height':
+    //             jump = 20
+    //         elif self.raw_combatant['MoveSkill'].startswith('Teleport'):
+    //             jump = 20
+    //         elif 'Fly' in self.stats.innates or 'Fly' == self.raw_combatant['MoveSkill']:
+    //             jump = 20
+    //         return jump
 
     pub fn gender(&self) -> Gender {
         self.info.gender
@@ -381,7 +391,7 @@ impl<'a> Combatant<'a> {
         match condition {
             Condition::Critical => !self.dead() && self.hp() <= self.max_hp() / 5,
             Condition::Death => self.dead(),
-            _ => self.conditions.has(condition)
+            _ => self.conditions.has(condition),
         }
     }
 
@@ -572,7 +582,9 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn any_equip<P>(&self, p: P) -> bool
-        where P: Fn(&'a Equipment) -> bool {
+    where
+        P: Fn(&'a Equipment) -> bool,
+    {
         self.main_hand().map_or(false, &p)
             || self.off_hand().map_or(false, &p)
             || self.headgear().map_or(false, &p)
@@ -581,18 +593,18 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn absorbs(&self, element: Element) -> bool {
-        self.base_stats().absorbs & element.flag() != 0 ||
-            self.any_equip(|eq| eq.absorbs & element.flag() != 0)
+        self.base_stats().absorbs & element.flag() != 0
+            || self.any_equip(|eq| eq.absorbs & element.flag() != 0)
     }
 
     pub fn halves(&self, element: Element) -> bool {
-        self.base_stats().halves & element.flag() != 0 ||
-            self.any_equip(|eq| eq.halves & element.flag() != 0)
+        self.base_stats().halves & element.flag() != 0
+            || self.any_equip(|eq| eq.halves & element.flag() != 0)
     }
 
     pub fn weak(&self, element: Element) -> bool {
-        self.base_stats().weaknesses & element.flag() != 0 ||
-            self.any_equip(|eq| eq.weaknesses & element.flag() != 0)
+        self.base_stats().weaknesses & element.flag() != 0
+            || self.any_equip(|eq| eq.weaknesses & element.flag() != 0)
     }
 
     pub fn strengthens(&self, element: Element) -> bool {

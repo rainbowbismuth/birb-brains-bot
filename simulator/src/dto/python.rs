@@ -50,7 +50,7 @@ pub struct Patch {
 
 #[derive(Serialize, Deserialize)]
 pub struct AbilityData {
-    pub by_name: HashMap<String, Ability>
+    pub by_name: HashMap<String, Ability>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -84,7 +84,7 @@ pub struct HitChance {
 
 #[derive(Serialize, Deserialize)]
 pub struct EquipmentData {
-    pub by_name: HashMap<String, Equipment>
+    pub by_name: HashMap<String, Equipment>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -118,7 +118,7 @@ pub struct Equipment {
 
 #[derive(Serialize, Deserialize)]
 pub struct BaseStatsData {
-    pub by_job_gender: HashMap<String, BaseStats>
+    pub by_job_gender: HashMap<String, BaseStats>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

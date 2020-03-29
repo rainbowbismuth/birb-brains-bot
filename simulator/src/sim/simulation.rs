@@ -1,11 +1,15 @@
 use std::cell::RefCell;
 
 use rand;
-use rand::{random, Rng};
 use rand::prelude::SmallRng;
+use rand::Rng;
 
 use crate::dto::rust::Equipment;
-use crate::sim::{Action, ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS, COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, perform_action, Phase, Source, Team, TIMED_CONDITIONS, WeaponType};
+use crate::sim::{
+    ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
+    Condition, EvasionType, Event, Location, Log, Phase, Source, Team, WeaponType, ALL_CONDITIONS,
+    COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, TIMED_CONDITIONS,
+};
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
@@ -26,7 +30,12 @@ pub struct Simulation<'a> {
 }
 
 impl<'a> Simulation<'a> {
-    pub fn new(combatants: [Combatant<'a>; MAX_COMBATANTS], arena_length: i8, rng: SmallRng, event_log: bool) -> Simulation<'a> {
+    pub fn new(
+        combatants: [Combatant<'a>; MAX_COMBATANTS],
+        arena_length: i8,
+        rng: SmallRng,
+        event_log: bool,
+    ) -> Simulation<'a> {
         let mut sim = Simulation {
             rng: RefCell::new(rng),
             combatants,
@@ -34,7 +43,11 @@ impl<'a> Simulation<'a> {
             arena_length,
             clock_tick: 0,
             prediction_mode: false,
-            log: if event_log { Log::new() } else { Log::new_no_log() },
+            log: if event_log {
+                Log::new()
+            } else {
+                Log::new_no_log()
+            },
             slow_actions: false,
             active_turns: false,
             left_wins: None,
@@ -99,10 +112,10 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn team_healthy(&self, team: Team) -> bool {
-        self.combatants.iter()
+        self.combatants
+            .iter()
             .filter(|combatant| combatant.team() == team)
-            .any(|combatant|
-                !combatant.dead() && !combatant.petrify() && !combatant.blood_suck())
+            .any(|combatant| !combatant.dead() && !combatant.petrify() && !combatant.blood_suck())
     }
 
     pub fn tick(&mut self) {
@@ -146,7 +159,7 @@ impl<'a> Simulation<'a> {
     //
     pub fn phase_slow_action_charging(&mut self) {
         self.log.set_phase(Phase::SlowActionCharging);
-        for combatant in &mut self.combatants {
+        for _combatant in &mut self.combatants {
             // TODO: Implement slow actions
         }
     }
@@ -163,7 +176,7 @@ impl<'a> Simulation<'a> {
     //             action()
     pub fn phase_slow_action_resolve(&mut self) {
         // self.log.set_phase(Phase::SlowAction())
-        for combatant in &self.combatants {
+        for _combatant in &self.combatants {
             // TODO: Implement slow action resolve
         }
         self.slow_actions = false;
@@ -221,7 +234,9 @@ impl<'a> Simulation<'a> {
             }
 
             let combatant = self.combatant(*cid);
-            if combatant.on_active_turn && !(combatant.moved_during_active_turn || combatant.acted_during_active_turn) {
+            if combatant.on_active_turn
+                && !(combatant.moved_during_active_turn || combatant.acted_during_active_turn)
+            {
                 self.log_event(Event::DidNothing(*cid));
             }
 
@@ -229,7 +244,12 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    pub fn cancel_condition(&mut self, target_id: CombatantId, condition: Condition, src: Source<'a>) {
+    pub fn cancel_condition(
+        &mut self,
+        target_id: CombatantId,
+        condition: Condition,
+        src: Source<'a>,
+    ) {
         let target = self.combatant_mut(target_id);
         if !target.has_condition(condition) {
             return;
@@ -256,7 +276,11 @@ impl<'a> Simulation<'a> {
         }
 
         for cancelled_condition in condition.cancels() {
-            self.cancel_condition(target_id, *cancelled_condition, Source::Condition(condition));
+            self.cancel_condition(
+                target_id,
+                *cancelled_condition,
+                Source::Condition(condition),
+            );
         }
     }
 
@@ -276,8 +300,16 @@ impl<'a> Simulation<'a> {
             }
 
             if combatant.dead() && combatant.reraise() && !combatant.undead() {
-                self.change_target_hp(*c_id, -(combatant.max_hp() / 10), Source::Condition(Condition::Reraise));
-                self.cancel_condition(*c_id, Condition::Reraise, Source::Condition(Condition::Reraise));
+                self.change_target_hp(
+                    *c_id,
+                    -(combatant.max_hp() / 10),
+                    Source::Condition(Condition::Reraise),
+                );
+                self.cancel_condition(
+                    *c_id,
+                    Condition::Reraise,
+                    Source::Condition(Condition::Reraise),
+                );
             }
 
             let combatant = self.combatant(*c_id);
@@ -289,7 +321,11 @@ impl<'a> Simulation<'a> {
                     let max_hp = combatant.max_hp();
                     self.combatant_mut(*c_id).reset_crystal_counter();
                     let heal_amount = self.roll_inclusive(1, max_hp);
-                    self.change_target_hp(*c_id, -heal_amount, Source::Condition(Condition::Undead));
+                    self.change_target_hp(
+                        *c_id,
+                        -heal_amount,
+                        Source::Condition(Condition::Undead),
+                    );
                 }
 
                 let combatant = self.combatant(*c_id);
@@ -317,7 +353,11 @@ impl<'a> Simulation<'a> {
 
             let combatant = self.combatant(*c_id);
             if combatant.regen() {
-                self.change_target_hp(*c_id, -(combatant.max_hp() / 8), Source::Condition(Condition::Regen));
+                self.change_target_hp(
+                    *c_id,
+                    -(combatant.max_hp() / 8),
+                    Source::Condition(Condition::Regen),
+                );
             }
 
             self.ai_do_active_turn(*c_id);
@@ -325,7 +365,11 @@ impl<'a> Simulation<'a> {
             let combatant = self.combatant(*c_id);
             if combatant.poison() {
                 // TODO: Can poison damage be mana shielded? *think*
-                self.change_target_hp(*c_id, combatant.max_hp() / 8, Source::Condition(Condition::Poison));
+                self.change_target_hp(
+                    *c_id,
+                    combatant.max_hp() / 8,
+                    Source::Condition(Condition::Poison),
+                );
             }
 
             self.end_of_active_turn_checks()
@@ -367,10 +411,14 @@ impl<'a> Simulation<'a> {
     }
 
     fn ai_can_be_cowardly(&self, user: &Combatant) -> bool {
-        let any_healthy = self.combatants.iter()
+        let any_healthy = self
+            .combatants
+            .iter()
             .filter(|c| user.team() == c.team() && user.id() != c.id())
             .any(|c| c.healthy());
-        let all_critical = self.combatants.iter()
+        let all_critical = self
+            .combatants
+            .iter()
             .filter(|c| user.team() == c.team() && user.id() != c.id())
             .all(|c| c.critical());
         any_healthy && !all_critical
@@ -380,8 +428,7 @@ impl<'a> Simulation<'a> {
         let arena_length = self.arena_length;
         let user = self.combatant_mut(user_id);
         let old_location = user.location;
-        let new_location = Location::new(
-            (-arena_length).max(desired_location.x.min(arena_length)));
+        let new_location = Location::new((-arena_length).max(desired_location.x.min(arena_length)));
         if old_location == new_location {
             return;
         }
@@ -399,7 +446,7 @@ impl<'a> Simulation<'a> {
         // TODO: Charm?
         let desired = match user.team() {
             Team::Left => target_location.x - range,
-            Team::Right => target_location.x + range
+            Team::Right => target_location.x + range,
         };
         let v = desired - user.location.x;
         let diff = user.movement().min(v.abs());
@@ -415,10 +462,12 @@ impl<'a> Simulation<'a> {
             return;
         }
         if user.location.x - target_location.x > 0 {
-            let new_location = Location::new(target_location.x.max(user.location.x - user.movement()));
+            let new_location =
+                Location::new(target_location.x.max(user.location.x - user.movement()));
             self.do_move_with_bounds(user_id, new_location);
         } else {
-            let new_location = Location::new(target_location.x.min(user.location.x + user.movement()));
+            let new_location =
+                Location::new(target_location.x.min(user.location.x + user.movement()));
             self.do_move_with_bounds(user_id, new_location);
         }
     }
@@ -462,21 +511,28 @@ impl<'a> Simulation<'a> {
         };
 
         let best_action = {
-            self.actions.borrow().iter().flat_map(|action| {
-                if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
-                    return None;
-                }
-                let mut simulated_world = self.prediction_clone();
-                perform_action(&mut simulated_world, user_id, *action);
-                let new_value = ai_target_value_sum(simulated_world.combatant(user_id), &simulated_world.combatants);
-                if new_value < basis {
-                    return None;
-                }
+            self.actions
+                .borrow()
+                .iter()
+                .flat_map(|action| {
+                    if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
+                        return None;
+                    }
+                    let mut simulated_world = self.prediction_clone();
+                    perform_action(&mut simulated_world, user_id, *action);
+                    let new_value = ai_target_value_sum(
+                        simulated_world.combatant(user_id),
+                        &simulated_world.combatants,
+                    );
+                    if new_value < basis {
+                        return None;
+                    }
 
-                // FIXME: A hack to get around the whole partial ord thing
-                let ordered_val = (new_value * 1_000_000.0) as i64;
-                Some((ordered_val, *action))
-            }).min_by_key(|pair| pair.0)
+                    // FIXME: A hack to get around the whole partial ord thing
+                    let ordered_val = (new_value * 1_000_000.0) as i64;
+                    Some((ordered_val, *action))
+                })
+                .min_by_key(|pair| pair.0)
         };
 
         if let Some((_, action)) = best_action {
@@ -496,9 +552,11 @@ impl<'a> Simulation<'a> {
 
         let first_action_with_foe = {
             let actions = self.actions.borrow();
-            actions.iter().filter(|action| {
-                user.different_team(self.combatant(action.target_id))
-            }).next().cloned()
+            actions
+                .iter()
+                .filter(|action| user.different_team(self.combatant(action.target_id)))
+                .next()
+                .cloned()
         };
 
         if let Some(action) = first_action_with_foe {
@@ -515,10 +573,10 @@ impl<'a> Simulation<'a> {
             return true;
         }
 
-//         if target.arrow_guard and not target.berserk and weapon.weapon_type in (
-//                 'Longbow', 'Bow', 'Gun', 'Crossbow') and self.roll_brave_reaction(target):
-//             self.unit_report(target, f'arror guarded {user.name}\'s attack')
-//             return True
+        //         if target.arrow_guard and not target.berserk and weapon.weapon_type in (
+        //                 'Longbow', 'Bow', 'Gun', 'Crossbow') and self.roll_brave_reaction(target):
+        //             self.unit_report(target, f'arror guarded {user.name}\'s attack')
+        //             return True
 
         if user.transparent() || user.concentrate() {
             return false;
@@ -541,7 +599,12 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    pub fn weapon_chance_to_add_or_cancel_status(&mut self, user_id: CombatantId, weapon: Option<&'a Equipment>, target_id: CombatantId) {
+    pub fn weapon_chance_to_add_or_cancel_status(
+        &mut self,
+        user_id: CombatantId,
+        weapon: Option<&'a Equipment>,
+        target_id: CombatantId,
+    ) {
         let target = self.combatant(target_id);
         if !target.healthy() {
             return; // TODO: this doesn't strictly make sense I don't think...
@@ -631,7 +694,12 @@ impl<'a> Simulation<'a> {
     }
 
     // TODO: Make this private, rework the flow, etc etc
-    pub fn after_damage_reaction(&mut self, user_id: CombatantId, target_id: CombatantId, amount: i16) {
+    pub fn after_damage_reaction(
+        &mut self,
+        user_id: CombatantId,
+        target_id: CombatantId,
+        amount: i16,
+    ) {
         let target = self.combatant(target_id);
         if amount == 0 || target.dead() {
             return;
@@ -639,7 +707,11 @@ impl<'a> Simulation<'a> {
 
         if target.auto_potion() && self.roll_brave_reaction(target) {
             let auto_potion_amount = if target.undead() { 100 } else { -100 };
-            self.change_target_hp(target_id, auto_potion_amount, Source::Constant("Auto Potion"));
+            self.change_target_hp(
+                target_id,
+                auto_potion_amount,
+                Source::Constant("Auto Potion"),
+            );
             return;
         }
 
@@ -649,33 +721,41 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    pub fn calculate_weapon_xa(&self, user: &Combatant, weapon: Option<&'a Equipment>, k: i16) -> i16 {
+    pub fn calculate_weapon_xa(
+        &self,
+        user: &Combatant,
+        weapon: Option<&'a Equipment>,
+        k: i16,
+    ) -> i16 {
         let weapon_type = weapon.and_then(|e| e.weapon_type);
         match weapon_type {
-            None =>
-                ((user.pa() as i16 + k as i16) * user.raw_brave as i16) / 100,
+            None => ((user.pa() as i16 + k as i16) * user.raw_brave as i16) / 100,
 
-            Some(WeaponType::Knife) | Some(WeaponType::NinjaSword) | Some(WeaponType::Bow) =>
-                (user.pa() as i16 + k + user.speed() as i16 + k) / 2,
+            Some(WeaponType::Knife) | Some(WeaponType::NinjaSword) | Some(WeaponType::Bow) => {
+                (user.pa() as i16 + k + user.speed() as i16 + k) / 2
+            }
 
-            Some(WeaponType::KnightSword) | Some(WeaponType::Katana) =>
-                ((user.pa() as i16 + k) * user.raw_brave as i16) / 100,
+            Some(WeaponType::KnightSword) | Some(WeaponType::Katana) => {
+                ((user.pa() as i16 + k) * user.raw_brave as i16) / 100
+            }
 
-            Some(WeaponType::Sword) | Some(WeaponType::Pole) | Some(WeaponType::Spear) | Some(WeaponType::Crossbow) =>
-                user.pa() as i16 + k,
+            Some(WeaponType::Sword)
+            | Some(WeaponType::Pole)
+            | Some(WeaponType::Spear)
+            | Some(WeaponType::Crossbow) => user.pa() as i16 + k,
 
-            Some(WeaponType::Staff) =>
-                user.ma() as i16 + k,
+            Some(WeaponType::Staff) => user.ma() as i16 + k,
 
-            Some(WeaponType::Flail) | Some(WeaponType::Bag) =>
-                self.roll_inclusive(1, (user.pa() as i16 + k).max(1)),
+            Some(WeaponType::Flail) | Some(WeaponType::Bag) => {
+                self.roll_inclusive(1, (user.pa() as i16 + k).max(1))
+            }
 
-            Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) =>
-                (user.pa() as i16 + k + user.ma() as i16 + k) / 2,
+            Some(WeaponType::Cloth) | Some(WeaponType::Harp) | Some(WeaponType::Book) => {
+                (user.pa() as i16 + k + user.ma() as i16 + k) / 2
+            }
 
             // TODO: Magical guns
-            Some(WeaponType::Gun) =>
-                weapon.unwrap().wp as i16 + k
+            Some(WeaponType::Gun) => weapon.unwrap().wp as i16 + k,
         }
     }
 }

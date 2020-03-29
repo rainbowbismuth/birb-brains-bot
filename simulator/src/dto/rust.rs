@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::dto::python;
-use crate::sim::{Gender, Sign};
 use crate::sim::{Condition, ConditionFlags, Element, ElementFlags, WeaponType};
+use crate::sim::{Gender, Sign};
 
 #[derive(Serialize, Deserialize)]
 pub struct MatchUp {
@@ -39,7 +39,11 @@ impl Team {
     pub fn from_python(team: python::Team) -> Team {
         Team {
             color: team.color,
-            combatants: team.combatants.into_iter().map(Combatant::from_python).collect(),
+            combatants: team
+                .combatants
+                .into_iter()
+                .map(Combatant::from_python)
+                .collect(),
         }
     }
 }
@@ -110,14 +114,17 @@ impl Patch {
 
 #[derive(Serialize, Deserialize)]
 pub struct AbilityData {
-    pub by_name: HashMap<String, Ability>
+    pub by_name: HashMap<String, Ability>,
 }
 
 impl AbilityData {
     pub fn from_python(ability_data: python::AbilityData) -> AbilityData {
         AbilityData {
-            by_name: ability_data.by_name.into_iter()
-                .map(|(k, v)| (k, Ability::from_python(v))).collect()
+            by_name: ability_data
+                .by_name
+                .into_iter()
+                .map(|(k, v)| (k, Ability::from_python(v)))
+                .collect(),
         }
     }
 }
@@ -161,14 +168,21 @@ impl Ability {
             chance_to_cancel: 0,
         };
 
-        ability.adds.iter()
+        ability
+            .adds
+            .iter()
             .for_each(|cond| new_ability.adds |= Condition::parse(cond).unwrap().flag());
-        ability.cancels.iter()
+        ability
+            .cancels
+            .iter()
             .for_each(|cond| new_ability.cancels |= Condition::parse(cond).unwrap().flag());
-        ability.chance_to_add.iter()
+        ability
+            .chance_to_add
+            .iter()
             .for_each(|cond| new_ability.chance_to_add |= Condition::parse(cond).unwrap().flag());
-        ability.chance_to_cancel.iter()
-            .for_each(|cond| new_ability.chance_to_cancel |= Condition::parse(cond).unwrap().flag());
+        ability.chance_to_cancel.iter().for_each(|cond| {
+            new_ability.chance_to_cancel |= Condition::parse(cond).unwrap().flag()
+        });
 
         new_ability
     }
@@ -197,14 +211,17 @@ impl HitChance {
 
 #[derive(Serialize, Deserialize)]
 pub struct EquipmentData {
-    pub by_name: HashMap<String, Equipment>
+    pub by_name: HashMap<String, Equipment>,
 }
 
 impl EquipmentData {
     pub fn from_python(equipment_data: python::EquipmentData) -> EquipmentData {
         EquipmentData {
-            by_name: equipment_data.by_name.into_iter()
-                .map(|(k, v)| (k, Equipment::from_python(v))).collect()
+            by_name: equipment_data
+                .by_name
+                .into_iter()
+                .map(|(k, v)| (k, Equipment::from_python(v)))
+                .collect(),
         }
     }
 }
@@ -254,8 +271,12 @@ impl Equipment {
             magic_ev: equipment.magic_ev,
             move_bonus: equipment.move_bonus,
             jump_bonus: equipment.jump_bonus,
-            weapon_type: equipment.weapon_type.map(|x| WeaponType::parse(&x).unwrap()),
-            weapon_element: equipment.weapon_element.map(|x| Element::parse(&x).unwrap()),
+            weapon_type: equipment
+                .weapon_type
+                .map(|x| WeaponType::parse(&x).unwrap()),
+            weapon_element: equipment
+                .weapon_element
+                .map(|x| Element::parse(&x).unwrap()),
             strengthens: 0,
             absorbs: 0,
             halves: 0,
@@ -268,24 +289,41 @@ impl Equipment {
             immune_to: 0,
         };
 
-        equipment.strengthens.iter()
+        equipment
+            .strengthens
+            .iter()
             .for_each(|el| new_equipment.strengthens |= Element::parse(el).unwrap().flag());
-        equipment.absorbs.iter()
+        equipment
+            .absorbs
+            .iter()
             .for_each(|el| new_equipment.absorbs |= Element::parse(el).unwrap().flag());
-        equipment.weaknesses.iter()
+        equipment
+            .weaknesses
+            .iter()
             .for_each(|el| new_equipment.weaknesses |= Element::parse(el).unwrap().flag());
-        equipment.cancels_element.iter()
+        equipment
+            .cancels_element
+            .iter()
             .for_each(|el| new_equipment.cancels_element |= Element::parse(el).unwrap().flag());
 
-        equipment.initial.iter()
+        equipment
+            .initial
+            .iter()
             .for_each(|cond| new_equipment.initial |= Condition::parse(cond).unwrap().flag());
-        equipment.cancels.iter()
+        equipment
+            .cancels
+            .iter()
             .for_each(|cond| new_equipment.cancels |= Condition::parse(cond).unwrap().flag());
-        equipment.chance_to_add.iter()
+        equipment
+            .chance_to_add
+            .iter()
             .for_each(|cond| new_equipment.chance_to_add |= Condition::parse(cond).unwrap().flag());
-        equipment.chance_to_cancel.iter()
-            .for_each(|cond| new_equipment.chance_to_cancel |= Condition::parse(cond).unwrap().flag());
-        equipment.immune_to.iter()
+        equipment.chance_to_cancel.iter().for_each(|cond| {
+            new_equipment.chance_to_cancel |= Condition::parse(cond).unwrap().flag()
+        });
+        equipment
+            .immune_to
+            .iter()
             .for_each(|cond| new_equipment.immune_to |= Condition::parse(cond).unwrap().flag());
 
         new_equipment
@@ -294,22 +332,25 @@ impl Equipment {
 
 #[derive(Serialize, Deserialize)]
 pub struct BaseStatsData {
-    pub by_job_gender: HashMap<(String, Gender), BaseStats>
+    pub by_job_gender: HashMap<(String, Gender), BaseStats>,
 }
 
 impl BaseStatsData {
     pub fn from_python(base_stats_data: python::BaseStatsData) -> BaseStatsData {
         BaseStatsData {
-            by_job_gender: base_stats_data.by_job_gender.into_iter().map(|(k, v)| {
-                let split: Vec<_> = k.split(",").collect();
-                let gender = Gender::parse(&split[1]).unwrap();
-                let key = (split[0].to_owned(), gender);
-                (key, BaseStats::from_python(v))
-            }).collect()
+            by_job_gender: base_stats_data
+                .by_job_gender
+                .into_iter()
+                .map(|(k, v)| {
+                    let split: Vec<_> = k.split(",").collect();
+                    let gender = Gender::parse(&split[1]).unwrap();
+                    let key = (split[0].to_owned(), gender);
+                    (key, BaseStats::from_python(v))
+                })
+                .collect(),
         }
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct BaseStats {
@@ -352,13 +393,21 @@ impl BaseStats {
             cancels: 0,
         };
 
-        base_stats.absorbs.iter()
+        base_stats
+            .absorbs
+            .iter()
             .for_each(|el| new_base_stats.absorbs |= Element::parse(el).unwrap().flag());
-        base_stats.halves.iter()
+        base_stats
+            .halves
+            .iter()
             .for_each(|el| new_base_stats.halves |= Element::parse(el).unwrap().flag());
-        base_stats.weaknesses.iter()
+        base_stats
+            .weaknesses
+            .iter()
             .for_each(|el| new_base_stats.weaknesses |= Element::parse(el).unwrap().flag());
-        base_stats.cancels.iter()
+        base_stats
+            .cancels
+            .iter()
             .for_each(|el| new_base_stats.cancels |= Element::parse(el).unwrap().flag());
 
         new_base_stats

@@ -125,5 +125,7 @@ impl SkillBlock {
         self.flags & THROW_ITEM_FLAG != 0
     }
 
-    pub fn skill_set_item(&self) -> bool { self.flags & SKILL_SET_ITEM_FLAG != 0 }
+    pub fn skill_set_item(&self) -> bool {
+        self.flags & SKILL_SET_ITEM_FLAG != 0
+    }
 }

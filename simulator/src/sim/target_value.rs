@@ -1,7 +1,8 @@
 pub use crate::sim::Combatant;
 
 pub fn ai_target_value_sum(user: &Combatant, combatants: &[Combatant]) -> f32 {
-    combatants.iter()
+    combatants
+        .iter()
         .map(|target| ai_calculate_target_value(user, target))
         .sum()
 }
@@ -66,7 +67,12 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
 
     // # 		0x10 - Confusion				-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
     if target.confusion() {
-        if target.slow() || target.stop() || target.sleep() || target.dont_move() || target.dont_act() {
+        if target.slow()
+            || target.stop()
+            || target.sleep()
+            || target.dont_move()
+            || target.dont_act()
+        {
             total += 0.25;
         } else {
             total -= 0.5;
@@ -81,7 +87,12 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
 
     // # 		0x04 - Blood Suck				-90.6% -74(ff8c) (+1 / 4 if slow/stop/sleep/don't move/act/)
     if target.blood_suck() {
-        if target.slow() || target.stop() || target.sleep() || target.dont_move() || target.dont_act() {
+        if target.slow()
+            || target.stop()
+            || target.sleep()
+            || target.dont_move()
+            || target.dont_act()
+        {
             total += 0.25;
         } else {
             total -= 0.906;
@@ -171,7 +182,6 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
         total += 0.50;
     }
 
-
     // # 	0x005c: Current Statuses 5
     // # 		0x80 - Faith					4.7% 6(0006)
     if target.faith() {
@@ -185,7 +195,12 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
 
     // # 		0x20 - Charm					-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
     if target.charm() {
-        if target.slow() || target.stop() || target.sleep() || target.dont_move() || target.dont_act() {
+        if target.slow()
+            || target.stop()
+            || target.sleep()
+            || target.dont_move()
+            || target.dont_act()
+        {
             total += 0.25;
         } else {
             total -= 0.50;
@@ -219,4 +234,3 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
 
     total
 }
-
