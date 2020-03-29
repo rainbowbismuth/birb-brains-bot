@@ -6,9 +6,9 @@ use rand::Rng;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
-    Condition, EvasionType, Event, Location, Log, Phase, Source, Team, WeaponType, ALL_CONDITIONS,
-    COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, TIMED_CONDITIONS,
+    Action, ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS,
+    COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, perform_action,
+    Phase, Source, Team, TIMED_CONDITIONS, WeaponType,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -231,6 +231,15 @@ impl<'a> Simulation<'a> {
 
                 let new_ct = 60.min(combatant.ct - minus_ct);
                 self.combatant_mut(*cid).ct = new_ct;
+
+                let combatant = self.combatant(*cid);
+                if combatant.moved_during_active_turn && combatant.move_hp_up() {
+                    self.change_target_hp(*cid, -(combatant.max_hp() / 10), Source::Constant("Move-HP Up"));
+                }
+                let combatant = self.combatant(*cid);
+                if combatant.moved_during_active_turn && combatant.move_mp_up() {
+                    self.change_target_mp(*cid, -(combatant.max_mp() / 10), Source::Constant("Move-MP Up"));
+                }
             }
 
             let combatant = self.combatant(*cid);
