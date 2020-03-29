@@ -36,8 +36,8 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
 
 #[derive(Copy, Clone, Debug)]
 pub struct SlowAction {
-    ctr: i8,
-    action: Action,
+    pub ctr: u8,
+    pub action: Action,
 }
 
 #[derive(Clone, Debug)]
@@ -108,10 +108,11 @@ impl<'a> CombatantInfo<'a> {
 pub struct Combatant<'a> {
     pub info: &'a CombatantInfo<'a>,
     pub conditions: ConditionBlock,
-    pub raw_hp: i16,
-    pub crystal_counter: i8,
     pub ct: u8,
     pub speed_mod: i8,
+    pub ctr_action: Option<SlowAction>,
+    pub raw_hp: i16,
+    pub crystal_counter: i8,
     pub raw_mp: i16,
     pub broken_items: i8,
     pub location: Location,
@@ -124,7 +125,6 @@ pub struct Combatant<'a> {
     pub pa_mod: i8,
     pub ma_mod: i8,
     pub death_sentence_counter: i8,
-    pub ctr_action: Option<SlowAction>,
 }
 
 impl<'a> Combatant<'a> {
@@ -398,6 +398,7 @@ impl<'a> Combatant<'a> {
     pub fn has_condition(&self, condition: Condition) -> bool {
         match condition {
             Condition::Critical => !self.dead() && self.hp() <= self.max_hp() / 5,
+            Condition::Charging => self.ctr_action.is_some(),
             Condition::Death => self.dead(),
             _ => self.conditions.has(condition),
         }
@@ -693,6 +694,10 @@ impl<'a> Combatant<'a> {
 
     pub fn skill_set_item(&self) -> bool {
         self.info.skill_block.skill_set_item()
+    }
+
+    pub fn skill_set_white_magic(&self) -> bool {
+        self.info.skill_block.skill_set_white_magic()
     }
 
     pub fn zodiac_compatibility(&self, other: &Combatant) -> f32 {

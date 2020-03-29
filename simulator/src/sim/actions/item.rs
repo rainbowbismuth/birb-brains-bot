@@ -90,6 +90,7 @@ pub fn consider_item_heal(
         actions.push(Action {
             kind: ActionKind::Item(potion),
             range: item_range(user),
+            ctr: None,
             target_id: target.id(),
         });
     }
@@ -149,12 +150,14 @@ pub fn consider_phoenix_down(
         actions.push(Action {
             kind: ActionKind::Item(Item::PhoenixDown),
             range: item_range(user),
+            ctr: None,
             target_id: target.id(),
         });
     } else if user.same_team(target) && !target.undead() && target.dead() && !target.reraise() {
         actions.push(Action {
             kind: ActionKind::Item(Item::PhoenixDown),
             range: item_range(user),
+            ctr: None,
             target_id: target.id(),
         });
     }

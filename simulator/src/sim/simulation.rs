@@ -7,8 +7,9 @@ use rand::Rng;
 use crate::dto::rust::Equipment;
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
-    Condition, EvasionType, Event, Location, Log, Phase, Source, Team, WeaponType, ALL_CONDITIONS,
-    COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, TIMED_CONDITIONS,
+    Condition, EvasionType, Event, Location, Log, Phase, SlowAction, Source, Team, WeaponType,
+    ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
+    TIMED_CONDITIONS,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -144,42 +145,42 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    //     def phase_slow_action_charging(self):
-    //         self.set_phase('Slow Action Charge')
-    //         for combatant in self.combatants:
-    //             if not combatant.ctr_action:
-    //                 continue
-    //
-    //             if combatant.stop:
-    //                 continue  # FIXME: Does stop just remove the slow action?
-    //
-    //             combatant.ctr -= 1
-    //             if combatant.ctr <= 0:
-    //                 self.slow_actions.append(combatant)
-    //
     pub fn phase_slow_action_charging(&mut self) {
         self.log.set_phase(Phase::SlowActionCharging);
-        for _combatant in &mut self.combatants {
-            // TODO: Implement slow actions
+        let mut slow_action_ready = false;
+        for c_id in &COMBATANT_IDS {
+            let combatant = self.combatant_mut(*c_id);
+            if combatant.stop() {
+                // FIXME: Does stop just remove the slow action? Sleep, etc...
+                continue;
+            }
+            if let Some(slow_action) = combatant.ctr_action.as_mut() {
+                if slow_action.ctr > 0 {
+                    slow_action.ctr -= 1;
+                }
+                slow_action_ready = slow_action_ready || slow_action.ctr == 0;
+            }
         }
+        self.slow_actions = slow_action_ready;
     }
 
-    //     def phase_slow_action_resolve(self):
-    //         self.set_phase('Slow Action Resolve')
-    //         while self.slow_actions:
-    //             combatant = self.slow_actions.pop(0)
-    //             if not combatant.healthy:
-    //                 continue
-    //             self.prepend = f'{self.colored_name(combatant)}\'s C'
-    //             action = combatant.ctr_action
-    //             combatant.ctr_action = None
-    //             action()
     pub fn phase_slow_action_resolve(&mut self) {
-        // self.log.set_phase(Phase::SlowAction())
-        for _combatant in &self.combatants {
-            // TODO: Implement slow action resolve
+        for c_id in &COMBATANT_IDS {
+            let combatant = self.combatant_mut(*c_id);
+            if combatant.stop() {
+                // FIXME: Does stop just remove the slow action? Sleep, etc...
+                continue;
+            }
+            if let Some(slow_action) = combatant.ctr_action.clone() {
+                if slow_action.ctr != 0 {
+                    continue;
+                }
+                self.log.set_phase(Phase::SlowAction(*c_id));
+                perform_action(self, *c_id, slow_action.action);
+            }
+            let combatant = self.combatant_mut(*c_id);
+            combatant.ctr_action = None;
         }
-        self.slow_actions = false;
     }
 
     pub fn phase_ct_charging(&mut self) {
@@ -513,6 +514,12 @@ impl<'a> Simulation<'a> {
             return;
         }
 
+        if user.ctr_action.is_some() {
+            // TODO: The AI in reality reconsiders here, will have to learn more.
+            self.do_move_out_of_combat(user_id);
+            return;
+        }
+
         let acting_cowardly = user.critical() && self.ai_can_be_cowardly(user);
         let targets = if acting_cowardly {
             &self.combatants[user_id.index()..user_id.index() + 1]
@@ -558,7 +565,12 @@ impl<'a> Simulation<'a> {
             if !in_range(user, action.range, target) {
                 self.do_move_to_range(user_id, action.range, action.target_id);
             }
-            perform_action(self, user_id, action);
+            if let Some(ctr) = action.ctr {
+                self.combatant_mut(user_id).ctr_action = Some(SlowAction { ctr, action });
+                self.log_event(Event::StartedCharging(user_id));
+            } else {
+                perform_action(self, user_id, action);
+            }
             self.combatant_mut(user_id).acted_during_active_turn = true;
         }
 

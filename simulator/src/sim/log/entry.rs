@@ -24,6 +24,9 @@ pub enum Event<'a> {
     BecameCrystal(CombatantId),
     Evaded(CombatantId, EvasionType, Source<'a>),
     Moved(CombatantId, Location, Location),
+    StartedCharging(CombatantId),
+    Silenced(CombatantId),
+    NoMP(CombatantId),
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -85,9 +88,9 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
         ),
 
         Event::HpHeal(target_id, amount, src) => format!(
-            "{} was healed for {} hp from {}",
+            "{} was healed for {} HP from {}",
             describe_combatant(*target_id, combatants),
-            amount,
+            amount.abs(),
             describe_source(*src, combatants)
         ),
 
@@ -101,7 +104,7 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
         Event::MpHeal(target_id, amount, src) => format!(
             "{} gained {} MP from {}",
             describe_combatant(*target_id, combatants),
-            amount,
+            amount.abs(),
             describe_source(*src, combatants)
         ),
 
@@ -165,6 +168,21 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             describe_combatant(*target_id, combatants),
             old_location.x,
             new_location.x
+        ),
+
+        Event::StartedCharging(target_id) => format!(
+            "{} started charging an ability",
+            describe_combatant(*target_id, combatants)
+        ),
+
+        Event::Silenced(target_id) => format!(
+            "{} couldn't finish their spell because they were silenced",
+            describe_combatant(*target_id, combatants)
+        ),
+
+        Event::NoMP(target_id) => format!(
+            "{} couldn't finish their spell due to lack of MP",
+            describe_combatant(*target_id, combatants)
         ),
     }
 }

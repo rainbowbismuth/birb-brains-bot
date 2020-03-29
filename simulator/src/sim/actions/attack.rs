@@ -46,12 +46,14 @@ pub fn consider_attack(
         actions.push(Action {
             kind: ActionKind::FrogAttack,
             range: 1,
+            ctr: None,
             target_id: target.id(),
         });
     } else {
         actions.push(Action {
             kind: ActionKind::Attack,
             range: user.main_hand().map_or(1, |eq| eq.range),
+            ctr: None,
             target_id: target.id(),
         });
     }

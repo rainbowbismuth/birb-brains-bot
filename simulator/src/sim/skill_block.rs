@@ -17,6 +17,7 @@ const DAMAGE_SPLIT_FLAG: u64 = 1 << 15;
 const AUTO_POTION_FLAG: u64 = 1 << 16;
 const THROW_ITEM_FLAG: u64 = 1 << 17;
 const SKILL_SET_ITEM_FLAG: u64 = 1 << 18;
+const SKILL_SET_WHITE_MAGIC_FLAG: u64 = 1 << 19;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -47,6 +48,7 @@ impl SkillBlock {
                 "Auto Potion" => block.flags |= AUTO_POTION_FLAG,
                 "Throw Item" => block.flags |= THROW_ITEM_FLAG,
                 "Item" => block.flags |= SKILL_SET_ITEM_FLAG,
+                "White Magic" => block.flags |= SKILL_SET_WHITE_MAGIC_FLAG,
                 _ => {}
             }
         }
@@ -127,5 +129,9 @@ impl SkillBlock {
 
     pub fn skill_set_item(&self) -> bool {
         self.flags & SKILL_SET_ITEM_FLAG != 0
+    }
+
+    pub fn skill_set_white_magic(&self) -> bool {
+        self.flags & SKILL_SET_WHITE_MAGIC_FLAG != 0
     }
 }
