@@ -25,6 +25,7 @@ pub enum Event<'a> {
     Evaded(CombatantId, EvasionType, Source<'a>),
     Moved(CombatantId, Location, Location),
     StartedCharging(CombatantId),
+    SlowActionTargetDied(CombatantId),
     Silenced(CombatantId),
     NoMP(CombatantId),
 }
@@ -172,6 +173,11 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
 
         Event::StartedCharging(target_id) => format!(
             "{} started charging an ability",
+            describe_combatant(*target_id, combatants)
+        ),
+
+        Event::SlowActionTargetDied(target_id) => format!(
+            "ability's target, {}, is dead",
             describe_combatant(*target_id, combatants)
         ),
 

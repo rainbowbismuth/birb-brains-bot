@@ -45,10 +45,10 @@ pub fn consider_cure(
     if target.dead() || target.petrify() || target.crystal() {
         return;
     }
-    if user.same_team(target) && target.undead() {
+    if user.same_team(target) && (target.undead() || target.hp_percent() > 0.50) {
         return;
     }
-    if target.different_team(target) && !target.undead() {
+    if user.different_team(target) && !target.undead() {
         return;
     }
     if !can_move_into_range(user, 4, target) {
@@ -80,7 +80,7 @@ pub fn consider_raise(
     if user.same_team(target) && (target.undead() || !target.dead()) {
         return;
     }
-    if target.different_team(target) && (!target.undead() || target.dead()) {
+    if user.different_team(target) && (!target.undead() || target.dead()) {
         return;
     }
     if !can_move_into_range(user, 4, target) {
@@ -124,6 +124,7 @@ pub fn perform_white_magic(
             }
             let target = sim.combatant(target_id);
             if target.dead() || target.crystal() || target.petrify() {
+                sim.log_event(Event::SlowActionTargetDied(target_id));
                 return;
             }
 

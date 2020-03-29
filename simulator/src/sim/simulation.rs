@@ -41,7 +41,7 @@ impl<'a> Simulation<'a> {
             rng: RefCell::new(rng),
             combatants,
             actions: RefCell::new(vec![]),
-            arena_length,
+            arena_length: arena_length / 2,
             clock_tick: 0,
             prediction_mode: false,
             log: if event_log {
@@ -539,6 +539,10 @@ impl<'a> Simulation<'a> {
                 .borrow()
                 .iter()
                 .flat_map(|action| {
+                    if self.ai_thirteen_rule() {
+                        return None;
+                    }
+
                     if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
                         return None;
                     }
@@ -579,18 +583,20 @@ impl<'a> Simulation<'a> {
             return;
         }
 
-        let first_action_with_foe = {
-            let actions = self.actions.borrow();
-            actions
-                .iter()
-                .filter(|action| user.different_team(self.combatant(action.target_id)))
-                .next()
-                .cloned()
-        };
+        if !user.acted_during_active_turn {
+            let first_action_with_foe = {
+                let actions = self.actions.borrow();
+                actions
+                    .iter()
+                    .filter(|action| user.different_team(self.combatant(action.target_id)))
+                    .next()
+                    .cloned()
+            };
 
-        if let Some(action) = first_action_with_foe {
-            self.do_move_towards_unit(user_id, action.target_id);
-            return;
+            if let Some(action) = first_action_with_foe {
+                self.do_move_towards_unit(user_id, action.target_id);
+                return;
+            }
         }
 
         self.do_move_out_of_combat(user_id);
