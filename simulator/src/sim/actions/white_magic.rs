@@ -1,5 +1,5 @@
-use crate::sim::actions::{Action, ActionKind};
 use crate::sim::{can_move_into_range, Combatant, CombatantId, Event, Simulation, Source};
+use crate::sim::actions::{Action, ActionKind};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum WhiteMagic {
@@ -128,10 +128,12 @@ pub fn perform_white_magic(
                 return;
             }
 
-            let mut heal_amount =
-                ((user.raw_faith as i32) * (target.raw_faith as i32) * (user.ma() as i32) * 14)
-                    / (10_000);
-            heal_amount = (heal_amount as f32 * user.zodiac_compatibility(target)) as i32;
+            let mut heal_amount = 1.0;
+            heal_amount *= user.faith_percent();
+            heal_amount *= target.faith_percent();
+            heal_amount *= user.ma() as f32;
+            heal_amount *= 14.0;
+            heal_amount *= user.zodiac_compatibility(target);
 
             if target.undead() {
                 heal_amount = -heal_amount;
@@ -161,6 +163,18 @@ pub fn perform_white_magic(
             if target.crystal() || target.petrify() || (!target.dead() && !target.undead()) {
                 return;
             }
+
+            let mut success_chance = 1.0;
+            success_chance *= user.faith_percent();
+            success_chance *= target.faith_percent();
+            success_chance *= (user.ma() as f32 + 180.0) / 100.0;
+            success_chance *= user.zodiac_compatibility(target);
+
+            if !(sim.roll_auto_succeed() < success_chance) {
+                // TODO: Log spell failed.
+                return;
+            }
+
             let mut heal_amount = ((target.max_hp() * 50) / 100).max(1);
             if target.undead() {
                 heal_amount = -heal_amount;

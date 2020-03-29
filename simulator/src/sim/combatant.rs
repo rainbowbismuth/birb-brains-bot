@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::{
-    Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign,
-    SkillBlock, Team, ALL_CONDITIONS,
+    Action, ALL_CONDITIONS, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location,
+    Sign, SkillBlock, Team,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -286,7 +286,13 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn faith_percent(&self) -> f32 {
-        self.raw_faith as f32 / 100.0
+        if self.faith() {
+            1.0
+        } else if self.innocent() {
+            0.0
+        } else {
+            self.raw_faith as f32 / 100.0
+        }
     }
 
     fn evasion_multiplier(&self) -> f32 {
@@ -591,8 +597,8 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn any_equip<P>(&self, p: P) -> bool
-    where
-        P: Fn(&'a Equipment) -> bool,
+        where
+            P: Fn(&'a Equipment) -> bool,
     {
         self.main_hand().map_or(false, &p)
             || self.off_hand().map_or(false, &p)
