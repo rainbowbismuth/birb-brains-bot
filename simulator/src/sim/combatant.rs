@@ -4,6 +4,7 @@ use crate::sim::{
     Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign,
     SkillBlock, Team, ALL_CONDITIONS,
 };
+use std::collections::HashSet;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
@@ -46,6 +47,7 @@ pub struct CombatantInfo<'a> {
     pub base_stats: &'a BaseStats,
     pub number_of_mp_using_abilities: i16,
     pub lowest_mp_cost_ability: i16,
+    pub abilities: HashSet<String>,
     pub name: &'a str,
     pub sign: Sign,
     pub job: &'a str,
@@ -96,6 +98,7 @@ impl<'a> CombatantInfo<'a> {
             accessory: patch.equipment.by_name.get(&src.accessory),
             starting_brave: src.brave,
             starting_faith: src.faith,
+            abilities: src.all_abilities.iter().cloned().collect(),
         }
     }
 }
@@ -187,6 +190,10 @@ impl<'a> Combatant<'a> {
 
     pub fn distance(&self, other: &Combatant) -> Distance {
         self.location.distance(&other.location)
+    }
+
+    pub fn knows_ability(&self, ability: &str) -> bool {
+        self.info.abilities.contains(ability)
     }
 
     pub fn max_hp(&self) -> i16 {

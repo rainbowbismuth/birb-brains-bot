@@ -1,5 +1,5 @@
-use crate::sim::actions::{Action, ActionKind};
 use crate::sim::{can_move_into_range, Combatant, CombatantId, Simulation, Source};
+use crate::sim::actions::{Action, ActionKind};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Item {
@@ -72,9 +72,24 @@ pub fn consider_item_heal(
     }
 
     // TODO: Determine if you even have potion
-    if false {
+    let all_potions = [
+        ("Elixir", Item::Elixir),
+        ("X-Potion", Item::XPotion),
+        ("Hi-Potion", Item::HiPotion),
+        ("Potion", Item::Potion),
+    ];
+    let mut best_potion = None;
+    for potion in all_potions.iter()
+    {
+        if user.knows_ability(potion.0) {
+            best_potion = Some(potion.1);
+            break;
+        }
+    }
+
+    if let Some(potion) = best_potion {
         actions.push(Action {
-            kind: ActionKind::Item(Item::Potion),
+            kind: ActionKind::Item(potion),
             range: item_range(user),
             target_id: target.id(),
         });
@@ -123,8 +138,7 @@ pub fn consider_phoenix_down(
     user: &Combatant,
     target: &Combatant,
 ) {
-    if true {
-        // TODO: Check to see if have Phoenix down
+    if !user.knows_ability("Phoenix Down") {
         return;
     }
 
