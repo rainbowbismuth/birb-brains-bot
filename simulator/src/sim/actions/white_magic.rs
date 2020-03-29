@@ -1,5 +1,5 @@
-use crate::sim::{can_move_into_range, Combatant, CombatantId, Event, Simulation, Source};
 use crate::sim::actions::{Action, ActionKind};
+use crate::sim::{can_move_into_range, Combatant, CombatantId, Event, Simulation, Source};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum WhiteMagic {
@@ -26,7 +26,7 @@ pub fn consider_white_magic(
     if !user.skill_set_white_magic() {
         return;
     }
-    if user.silence() || target.innocent() {
+    if user.silence() || user.innocent() || target.innocent() {
         return;
     }
     consider_cure(actions, sim, user, target);

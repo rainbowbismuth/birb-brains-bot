@@ -28,10 +28,6 @@ pub fn consider_item(
         return;
     }
 
-    if user.berserk() {
-        return;
-    }
-
     let range = item_range(user);
     if !can_move_into_range(user, range, target) {
         return;

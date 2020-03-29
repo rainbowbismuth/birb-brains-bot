@@ -28,6 +28,9 @@ pub fn ai_consider_actions(
 ) {
     for target in targets {
         attack::consider_attack(actions, sim, user, target);
+        if user.berserk() {
+            continue;
+        }
         item::consider_item(actions, sim, user, target);
         white_magic::consider_white_magic(actions, sim, user, target);
     }

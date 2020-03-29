@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::{
-    Action, ALL_CONDITIONS, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location,
-    Sign, SkillBlock, Team,
+    Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign,
+    SkillBlock, Team, ALL_CONDITIONS,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -597,8 +597,8 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn any_equip<P>(&self, p: P) -> bool
-        where
-            P: Fn(&'a Equipment) -> bool,
+    where
+        P: Fn(&'a Equipment) -> bool,
     {
         self.main_hand().map_or(false, &p)
             || self.off_hand().map_or(false, &p)
