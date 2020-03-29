@@ -152,14 +152,7 @@ fn calculate_damage<'a, 'b>(
         xa = (xa * 3) / 2;
     }
 
-    // TODO: ZODIAC
-    //     #   11. Apply zodiac multipliers:
-    //     #           If compatibility is 'Good', then (XA11 = XA10 + [(XA10)/4]))
-    //     #           elseIf compatibility is 'Bad', then (XA11 = XA10 - [(XA10)/4])
-    //     #           elseIf compatibility is 'Best', then (XA11 = XA10 + [(XA10)/2])
-    //     #           elseIf compatibility is 'Worst', then (XA11 = XA10 - [(XA10)/2])
-    //     #           else XA11 = XA10
-    //     xa = floor(xa * user.zodiac_compatibility(target))
+    xa = (xa as f32 * user.zodiac_compatibility(target)).floor() as i16;
 
     if user.barehanded() {
         damage = xa * user.pa_bang() as i16;

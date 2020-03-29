@@ -37,4 +37,8 @@ impl Sign {
             _ => None,
         }
     }
+
+    pub fn index(self) -> usize {
+        self as usize
+    }
 }

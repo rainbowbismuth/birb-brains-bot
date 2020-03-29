@@ -1,10 +1,11 @@
+use std::collections::HashSet;
+
 use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::{
     Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign,
     SkillBlock, Team, ALL_CONDITIONS,
 };
-use std::collections::HashSet;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
@@ -667,7 +668,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn move_mp_up(&self) -> bool {
-        self.info.skill_block.move_hp_up()
+        self.info.skill_block.move_mp_up()
     }
 
     pub fn sicken(&self) -> bool {
@@ -693,37 +694,47 @@ impl<'a> Combatant<'a> {
     pub fn skill_set_item(&self) -> bool {
         self.info.skill_block.skill_set_item()
     }
+
+    pub fn zodiac_compatibility(&self, other: &Combatant) -> f32 {
+        let s1 = self.info.sign.index();
+        let s2 = other.info.sign.index();
+        match ZODIAC_CHART[s1 * 13 + s2] {
+            b'O' => 1.0,
+            b'+' => 1.25,
+            b'-' => 0.75,
+            b'?' => {
+                if self.monster() || other.monster() {
+                    0.75
+                } else if self.gender() != other.gender() {
+                    1.5
+                } else {
+                    0.5
+                }
+            }
+            _ => unreachable!("found symbol that shouldn't be in table"),
+        }
+    }
 }
+
+const ZODIAC_CHART: &[u8; 13 * 13] = b"OOO-+O?O+-OOO\
+    OOOO-+O?O+-OO\
+    OOOOO-+O?O+-O\
+    -OOOOO-+O?O+O\
+    +-OOOOO-+O?OO\
+    O+-OOOOO-+O?O\
+    ?O+-OOOOO-+OO\
+    O?O+-OOOOO-+O\
+    +O?O+-OOOOO-O\
+    -+O?O+-OOOOOO\
+    O-+O?O+-OOOOO\
+    OO-+O?O+-OOOO\
+    OOOOOOOOOOOOO";
 
 //     @property
 //     def arrow_guard(self) -> bool:
 //         return 'Arrow Guard' in self.skills
 //
 //     @property
-//     def throw_item(self) -> bool:
-//         return 'Throw Item' in self.skills
-
-//     @property
 //     def has_offhand_weapon(self) -> bool:
 //         return self.offhand.weapon_type is not None
 //
-
-//     def zodiac_compatibility(self, other: 'Combatant') -> f32:
-//         s1 = ZODIAC_INDEX[self.sign]
-//         s2 = ZODIAC_INDEX[other.sign]
-//         if ZODIAC_CHART[s1][s2] == 'O':
-//             return 1.0
-//         elif ZODIAC_CHART[s1][s2] == '+':
-//             return 1.25
-//         elif ZODIAC_CHART[s1][s2] == '-':
-//             return 0.75
-//         elif ZODIAC_CHART[s1][s2] == '?':
-//             if self.gender == 'Monster' or other.gender == 'Monster':
-//                 return 0.75
-//             elif self.gender != other.gender:
-//                 return 1.5
-//             else:
-//                 return 0.5
-//         else:
-//             raise Exception(f"Missing case in zodiac compatibility calculation\
-//              {self.sign} {self.gender} vs {other.sign} {other.gender}")

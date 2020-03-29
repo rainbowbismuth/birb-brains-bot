@@ -1,5 +1,5 @@
-use crate::sim::{can_move_into_range, Combatant, CombatantId, Simulation, Source};
 use crate::sim::actions::{Action, ActionKind};
+use crate::sim::{can_move_into_range, Combatant, CombatantId, Simulation, Source};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Item {
@@ -79,8 +79,7 @@ pub fn consider_item_heal(
         ("Potion", Item::Potion),
     ];
     let mut best_potion = None;
-    for potion in all_potions.iter()
-    {
+    for potion in all_potions.iter() {
         if user.knows_ability(potion.0) {
             best_potion = Some(potion.1);
             break;
