@@ -1,5 +1,5 @@
-use crate::sim::actions::{Action, ActionKind};
 use crate::sim::{can_move_into_range, Combatant, CombatantId, Event, Simulation, Source};
+use crate::sim::actions::{Action, ActionKind};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum WhiteMagic {
@@ -33,13 +33,18 @@ pub fn consider_white_magic(
     consider_raise(actions, sim, user, target);
 }
 
-pub fn consider_cure(
+fn consider_cure_like(
     actions: &mut Vec<Action>,
     _sim: &Simulation,
     user: &Combatant,
     target: &Combatant,
+    name: &'static str,
+    spell: WhiteMagic,
+    mp_cost: i16,
+    ctr: u8,
+    range: i8,
 ) {
-    if !user.knows_ability("Cure") {
+    if !user.knows_ability(name) {
         return;
     }
     if target.dead() || target.petrify() || target.crystal() {
@@ -54,18 +59,30 @@ pub fn consider_cure(
     if !can_move_into_range(user, 4, target) {
         return;
     }
-    if user.mp() < 6 {
+    if user.mp() < mp_cost {
         return;
     }
     actions.push(Action {
-        kind: ActionKind::WhiteMagic(WhiteMagic::Cure),
-        range: 4,
-        ctr: Some(4),
+        kind: ActionKind::WhiteMagic(spell),
+        range,
+        ctr: Some(ctr),
         target_id: target.id(),
     });
 }
 
-pub fn consider_raise(
+fn consider_cure(
+    actions: &mut Vec<Action>,
+    _sim: &Simulation,
+    user: &Combatant,
+    target: &Combatant,
+) {
+    consider_cure_like(actions, _sim, user, target, "Cure", WhiteMagic::Cure, 6, 4, 4);
+    consider_cure_like(actions, _sim, user, target, "Cure 2", WhiteMagic::Cure2, 10, 5, 4);
+    consider_cure_like(actions, _sim, user, target, "Cure 3", WhiteMagic::Cure3, 16, 7, 4);
+    consider_cure_like(actions, _sim, user, target, "Cure 4", WhiteMagic::Cure4, 20, 10, 4);
+}
+
+fn consider_raise(
     actions: &mut Vec<Action>,
     _sim: &Simulation,
     user: &Combatant,
@@ -97,6 +114,40 @@ pub fn consider_raise(
     });
 }
 
+fn perform_cure_like(
+    sim: &mut Simulation,
+    user_id: CombatantId,
+    target_id: CombatantId,
+    name: &'static str,
+    mp_cost: i16,
+    ma_constant: f32,
+) {
+    let user = sim.combatant(user_id);
+    if user.mp() < mp_cost {
+        sim.log_event(Event::NoMP(user_id));
+        return;
+    }
+
+    let target = sim.combatant(target_id);
+    if target.dead() || target.crystal() || target.petrify() {
+        sim.log_event(Event::SlowActionTargetDied(target_id));
+        return;
+    }
+    // TODO: Lol I need to actually pay the MP cost, should do that in sim I guess.
+
+    let mut heal_amount = 1.0;
+    heal_amount *= user.faith_percent();
+    heal_amount *= target.faith_percent();
+    heal_amount *= user.ma() as f32;
+    heal_amount *= ma_constant;
+    heal_amount *= user.zodiac_compatibility(target);
+
+    if target.undead() {
+        heal_amount = -heal_amount;
+    }
+    sim.change_target_hp(target_id, -heal_amount as i16, Source::Constant(name));
+}
+
 pub fn perform_white_magic(
     sim: &mut Simulation,
     user_id: CombatantId,
@@ -117,28 +168,16 @@ pub fn perform_white_magic(
         // | Range: 4 / Effect: 2v1         |                                            |
         //  -----------------------------------------------------------------------------
         WhiteMagic::Cure => {
-            let user = sim.combatant(user_id);
-            if user.mp() < 6 {
-                sim.log_event(Event::NoMP(user_id));
-                return;
-            }
-            let target = sim.combatant(target_id);
-            if target.dead() || target.crystal() || target.petrify() {
-                sim.log_event(Event::SlowActionTargetDied(target_id));
-                return;
-            }
-
-            let mut heal_amount = 1.0;
-            heal_amount *= user.faith_percent();
-            heal_amount *= target.faith_percent();
-            heal_amount *= user.ma() as f32;
-            heal_amount *= 14.0;
-            heal_amount *= user.zodiac_compatibility(target);
-
-            if target.undead() {
-                heal_amount = -heal_amount;
-            }
-            sim.change_target_hp(target_id, -heal_amount as i16, Source::Constant("Cure"));
+            perform_cure_like(sim, user_id, target_id, "Cure", 6, 14.0);
+        }
+        WhiteMagic::Cure2 => {
+            perform_cure_like(sim, user_id, target_id, "Cure 2", 10, 20.0);
+        }
+        WhiteMagic::Cure3 => {
+            perform_cure_like(sim, user_id, target_id, "Cure 3", 16, 30.0);
+        }
+        WhiteMagic::Cure4 => {
+            perform_cure_like(sim, user_id, target_id, "Cure 4", 20, 40.0);
         }
         //  _____________________________________________________________________________
         // | [Raise]                        [ 005 ]                          WHITE MAGIC |
