@@ -1,4 +1,4 @@
-use crate::sim::{Combatant, CombatantId, Simulation};
+use crate::sim::{Combatant, CombatantId, Event, Simulation};
 
 pub mod attack;
 pub mod common;
@@ -95,8 +95,17 @@ pub fn ai_consider_actions<'a>(
 pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action: Action<'a>) {
     let ability = action.ability;
     let user = sim.combatant(user_id);
+
+    // TODO: These are redundant with the entire check below..
+    if action.ability.flags & SILENCEABLE != 0 && user.silence() {
+        sim.log_event(Event::Silenced(user_id, action));
+        return;
+    } else if ability.mp_cost > 0 && user.mp() < ability.mp_cost {
+        sim.log_event(Event::NoMP(user_id, action));
+        return;
+    }
+
     if !filter_ability_level(user, ability) {
-        // TODO: Log some sort of event for failing to perform an ability
         return;
     }
     let target = sim.combatant(action.target_id);
@@ -104,6 +113,13 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         // TODO: Log some sort of event for failing to perform an ability
         return;
     }
+
+    if ability.mp_cost > 0 {
+        let user = sim.combatant_mut(user_id);
+        let new_mp = user.mp() - ability.mp_cost;
+        user.set_mp_within_bounds(new_mp);
+    }
+
     ability
         .implementation
         .perform(sim, user_id, action.target_id);

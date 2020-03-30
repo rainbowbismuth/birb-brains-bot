@@ -29,8 +29,8 @@ pub enum Event<'a> {
     UsingAbility(CombatantId, Action<'a>),
     StartedCharging(CombatantId, Action<'a>),
     SlowActionTargetDied(CombatantId),
-    Silenced(CombatantId),
-    NoMP(CombatantId),
+    Silenced(CombatantId, Action<'a>),
+    NoMP(CombatantId, Action<'a>),
 }
 
 #[derive(Copy, Clone)]
@@ -194,14 +194,16 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             describe_combatant(*target_id, combatants)
         ),
 
-        Event::Silenced(target_id) => format!(
-            "{} couldn't finish their spell because they were silenced",
-            describe_combatant(*target_id, combatants)
+        Event::Silenced(target_id, action) => format!(
+            "{} couldn't finish charging {} because they were silenced",
+            describe_combatant(*target_id, combatants),
+            action.ability.name
         ),
 
-        Event::NoMP(target_id) => format!(
-            "{} couldn't finish their spell due to lack of MP",
-            describe_combatant(*target_id, combatants)
+        Event::NoMP(target_id, action) => format!(
+            "{} couldn't finish {} due to lack of MP",
+            describe_combatant(*target_id, combatants),
+            action.ability.name
         ),
     }
 }
@@ -224,17 +226,19 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
 
     match combatant.team() {
         Team::Left => format!(
-            "{} ({} HP, loc: {}{})",
+            "{} ({} HP, {} MP, loc: {}{})",
             combatant.name().red(),
             combatant.hp(),
+            combatant.mp(),
             combatant.location.x,
             cond_str
         ),
 
         Team::Right => format!(
-            "{} ({} HP, loc: {}{})",
+            "{} ({} HP, {} MP, loc: {}{})",
             combatant.name().blue(),
             combatant.hp(),
+            combatant.mp(),
             combatant.location.x,
             cond_str
         ),

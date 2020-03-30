@@ -20,8 +20,8 @@ pub fn do_hp_heal(
     hurts_undead: bool,
 ) {
     let target = sim.combatant(target_id);
-    if target.undead() {
+    if hurts_undead && target.undead() {
         amount = -amount;
     }
-    sim.change_target_hp(target_id, amount, Source::Ability);
+    sim.change_target_hp(target_id, -amount, Source::Ability);
 }
