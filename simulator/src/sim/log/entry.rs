@@ -1,9 +1,11 @@
 use colored::Colorize;
 
 use crate::dto::rust::Equipment;
-use crate::sim::{Combatant, CombatantId, Condition, Location, Phase, Team, MAX_COMBATANTS};
+use crate::sim::{
+    Ability, Action, Combatant, CombatantId, Condition, Location, Phase, Team, MAX_COMBATANTS,
+};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Entry<'a> {
     pub clock_tick: usize,
     pub phase: Phase,
@@ -11,7 +13,7 @@ pub struct Entry<'a> {
     pub event: Event<'a>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub enum Event<'a> {
     DidNothing(CombatantId),
     HpDamage(CombatantId, i16, Source<'a>),
@@ -24,13 +26,14 @@ pub enum Event<'a> {
     BecameCrystal(CombatantId),
     Evaded(CombatantId, EvasionType, Source<'a>),
     Moved(CombatantId, Location, Location),
-    StartedCharging(CombatantId),
+    UsingAbility(CombatantId, Action<'a>),
+    StartedCharging(CombatantId, Action<'a>),
     SlowActionTargetDied(CombatantId),
     Silenced(CombatantId),
     NoMP(CombatantId),
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub enum Source<'a> {
     Phase,
     Constant(&'static str),
@@ -38,7 +41,7 @@ pub enum Source<'a> {
     Weapon(CombatantId, Option<&'a Equipment>),
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum EvasionType {
     Guarded,
     Blocked,
@@ -171,9 +174,18 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             new_location.x
         ),
 
-        Event::StartedCharging(target_id) => format!(
-            "{} started charging an ability",
-            describe_combatant(*target_id, combatants)
+        Event::UsingAbility(target_id, action) => format!(
+            "{} is using {} on {}",
+            describe_combatant(*target_id, combatants),
+            action.ability.name,
+            describe_combatant(action.target_id, combatants),
+        ),
+
+        Event::StartedCharging(target_id, action) => format!(
+            "{} started charging {} on {}",
+            describe_combatant(*target_id, combatants),
+            action.ability.name,
+            describe_combatant(action.target_id, combatants),
         ),
 
         Event::SlowActionTargetDied(target_id) => format!(

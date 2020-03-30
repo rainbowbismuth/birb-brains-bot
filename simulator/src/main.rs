@@ -179,8 +179,9 @@ fn run_sims() -> io::Result<()> {
     }
 
     let correct_percent = correct as f32 / total as f32;
+    println!("\ntotal: {}", total);
     println!(
-        "\ncorrect: {:.1}%, time_outs: {}",
+        "correct: {:.1}%, time_outs: {}",
         correct_percent * 100.0,
         time_outs
     );

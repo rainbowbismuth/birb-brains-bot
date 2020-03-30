@@ -1,13 +1,13 @@
-use std::collections::HashSet;
-
 use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
+use crate::sim::actions::attack::ATTACK_ABILITY;
+use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::{
-    Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender, Location, Sign,
-    SkillBlock, Team, ALL_CONDITIONS,
+    Ability, Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender,
+    Location, Sign, SkillBlock, Team, ALL_CONDITIONS,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct CombatantId {
     pub id: u8,
 }
@@ -34,13 +34,13 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
     CombatantId { id: 7 },
 ];
 
-#[derive(Copy, Clone, Debug)]
-pub struct SlowAction {
+#[derive(Copy, Clone)]
+pub struct SlowAction<'a> {
     pub ctr: u8,
-    pub action: Action,
+    pub action: Action<'a>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CombatantInfo<'a> {
     pub id: CombatantId,
     pub team: Team,
@@ -48,7 +48,7 @@ pub struct CombatantInfo<'a> {
     pub base_stats: &'a BaseStats,
     pub number_of_mp_using_abilities: i16,
     pub lowest_mp_cost_ability: i16,
-    pub abilities: HashSet<String>,
+    pub abilities: Vec<&'a Ability<'a>>,
     pub name: &'a str,
     pub sign: Sign,
     pub job: &'a str,
@@ -69,6 +69,7 @@ impl<'a> CombatantInfo<'a> {
         src: &'a rust::Combatant,
         patch: &'a Patch,
     ) -> CombatantInfo<'a> {
+        // TODO: Do the replace on the way in to rust::Combatant, better yet add this key.
         let short_class = src.class.replace(" ", "");
         let base_stats = &patch
             .base_stats
@@ -81,12 +82,32 @@ impl<'a> CombatantInfo<'a> {
         skills.push(&src.reaction_skill);
         skills.push(&src.support_skill);
         skills.push(&src.move_skill);
+
+        let mut abilities = vec![];
+        abilities.push(&ATTACK_ABILITY);
+        for ability in ITEM_ABILITIES.iter() {
+            if src.all_abilities.iter().any(|n| n == ability.name) {
+                abilities.push(ability);
+            }
+        }
+
+        let mut number_of_mp_using_abilities = 0;
+        let mut lowest_mp_cost_ability = 0;
+
+        for ability in &abilities {
+            if ability.mp_cost == 0 {
+                continue;
+            }
+            number_of_mp_using_abilities += 1;
+            lowest_mp_cost_ability = lowest_mp_cost_ability.min(ability.mp_cost);
+        }
+
         CombatantInfo {
             base_stats,
             id,
             team,
-            number_of_mp_using_abilities: 0,
-            lowest_mp_cost_ability: 0,
+            number_of_mp_using_abilities,
+            lowest_mp_cost_ability,
             name: &src.name,
             sign: src.sign,
             job: &src.class,
@@ -99,18 +120,18 @@ impl<'a> CombatantInfo<'a> {
             accessory: patch.equipment.by_name.get(&src.accessory),
             starting_brave: src.brave,
             starting_faith: src.faith,
-            abilities: src.all_abilities.iter().cloned().collect(),
+            abilities,
         }
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Combatant<'a> {
     pub info: &'a CombatantInfo<'a>,
     pub conditions: ConditionBlock,
     pub ct: u8,
     pub speed_mod: i8,
-    pub ctr_action: Option<SlowAction>,
+    pub ctr_action: Option<SlowAction<'a>>,
     pub raw_hp: i16,
     pub crystal_counter: i8,
     pub raw_mp: i16,
@@ -185,16 +206,28 @@ impl<'a> Combatant<'a> {
         self.team() != other.team()
     }
 
+    pub fn team_allegiance(&self) -> Team {
+        if !self.charm() {
+            self.team()
+        } else {
+            self.team().opposite()
+        }
+    }
+
+    pub fn ally(&self, other: &Combatant) -> bool {
+        self.team_allegiance() == other.team_allegiance()
+    }
+
+    pub fn foe(&self, other: &Combatant) -> bool {
+        self.team_allegiance() != other.team_allegiance()
+    }
+
     pub fn base_stats(&self) -> &'a BaseStats {
         self.info.base_stats
     }
 
     pub fn distance(&self, other: &Combatant) -> Distance {
         self.location.distance(&other.location)
-    }
-
-    pub fn knows_ability(&self, ability: &str) -> bool {
-        self.info.abilities.contains(ability)
     }
 
     pub fn max_hp(&self) -> i16 {
@@ -422,12 +455,16 @@ impl<'a> Combatant<'a> {
         self.conditions.add(condition);
     }
 
-    pub fn healthy(&self) -> bool {
-        !self.dead() && !self.crystal() && !self.petrify()
-    }
-
     pub fn dead(&self) -> bool {
         self.hp() == 0
+    }
+
+    pub fn alive(&self) -> bool {
+        self.hp() > 0 && !self.crystal()
+    }
+
+    pub fn healthy(&self) -> bool {
+        self.alive() && !self.petrify()
     }
 
     pub fn critical(&self) -> bool {
@@ -698,12 +735,8 @@ impl<'a> Combatant<'a> {
         self.info.skill_block.throw_item()
     }
 
-    pub fn skill_set_item(&self) -> bool {
-        self.info.skill_block.skill_set_item()
-    }
-
-    pub fn skill_set_white_magic(&self) -> bool {
-        self.info.skill_block.skill_set_white_magic()
+    pub fn abilities(&self) -> &[&'a Ability<'a>] {
+        self.info.abilities.as_slice()
     }
 
     pub fn zodiac_compatibility(&self, other: &Combatant) -> f32 {

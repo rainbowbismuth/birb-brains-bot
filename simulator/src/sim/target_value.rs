@@ -13,9 +13,8 @@ fn ai_calculate_target_value(user: &Combatant, target: &Combatant) -> f32 {
     priority += ai_calculate_status_target_value_mod(target);
     priority += ai_calculate_caster_hate_mod(target);
     // TODO: Golem fear
-    // TODO: Charm
 
-    if user.different_team(target) {
+    if user.foe(target) {
         -priority
     } else {
         priority
