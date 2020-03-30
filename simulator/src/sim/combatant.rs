@@ -2,6 +2,7 @@ use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::actions::attack::ATTACK_ABILITY;
 use crate::sim::actions::item::ITEM_ABILITIES;
+use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender,
     Location, Sign, SkillBlock, Team, ALL_CONDITIONS,
@@ -86,6 +87,11 @@ impl<'a> CombatantInfo<'a> {
         let mut abilities = vec![];
         abilities.push(&ATTACK_ABILITY);
         for ability in ITEM_ABILITIES.iter() {
+            if src.all_abilities.iter().any(|n| n == ability.name) {
+                abilities.push(ability);
+            }
+        }
+        for ability in WHITE_MAGIC_ABILITIES.iter() {
             if src.all_abilities.iter().any(|n| n == ability.name) {
                 abilities.push(ability);
             }

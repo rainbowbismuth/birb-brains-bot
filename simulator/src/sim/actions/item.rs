@@ -1,6 +1,6 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::common::{do_hp_heal, should_heal_ally, should_heal_foe};
 use crate::sim::{Combatant, CombatantId, Condition, Simulation, Source, NOT_ALIVE_OK};
-use std::path::Component::CurDir;
 
 pub const ITEM_ABILITIES: &[Ability] = &[
     Ability {
@@ -144,10 +144,10 @@ impl AbilityImpl for PotionAbilityImpl {
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        if user.ally(target) && !should_item_heal_ally(target) {
+        if user.ally(target) && !should_heal_ally(target, true) {
             return;
         }
-        if user.foe(target) && !should_item_heal_foe(target) {
+        if user.foe(target) && !should_heal_foe(target, true) {
             return;
         }
         actions.push(Action {
@@ -158,14 +158,11 @@ impl AbilityImpl for PotionAbilityImpl {
         });
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
-        let mut heal_amount = self.hp_amount;
-        if sim.combatant(target_id).undead() {
-            heal_amount = -heal_amount;
+        if self.hp_amount > 0 {
+            do_hp_heal(sim, target_id, self.hp_amount, true);
         }
-        sim.change_target_hp(target_id, -heal_amount, Source::Constant("Item"));
-
         if self.mp_amount > 0 {
-            sim.change_target_mp(target_id, -self.mp_amount, Source::Constant("Item"));
+            sim.change_target_mp(target_id, -self.mp_amount, Source::Ability);
         }
     }
 }
@@ -195,7 +192,7 @@ impl AbilityImpl for ConditionCureItemImpl {
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
         for condition in self.cures {
-            sim.cancel_condition(target_id, *condition, Source::Constant("Item"));
+            sim.cancel_condition(target_id, *condition, Source::Ability);
         }
     }
 }
@@ -205,18 +202,6 @@ fn item_range(user: &Combatant) -> i8 {
         4
     } else {
         1
-    }
-}
-
-fn should_item_heal_foe(target: &Combatant) -> bool {
-    target.undead()
-}
-
-fn should_item_heal_ally(target: &Combatant) -> bool {
-    if target.undead() {
-        false
-    } else {
-        target.hp_percent() <= 0.50
     }
 }
 
@@ -251,10 +236,10 @@ impl AbilityImpl for PhoenixDownImpl {
     fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
         let target = sim.combatant(target_id);
         if target.undead() && !target.dead() {
-            sim.change_target_hp(target_id, target.max_hp(), Source::Constant("Phoenix Down"));
+            sim.change_target_hp(target_id, target.max_hp(), Source::Ability);
         } else if !target.undead() && target.dead() {
             let heal_amount = sim.roll_inclusive(1, 20);
-            sim.change_target_hp(target_id, -heal_amount, Source::Constant("Phoenix Down"));
+            sim.change_target_hp(target_id, -heal_amount, Source::Ability);
         }
     }
 }

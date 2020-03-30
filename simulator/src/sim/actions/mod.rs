@@ -1,6 +1,7 @@
 use crate::sim::{Combatant, CombatantId, Simulation};
 
 pub mod attack;
+pub mod common;
 pub mod item;
 pub mod white_magic;
 

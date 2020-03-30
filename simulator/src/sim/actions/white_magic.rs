@@ -1,357 +1,361 @@
-// use crate::sim::{can_move_into_range, Combatant, CombatantId, Event, Simulation, Source};
-// use crate::sim::actions::{Action, ActionKind};
-//
-// #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-// pub enum WhiteMagic {
-//     Cure,
-//     Cure2,
-//     Cure3,
-//     Cure4,
-//     Raise,
-//     Raise2,
-//     Reraise,
-//     Regen,
-//     Protect,
-//     Protect2,
-//     Esuna,
-//     Holy,
-// }
-//
-// pub fn consider_white_magic(
-//     actions: &mut Vec<Action>,
-//     sim: &Simulation,
-//     user: &Combatant,
-//     target: &Combatant,
-// ) {
-//     if !user.skill_set_white_magic() {
-//         return;
-//     }
-//     if user.silence() || user.innocent() || target.innocent() {
-//         return;
-//     }
-//     consider_cure(actions, sim, user, target);
-//     consider_raise(actions, sim, user, target);
-// }
-//
-// fn consider_cure_like(
-//     actions: &mut Vec<Action>,
-//     _sim: &Simulation,
-//     user: &Combatant,
-//     target: &Combatant,
-//     name: &'static str,
-//     spell: WhiteMagic,
-//     mp_cost: i16,
-//     ctr: u8,
-//     range: i8,
-// ) {
-//     if !user.knows_ability(name) {
-//         return;
-//     }
-//     if target.dead() || target.petrify() || target.crystal() {
-//         return;
-//     }
-//     if user.same_team(target) && (target.undead() || target.hp_percent() > 0.50) {
-//         return;
-//     }
-//     if user.different_team(target) && !target.undead() {
-//         return;
-//     }
-//     if !can_move_into_range(user, 4, target) {
-//         return;
-//     }
-//     if user.mp() < mp_cost {
-//         return;
-//     }
-//     actions.push(Action {
-//         kind: ActionKind::WhiteMagic(spell),
-//         range,
-//         ctr: Some(ctr),
-//         target_id: target.id(),
-//     });
-// }
-//
-// fn consider_cure(
-//     actions: &mut Vec<Action>,
-//     _sim: &Simulation,
-//     user: &Combatant,
-//     target: &Combatant,
-// ) {
-//     consider_cure_like(actions, _sim, user, target, "Cure", WhiteMagic::Cure, 6, 4, 4);
-//     consider_cure_like(actions, _sim, user, target, "Cure 2", WhiteMagic::Cure2, 10, 5, 4);
-//     consider_cure_like(actions, _sim, user, target, "Cure 3", WhiteMagic::Cure3, 16, 7, 4);
-//     consider_cure_like(actions, _sim, user, target, "Cure 4", WhiteMagic::Cure4, 20, 10, 4);
-// }
-//
-// fn consider_raise(
-//     actions: &mut Vec<Action>,
-//     _sim: &Simulation,
-//     user: &Combatant,
-//     target: &Combatant,
-// ) {
-//     if !user.knows_ability("Raise") {
-//         return;
-//     }
-//     if target.petrify() || target.crystal() {
-//         return;
-//     }
-//     if user.same_team(target) && (target.undead() || !target.dead()) {
-//         return;
-//     }
-//     if user.different_team(target) && (!target.undead() || target.dead()) {
-//         return;
-//     }
-//     if !can_move_into_range(user, 4, target) {
-//         return;
-//     }
-//     if user.mp() < 10 {
-//         return;
-//     }
-//     actions.push(Action {
-//         kind: ActionKind::WhiteMagic(WhiteMagic::Raise),
-//         range: 4,
-//         ctr: Some(4),
-//         target_id: target.id(),
-//     });
-// }
-//
-// fn perform_cure_like(
-//     sim: &mut Simulation,
-//     user_id: CombatantId,
-//     target_id: CombatantId,
-//     name: &'static str,
-//     mp_cost: i16,
-//     ma_constant: f32,
-// ) {
-//     let user = sim.combatant(user_id);
-//     if user.mp() < mp_cost {
-//         sim.log_event(Event::NoMP(user_id));
-//         return;
-//     }
-//
-//     let target = sim.combatant(target_id);
-//     if target.dead() || target.crystal() || target.petrify() {
-//         sim.log_event(Event::SlowActionTargetDied(target_id));
-//         return;
-//     }
-//     // TODO: Lol I need to actually pay the MP cost, should do that in sim I guess.
-//
-//     let mut heal_amount = 1.0;
-//     heal_amount *= user.faith_percent();
-//     heal_amount *= target.faith_percent();
-//     heal_amount *= user.ma() as f32;
-//     heal_amount *= ma_constant;
-//     heal_amount *= user.zodiac_compatibility(target);
-//
-//     if target.undead() {
-//         heal_amount = -heal_amount;
-//     }
-//     sim.change_target_hp(target_id, -heal_amount as i16, Source::Constant(name));
-// }
-//
-// pub fn perform_white_magic(
-//     sim: &mut Simulation,
-//     user_id: CombatantId,
-//     target_id: CombatantId,
-//     spell: WhiteMagic,
-// ) {
-//     if sim.combatant(user_id).silence() {
-//         sim.log_event(Event::Silenced(user_id));
-//     }
-//     match spell {
-//         // | [Cure]                         [ 001 ]                          WHITE MAGIC |
-//         // |=============================================================================|
-//         // | magical  | CBG: - |  MP:   6   | Restore [CFa/100 * TFa/100 * MA * 14] HP   |
-//         // | REFL: +  |  CM: - | CTR:   4   | If target is Undead, HP is subtracted      |
-//         // | CALC: +  |  CF: - |  JP:  50   | instead of added.                          |
-//         // | ELEM: -  | EVD: - | MOD:   5   | Ignores Shell and Magic DefendUP.          |
-//         // |--------------------------------|                                            |
-//         // | Range: 4 / Effect: 2v1         |                                            |
-//         //  -----------------------------------------------------------------------------
-//         WhiteMagic::Cure => {
-//             perform_cure_like(sim, user_id, target_id, "Cure", 6, 14.0);
-//         }
-//         WhiteMagic::Cure2 => {
-//             perform_cure_like(sim, user_id, target_id, "Cure 2", 10, 20.0);
-//         }
-//         WhiteMagic::Cure3 => {
-//             perform_cure_like(sim, user_id, target_id, "Cure 3", 16, 30.0);
-//         }
-//         WhiteMagic::Cure4 => {
-//             perform_cure_like(sim, user_id, target_id, "Cure 4", 20, 40.0);
-//         }
-//         //  _____________________________________________________________________________
-//         // | [Raise]                        [ 005 ]                          WHITE MAGIC |
-//         // |=============================================================================|
-//         // | magical  | CBG: - |  MP:  10   | Cancel: Dead & Restore RU{T_MaxHP * 50/100}|
-//         // | REFL: +  |  CM: - | CTR:   4   | Spell will miss unless target is Dead.     |
-//         // | CALC: +  |  CF: - |  JP: 180   | If target is Undead, RU{T_MaxHP * 50/100}  |
-//         // | ELEM: -  | EVD: - | MOD:   6   |  will be substracted from its HP total.    |
-//         // |--------------------------------| If target is Dead and Undead, spell will   |
-//         // | Range: 4 / Effect: 1           |  miss. Ignores Shell and Magic DefendUP.   |
-//         // |                                | Success% = [CFa/100 * TFa/100 * (MA + 180)]|
-//         //  -----------------------------------------------------------------------------
-//         WhiteMagic::Raise => {
-//             let user = sim.combatant(user_id);
-//             if user.mp() < 10 {
-//                 sim.log_event(Event::NoMP(user_id));
-//                 return;
-//             }
-//             let target = sim.combatant(target_id);
-//             if target.crystal() || target.petrify() || (!target.dead() && !target.undead()) {
-//                 return;
-//             }
-//
-//             let mut success_chance = 1.0;
-//             success_chance *= user.faith_percent();
-//             success_chance *= target.faith_percent();
-//             success_chance *= (user.ma() as f32 + 180.0) / 100.0;
-//             success_chance *= user.zodiac_compatibility(target);
-//
-//             if !(sim.roll_auto_succeed() < success_chance) {
-//                 // TODO: Log spell failed.
-//                 return;
-//             }
-//
-//             let mut heal_amount = ((target.max_hp() * 50) / 100).max(1);
-//             if target.undead() {
-//                 heal_amount = -heal_amount;
-//             }
-//             sim.change_target_hp(target_id, -heal_amount, Source::Constant("Raise"));
-//         }
-//         _ => {
-//             panic!("other white magic spells have not been implemented");
-//         }
-//     }
-// }
-//
-// //  _____________________________________________________________________________
-// // | [Cure 2]                       [ 002 ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  10   | Restore [CFa/100 * TFa/100 * MA * 20] HP   |
-// // | REFL: +  |  CM: - | CTR:   5   | If target is Undead, HP is subtracted      |
-// // | CALC: +  |  CF: - |  JP: 180   | instead of added.                          |
-// // | ELEM: -  | EVD: - | MOD:   5   | Ignores Shell and Magic DefendUP.          |
-// // |--------------------------------|                                            |
-// // | Range: 4 / Effect: 2v1         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Cure 3]                       [ 003 ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  16   | Restore [CFa/100 * TFa/100 * MA * 30] HP   |
-// // | REFL: +  |  CM: - | CTR:   7   | If target is Undead, HP is subtracted      |
-// // | CALC: +  |  CF: - |  JP: 400   | instead of added.                          |
-// // | ELEM: -  | EVD: - | MOD:   5   | Ignores Shell and Magic DefendUP.          |
-// // |--------------------------------|                                            |
-// // | Range: 4 / Effect: 2v2         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Cure 4]                       [ 004 ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  20   | Restore [CFa/100 * TFa/100 * MA * 40] HP   |
-// // | REFL: -  |  CM: - | CTR:  10   | If target is Undead, HP is subtracted      |
-// // | CALC: -  |  CF: - |  JP: 700   | instead of added.                          |
-// // | ELEM: -  | EVD: - | MOD:   5   | Ignores Shell and Magic DefendUP.          |
-// // |--------------------------------|                                            |
-// // | Range: 4 / Effect: 2v3         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Raise 2]                      [ 006 ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  20   | Cancel: Dead & Restore (Target's Max HP    |
-// // | REFL: +  |  CM: - | CTR:  10   | Spell will miss unless target is Dead.     |
-// // | CALC: +  |  CF: - |  JP: 500   | If target is Undead, (T_MaxHP) will be     |
-// // | ELEM: -  | EVD: - | MOD:   6   |  subtracted from its HP total.             |
-// // |--------------------------------| If target is Dead and Undead, spell will   |
-// // | Range: 4 / Effect: 1           |  miss. Ignores Shell and Magic DefendUP.   |
-// // |                                | Success% = [CFa/100 * TFa/100 * (MA + 160)]|
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Reraise]                      [ 007 ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  16   | Add: Reraise                               |
-// // | REFL: +  |  CM: - | CTR:   7   | If target is Undead, spell will miss.      |
-// // | CALC: +  |  CF: - |  JP: 800   | Success% = [CFa/100 * TFa/100 * (MA + 140)]|
-// // | ELEM: -  | EVD: - | MOD:   6   | Ignores Shell and Magic DefendUP.          |
-// // |--------------------------------|                                            |
-// // | Range: 4 / Effect: 1           |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Regen]                        [ 008 ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:   8   | Add: Regen                                 |
-// // | REFL: +  |  CM: - | CTR:   4   | Success% = [CFa/100 * TFa/100 * (MA + 170)]|
-// // | CALC: +  |  CF: - |  JP: 300   | Ignores Shell and Magic DefendUP.          |
-// // | ELEM: -  | EVD: - | MOD:   6   |                                            |
-// // |--------------------------------|                                            |
-// // | Range: 3 / Effect: 2v0         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Protect]                      [ 009 ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:   6   | Add: Protect                               |
-// // | REFL: +  |  CM: - | CTR:   4   | Success% = [CFa/100 * TFa/100 * (MA + 200)]|
-// // | CALC: +  |  CF: - |  JP:  70   | Ignores Shell and Magic DefendUP.          |
-// // | ELEM: -  | EVD: - | MOD:   6   |                                            |
-// // |--------------------------------|                                            |
-// // | Range: 3 / Effect: 2v0         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Protect 2]                    [ 00A ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  24   | Add: Protect                               |
-// // | REFL: -  |  CM: - | CTR:   7   | Success% = [CFa/100 * TFa/100 * (MA + 120)]|
-// // | CALC: -  |  CF: - |  JP: 500   | Ignores Shell and Magic DefendUP.          |
-// // | ELEM: -  | EVD: - | MOD:   6   |                                            |
-// // |--------------------------------|                                            |
-// // | Range: 3 / Effect: 2v3         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Shell]                        [ 00B ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:   6   | Add: Shell                                 |
-// // | REFL: +  |  CM: - | CTR:   4   | Success% = [CFa/100 * TFa/100 * (MA + 200)]|
-// // | CALC: +  |  CF: - |  JP:  70   | Ignores Shell and Magic DefendUP.          |
-// // | ELEM: -  | EVD: - | MOD:   6   |                                            |
-// // |--------------------------------|                                            |
-// // | Range: 3 / Effect: 2v0         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Shell 2]                      [ 00C ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  20   | Add: Shell                                 |
-// // | REFL: -  |  CM: - | CTR:   7   | Success% = [CFa/100 * TFa/100 * (MA + 120)]|
-// // | CALC: -  |  CF: - |  JP: 500   | Ignores Shell and Magic DefendUP.          |
-// // | ELEM: -  | EVD: - | MOD:   6   |                                            |
-// // |--------------------------------|                                            |
-// // | Range: 3 / Effect: 2v3         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Wall]                         [ 00D ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  24   | Add: Protect, Shell                        |
-// // | REFL: +  |  CM: - | CTR:   4   | Success% = [CFa/100 * TFa/100 * (MA + 140)]|
-// // | CALC: +  |  CF: - |  JP: 380   | Ignores Shell and Magic DefendUP.          |
-// // | ELEM: -  | EVD: - | MOD:   6   |                                            |
-// // |--------------------------------|                                            |
-// // | Range: 3 / Effect: 1           |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Esuna]                        [ 00E ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  18   | Cancel: Petrify, Darkness, Confusion,      |
-// // | REFL: +  |  CM: - | CTR:   3   |         Silence, Berserk, Frog, Poison,    |
-// // | CALC: +  |  CF: - |  JP: 280   |         Sleep, Don't Move, Don't Act       |
-// // | ELEM: -  | EVD: - | MOD:   6   | Success% = [CFa/100 * TFa/100 * (MA + 190)]|
-// // |--------------------------------| Ignores Shell and Magic DefendUP.          |
-// // | Range: 3 / Effect: 2v2         |                                            |
-// //  -----------------------------------------------------------------------------
-// //  _____________________________________________________________________________
-// // | [Holy]                         [ 00F ]                          WHITE MAGIC |
-// // |=============================================================================|
-// // | magical  | CBG: - |  MP:  56   | Damage = [CFa/100 * TFa/100 * MA * 50]     |
-// // | REFL: +  |  CM: + | CTR:   6   |                                            |
-// // | CALC: +  |  CF: - |  JP: 600   |                                            |
-// // | ELEM: H  | EVD: - | MOD:   5   |                                            |
-// // |--------------------------------|                                            |
-// // | Range: 5 / Effect: 1           |                                            |
-// //  -----------------------------------------------------------------------------
+use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::common::{do_hp_heal, should_heal_ally, should_heal_foe};
+use crate::sim::{
+    Combatant, CombatantId, Condition, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
+};
+
+pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
+    // Cure: 5 range, 1 AoE, 3 CT, 6 MP. Effect: Heal Faith(MA * 15).
+    Ability {
+        name: "Cure",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        mp_cost: 6,
+        implementation: &CureSpellImpl {
+            ma_factor: 15,
+            ctr: 3,
+            range: 5,
+        },
+    },
+    // Cure 2: 5 range, 1 AoE, 4 CT, 10 MP. Effect: Heal Faith(MA * 20).
+    Ability {
+        name: "Cure 2",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        mp_cost: 10,
+        implementation: &CureSpellImpl {
+            ma_factor: 20,
+            ctr: 4,
+            range: 5,
+        },
+    },
+    // Cure 3: 5 range, 1 AoE, 6 CT, 16 MP. Effect: Heal Faith(MA * 30).
+    Ability {
+        name: "Cure 3",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        mp_cost: 16,
+        implementation: &CureSpellImpl {
+            ma_factor: 30,
+            ctr: 6,
+            range: 5,
+        },
+    },
+    // Cure 4: 5 range, 1 AoE, 8 CT, 24 MP. Effect: Heal Faith(MA * 40).
+    Ability {
+        name: "Cure 4",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        mp_cost: 24,
+        implementation: &CureSpellImpl {
+            ma_factor: 40,
+            ctr: 8,
+            range: 5,
+        },
+    },
+    // Raise: 5 range, 0 AoE, 4 CT, 10 MP. Hit: Faith(MA + 190)%. Effect: Cancel Death; If successful Heal (50)%.
+    Ability {
+        name: "Raise",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK,
+        mp_cost: 10,
+        implementation: &RaiseSpellImpl {
+            hp_percent: 0.5,
+            base_chance: 190,
+            ctr: 4,
+            range: 5,
+        },
+    },
+    // Raise 2: 5 range, 0 AoE, 10 CT, 20 MP. Hit: Faith(MA + 160)%. Effect: Cancel Death; If successful Heal (100)%.
+    Ability {
+        name: "Raise 2",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK,
+        mp_cost: 20,
+        implementation: &RaiseSpellImpl {
+            hp_percent: 1.0,
+            base_chance: 160,
+            ctr: 10,
+            range: 5,
+        },
+    },
+    // Reraise: 4 range, 0 AoE, 7 CT, 16 MP. Hit: Faith(MA + 140)%. Effect: Add Reraise.
+    Ability {
+        name: "Reraise",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 16,
+        implementation: &ConditionSpellImpl {
+            condition: Condition::Reraise,
+            base_chance: 140,
+            ctr: 7,
+            range: 4,
+        },
+    },
+    // Regen: 4 range, 1 AoE, 4 CT, 8 MP. Hit: Faith(MA + 170)%. Effect: Add Regen.
+    Ability {
+        name: "Regen",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 8,
+        implementation: &ConditionSpellImpl {
+            condition: Condition::Regen,
+            base_chance: 170,
+            ctr: 4,
+            range: 4,
+        },
+    },
+    // Protect: 4 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 200)%. Effect: Add Protect.
+    Ability {
+        name: "Protect",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 6,
+        implementation: &ConditionSpellImpl {
+            condition: Condition::Protect,
+            base_chance: 200,
+            ctr: 3,
+            range: 4,
+        },
+    },
+    // Protect 2: 4 range, 1 AoE, 6 CT, 18 MP. Hit: Faith(MA + 240)%. Effect: Add Protect.
+    Ability {
+        name: "Protect 2",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 18,
+        implementation: &ConditionSpellImpl {
+            condition: Condition::Protect,
+            base_chance: 240,
+            ctr: 6,
+            range: 4,
+        },
+    },
+    // Shell: 4 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 200)%. Effect: Add Shell.
+    Ability {
+        name: "Shell",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 6,
+        implementation: &ConditionSpellImpl {
+            condition: Condition::Shell,
+            base_chance: 200,
+            ctr: 3,
+            range: 4,
+        },
+    },
+    // Shell 2: 4 range, 1 AoE, 6 CT, 18 MP. Hit: Faith(MA + 240)%. Effect: Add Shell.
+    Ability {
+        name: "Shell 2",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 18,
+        implementation: &ConditionSpellImpl {
+            condition: Condition::Shell,
+            base_chance: 240,
+            ctr: 6,
+            range: 4,
+        },
+    },
+    // Wall: 4 range, 1 AoE, 4 CT, 24 MP. Hit: Faith(MA + 140)%. Effect: Add Protect, Shell (All).
+    // Esuna: 5 range, 1 AoE, 3 CT, 16 MP. Hit: Faith(MA + 195)%. Effect: Cancel Petrify, Darkness,
+    //  Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act.
+    Ability {
+        name: "Esuna",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 16,
+        implementation: &ConditionClearSpellImpl {
+            conditions: &[
+                Condition::Petrify,
+                Condition::Darkness,
+                Condition::Confusion,
+                Condition::Silence,
+                Condition::BloodSuck,
+                Condition::Berserk,
+                Condition::Frog,
+                Condition::Poison,
+                Condition::Sleep,
+                Condition::DontMove,
+                Condition::DontAct,
+            ],
+            base_chance: 195,
+            ctr: 3,
+            range: 4,
+        },
+    },
+    // Holy: 5 range, 0 AoE, 6 CT, 56 MP. Element: Holy. Effect: Damage Faith(MA * 47).
+];
+
+struct CureSpellImpl {
+    ma_factor: i16,
+    ctr: u8,
+    range: i8,
+}
+
+impl AbilityImpl for CureSpellImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        if user.ally(target) && !should_heal_ally(target, true) {
+            return;
+        }
+        if user.foe(target) && !should_heal_foe(target, true) {
+            return;
+        }
+        actions.push(Action {
+            ability,
+            range: self.range,
+            ctr: Some(self.ctr),
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let mut heal_amount = 1.0;
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+        heal_amount *= user.faith_percent();
+        heal_amount *= target.faith_percent();
+        heal_amount *= user.ma() as f32;
+        heal_amount *= self.ma_factor as f32;
+        heal_amount *= user.zodiac_compatibility(target);
+
+        do_hp_heal(sim, target_id, heal_amount as i16, true);
+    }
+}
+
+struct RaiseSpellImpl {
+    hp_percent: f32,
+    base_chance: i16,
+    ctr: u8,
+    range: i8,
+}
+
+impl AbilityImpl for RaiseSpellImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        if user.ally(target) && !should_heal_ally(target, true) {
+            return;
+        }
+        if user.foe(target) && !should_heal_foe(target, true) {
+            return;
+        }
+        actions.push(Action {
+            ability,
+            range: self.range,
+            ctr: Some(self.ctr),
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let mut success_chance = 1.0;
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+        success_chance *= user.faith_percent();
+        success_chance *= target.faith_percent();
+        success_chance *= (user.ma() as f32 + self.base_chance as f32) / 100.0;
+        success_chance *= user.zodiac_compatibility(target);
+
+        if !(sim.roll_auto_succeed() < success_chance) {
+            // TODO: Log spell failed.
+            return;
+        }
+
+        let mut heal_amount = ((target.max_hp() as f32 * self.hp_percent) as i16).max(1);
+        do_hp_heal(sim, target_id, heal_amount, true);
+    }
+}
+
+struct ConditionSpellImpl {
+    condition: Condition,
+    base_chance: i16,
+    range: i8,
+    ctr: u8,
+}
+
+impl AbilityImpl for ConditionSpellImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        // TODO: Probably not actually true, but *shrug*
+        if target.has_condition(self.condition) {
+            return;
+        }
+        actions.push(Action {
+            ability,
+            range: self.range,
+            ctr: Some(self.ctr),
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let mut success_chance = 1.0;
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+        success_chance *= user.faith_percent();
+        success_chance *= target.faith_percent();
+        success_chance *= (user.ma() as f32 + self.base_chance as f32) / 100.0;
+        success_chance *= user.zodiac_compatibility(target);
+
+        if !(sim.roll_auto_succeed() < success_chance) {
+            // TODO: Log spell failed.
+            return;
+        }
+
+        sim.add_condition(target_id, self.condition, Source::Ability);
+    }
+}
+
+struct ConditionClearSpellImpl {
+    conditions: &'static [Condition],
+    base_chance: i16,
+    range: i8,
+    ctr: u8,
+}
+
+impl AbilityImpl for ConditionClearSpellImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        // TODO: Probably not actually true, but *shrug*
+        if !self
+            .conditions
+            .iter()
+            .any(|cond| target.has_condition(*cond))
+        {
+            return;
+        }
+        actions.push(Action {
+            ability,
+            range: self.range,
+            ctr: Some(self.ctr),
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let mut success_chance = 1.0;
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+        success_chance *= user.faith_percent();
+        success_chance *= target.faith_percent();
+        success_chance *= (user.ma() as f32 + self.base_chance as f32) / 100.0;
+        success_chance *= user.zodiac_compatibility(target);
+
+        if !(sim.roll_auto_succeed() < success_chance) {
+            // TODO: Log spell failed.
+            return;
+        }
+
+        for cond in self.conditions {
+            sim.cancel_condition(target_id, *cond, Source::Ability);
+        }
+    }
+}
