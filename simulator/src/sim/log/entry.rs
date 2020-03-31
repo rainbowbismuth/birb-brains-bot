@@ -2,7 +2,7 @@ use colored::Colorize;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    Action, Combatant, CombatantId, Condition, Location, Phase, Team, MAX_COMBATANTS,
+    Action, Combatant, CombatantId, Condition, Location, MAX_COMBATANTS, Phase, Team,
 };
 
 #[derive(Clone)]
@@ -210,6 +210,14 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
     }
 }
 
+pub fn describe_combatant_short(c_id: CombatantId, combatants: &[Combatant]) -> String {
+    let combatant = &combatants[c_id.index()];
+    match combatant.team() {
+        Team::Left => combatant.name().red().to_string(),
+        Team::Right => combatant.name().blue().to_string(),
+    }
+}
+
 pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String {
     let combatant = &combatants[c_id.index()];
     let conditions = combatant.all_conditions();
@@ -257,11 +265,11 @@ pub fn describe_source(src: Source, combatants: &[Combatant]) -> String {
         Source::Condition(cond) => String::from(cond.name()),
         Source::Weapon(c_id, Some(weapon)) => format!(
             "{}\'s {}",
-            describe_combatant(c_id, combatants),
+            describe_combatant_short(c_id, combatants),
             weapon.name
         ),
         Source::Weapon(c_id, None) => {
-            format!("{}\'s bare hands", describe_combatant(c_id, combatants))
+            format!("{}\'s bare hands", describe_combatant_short(c_id, combatants))
         }
     }
 }
