@@ -461,6 +461,9 @@ impl<'a> Combatant<'a> {
 
     pub fn cancel_condition(&mut self, condition: Condition) {
         // TODO: Special handling of charging/performing/etc
+        if condition == Condition::Charging {
+            self.ctr_action = None;
+        }
         self.conditions.remove(condition);
     }
 

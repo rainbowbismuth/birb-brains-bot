@@ -174,7 +174,12 @@ const HASTE_CANCELS: [Condition; 1] = [Condition::Slow];
 const SLOW_CANCELS: [Condition; 1] = [Condition::Haste];
 const POISON_CANCELS: [Condition; 1] = [Condition::Regen];
 const REGEN_CANCELS: [Condition; 1] = [Condition::Poison];
-const PETRIFY_CANCELS: [Condition; 2] = [Condition::DeathSentence, Condition::Transparent];
+const SLEEP_CANCELS: [Condition; 1] = [Condition::Charging];
+const PETRIFY_CANCELS: [Condition; 3] = [
+    Condition::Charging,
+    Condition::DeathSentence,
+    Condition::Transparent,
+];
 const FAITH_CANCELS: [Condition; 1] = [Condition::Innocent];
 const INNOCENT_CANCELS: [Condition; 1] = [Condition::Faith];
 
@@ -273,6 +278,7 @@ impl Condition {
             Condition::Petrify => &PETRIFY_CANCELS,
             Condition::Faith => &FAITH_CANCELS,
             Condition::Innocent => &INNOCENT_CANCELS,
+            Condition::Sleep => &SLEEP_CANCELS,
             _ => &[],
         }
     }
