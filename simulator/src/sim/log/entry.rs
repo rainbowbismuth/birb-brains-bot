@@ -2,7 +2,7 @@ use colored::Colorize;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    Ability, Action, Combatant, CombatantId, Condition, Location, Phase, Team, MAX_COMBATANTS,
+    Action, Combatant, CombatantId, Condition, Location, Phase, Team, MAX_COMBATANTS,
 };
 
 #[derive(Clone)]

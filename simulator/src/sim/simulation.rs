@@ -9,7 +9,7 @@ use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
     Condition, EvasionType, Event, Location, Log, Phase, SlowAction, Source, Team, WeaponType,
     ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
-    TIMED_CONDITIONS,
+    NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -233,23 +233,6 @@ impl<'a> Simulation<'a> {
 
                 let new_ct = 60.min(combatant.ct - minus_ct);
                 self.combatant_mut(*cid).ct = new_ct;
-
-                let combatant = self.combatant(*cid);
-                if combatant.moved_during_active_turn && combatant.move_hp_up() {
-                    self.change_target_hp(
-                        *cid,
-                        -(combatant.max_hp() / 10),
-                        Source::Constant("Move-HP Up"),
-                    );
-                }
-                let combatant = self.combatant(*cid);
-                if combatant.moved_during_active_turn && combatant.move_mp_up() {
-                    self.change_target_mp(
-                        *cid,
-                        -(combatant.max_mp() / 10),
-                        Source::Constant("Move-MP Up"),
-                    );
-                }
             }
 
             let combatant = self.combatant(*cid);
@@ -461,6 +444,23 @@ impl<'a> Simulation<'a> {
         user.location = new_location;
         user.moved_during_active_turn = true;
         self.log_event(Event::Moved(user_id, old_location, new_location));
+
+        let combatant = self.combatant(user_id);
+        if combatant.moved_during_active_turn && combatant.move_hp_up() {
+            self.change_target_hp(
+                user_id,
+                -(combatant.max_hp() / 10),
+                Source::Constant("Move-HP Up"),
+            );
+        }
+        let combatant = self.combatant(user_id);
+        if combatant.moved_during_active_turn && combatant.move_mp_up() {
+            self.change_target_mp(
+                user_id,
+                -(combatant.max_mp() / 10),
+                Source::Constant("Move-MP Up"),
+            );
+        }
     }
 
     fn do_move_to_range(&mut self, user_id: CombatantId, range: i8, target_id: CombatantId) {
@@ -469,8 +469,7 @@ impl<'a> Simulation<'a> {
         if user.moved_during_active_turn || user.dont_move() {
             return;
         }
-        // TODO: Charm?
-        let desired = match user.team() {
+        let desired = match user.team_allegiance() {
             Team::Left => target_location.x - range,
             Team::Right => target_location.x + range,
         };
@@ -577,7 +576,11 @@ impl<'a> Simulation<'a> {
             if !in_range(user, action.range, target) {
                 self.do_move_to_range(user_id, action.range, action.target_id);
             }
-            if let Some(ctr) = action.ctr {
+            if let Some(mut ctr) = action.ctr {
+                let user = self.combatant(user_id);
+                if user.short_charge() && action.ability.flags & NO_SHORT_CHARGE == 0 {
+                    ctr /= 2;
+                }
                 self.combatant_mut(user_id).ctr_action = Some(SlowAction { ctr, action });
                 self.log_event(Event::StartedCharging(user_id, action));
             } else {

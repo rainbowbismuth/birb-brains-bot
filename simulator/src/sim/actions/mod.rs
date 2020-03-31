@@ -1,6 +1,7 @@
 use crate::sim::{Combatant, CombatantId, Event, Simulation};
 
 pub mod attack;
+pub mod black_magic;
 pub mod common;
 pub mod item;
 pub mod white_magic;
@@ -25,6 +26,7 @@ pub const FOE_OK: AbilityFlags = 1 << 2;
 pub const NOT_ALIVE_OK: AbilityFlags = 1 << 3;
 pub const PETRIFY_OK: AbilityFlags = 1 << 4;
 pub const SILENCEABLE: AbilityFlags = 1 << 5;
+pub const NO_SHORT_CHARGE: AbilityFlags = 1 << 6;
 
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
@@ -116,7 +118,12 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
 
     if ability.mp_cost > 0 {
         let user = sim.combatant_mut(user_id);
-        let new_mp = user.mp() - ability.mp_cost;
+        let mp_cost = if user.halve_mp() {
+            1.max(ability.mp_cost / 2)
+        } else {
+            ability.mp_cost
+        };
+        let new_mp = user.mp() - mp_cost;
         user.set_mp_within_bounds(new_mp);
     }
 

@@ -1,7 +1,9 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-use crate::sim::common::{do_hp_heal, should_heal_ally, should_heal_foe};
+use crate::sim::common::{
+    do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ElementalDamageSpellImpl,
+};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
+    Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
@@ -11,7 +13,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 6,
         implementation: &CureSpellImpl {
-            ma_factor: 15,
+            q: 15,
             ctr: 3,
             range: 5,
         },
@@ -22,7 +24,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 10,
         implementation: &CureSpellImpl {
-            ma_factor: 20,
+            q: 20,
             ctr: 4,
             range: 5,
         },
@@ -33,7 +35,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 16,
         implementation: &CureSpellImpl {
-            ma_factor: 30,
+            q: 30,
             ctr: 6,
             range: 5,
         },
@@ -44,7 +46,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 24,
         implementation: &CureSpellImpl {
-            ma_factor: 40,
+            q: 40,
             ctr: 8,
             range: 5,
         },
@@ -78,7 +80,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Reraise",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 16,
-        implementation: &ConditionSpellImpl {
+        implementation: &AddConditionSpellImpl {
             condition: Condition::Reraise,
             base_chance: 140,
             ctr: 7,
@@ -90,7 +92,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Regen",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 8,
-        implementation: &ConditionSpellImpl {
+        implementation: &AddConditionSpellImpl {
             condition: Condition::Regen,
             base_chance: 170,
             ctr: 4,
@@ -102,7 +104,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Protect",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 6,
-        implementation: &ConditionSpellImpl {
+        implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
             base_chance: 200,
             ctr: 3,
@@ -114,7 +116,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Protect 2",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 18,
-        implementation: &ConditionSpellImpl {
+        implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
             base_chance: 240,
             ctr: 6,
@@ -126,7 +128,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Shell",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 6,
-        implementation: &ConditionSpellImpl {
+        implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
             base_chance: 200,
             ctr: 3,
@@ -138,7 +140,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Shell 2",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 18,
-        implementation: &ConditionSpellImpl {
+        implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
             base_chance: 240,
             ctr: 6,
@@ -172,10 +174,21 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         },
     },
     // Holy: 5 range, 0 AoE, 6 CT, 56 MP. Element: Holy. Effect: Damage Faith(MA * 47).
+    Ability {
+        name: "Holy",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        mp_cost: 56,
+        implementation: &ElementalDamageSpellImpl {
+            element: Element::Holy,
+            q: 47,
+            ctr: 6,
+            range: 5,
+        },
+    },
 ];
 
 struct CureSpellImpl {
-    ma_factor: i16,
+    q: i16,
     ctr: u8,
     range: i8,
 }
@@ -209,7 +222,7 @@ impl AbilityImpl for CureSpellImpl {
         heal_amount *= user.faith_percent();
         heal_amount *= target.faith_percent();
         heal_amount *= user.ma() as f32;
-        heal_amount *= self.ma_factor as f32;
+        heal_amount *= self.q as f32;
         heal_amount *= user.zodiac_compatibility(target);
 
         do_hp_heal(sim, target_id, heal_amount as i16, true);
@@ -259,53 +272,8 @@ impl AbilityImpl for RaiseSpellImpl {
             return;
         }
 
-        let mut heal_amount = ((target.max_hp() as f32 * self.hp_percent) as i16).max(1);
+        let heal_amount = ((target.max_hp() as f32 * self.hp_percent) as i16).max(1);
         do_hp_heal(sim, target_id, heal_amount, true);
-    }
-}
-
-struct ConditionSpellImpl {
-    condition: Condition,
-    base_chance: i16,
-    range: i8,
-    ctr: u8,
-}
-
-impl AbilityImpl for ConditionSpellImpl {
-    fn consider<'a>(
-        &self,
-        actions: &mut Vec<Action<'a>>,
-        ability: &'a Ability<'a>,
-        _sim: &Simulation<'a>,
-        user: &Combatant<'a>,
-        target: &Combatant<'a>,
-    ) {
-        // TODO: Probably not actually true, but *shrug*
-        if target.has_condition(self.condition) {
-            return;
-        }
-        actions.push(Action {
-            ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
-    }
-    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
-        let mut success_chance = 1.0;
-        let user = sim.combatant(user_id);
-        let target = sim.combatant(target_id);
-        success_chance *= user.faith_percent();
-        success_chance *= target.faith_percent();
-        success_chance *= (user.ma() as f32 + self.base_chance as f32) / 100.0;
-        success_chance *= user.zodiac_compatibility(target);
-
-        if !(sim.roll_auto_succeed() < success_chance) {
-            // TODO: Log spell failed.
-            return;
-        }
-
-        sim.add_condition(target_id, self.condition, Source::Ability);
     }
 }
 
@@ -322,7 +290,7 @@ impl AbilityImpl for ConditionClearSpellImpl {
         actions: &mut Vec<Action<'a>>,
         ability: &'a Ability<'a>,
         _sim: &Simulation<'a>,
-        user: &Combatant<'a>,
+        _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
         // TODO: Probably not actually true, but *shrug*

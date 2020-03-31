@@ -1,6 +1,7 @@
 use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::actions::attack::ATTACK_ABILITY;
+use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::{
@@ -92,6 +93,11 @@ impl<'a> CombatantInfo<'a> {
             }
         }
         for ability in WHITE_MAGIC_ABILITIES.iter() {
+            if src.all_abilities.iter().any(|n| n == ability.name) {
+                abilities.push(ability);
+            }
+        }
+        for ability in BLACK_MAGIC_ABILITIES.iter() {
             if src.all_abilities.iter().any(|n| n == ability.name) {
                 abilities.push(ability);
             }
@@ -739,6 +745,22 @@ impl<'a> Combatant<'a> {
 
     pub fn throw_item(&self) -> bool {
         self.info.skill_block.throw_item()
+    }
+
+    pub fn magic_attack_up(&self) -> bool {
+        self.info.skill_block.magic_attack_up()
+    }
+
+    pub fn magic_defense_up(&self) -> bool {
+        self.info.skill_block.magic_defense_up()
+    }
+
+    pub fn short_charge(&self) -> bool {
+        self.info.skill_block.short_charge()
+    }
+
+    pub fn halve_mp(&self) -> bool {
+        self.info.skill_block.halve_mp()
     }
 
     pub fn abilities(&self) -> &[&'a Ability<'a>] {

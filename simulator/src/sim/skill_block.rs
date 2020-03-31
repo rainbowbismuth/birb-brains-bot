@@ -16,6 +16,10 @@ const MANA_SHIELD_FLAG: u64 = 1 << 14;
 const DAMAGE_SPLIT_FLAG: u64 = 1 << 15;
 const AUTO_POTION_FLAG: u64 = 1 << 16;
 const THROW_ITEM_FLAG: u64 = 1 << 17;
+const MAGIC_ATTACK_UP: u64 = 1 << 18;
+const MAGIC_DEFENSE_UP: u64 = 1 << 19;
+const SHORT_CHARGE: u64 = 1 << 20;
+const HALVE_MP: u64 = 1 << 21;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -45,6 +49,10 @@ impl SkillBlock {
                 "Damage Split" => block.flags |= DAMAGE_SPLIT_FLAG,
                 "Auto Potion" => block.flags |= AUTO_POTION_FLAG,
                 "Throw Item" => block.flags |= THROW_ITEM_FLAG,
+                "Magic Attack UP" => block.flags |= MAGIC_ATTACK_UP,
+                "Magic Defense UP" => block.flags |= MAGIC_DEFENSE_UP,
+                "Short Charge" => block.flags |= SHORT_CHARGE,
+                "Halve MP" => block.flags |= HALVE_MP,
                 _ => {}
             }
         }
@@ -121,5 +129,21 @@ impl SkillBlock {
 
     pub fn throw_item(&self) -> bool {
         self.flags & THROW_ITEM_FLAG != 0
+    }
+
+    pub fn magic_attack_up(&self) -> bool {
+        self.flags & MAGIC_ATTACK_UP != 0
+    }
+
+    pub fn magic_defense_up(&self) -> bool {
+        self.flags & MAGIC_DEFENSE_UP != 0
+    }
+
+    pub fn short_charge(&self) -> bool {
+        self.flags & SHORT_CHARGE != 0
+    }
+
+    pub fn halve_mp(&self) -> bool {
+        self.flags & HALVE_MP != 0
     }
 }
