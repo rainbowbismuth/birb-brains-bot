@@ -2,7 +2,7 @@ use colored::Colorize;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    Action, Combatant, CombatantId, Condition, Location, MAX_COMBATANTS, Phase, Team,
+    Action, Combatant, CombatantId, Condition, Location, Phase, Team, MAX_COMBATANTS,
 };
 
 #[derive(Clone)]
@@ -268,8 +268,9 @@ pub fn describe_source(src: Source, combatants: &[Combatant]) -> String {
             describe_combatant_short(c_id, combatants),
             weapon.name
         ),
-        Source::Weapon(c_id, None) => {
-            format!("{}\'s bare hands", describe_combatant_short(c_id, combatants))
-        }
+        Source::Weapon(c_id, None) => format!(
+            "{}\'s bare hands",
+            describe_combatant_short(c_id, combatants)
+        ),
     }
 }

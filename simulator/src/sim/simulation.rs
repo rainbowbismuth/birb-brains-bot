@@ -6,10 +6,10 @@ use rand::Rng;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    Action, ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS,
-    COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, NO_SHORT_CHARGE,
-    perform_action, Phase, SlowAction, Source, Team,
-    TIMED_CONDITIONS, WeaponType,
+    ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
+    Condition, EvasionType, Event, Location, Log, Phase, SlowAction, Source, Team, WeaponType,
+    ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
+    NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -56,11 +56,17 @@ impl<'a> Simulation<'a> {
         };
         for i in 0..4 {
             let combatant = &mut sim.combatants[i];
-            combatant.location = Location::new(-arena_length as i16, combatant.location.y + (i*2) as i16 - 3);
+            combatant.location = Location::new(
+                -arena_length as i16,
+                combatant.location.y + (i * 2) as i16 - 3,
+            );
         }
         for i in 0..4 {
             let combatant = &mut sim.combatants[i + 4];
-            combatant.location = Location::new(arena_length as i16, combatant.location.y + (i*2) as i16 - 3);
+            combatant.location = Location::new(
+                arena_length as i16,
+                combatant.location.y + (i * 2) as i16 - 3,
+            );
         }
         sim
     }

@@ -683,6 +683,11 @@ impl<'a> Combatant<'a> {
         self.any_equip(|eq| eq.immune_to & condition.flag() != 0)
     }
 
+    pub fn cancels(&self, element: Element) -> bool {
+        self.base_stats().cancels & element.flag() != 0
+            || self.any_equip(|eq| eq.cancels_element & element.flag() != 0)
+    }
+
     pub fn abandon(&self) -> bool {
         self.info.skill_block.abandon()
     }

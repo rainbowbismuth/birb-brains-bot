@@ -1,9 +1,9 @@
-use crate::sim::{
-    Combatant, CombatantId, Condition, Element, NOT_ALIVE_OK, SILENCEABLE, Simulation, Source,
-};
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{
-    AddConditionSpellImpl, do_hp_heal, ElementalDamageSpellImpl, should_heal_ally, should_heal_foe,
+    do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ElementalDamageSpellImpl,
+};
+use crate::sim::{
+    Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[

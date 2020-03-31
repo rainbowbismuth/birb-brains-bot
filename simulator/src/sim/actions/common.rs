@@ -106,6 +106,9 @@ impl AbilityImpl for ElementalDamageSpellImpl {
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
+        if target.cancels(self.element) {
+            return;
+        }
         if sim.do_magical_evade(user, target, Source::Ability) {
             return;
         }
