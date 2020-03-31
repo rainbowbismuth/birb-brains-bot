@@ -169,10 +169,12 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
         ),
 
         Event::Moved(target_id, old_location, new_location) => format!(
-            "{} moved from {} to {}",
+            "{} moved from ({},{}) to ({},{})",
             describe_combatant(*target_id, combatants),
             old_location.x,
-            new_location.x
+            old_location.y,
+            new_location.x,
+            new_location.y
         ),
 
         Event::UsingAbility(target_id, action) => format!(
@@ -226,20 +228,22 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
 
     match combatant.team() {
         Team::Left => format!(
-            "{} ({} HP, {} MP, loc: {}{})",
+            "{} [{} HP, {} MP, loc: ({},{}){}]",
             combatant.name().red(),
             combatant.hp(),
             combatant.mp(),
             combatant.location.x,
+            combatant.location.y,
             cond_str
         ),
 
         Team::Right => format!(
-            "{} ({} HP, {} MP, loc: {}{})",
+            "{} [{} HP, {} MP, loc: ({},{}){}]",
             combatant.name().blue(),
             combatant.hp(),
             combatant.mp(),
             combatant.location.x,
+            combatant.location.y,
             cond_str
         ),
     }

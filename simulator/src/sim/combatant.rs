@@ -5,8 +5,8 @@ use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::{
-    Ability, Action, Condition, ConditionBlock, ConditionFlags, Distance, Element, Gender,
-    Location, Sign, SkillBlock, Team, ALL_CONDITIONS,
+    Ability, Action, Condition, ConditionBlock, ConditionFlags, DiamondIterator, Distance, Element,
+    Gender, Location, Sign, SkillBlock, Team, ALL_CONDITIONS,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -170,7 +170,7 @@ impl<'a> Combatant<'a> {
             speed_mod: 0,
             conditions: ConditionBlock::new(),
             broken_items: 0,
-            location: Location::new(0),
+            location: Location::zero(),
             on_active_turn: false,
             moved_during_active_turn: false,
             acted_during_active_turn: false,
@@ -239,7 +239,11 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn distance(&self, other: &Combatant) -> Distance {
-        self.location.distance(&other.location)
+        self.location.distance(other.location)
+    }
+
+    pub fn movement_diamond(&self) -> DiamondIterator {
+        self.location.diamond(self.movement() as u8)
     }
 
     pub fn max_hp(&self) -> i16 {

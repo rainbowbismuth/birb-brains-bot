@@ -6,10 +6,10 @@ use rand::Rng;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
-    Condition, EvasionType, Event, Location, Log, Phase, SlowAction, Source, Team, WeaponType,
-    ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
-    NO_SHORT_CHARGE, TIMED_CONDITIONS,
+    Action, ai_consider_actions, ai_target_value_sum, ALL_CONDITIONS, Combatant, COMBATANT_IDS,
+    COMBATANT_IDS_LEN, CombatantId, Condition, DAMAGE_CANCELS, DEATH_CANCELS, EvasionType, Event, Location, Log, NO_SHORT_CHARGE,
+    perform_action, Phase, SlowAction, Source, Team,
+    TIMED_CONDITIONS, WeaponType,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -54,11 +54,13 @@ impl<'a> Simulation<'a> {
             left_wins: None,
             time_out_win: None,
         };
-        for combatant in &mut sim.combatants[0..4] {
-            combatant.location = Location::new(-arena_length);
+        for i in 0..4 {
+            let combatant = &mut sim.combatants[i];
+            combatant.location = Location::new(-arena_length as i16, combatant.location.y + (i*2) as i16 - 3);
         }
-        for combatant in &mut sim.combatants[4..8] {
-            combatant.location = Location::new(arena_length);
+        for i in 0..4 {
+            let combatant = &mut sim.combatants[i + 4];
+            combatant.location = Location::new(arena_length as i16, combatant.location.y + (i*2) as i16 - 3);
         }
         sim
     }
@@ -437,7 +439,10 @@ impl<'a> Simulation<'a> {
         let arena_length = self.arena_length;
         let user = self.combatant_mut(user_id);
         let old_location = user.location;
-        let new_location = Location::new((-arena_length).max(desired_location.x.min(arena_length)));
+        let new_location = Location::new(
+            (-arena_length as i16).max(desired_location.x.min(arena_length as i16)),
+            (-arena_length as i16).max(desired_location.y.min(arena_length as i16)),
+        );
         if old_location == new_location {
             return;
         }
@@ -463,67 +468,16 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn do_move_to_range(&mut self, user_id: CombatantId, range: i8, target_id: CombatantId) {
-        let target_location = self.combatant(target_id).location;
-        let user = self.combatant(user_id);
-        if user.moved_during_active_turn || user.dont_move() {
-            return;
-        }
-        let desired = match user.team_allegiance() {
-            Team::Left => target_location.x - range,
-            Team::Right => target_location.x + range,
-        };
-        let v = desired - user.location.x;
-        let diff = user.movement().min(v.abs());
-        let sign = if v > 0 { 1 } else { -1 };
-        let new_location = Location::new(user.location.x + diff * sign);
-        self.do_move_with_bounds(user_id, new_location);
-    }
-
-    fn do_move_towards_unit(&mut self, user_id: CombatantId, target_id: CombatantId) {
-        let target_location = self.combatant(target_id).location;
-        let user = self.combatant(user_id);
-        if user.moved_during_active_turn || user.dont_move() {
-            return;
-        }
-        if user.location.x - target_location.x > 0 {
-            let new_location =
-                Location::new(target_location.x.max(user.location.x - user.movement()));
-            self.do_move_with_bounds(user_id, new_location);
-        } else {
-            let new_location =
-                Location::new(target_location.x.min(user.location.x + user.movement()));
-            self.do_move_with_bounds(user_id, new_location);
-        }
-    }
-
-    fn do_move_out_of_combat(&mut self, user_id: CombatantId) {
-        let user = self.combatant(user_id);
-        if user.moved_during_active_turn || user.dont_move() {
-            return;
-        }
-        match user.team() {
-            Team::Left => {
-                let new_location = Location::new(user.location.x - user.movement());
-                self.do_move_with_bounds(user_id, new_location);
-            }
-            Team::Right => {
-                let new_location = Location::new(user.location.x + user.movement());
-                self.do_move_with_bounds(user_id, new_location);
-            }
-        }
-    }
-
     fn ai_do_active_turn(&mut self, user_id: CombatantId) {
         let user = self.combatant(user_id);
         if user.dont_act() {
-            self.do_move_out_of_combat(user_id);
+            self.post_action_move(user_id);
             return;
         }
 
         if user.ctr_action.is_some() {
             // TODO: The AI in reality reconsiders here, will have to learn more.
-            self.do_move_out_of_combat(user_id);
+            self.post_action_move(user_id);
             return;
         }
 
@@ -549,7 +503,7 @@ impl<'a> Simulation<'a> {
                     if self.ai_thirteen_rule() {
                         return None;
                     }
-
+                    // TODO: This isn't strictly correct..
                     if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
                         return None;
                     }
@@ -574,7 +528,7 @@ impl<'a> Simulation<'a> {
             let user = self.combatant(user_id);
             let target = self.combatant(action.target_id);
             if !in_range(user, action.range, target) {
-                self.do_move_to_range(user_id, action.range, action.target_id);
+                self.pre_action_move(user_id, action.range as u8, action.target_id);
             }
             if let Some(mut ctr) = action.ctr {
                 let user = self.combatant(user_id);
@@ -596,22 +550,11 @@ impl<'a> Simulation<'a> {
         }
 
         if !user.acted_during_active_turn {
-            let first_action_with_foe = {
-                let actions = self.actions.borrow();
-                actions
-                    .iter()
-                    .filter(|action| user.different_team(self.combatant(action.target_id)))
-                    .next()
-                    .cloned()
-            };
-
-            if let Some(action) = first_action_with_foe {
-                self.do_move_towards_unit(user_id, action.target_id);
-                return;
-            }
+            self.engage_enemy_blindly(user_id);
+            return;
         }
 
-        self.do_move_out_of_combat(user_id);
+        self.post_action_move(user_id);
     }
 
     pub fn do_physical_evade(&self, user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
@@ -817,16 +760,112 @@ impl<'a> Simulation<'a> {
             Some(WeaponType::Gun) => weapon.unwrap().wp as i16 + k,
         }
     }
+
+    fn pre_action_move(&mut self, user_id: CombatantId, range: u8, target_id: CombatantId) {
+        let user = self.combatant(user_id);
+        let target = self.combatant(target_id);
+        let movement = if user.dont_move() { 0 } else { user.movement() };
+        if in_range(user, range as i8, target) {
+            return;
+        }
+        let best_panel = target
+            .location
+            .diamond(range)
+            .flat_map(|location| {
+                if user.location.distance(location) > movement as i16 {
+                    return None;
+                }
+                if self.occupied_panel(location) {
+                    return None;
+                }
+                let enemy_distance = self.enemy_distance_metric(user, location);
+                Some((enemy_distance, location))
+            })
+            .max_by_key(|p| p.0)
+            .map(|p| p.1);
+
+        if let Some(panel) = best_panel {
+            self.do_move_with_bounds(user_id, panel);
+        }
+    }
+
+    fn post_action_move(&mut self, user_id: CombatantId) {
+        let user = self.combatant(user_id);
+        if user.dont_move() {
+            return;
+        }
+        let best_panel = user
+            .movement_diamond()
+            .flat_map(|location| {
+                if self.occupied_panel(location) {
+                    return None;
+                }
+                let enemy_distance = self.enemy_distance_metric(user, location);
+                // TODO: Add metric based on currently charging slow actions.
+                Some((enemy_distance, location))
+            })
+            .max_by_key(|p| p.0)
+            .map(|p| p.1);
+
+        if let Some(panel) = best_panel {
+            self.do_move_with_bounds(user_id, panel);
+        }
+    }
+
+    fn engage_enemy_blindly(&mut self, user_id: CombatantId) {
+        let user = self.combatant(user_id);
+        if user.dont_move() {
+            return;
+        }
+        let best_panel = user
+            .movement_diamond()
+            .flat_map(|location| {
+                if self.occupied_panel(location) {
+                    return None;
+                }
+                let enemy_distance = self.enemy_distance_metric(user, location);
+                // TODO: Add metric based on currently charging slow actions.
+                Some((enemy_distance, location))
+            })
+            .min_by_key(|p| p.0);
+
+        if let Some((_, panel)) = best_panel {
+            self.do_move_with_bounds(user_id, panel);
+        }
+    }
+
+    fn occupied_panel(&self, location: Location) -> bool {
+        // TODO: This doesn't belong in this function, but I'm not handling not being able to walk
+        //  through enemy units, I.E. path finding.
+        for combatant in &self.combatants {
+            if combatant.location == location {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn enemy_distance_metric(&self, user: &Combatant, location: Location) -> i16 {
+        let mut metric = 0;
+        for combatant in &self.combatants {
+            if !user.foe(combatant) {
+                continue;
+            }
+
+            metric += combatant.location.distance(location);
+        }
+        metric
+    }
 }
 
 pub fn in_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
     let dist = user.distance(target);
-    dist <= range
+    dist <= range as i16
 }
 
 pub fn can_move_into_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
     let movement = if user.dont_move() { 0 } else { user.movement() };
-    user.distance(target) <= range + movement
+    user.distance(target) <= range as i16 + movement as i16
 }
 
 //
