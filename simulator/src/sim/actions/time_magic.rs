@@ -14,6 +14,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Haste,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 180,
             range: 4,
             ctr: 2,
@@ -28,6 +29,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Haste,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 240,
             range: 4,
             ctr: 2,
@@ -42,6 +44,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Slow,
             can_be_evaded: true,
+            ignore_magic_def: false,
             base_chance: 180,
             range: 4,
             ctr: 2,
@@ -56,6 +59,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Slow,
             can_be_evaded: true,
+            ignore_magic_def: false,
             base_chance: 240,
             range: 4,
             ctr: 5,
@@ -70,6 +74,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Stop,
             can_be_evaded: true,
+            ignore_magic_def: false,
             base_chance: 130,
             range: 4,
             ctr: 7,
@@ -84,6 +89,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::DontMove,
             can_be_evaded: true,
+            ignore_magic_def: false,
             base_chance: 190,
             range: 5,
             ctr: 3,
@@ -102,7 +108,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         aoe: Some(3),
         implementation: &ElementalDamageSpellImpl {
             // TODO: There should be a 'neutral' element.
-            element: Element::Weapon,
+            element: Element::None,
             q: 60,
             ctr: 13,
             range: 5,

@@ -5,6 +5,7 @@ use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
+use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, Condition, ConditionBlock, ConditionFlags, DiamondIterator, Distance, Element,
     Gender, Location, Sign, SkillBlock, Team, ALL_CONDITIONS,
@@ -93,6 +94,7 @@ impl<'a> CombatantInfo<'a> {
             WHITE_MAGIC_ABILITIES,
             BLACK_MAGIC_ABILITIES,
             TIME_MAGIC_ABILITIES,
+            YIN_YANG_MAGIC_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if src.all_abilities.iter().any(|n| n == ability.name) {

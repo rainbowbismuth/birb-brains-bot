@@ -1,6 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{
-    do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ElementalDamageSpellImpl,
+    do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ConditionClearSpellImpl,
+    ElementalDamageSpellImpl,
 };
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
@@ -90,6 +91,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Reraise,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 140,
             ctr: 7,
             range: 4,
@@ -104,6 +106,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Regen,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 170,
             ctr: 4,
             range: 4,
@@ -118,6 +121,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 200,
             ctr: 3,
             range: 4,
@@ -132,6 +136,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 240,
             ctr: 6,
             range: 4,
@@ -146,6 +151,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 200,
             ctr: 3,
             range: 4,
@@ -160,6 +166,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
             can_be_evaded: false,
+            ignore_magic_def: true,
             base_chance: 240,
             ctr: 6,
             range: 4,
@@ -187,6 +194,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
                 Condition::DontMove,
                 Condition::DontAct,
             ],
+            ignore_magic_def: true,
             base_chance: 195,
             ctr: 3,
             range: 4,
@@ -294,56 +302,5 @@ impl AbilityImpl for RaiseSpellImpl {
 
         let heal_amount = ((target.max_hp() as f32 * self.hp_percent) as i16).max(1);
         do_hp_heal(sim, target_id, heal_amount, true);
-    }
-}
-
-struct ConditionClearSpellImpl {
-    conditions: &'static [Condition],
-    base_chance: i16,
-    range: i8,
-    ctr: u8,
-}
-
-impl AbilityImpl for ConditionClearSpellImpl {
-    fn consider<'a>(
-        &self,
-        actions: &mut Vec<Action<'a>>,
-        ability: &'a Ability<'a>,
-        _sim: &Simulation<'a>,
-        _user: &Combatant<'a>,
-        target: &Combatant<'a>,
-    ) {
-        // TODO: Probably not actually true, but *shrug*
-        if !self
-            .conditions
-            .iter()
-            .any(|cond| target.has_condition(*cond))
-        {
-            return;
-        }
-        actions.push(Action {
-            ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
-    }
-    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
-        let mut success_chance = 1.0;
-        let user = sim.combatant(user_id);
-        let target = sim.combatant(target_id);
-        success_chance *= user.faith_percent();
-        success_chance *= target.faith_percent();
-        success_chance *= (user.ma() as f32 + self.base_chance as f32) / 100.0;
-        success_chance *= user.zodiac_compatibility(target);
-
-        if !(sim.roll_auto_succeed() < success_chance) {
-            // TODO: Log spell failed.
-            return;
-        }
-
-        for cond in self.conditions {
-            sim.cancel_condition(target_id, *cond, Source::Ability);
-        }
     }
 }

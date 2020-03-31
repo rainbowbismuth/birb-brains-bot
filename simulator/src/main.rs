@@ -59,7 +59,7 @@ fn run_sims() -> io::Result<()> {
     println!("{} patches\n", patches.len());
 
     let mut correct = 0;
-    let total = 12391;
+    let total = 13287;
     let mut time_outs = 0;
     let mut log_loss: f64 = 0.0;
 

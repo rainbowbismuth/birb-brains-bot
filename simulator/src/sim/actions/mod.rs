@@ -6,6 +6,7 @@ pub mod common;
 pub mod item;
 pub mod time_magic;
 pub mod white_magic;
+pub mod yin_yang_magic;
 
 pub trait AbilityImpl: Sync {
     fn consider<'a>(

@@ -170,6 +170,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Poison,
             can_be_evaded: true,
+            ignore_magic_def: false,
             base_chance: 190,
             ctr: 3,
             range: 5,
@@ -184,6 +185,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Frog,
             can_be_evaded: true,
+            ignore_magic_def: false,
             base_chance: 120,
             ctr: 5,
             range: 4,
@@ -199,6 +201,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &AddConditionSpellImpl {
             condition: Condition::Death,
             can_be_evaded: true,
+            ignore_magic_def: false,
             base_chance: 110,
             ctr: 10,
             range: 5,
@@ -211,8 +214,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 60,
         aoe: None,
         implementation: &ElementalDamageSpellImpl {
-            // TODO: There should be a 'neutral' element.
-            element: Element::Weapon,
+            element: Element::None,
             q: 49,
             ctr: 7,
             range: 6,
