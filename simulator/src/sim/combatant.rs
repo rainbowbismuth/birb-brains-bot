@@ -3,6 +3,7 @@ use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::actions::attack::ATTACK_ABILITY;
 use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
+use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, Condition, ConditionBlock, ConditionFlags, DiamondIterator, Distance, Element,
@@ -87,19 +88,16 @@ impl<'a> CombatantInfo<'a> {
 
         let mut abilities = vec![];
         abilities.push(&ATTACK_ABILITY);
-        for ability in ITEM_ABILITIES.iter() {
-            if src.all_abilities.iter().any(|n| n == ability.name) {
-                abilities.push(ability);
-            }
-        }
-        for ability in WHITE_MAGIC_ABILITIES.iter() {
-            if src.all_abilities.iter().any(|n| n == ability.name) {
-                abilities.push(ability);
-            }
-        }
-        for ability in BLACK_MAGIC_ABILITIES.iter() {
-            if src.all_abilities.iter().any(|n| n == ability.name) {
-                abilities.push(ability);
+        for ability_set in &[
+            ITEM_ABILITIES,
+            WHITE_MAGIC_ABILITIES,
+            BLACK_MAGIC_ABILITIES,
+            TIME_MAGIC_ABILITIES,
+        ] {
+            for ability in ability_set.iter() {
+                if src.all_abilities.iter().any(|n| n == ability.name) {
+                    abilities.push(ability);
+                }
             }
         }
 

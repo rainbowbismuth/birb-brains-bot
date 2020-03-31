@@ -4,6 +4,7 @@ pub mod attack;
 pub mod black_magic;
 pub mod common;
 pub mod item;
+pub mod time_magic;
 pub mod white_magic;
 
 pub trait AbilityImpl: Sync {

@@ -269,7 +269,8 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn add_condition(&mut self, target_id: CombatantId, condition: Condition, src: Source<'a>) {
-        if self.combatant(target_id).immune_to(condition) {
+        let target = self.combatant(target_id);
+        if !target.healthy() || target.immune_to(condition) {
             return;
         }
 
