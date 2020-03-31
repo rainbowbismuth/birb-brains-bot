@@ -7,6 +7,7 @@ const ATTACK_IMPL: AttackImpl = AttackImpl {};
 pub const ATTACK_ABILITY: Ability = Ability {
     flags: BERSERK_OK | ALLY_OK | FOE_OK,
     mp_cost: 0,
+    aoe: None,
     implementation: &AttackImpl {},
     name: "Attack",
 };

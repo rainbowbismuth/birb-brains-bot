@@ -856,6 +856,15 @@ impl<'a> Simulation<'a> {
         }
         metric
     }
+
+    pub fn combatant_on_panel(&self, location: Location) -> Option<CombatantId> {
+        for combatant in &self.combatants {
+            if combatant.location == location {
+                return Some(combatant.id());
+            }
+        }
+        None
+    }
 }
 
 pub fn in_range(user: &Combatant, range: i8, target: &Combatant) -> bool {

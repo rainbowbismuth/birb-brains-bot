@@ -31,6 +31,8 @@ pub const NO_SHORT_CHARGE: AbilityFlags = 1 << 6;
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
     pub mp_cost: i16,
+    pub aoe: Option<u8>,
+    // TODO: Refactor this, consider if it needs to be in the ability impl itself?
     pub implementation: &'a (dyn AbilityImpl + 'a),
     pub name: &'a str,
 }
@@ -127,7 +129,17 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         user.set_mp_within_bounds(new_mp);
     }
 
-    ability
-        .implementation
-        .perform(sim, user_id, action.target_id);
+    if let Some(aoe) = ability.aoe {
+        // TODO: Do summons go off even if the target dies? *think*
+        let target = sim.combatant(action.target_id);
+        for location in target.location.diamond(aoe) {
+            if let Some(real_target_id) = sim.combatant_on_panel(location) {
+                ability.implementation.perform(sim, user_id, real_target_id);
+            }
+        }
+    } else {
+        ability
+            .implementation
+            .perform(sim, user_id, action.target_id);
+    }
 }
