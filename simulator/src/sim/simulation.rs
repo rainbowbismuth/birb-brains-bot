@@ -646,6 +646,18 @@ impl<'a> Simulation<'a> {
         }
     }
 
+    pub fn do_magical_evade(&self, _user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
+        if self.roll_auto_fail() < target.magical_accessory_evasion() {
+            self.log_event(Event::Evaded(target.id(), EvasionType::Guarded, src));
+            true
+        } else if self.roll_auto_fail() < target.magical_shield_evasion() / 2.0 {
+            self.log_event(Event::Evaded(target.id(), EvasionType::Blocked, src));
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn weapon_chance_to_add_or_cancel_status(
         &mut self,
         user_id: CombatantId,

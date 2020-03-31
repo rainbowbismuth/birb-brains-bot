@@ -156,6 +156,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Poison,
+            can_be_evaded: true,
             base_chance: 190,
             ctr: 3,
             range: 5,
@@ -168,6 +169,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 12,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Frog,
+            can_be_evaded: true,
             base_chance: 120,
             ctr: 5,
             range: 4,
@@ -181,6 +183,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 24,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Death,
+            can_be_evaded: true,
             base_chance: 110,
             ctr: 10,
             range: 5,

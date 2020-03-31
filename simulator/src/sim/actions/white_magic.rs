@@ -82,6 +82,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 16,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Reraise,
+            can_be_evaded: false,
             base_chance: 140,
             ctr: 7,
             range: 4,
@@ -94,6 +95,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 8,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Regen,
+            can_be_evaded: false,
             base_chance: 170,
             ctr: 4,
             range: 4,
@@ -106,6 +108,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
+            can_be_evaded: false,
             base_chance: 200,
             ctr: 3,
             range: 4,
@@ -118,6 +121,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 18,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
+            can_be_evaded: false,
             base_chance: 240,
             ctr: 6,
             range: 4,
@@ -130,6 +134,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
+            can_be_evaded: false,
             base_chance: 200,
             ctr: 3,
             range: 4,
@@ -142,6 +147,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 18,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
+            can_be_evaded: false,
             base_chance: 240,
             ctr: 6,
             range: 4,
