@@ -2,7 +2,7 @@ use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ElementalDamageSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
-    HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE,
+    HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, PETRIFY_OK
 };
 
 pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
@@ -63,7 +63,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
     // Carbunkle: 4 range, 2 AoE, 7 CT, 30 MP. Hit: Faith(MA + 140)%. Effect: Cancel Death, Undead, Petrify, Blood Suck, Charm, Death Sentence; If successful Heal (25)%.
     Ability {
         name: "Carbunkle",
-        flags: ALLY_OK | SILENCEABLE | HITS_ALLIES_ONLY,
+        flags: ALLY_OK | NOT_ALIVE_OK | PETRIFY_OK | SILENCEABLE | HITS_ALLIES_ONLY,
         mp_cost: 30,
         aoe: Some(2),
         implementation: &CarbunkleImpl {

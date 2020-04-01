@@ -3,9 +3,7 @@ use crate::sim::common::{
     do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ConditionClearSpellImpl,
     ElementalDamageSpellImpl,
 };
-use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
-};
+use crate::sim::{Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE, PETRIFY_OK};
 
 pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Cure: 5 range, 1 AoE, 3 CT, 6 MP. Effect: Heal Faith(MA * 15).
@@ -177,7 +175,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     //  Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act.
     Ability {
         name: "Esuna",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | PETRIFY_OK | SILENCEABLE,
         mp_cost: 16,
         aoe: Some(1),
         implementation: &ConditionClearSpellImpl {
