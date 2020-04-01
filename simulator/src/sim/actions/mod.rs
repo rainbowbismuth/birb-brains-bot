@@ -31,6 +31,7 @@ pub const PETRIFY_OK: AbilityFlags = 1 << 4;
 pub const SILENCEABLE: AbilityFlags = 1 << 5;
 pub const NO_SHORT_CHARGE: AbilityFlags = 1 << 6;
 pub const HITS_FOES_ONLY: AbilityFlags = 1 << 7;
+pub const HITS_ALLIES_ONLY: AbilityFlags = 1 << 8;
 
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
@@ -136,23 +137,17 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
     if let Some(aoe) = ability.aoe {
         // TODO: Do summons go off even if the target dies? *think*
         let target = sim.combatant(action.target_id);
-
-        if ability.flags & HITS_FOES_ONLY != 0 {
-            for location in target.location.diamond(aoe) {
-                if let Some(real_target_id) = sim.combatant_on_panel(location) {
-                    let user = sim.combatant(user_id);
-                    let target = sim.combatant(real_target_id);
-                    if !user.foe(target) {
-                        continue;
-                    }
-                    ability.implementation.perform(sim, user_id, real_target_id);
+        for location in target.location.diamond(aoe) {
+            if let Some(real_target_id) = sim.combatant_on_panel(location) {
+                let user = sim.combatant(user_id);
+                let target = sim.combatant(real_target_id);
+                if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {
+                    continue;
                 }
-            }
-        } else {
-            for location in target.location.diamond(aoe) {
-                if let Some(real_target_id) = sim.combatant_on_panel(location) {
-                    ability.implementation.perform(sim, user_id, real_target_id);
+                if ability.flags & HITS_ALLIES_ONLY != 0 && !user.ally(target) {
+                    continue;
                 }
+                ability.implementation.perform(sim, user_id, real_target_id);
             }
         }
     } else {

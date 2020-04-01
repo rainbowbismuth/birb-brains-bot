@@ -216,8 +216,8 @@ struct AbsorbSpellImpl {
     hp_not_mp: bool,
     amount: f32,
     base_chance: i16,
-    pub range: i8,
-    pub ctr: u8,
+    range: i8,
+    ctr: u8,
 }
 
 impl AbilityImpl for AbsorbSpellImpl {

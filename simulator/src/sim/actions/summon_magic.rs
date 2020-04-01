@@ -1,8 +1,8 @@
-use crate::sim::actions::{Ability, ALLY_OK, FOE_OK};
-use crate::sim::common::{AddConditionSpellImpl, ElementalDamageSpellImpl};
+use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ElementalDamageSpellImpl};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_FOES_ONLY, NOT_ALIVE_OK,
-    SILENCEABLE,
+    Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
+    HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
@@ -60,7 +60,26 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         },
     },
     // TODO: Golem: 0 range, 0 AoE, 4 CT, 40 MP. Hit: ((Faith/100) * (MA + 200))%. Effect: Set Golem on party equal to Caster HP, which takes all physical damage for party until destroyed.
-    // TODO: Carbunkle: 4 range, 2 AoE, 7 CT, 30 MP. Hit: Faith(MA + 140)%. Effect: Cancel Death, Undead, Petrify, Blood Suck, Charm, Death Sentence; If successful Heal (25)%.
+    // Carbunkle: 4 range, 2 AoE, 7 CT, 30 MP. Hit: Faith(MA + 140)%. Effect: Cancel Death, Undead, Petrify, Blood Suck, Charm, Death Sentence; If successful Heal (25)%.
+    Ability {
+        name: "Carbunkle",
+        flags: ALLY_OK | SILENCEABLE | HITS_ALLIES_ONLY,
+        mp_cost: 30,
+        aoe: Some(2),
+        implementation: &CarbunkleImpl {
+            base_chance: 140,
+            heal_percent: 0.25,
+            conditions: &[
+                Condition::Undead,
+                Condition::Petrify,
+                Condition::BloodSuck,
+                Condition::Charm,
+                Condition::DeathSentence,
+            ],
+            range: 4,
+            ctr: 7,
+        },
+    },
     // Bahamut: 4 range, 3 AoE, 10 CT, 60 MP. Element: Dark. Effect: Damage Faith(MA * 46).
     Ability {
         name: "Bahamut",
@@ -157,3 +176,46 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         },
     },
 ];
+
+struct CarbunkleImpl {
+    base_chance: i16,
+    heal_percent: f32,
+    conditions: &'static [Condition],
+    range: i8,
+    ctr: u8,
+}
+
+impl AbilityImpl for CarbunkleImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        actions.push(Action {
+            ability,
+            range: self.range,
+            ctr: Some(self.ctr),
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+        let success_chance = mod_6_formula(user, target, Element::None, self.base_chance, true);
+        if !(sim.roll_auto_succeed() < success_chance) {
+            // TODO: Log spell failed.
+            return;
+        }
+
+        if target.dead() {
+            let heal_amount = (target.max_hp() as f32 * self.heal_percent) as i16;
+            sim.change_target_hp(target_id, -heal_amount, Source::Ability);
+        }
+        for condition in self.conditions.iter() {
+            sim.cancel_condition(target_id, *condition, Source::Ability);
+        }
+    }
+}
