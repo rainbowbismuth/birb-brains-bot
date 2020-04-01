@@ -43,7 +43,7 @@ impl Add for Location {
 
 pub struct DiamondIterator {
     size: u8,
-    idx: u8,
+    idx: u16,
     constant: Location,
 }
 
@@ -52,7 +52,7 @@ impl Iterator for DiamondIterator {
     type Item = Location;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let length = self.size as u8 * 2 + 1;
+        let length = (self.size * 2 + 1) as u16;
         let squared = length * length;
         while self.idx < squared {
             let x = (self.idx % length) as i8 - self.size as i8;
