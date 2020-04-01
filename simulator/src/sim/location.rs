@@ -51,10 +51,6 @@ pub struct DiamondIterator {
 impl Iterator for DiamondIterator {
     type Item = Location;
 
-    // Here, we define the sequence using `.curr` and `.next`.
-    // The return type is `Option<T>`:
-    //     * When the `Iterator` is finished, `None` is returned.
-    //     * Otherwise, the next value is wrapped in `Some` and returned.
     fn next(&mut self) -> Option<Self::Item> {
         let length = self.size as u8 * 2 + 1;
         let squared = length * length;
