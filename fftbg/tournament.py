@@ -37,6 +37,10 @@ NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', '
           + CAN_HEAL_TEAM + CAN_HURT_ENEMY + CAN_LETHAL_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
           + CAUSE_STATUS + CANCEL_STATUS
 
+SKIP_ID_RANGES = [
+    (1585741145317, 1585787081769)  # April fools, 2020.
+]
+
 
 def _calculate_hypothetical_match_ups():
     matches = []
@@ -245,7 +249,18 @@ def parse_teams(tournament):
 
 
 def parse_tournaments() -> List[Tournament]:
-    return [parse_tournament(p) for p in TOURNAMENTS_ROOT.glob('*.json')]
+    out = []
+    for p in TOURNAMENTS_ROOT.glob('*.json'):
+        tournament = parse_tournament(p)
+        skip = False
+        for (start, end) in SKIP_ID_RANGES:
+            if start <= tournament.id <= end:
+                skip = True
+                break
+        if skip:
+            continue
+        out.append(tournament)
+    return out
 
 
 def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
