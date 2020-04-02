@@ -216,7 +216,7 @@ def model_three(combatant_size,
         # return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    first_layer = make_dense(int(combatant_size))
+    first_layer = make_dense(combatant_size)
     first_nodes = [first_layer(input_node) for input_node in inputs]
 
     nodes = [first_nodes]
