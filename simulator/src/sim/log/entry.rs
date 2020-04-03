@@ -2,7 +2,8 @@ use colored::Colorize;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    Action, Combatant, CombatantId, Condition, Location, Phase, Team, MAX_COMBATANTS,
+    Action, Combatant, CombatantId, Condition, Facing, Location, Phase, RelativeFacing, Team,
+    MAX_COMBATANTS,
 };
 
 #[derive(Clone)]
@@ -178,10 +179,11 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
         ),
 
         Event::UsingAbility(target_id, action) => format!(
-            "{} is using {} on {}",
+            "{} is using {} on {} from the {}",
             describe_combatant(*target_id, combatants),
             action.ability.name,
             describe_combatant(action.target_id, combatants),
+            describe_relative_facing(*target_id, action.target_id, combatants)
         ),
 
         Event::StartedCharging(target_id, action) => format!(
@@ -236,24 +238,49 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
 
     match combatant.team() {
         Team::Left => format!(
-            "{} [{} HP, {} MP, loc: ({},{}){}]",
+            "{} [{} HP, {} MP, loc: ({},{},{}){}]",
             combatant.name().red(),
             combatant.hp(),
             combatant.mp(),
             combatant.location.x,
             combatant.location.y,
+            describe_facing(combatant.facing),
             cond_str
         ),
 
         Team::Right => format!(
-            "{} [{} HP, {} MP, loc: ({},{}){}]",
+            "{} [{} HP, {} MP, loc: ({},{},{}){}]",
             combatant.name().blue(),
             combatant.hp(),
             combatant.mp(),
             combatant.location.x,
             combatant.location.y,
+            describe_facing(combatant.facing),
             cond_str
         ),
+    }
+}
+
+pub fn describe_facing(facing: Facing) -> &'static str {
+    match facing {
+        Facing::North => "N",
+        Facing::East => "E",
+        Facing::South => "S",
+        Facing::West => "W",
+    }
+}
+
+pub fn describe_relative_facing(
+    user_id: CombatantId,
+    target_id: CombatantId,
+    combatants: &[Combatant],
+) -> &'static str {
+    let user = combatants[user_id.index()];
+    let target = combatants[target_id.index()];
+    match user.relative_facing(&target) {
+        RelativeFacing::Front => "front",
+        RelativeFacing::Side => "side",
+        RelativeFacing::Back => "back",
     }
 }
 

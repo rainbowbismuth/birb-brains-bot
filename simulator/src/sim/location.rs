@@ -7,9 +7,10 @@ pub struct Location {
 }
 
 pub type Distance = i16;
+pub type DistanceSquared = i32;
 
 impl Location {
-    pub fn new(x: i16, y: i16) -> Location {
+    pub const fn new(x: i16, y: i16) -> Location {
         Location { x, y }
     }
 
@@ -19,6 +20,12 @@ impl Location {
 
     pub fn distance(self, other: Self) -> Distance {
         (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+
+    pub fn distance_squared(self, other: Self) -> DistanceSquared {
+        let x_dist = (self.x - other.x).abs() as i32;
+        let y_dist = (self.y - other.y).abs() as i32;
+        x_dist * x_dist + y_dist * y_dist
     }
 
     pub fn diamond(self, size: u8) -> DiamondIterator {

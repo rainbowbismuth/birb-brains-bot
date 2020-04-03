@@ -3,7 +3,9 @@ use crate::sim::common::{
     do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ConditionClearSpellImpl,
     ElementalDamageSpellImpl,
 };
-use crate::sim::{Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE, PETRIFY_OK};
+use crate::sim::{
+    Combatant, CombatantId, Condition, Element, Simulation, NOT_ALIVE_OK, PETRIFY_OK, SILENCEABLE,
+};
 
 pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Cure: 5 range, 1 AoE, 3 CT, 6 MP. Effect: Heal Faith(MA * 15).

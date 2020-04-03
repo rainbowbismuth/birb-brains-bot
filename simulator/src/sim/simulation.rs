@@ -7,8 +7,8 @@ use rand::Rng;
 use crate::dto::rust::Equipment;
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
-    Condition, EvasionType, Event, Location, Log, Phase, SlowAction, Source, Team, WeaponType,
-    ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
+    Condition, EvasionType, Event, Facing, Location, Log, Phase, SlowAction, Source, Team,
+    WeaponType, ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
     NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 
@@ -379,6 +379,7 @@ impl<'a> Simulation<'a> {
             }
 
             self.ai_do_active_turn(*c_id);
+            self.face_closest_enemy(*c_id);
 
             let combatant = self.combatant(*c_id);
             if combatant.poison() {
@@ -579,16 +580,19 @@ impl<'a> Simulation<'a> {
             return false;
         }
 
+        let facing = user.relative_facing(target);
         if self.roll_auto_fail() < target.physical_accessory_evasion() {
             self.log_event(Event::Evaded(target.id(), EvasionType::Guarded, src));
             true
-        } else if self.roll_auto_fail() < target.physical_shield_evasion() / 2.0 {
+        } else if facing.is_front_or_side()
+            && self.roll_auto_fail() < target.physical_shield_evasion()
+        {
             self.log_event(Event::Evaded(target.id(), EvasionType::Blocked, src));
             true
-        } else if self.roll_auto_fail() < target.weapon_evasion() / 2.0 {
+        } else if facing.is_front_or_side() && self.roll_auto_fail() < target.weapon_evasion() {
             self.log_event(Event::Evaded(target.id(), EvasionType::Parried, src));
             true
-        } else if self.roll_auto_fail() < target.class_evasion() / 2.0 {
+        } else if facing.is_front() && self.roll_auto_fail() < target.class_evasion() {
             self.log_event(Event::Evaded(target.id(), EvasionType::Evaded, src));
             true
         } else {
@@ -816,6 +820,26 @@ impl<'a> Simulation<'a> {
 
         if let Some(panel) = best_panel {
             self.do_move_with_bounds(user_id, panel);
+        }
+    }
+
+    fn face_closest_enemy(&mut self, user_id: CombatantId) {
+        let user = self.combatant(user_id);
+        let closest_enemy_location = self
+            .combatants
+            .iter()
+            .flat_map(|target| {
+                if !user.foe(target) {
+                    return None;
+                }
+                Some((user.distance(target), target.location))
+            })
+            .min_by_key(|p| p.0)
+            .map(|p| p.1);
+
+        if let Some(target_location) = closest_enemy_location {
+            let mut user = self.combatant_mut(user_id);
+            user.facing = Facing::towards(user.location, target_location);
         }
     }
 

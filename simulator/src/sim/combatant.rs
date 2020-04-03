@@ -9,7 +9,7 @@ use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, Condition, ConditionBlock, ConditionFlags, DiamondIterator, Distance, Element,
-    Gender, Location, Sign, SkillBlock, Team, ALL_CONDITIONS,
+    Facing, Gender, Location, RelativeFacing, Sign, SkillBlock, Team, ALL_CONDITIONS,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -149,6 +149,7 @@ pub struct Combatant<'a> {
     pub raw_hp: i16,
     pub crystal_counter: i8,
     pub raw_mp: i16,
+    pub facing: Facing,
     pub broken_items: i8,
     pub location: Location,
     pub on_active_turn: bool,
@@ -171,6 +172,7 @@ impl<'a> Combatant<'a> {
             ct: 0,
             speed_mod: 0,
             conditions: ConditionBlock::new(),
+            facing: Facing::South,
             broken_items: 0,
             location: Location::zero(),
             on_active_turn: false,
@@ -234,6 +236,11 @@ impl<'a> Combatant<'a> {
 
     pub fn foe(&self, other: &Combatant) -> bool {
         self.team_allegiance() != other.team_allegiance()
+    }
+
+    pub fn relative_facing(&self, other: &Combatant) -> RelativeFacing {
+        // TODO: This is a confusing API.
+        other.facing.relative(other.location, self.location)
     }
 
     pub fn base_stats(&self) -> &'a BaseStats {

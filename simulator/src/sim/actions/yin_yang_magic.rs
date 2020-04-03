@@ -1,10 +1,6 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-use crate::sim::common::{
-    mod_6_formula, AddConditionSpellImpl, ConditionClearSpellImpl, ElementalDamageSpellImpl,
-};
-use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
-};
+use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ConditionClearSpellImpl};
+use crate::sim::{Combatant, CombatantId, Condition, Element, Simulation, Source, SILENCEABLE};
 
 pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Blind: 5 range, 1 AoE, 2 CT, 4 MP. Hit: Faith(MA + 200)%. Effect: Add Blind.

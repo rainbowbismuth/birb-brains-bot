@@ -1,8 +1,8 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ElementalDamageSpellImpl};
+use crate::sim::common::{mod_6_formula, ElementalDamageSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
-    HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, PETRIFY_OK
+    HITS_FOES_ONLY, NOT_ALIVE_OK, PETRIFY_OK, SILENCEABLE,
 };
 
 pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[

@@ -7,7 +7,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rand::rngs::SmallRng;
 use rand::{thread_rng, Rng, SeedableRng};
 
-use sim::{Combatant, CombatantId, Location, Simulation, Team};
+use sim::{Combatant, CombatantId, Simulation, Team};
 
 use crate::sim::{describe_entry, CombatantInfo};
 
