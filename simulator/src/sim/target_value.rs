@@ -41,8 +41,17 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
     // # 		0x04 - Jump						0% (0000)
     // # 		0x02 - Defending				0% (0000)
     // # 		0x01 - Performing				0% (0000)
+    if target.crystal() {
+        total -= 1.5;
+    }
+
     if target.dead() {
         total -= 1.5;
+    }
+
+    if target.conditions.status_flags == 0 {
+        // Purely an optimization
+        return total;
     }
 
     if target.undead() {
