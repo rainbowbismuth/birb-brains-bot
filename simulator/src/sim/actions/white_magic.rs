@@ -4,7 +4,8 @@ use crate::sim::common::{
     ElementalDamageSpellImpl,
 };
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, NOT_ALIVE_OK, PETRIFY_OK, SILENCEABLE,
+    Combatant, CombatantId, Condition, Element, Event, Simulation, NOT_ALIVE_OK, PETRIFY_OK,
+    SILENCEABLE,
 };
 
 pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
@@ -296,7 +297,7 @@ impl AbilityImpl for RaiseSpellImpl {
         success_chance *= user.zodiac_compatibility(target);
 
         if !(sim.roll_auto_succeed() < success_chance) {
-            // TODO: Log spell failed.
+            sim.log_event(Event::AbilityMissed(user_id));
             return;
         }
 

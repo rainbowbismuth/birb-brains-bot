@@ -1,7 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_6_formula, ElementalDamageSpellImpl};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
+    Combatant, CombatantId, Condition, Element, Event, Simulation, Source, HITS_ALLIES_ONLY,
     HITS_FOES_ONLY, NOT_ALIVE_OK, PETRIFY_OK, SILENCEABLE,
 };
 
@@ -206,7 +206,7 @@ impl AbilityImpl for CarbunkleImpl {
         let target = sim.combatant(target_id);
         let success_chance = mod_6_formula(user, target, Element::None, self.base_chance, true);
         if !(sim.roll_auto_succeed() < success_chance) {
-            // TODO: Log spell failed.
+            sim.log_event(Event::AbilityMissed(user_id));
             return;
         }
 

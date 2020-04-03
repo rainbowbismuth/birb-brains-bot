@@ -28,6 +28,7 @@ pub enum Event<'a> {
     Evaded(CombatantId, EvasionType, Source<'a>),
     Moved(CombatantId, Location, Location),
     UsingAbility(CombatantId, Action<'a>),
+    AbilityMissed(CombatantId),
     StartedCharging(CombatantId, Action<'a>),
     SlowActionTargetDied(CombatantId),
     Silenced(CombatantId, Action<'a>),
@@ -182,15 +183,20 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             "{} is using {} on {} from the {}",
             describe_combatant(*target_id, combatants),
             action.ability.name,
-            describe_combatant(action.target_id, combatants),
+            describe_combatant_short(action.target_id, combatants),
             describe_relative_facing(*target_id, action.target_id, combatants)
+        ),
+
+        Event::AbilityMissed(target_id) => format!(
+            "{}'s ability missed!",
+            describe_combatant_short(*target_id, combatants)
         ),
 
         Event::StartedCharging(target_id, action) => format!(
             "{} started charging {} on {}",
             describe_combatant(*target_id, combatants),
             action.ability.name,
-            describe_combatant(action.target_id, combatants),
+            describe_combatant_short(action.target_id, combatants),
         ),
 
         Event::SlowActionTargetDied(target_id) => format!(
@@ -238,7 +244,7 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
 
     match combatant.team() {
         Team::Left => format!(
-            "{} [{} HP, {} MP, loc: ({},{},{}){}]",
+            "{} [{} HP, {} MP, ({},{},{}){}]",
             combatant.name().red(),
             combatant.hp(),
             combatant.mp(),
@@ -249,7 +255,7 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
         ),
 
         Team::Right => format!(
-            "{} [{} HP, {} MP, loc: ({},{},{}){}]",
+            "{} [{} HP, {} MP, ({},{},{}){}]",
             combatant.name().blue(),
             combatant.hp(),
             combatant.mp(),

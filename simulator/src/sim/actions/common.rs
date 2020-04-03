@@ -1,5 +1,5 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action};
-use crate::sim::{Combatant, CombatantId, Condition, Element, Simulation, Source};
+use crate::sim::{Combatant, CombatantId, Condition, Element, Event, Simulation, Source};
 
 pub fn should_heal_foe(target: &Combatant, hurts_undead: bool) -> bool {
     hurts_undead && target.undead()
@@ -69,7 +69,7 @@ impl AbilityImpl for AddConditionSpellImpl {
             self.ignore_magic_def,
         );
         if !(sim.roll_auto_succeed() < success_chance) {
-            // TODO: Log spell failed.
+            sim.log_event(Event::AbilityMissed(user_id));
             return;
         }
         sim.add_condition(target_id, self.condition, Source::Ability);
@@ -164,7 +164,7 @@ impl AbilityImpl for ConditionClearSpellImpl {
         );
 
         if !(sim.roll_auto_succeed() < success_chance) {
-            // TODO: Log spell failed.
+            sim.log_event(Event::AbilityMissed(user_id));
             return;
         }
 
