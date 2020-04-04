@@ -3,8 +3,8 @@ use crate::sim::actions::{
 };
 
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, WeaponType, HITS_ALLIES_ONLY,
-    HITS_FOES_ONLY, JUMPING, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,
+    Combatant, CombatantId, Condition, Element, Simulation, Source, WeaponType, DAMAGE_CANCELS,
+    HITS_ALLIES_ONLY, HITS_FOES_ONLY, JUMPING, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,
 };
 
 pub const JUMP_ABILITIES: &[Ability] = &[Ability {
@@ -26,6 +26,14 @@ impl AbilityImpl for JumpImpl {
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
+        if user.ally(target)
+            && !DAMAGE_CANCELS
+                .iter()
+                .any(|condition| target.has_condition(*condition))
+        {
+            return;
+        }
+
         actions.push(Action {
             ability,
             range: user.info.horizontal_jump,
