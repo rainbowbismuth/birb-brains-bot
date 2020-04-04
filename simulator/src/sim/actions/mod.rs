@@ -3,6 +3,7 @@ use crate::sim::{Combatant, CombatantId, Event, Simulation};
 pub mod attack;
 pub mod black_magic;
 pub mod common;
+pub mod draw_out;
 pub mod item;
 pub mod summon_magic;
 pub mod time_magic;
@@ -32,6 +33,7 @@ pub const SILENCEABLE: AbilityFlags = 1 << 5;
 pub const NO_SHORT_CHARGE: AbilityFlags = 1 << 6;
 pub const HITS_FOES_ONLY: AbilityFlags = 1 << 7;
 pub const HITS_ALLIES_ONLY: AbilityFlags = 1 << 8;
+pub const TARGET_SELF_ONLY: AbilityFlags = 1 << 9;
 
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
@@ -66,6 +68,8 @@ fn filter_ability_level(user: &Combatant, ability: &Ability) -> bool {
 fn filter_target_level(user: &Combatant, ability: &Ability, target: &Combatant) -> bool {
     let flags = ability.flags;
     if target.crystal() {
+        false
+    } else if flags & TARGET_SELF_ONLY != 0 && user.id() != target.id() {
         false
     } else if flags & ALLY_OK == 0 && user.ally(target) {
         false
@@ -118,6 +122,8 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         return;
     }
     let target = sim.combatant(action.target_id);
+    // TODO: I should add a version that ignores the ALLY/FOE_OK because an ability
+    //  should still go off even if the target was charmed
     if !filter_target_level(user, ability, target) {
         // TODO: Log some sort of event for failing to perform an ability
         return;
@@ -141,12 +147,22 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             if let Some(real_target_id) = sim.combatant_on_panel(location) {
                 let user = sim.combatant(user_id);
                 let target = sim.combatant(real_target_id);
+                if target.crystal() {
+                    continue;
+                }
                 if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {
                     continue;
                 }
                 if ability.flags & HITS_ALLIES_ONLY != 0 && !user.ally(target) {
                     continue;
                 }
+                if ability.flags & NOT_ALIVE_OK == 0 && !target.alive() {
+                    continue;
+                }
+                if ability.flags & PETRIFY_OK == 0 && target.petrify() {
+                    continue;
+                }
+
                 ability.implementation.perform(sim, user_id, real_target_id);
             }
         }

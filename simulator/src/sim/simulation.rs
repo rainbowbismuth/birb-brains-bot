@@ -124,7 +124,7 @@ impl<'a> Simulation<'a> {
         self.combatants
             .iter()
             .filter(|combatant| combatant.team() == team)
-            .any(|combatant| !combatant.dead() && !combatant.petrify() && !combatant.blood_suck())
+            .any(|combatant| combatant.healthy() && !combatant.blood_suck())
     }
 
     pub fn tick(&mut self) {
@@ -521,7 +521,7 @@ impl<'a> Simulation<'a> {
                         simulated_world.combatant(user_id),
                         &simulated_world.combatants,
                     );
-                    if new_value < basis {
+                    if new_value <= basis {
                         return None;
                     }
 
@@ -529,7 +529,7 @@ impl<'a> Simulation<'a> {
                     let ordered_val = (new_value * 1_000_000.0) as i64;
                     Some((ordered_val, *action))
                 })
-                .min_by_key(|pair| pair.0)
+                .max_by_key(|pair| pair.0)
         };
 
         if let Some((_, action)) = best_action {
@@ -880,6 +880,9 @@ impl<'a> Simulation<'a> {
         let mut metric = 0;
         for combatant in &self.combatants {
             if !user.foe(combatant) {
+                continue;
+            }
+            if !combatant.healthy() {
                 continue;
             }
 

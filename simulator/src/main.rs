@@ -15,9 +15,11 @@ mod data;
 mod dto;
 mod sim;
 
+const NUM_RUNS: i32 = 20;
+
 fn run_many_sims(combatants: &[Combatant; 8]) -> (f64, u64) {
     let mut thread_rng = thread_rng();
-    let num_runs = 20;
+    let num_runs = NUM_RUNS;
     let mut left_wins = 0;
     let mut time_outs = 0;
     for _ in 0..num_runs {
@@ -180,10 +182,10 @@ fn run_sims() -> io::Result<()> {
 
     let correct_percent = correct as f32 / total as f32;
     println!("\ntotal: {}", total);
+    println!("correct: {:.1}%", correct_percent * 100.0);
     println!(
-        "correct: {:.1}%, time_outs: {}",
-        correct_percent * 100.0,
-        time_outs
+        "time_outs: {:.1}%",
+        ((time_outs as f32 / NUM_RUNS as f32) / total as f32) * 100.0
     );
     println!("improvement: {:.1}%", (correct_percent - 0.5) * 200.0);
     println!("log loss: {:.6}", log_loss / total as f64);
