@@ -80,7 +80,7 @@ impl AbilityImpl for JumpImpl {
         xa = (xa as f32 * user.zodiac_compatibility(target)) as i16;
 
         let damage = if user.barehanded() {
-            xa * (user.pa() as f32 * user.brave_percent()) as i16
+            xa * (user.pa_bang() as f32 * user.brave_percent()) as i16
         } else {
             xa * user.main_hand().unwrap().wp as i16
         };
