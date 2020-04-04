@@ -76,9 +76,6 @@ fn filter_target_level(user: &Combatant, ability: &Ability, target: &Combatant) 
         false
     } else if flags & FOE_OK == 0 && user.foe(target) {
         false
-    } else if user.foe(target) && target.death_sentence() {
-        // TODO: Probably not the best place to put this :)
-        false
     } else if flags & NOT_ALIVE_OK == 0 && !target.alive() {
         false
     } else if flags & PETRIFY_OK == 0 && target.petrify() {
@@ -94,6 +91,7 @@ pub fn ai_consider_actions<'a>(
     user: &Combatant<'a>,
     targets: &[Combatant<'a>],
 ) {
+    let foes_have_non_disabled = sim.ai_foes_have_non_disabled_units(user);
     for ability in user.abilities() {
         if !filter_ability_level(user, ability) {
             continue;
@@ -102,6 +100,13 @@ pub fn ai_consider_actions<'a>(
             if !filter_target_level(user, ability, target) {
                 continue;
             }
+
+            if user.foe(target) && foes_have_non_disabled {
+                if target.confusion() || target.death_sentence() {
+                    continue;
+                }
+            }
+
             ability
                 .implementation
                 .consider(actions, ability, sim, user, target);

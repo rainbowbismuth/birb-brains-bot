@@ -417,7 +417,7 @@ impl<'a> Simulation<'a> {
 
     // NOTE: I flipped this bool to be true when in prediction mode
     fn roll_brave_reaction(&self, combatant: &Combatant) -> bool {
-        if combatant.berserk() {
+        if combatant.berserk() || combatant.confusion() {
             false
         } else {
             self.roll_auto_fail() <= combatant.brave_percent()
@@ -459,7 +459,7 @@ impl<'a> Simulation<'a> {
         self.log_event(Event::Moved(user_id, old_location, new_location));
 
         let combatant = self.combatant(user_id);
-        if combatant.moved_during_active_turn && combatant.move_hp_up() {
+        if combatant.moved_during_active_turn && combatant.move_hp_up() && !combatant.confusion() {
             self.change_target_hp(
                 user_id,
                 -(combatant.max_hp() / 10),
@@ -467,13 +467,20 @@ impl<'a> Simulation<'a> {
             );
         }
         let combatant = self.combatant(user_id);
-        if combatant.moved_during_active_turn && combatant.move_mp_up() {
+        if combatant.moved_during_active_turn && combatant.move_mp_up() && !combatant.confusion() {
             self.change_target_mp(
                 user_id,
                 -(combatant.max_mp() / 10),
                 Source::Constant("Move-MP Up"),
             );
         }
+    }
+
+    pub fn ai_foes_have_non_disabled_units(&self, user: &Combatant) -> bool {
+        self.combatants
+            .iter()
+            .filter(|target| user.foe(target) && target.healthy())
+            .any(|target| !target.confusion() && !target.death_sentence())
     }
 
     fn ai_do_active_turn(&mut self, user_id: CombatantId) {
@@ -580,19 +587,23 @@ impl<'a> Simulation<'a> {
             return false;
         }
 
+        let bonus = if user.confusion() { 2.0 } else { 1.0 };
         let facing = user.relative_facing(target);
-        if self.roll_auto_fail() < target.physical_accessory_evasion() {
+
+        if self.roll_auto_fail() < target.physical_accessory_evasion() * bonus {
             self.log_event(Event::Evaded(target.id(), EvasionType::Guarded, src));
             true
         } else if facing.is_front_or_side()
-            && self.roll_auto_fail() < target.physical_shield_evasion()
+            && self.roll_auto_fail() < target.physical_shield_evasion() * bonus
         {
             self.log_event(Event::Evaded(target.id(), EvasionType::Blocked, src));
             true
-        } else if facing.is_front_or_side() && self.roll_auto_fail() < target.weapon_evasion() {
+        } else if facing.is_front_or_side()
+            && self.roll_auto_fail() < target.weapon_evasion() * bonus
+        {
             self.log_event(Event::Evaded(target.id(), EvasionType::Parried, src));
             true
-        } else if facing.is_front() && self.roll_auto_fail() < target.class_evasion() {
+        } else if facing.is_front() && self.roll_auto_fail() < target.class_evasion() * bonus {
             self.log_event(Event::Evaded(target.id(), EvasionType::Evaded, src));
             true
         } else {
@@ -600,11 +611,16 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    pub fn do_magical_evade(&self, _user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
-        if self.roll_auto_fail() < target.magical_accessory_evasion() {
+    pub fn do_magical_evade(&self, user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
+        let bonus = if user.confusion() { 2.0 } else { 1.0 };
+        let facing = user.relative_facing(target);
+
+        if self.roll_auto_fail() < target.magical_accessory_evasion() * bonus {
             self.log_event(Event::Evaded(target.id(), EvasionType::Guarded, src));
             true
-        } else if self.roll_auto_fail() < target.magical_shield_evasion() / 2.0 {
+        } else if facing.is_front_or_side()
+            && self.roll_auto_fail() < target.magical_shield_evasion() * bonus
+        {
             self.log_event(Event::Evaded(target.id(), EvasionType::Blocked, src));
             true
         } else {

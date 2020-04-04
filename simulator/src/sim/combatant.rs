@@ -241,11 +241,19 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn ally(&self, other: &Combatant) -> bool {
-        self.team_allegiance() == other.team_allegiance()
+        if !self.confusion() {
+            self.team_allegiance() == other.team_allegiance()
+        } else {
+            true
+        }
     }
 
     pub fn foe(&self, other: &Combatant) -> bool {
-        self.team_allegiance() != other.team_allegiance()
+        if !self.confusion() {
+            self.team_allegiance() != other.team_allegiance()
+        } else {
+            self.id() != other.id()
+        }
     }
 
     pub fn relative_facing(&self, other: &Combatant) -> RelativeFacing {
