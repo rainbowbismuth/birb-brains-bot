@@ -4,6 +4,7 @@ use crate::sim::actions::attack::ATTACK_ABILITY;
 use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::draw_out::DRAW_OUT_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
+use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
 use crate::sim::actions::summon_magic::SUMMON_MAGIC_ABILITES;
 use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
@@ -99,6 +100,7 @@ impl<'a> CombatantInfo<'a> {
             YIN_YANG_MAGIC_ABILITIES,
             SUMMON_MAGIC_ABILITES,
             DRAW_OUT_ABILITIES,
+            PUNCH_ART_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if src.all_abilities.iter().any(|n| n == ability.name) {

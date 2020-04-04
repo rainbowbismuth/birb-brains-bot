@@ -5,6 +5,7 @@ pub mod black_magic;
 pub mod common;
 pub mod draw_out;
 pub mod item;
+pub mod punch_art;
 pub mod summon_magic;
 pub mod time_magic;
 pub mod white_magic;

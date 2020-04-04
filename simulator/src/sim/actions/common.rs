@@ -174,6 +174,99 @@ impl AbilityImpl for ConditionClearSpellImpl {
     }
 }
 
+pub fn mod_2_formula_xa(
+    sim: &Simulation,
+    mut xa: i16,
+    user: &Combatant,
+    target: &Combatant,
+    element: Element,
+    crit: bool,
+    always_apply_martial_arts: bool,
+    ignores_protect_and_defense_up: bool,
+) -> i16 {
+    //    1. If this is a critical hit, then XA1 = XA0 + (1..XA0) - 1.
+    if crit {
+        xa += sim.roll_inclusive(1, xa) - 1;
+    }
+
+    //    2. If the attack is endowed with an Element, and the caster has
+    //       equipment that 'Strengthens' that element, then (XA2 = [XA1 * 5/4]),
+    //       else XA2 = XA1
+    if user.strengthens(element) {
+        xa = (xa * 5) / 4;
+    }
+
+    xa = mod_3_formula_xa(
+        xa,
+        user,
+        target,
+        always_apply_martial_arts,
+        ignores_protect_and_defense_up,
+    );
+
+    //   11. Apply zodiac multipliers:
+    //           If compatibility is 'Good', then (XA11 = XA10 + [(XA10)/4]))
+    //           ElseIf compatibility is 'Bad', then (XA11 = XA10 - [(XA10)/4])
+    //           ElseIf compatibility is 'Best', then (XA11 = XA10 + [(XA10)/2])
+    //           ElseIf compatibility is 'Worst', then (XA11 = XA10 - [(XA10)/2])
+    //           Else, XA11 = XA10
+    xa = (xa as f32 * user.zodiac_compatibility(target)) as i16;
+
+    xa
+}
+
+pub fn mod_3_formula_xa(
+    mut xa: i16,
+    user: &Combatant,
+    target: &Combatant,
+    always_apply_martial_arts: bool,
+    ignores_protect_and_defense_up: bool,
+) -> i16 {
+    //    3. If caster has Attack UP, then (XA3 = [XA2 * 4/3]), else XA3 = XA2
+    if user.attack_up() {
+        xa = (xa * 4) / 3;
+    }
+
+    //    4. If caster has Martial Arts AND this is not a wpn-elemental attack,
+    //       then (XA4 = [XA3 * 3/2]), else XA4 = XA3
+    if user.martial_arts() && (always_apply_martial_arts || user.barehanded()) {
+        xa = (xa * 3) / 2;
+    }
+
+    //    5. If caster is Berserk, then (XA5 = [XA4 * 3/2]), else XA5 = XA4
+    if user.berserk() {
+        xa = (xa * 3) / 2;
+    }
+
+    //    6. If target has Defense UP, then (XA6 = [XA5 * 2/3]), else XA6 = XA5
+    if !ignores_protect_and_defense_up && target.defense_up() {
+        xa = (xa * 2) / 3;
+    }
+
+    //    7. If target has Protect, then (XA7 = [XA6 * 2/3]), else XA7 = XA6
+    if !ignores_protect_and_defense_up && target.protect() {
+        xa = (xa * 2) / 3;
+    }
+
+    //    8. If target is Charging, then (XA8 = [XA7 * 3/2]), else XA8 = XA7
+    if target.charging() {
+        xa = (xa * 3) / 2;
+    }
+
+    //    9. If target is Sleeping, then (XA9 = [XA8 * 3/2]), else XA9 = XA8
+    if target.sleep() {
+        xa = (xa * 3) / 2;
+    }
+
+    //   10. If target is a Chicken and/or a Frog, then (XA10 = [XA9 * 3/2]),
+    //       else XA10 = XA9
+    if target.chicken() || target.frog() {
+        xa = (xa * 3) / 2;
+    }
+
+    xa
+}
+
 pub fn mod_5_formula(user: &Combatant, target: &Combatant, element: Element, q: i16) -> i16 {
     let mut ma = user.ma() as i16;
     // 1. If caster has 'Strengthen: [element of spell]', then (MA1 = [MA0 * 5/4])
