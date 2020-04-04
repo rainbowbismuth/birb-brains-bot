@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
 use crate::sim::common::{
     mod_2_formula_xa, mod_3_formula_xa, AddConditionSpellImpl, ElementalDamageSpellImpl,
 };
@@ -25,7 +25,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
     // TODO: Wave Fist: 3 range, 0 AoE. Element: Wind. Effect: Damage ((PA + 2) / 2 * PA).
     Ability {
         name: "Wave Fist",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
         aoe: None,
         implementation: &DamagePunchArt {
@@ -80,7 +80,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
     // Revive: 1 range, 0 AoE. Effect: Hit: (PA + 70)%. Effect: Cancel Death; If successful Heal (25)%.
     Ability {
         name: "Revive",
-        flags: ALLY_OK | NOT_ALIVE_OK,
+        flags: ALLY_OK | NOT_ALIVE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
         aoe: None,
         implementation: &ReviveImpl {

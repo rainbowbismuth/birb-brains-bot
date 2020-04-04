@@ -5,6 +5,7 @@ pub mod black_magic;
 pub mod common;
 pub mod draw_out;
 pub mod item;
+pub mod jump;
 pub mod punch_art;
 pub mod summon_magic;
 pub mod time_magic;
@@ -35,6 +36,8 @@ pub const NO_SHORT_CHARGE: AbilityFlags = 1 << 6;
 pub const HITS_FOES_ONLY: AbilityFlags = 1 << 7;
 pub const HITS_ALLIES_ONLY: AbilityFlags = 1 << 8;
 pub const TARGET_SELF_ONLY: AbilityFlags = 1 << 9;
+pub const JUMPING: AbilityFlags = 1 << 10;
+pub const TARGET_NOT_SELF: AbilityFlags = 1 << 11;
 
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
@@ -68,7 +71,9 @@ fn filter_ability_level(user: &Combatant, ability: &Ability) -> bool {
 
 fn filter_target_level(user: &Combatant, ability: &Ability, target: &Combatant) -> bool {
     let flags = ability.flags;
-    if target.crystal() {
+    if target.crystal() || target.jumping() {
+        false
+    } else if flags & TARGET_NOT_SELF != 0 && user.id() == target.id() {
         false
     } else if flags & TARGET_SELF_ONLY != 0 && user.id() != target.id() {
         false
@@ -156,7 +161,7 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             if let Some(real_target_id) = sim.combatant_on_panel(location) {
                 let user = sim.combatant(user_id);
                 let target = sim.combatant(real_target_id);
-                if target.crystal() {
+                if target.crystal() || target.jumping() {
                     continue;
                 }
                 if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {
@@ -176,6 +181,11 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             }
         }
     } else {
+        let target = sim.combatant(action.target_id);
+        if target.jumping() {
+            return;
+        }
+
         ability
             .implementation
             .perform(sim, user_id, action.target_id);

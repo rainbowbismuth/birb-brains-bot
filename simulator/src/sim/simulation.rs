@@ -9,7 +9,7 @@ use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
     Condition, EvasionType, Event, Facing, Location, Log, Phase, SlowAction, Source, Team,
     WeaponType, ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
-    NO_SHORT_CHARGE, TIMED_CONDITIONS,
+    JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -144,6 +144,11 @@ impl<'a> Simulation<'a> {
         self.log.set_clock_tick(self.clock_tick);
         self.log.set_phase(Phase::StatusCheck);
         for cid in &COMBATANT_IDS {
+            let combatant = self.combatant(*cid);
+            if combatant.jumping() {
+                continue;
+            }
+
             for condition in &TIMED_CONDITIONS {
                 let removed = self.combatant_mut(*cid).tick_condition(*condition).unwrap();
                 if removed {
@@ -550,8 +555,12 @@ impl<'a> Simulation<'a> {
                 if user.short_charge() && action.ability.flags & NO_SHORT_CHARGE == 0 {
                     ctr /= 2;
                 }
-                self.combatant_mut(user_id).ctr_action = Some(SlowAction { ctr, action });
+                let mut user = self.combatant_mut(user_id);
+                user.ctr_action = Some(SlowAction { ctr, action });
                 self.log_event(Event::StartedCharging(user_id, action));
+                if action.ability.flags & JUMPING != 0 {
+                    self.add_condition(user_id, Condition::Jumping, Source::Ability);
+                }
             } else {
                 self.log_event(Event::UsingAbility(user_id, action));
                 perform_action(self, user_id, action);
@@ -560,6 +569,10 @@ impl<'a> Simulation<'a> {
         }
 
         let user = self.combatant(user_id);
+        if user.jumping() {
+            return;
+        }
+
         if user.moved_during_active_turn {
             return;
         }

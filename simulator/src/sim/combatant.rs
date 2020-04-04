@@ -4,6 +4,7 @@ use crate::sim::actions::attack::ATTACK_ABILITY;
 use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::draw_out::DRAW_OUT_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
+use crate::sim::actions::jump::JUMP_ABILITIES;
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
 use crate::sim::actions::summon_magic::SUMMON_MAGIC_ABILITES;
 use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
@@ -68,6 +69,7 @@ pub struct CombatantInfo<'a> {
     pub accessory: Option<&'a Equipment>,
     pub starting_brave: i8,
     pub starting_faith: i8,
+    pub horizontal_jump: i8,
 }
 
 impl<'a> CombatantInfo<'a> {
@@ -110,6 +112,25 @@ impl<'a> CombatantInfo<'a> {
             }
         }
 
+        let mut horizontal_jump = 0;
+        if src.action_skill == "Jump" || &src.class == "Lancer" {
+            horizontal_jump = 1;
+        }
+        for ability in &src.all_abilities {
+            match ability.as_str() {
+                "Level Jump2" => horizontal_jump = 2.max(horizontal_jump),
+                "Level Jump3" => horizontal_jump = 3.max(horizontal_jump),
+                "Level Jump4" => horizontal_jump = 4.max(horizontal_jump),
+                "Level Jump5" => horizontal_jump = 5.max(horizontal_jump),
+                "Level Jump8" => horizontal_jump = 8.max(horizontal_jump),
+                _ => {}
+            }
+        }
+
+        if horizontal_jump > 0 {
+            abilities.extend(JUMP_ABILITIES);
+        }
+
         let mut number_of_silenceable = 0;
         let mut number_of_mp_using_abilities = 0;
         let mut lowest_mp_cost_ability = 0;
@@ -145,6 +166,7 @@ impl<'a> CombatantInfo<'a> {
             starting_brave: src.brave,
             starting_faith: src.faith,
             abilities,
+            horizontal_jump,
         }
     }
 }
@@ -511,6 +533,10 @@ impl<'a> Combatant<'a> {
 
     pub fn healthy(&self) -> bool {
         self.alive() && !self.petrify()
+    }
+
+    pub fn jumping(&self) -> bool {
+        self.has_condition(Condition::Jumping)
     }
 
     pub fn critical(&self) -> bool {
