@@ -268,26 +268,31 @@ pub fn mod_3_formula_xa(
     xa
 }
 
-pub fn mod_5_formula(user: &Combatant, target: &Combatant, element: Element, q: i16) -> i16 {
-    let mut ma = user.ma() as i16;
+pub fn mod_5_formula_xa(
+    mut xa: i16,
+    user: &Combatant,
+    target: &Combatant,
+    element: Element,
+    ignores_shell_and_defense_up: bool,
+) -> i16 {
     // 1. If caster has 'Strengthen: [element of spell]', then (MA1 = [MA0 * 5/4])
     //      else MA1 = MA0
     if user.strengthens(element) {
-        ma = (ma * 5) / 4;
+        xa = (xa * 5) / 4;
     }
     //   2. If caster has Magic AttackUP, then (MA2 = [MA1 * 4/3]), else MA2 = MA1
     if user.magic_attack_up() {
-        ma = (ma * 4) / 3;
+        xa = (xa * 4) / 3;
     }
 
     //   3. If target has Magic DefendUP, then (MA3 = [MA2 * 2/3]), else MA3 = MA2
-    if target.magic_defense_up() {
-        ma = (ma * 2) / 3;
+    if !ignores_shell_and_defense_up && target.magic_defense_up() {
+        xa = (xa * 2) / 3;
     }
 
     //   4. If target has Shell, then (MA4 = [MA3 * 2/3]), else MA5 = MA4
-    if target.shell() {
-        ma = (ma * 2) / 3;
+    if !ignores_shell_and_defense_up && target.shell() {
+        xa = (xa * 2) / 3;
     }
 
     //   5. Apply zodiac multipliers:
@@ -297,29 +302,35 @@ pub fn mod_5_formula(user: &Combatant, target: &Combatant, element: Element, q: 
     //           ElseIf compatibility is 'Worst', then (MA5 = MA4 - [(MA4)/2])
     //           Else, MA5 = MA
     // TODO: Cheating for now, but I think I do want to fix this.
-    ma = (ma as f32 * user.zodiac_compatibility(target)) as i16;
+    xa = (xa as f32 * user.zodiac_compatibility(target)) as i16;
 
     //   9. If target is 'Weak' against spell's element, then
     //        Frac3 = Frac2 * 2
     //      Else, Frac3 = Frac2
     if target.weak(element) {
-        ma *= 2;
+        xa *= 2;
     }
 
     //  10. If target has 'Half' spell's element, then
     //        Frac4 = Frac3 * 1/2
     //      Else, Frac4 = Frac3
     if target.halves(element) {
-        ma /= 2;
+        xa /= 2;
     }
 
     //  11. If target has 'Absorb' spell's element, then
     //        Frac5 = -(Frac4)
     //      Else, Frac5 = Frac4
     if target.absorbs(element) {
-        ma = -ma;
+        xa = -xa;
     }
 
+    xa
+}
+
+pub fn mod_5_formula(user: &Combatant, target: &Combatant, element: Element, q: i16) -> i16 {
+    let mut ma = user.ma() as i16;
+    ma = mod_5_formula_xa(ma, user, target, element, false);
     //      damage = [(CFa * TFa * Q * MA5 * N) / (10000 * D)]
     (user.faith_percent() * target.faith_percent() * q as f32 * ma as f32) as i16
 }
