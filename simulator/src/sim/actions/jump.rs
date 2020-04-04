@@ -1,9 +1,7 @@
 use crate::sim::actions::{
     Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, NO_SHORT_CHARGE, TARGET_NOT_SELF,
 };
-use crate::sim::common::{
-    mod_2_formula_xa, mod_3_formula_xa, AddConditionSpellImpl, ElementalDamageSpellImpl,
-};
+
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, WeaponType, HITS_ALLIES_ONLY,
     HITS_FOES_ONLY, JUMPING, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,

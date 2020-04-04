@@ -1,7 +1,5 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
-use crate::sim::common::{
-    mod_2_formula_xa, mod_3_formula_xa, AddConditionSpellImpl, ElementalDamageSpellImpl,
-};
+use crate::sim::common::{mod_2_formula_xa, mod_3_formula_xa};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
     HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,
@@ -205,7 +203,7 @@ impl AbilityImpl for ChakraImpl {
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
-        let target = sim.combatant(target_id);
+        let _target = sim.combatant(target_id);
 
         let mut pa = user.pa() as i16;
         if user.martial_arts() {
