@@ -43,7 +43,29 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         aoe: None,
         implementation: &SecretFistImpl { base_chance: 50 },
     },
-    // TODO: Purification: 0 range, 1 AoE. Hit: (PA + 80)%. Effect: Cancel Petrify, Darkness, Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act.
+    // Purification: 0 range, 1 AoE. Hit: (PA + 80)%. Effect: Cancel Petrify, Darkness, Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act.
+    Ability {
+        name: "Purification",
+        flags: ALLY_OK | TARGET_SELF_ONLY,
+        mp_cost: 0,
+        aoe: Some(1),
+        implementation: &PurificationImpl {
+            base_chance: 80,
+            cancels: &[
+                Condition::Petrify,
+                Condition::Darkness,
+                Condition::Confusion,
+                Condition::Silence,
+                Condition::BloodSuck,
+                Condition::Berserk,
+                Condition::Frog,
+                Condition::Poison,
+                Condition::Sleep,
+                Condition::DontMove,
+                Condition::DontAct,
+            ],
+        },
+    },
     // Chakra: 0 range, 1 AoE. Effect: Heal (PA * 5); HealMP ((PA * 5) / 2).
     Ability {
         name: "Chakra",
@@ -235,6 +257,43 @@ impl AbilityImpl for ReviveImpl {
         if sim.roll_auto_succeed() < chance {
             let heal_amount = (target.max_hp() as f32 * self.heal_amount) as i16;
             sim.change_target_hp(target_id, -heal_amount, Source::Ability);
+        }
+    }
+}
+
+struct PurificationImpl {
+    base_chance: i16,
+    cancels: &'static [Condition],
+}
+
+impl AbilityImpl for PurificationImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        actions.push(Action {
+            ability,
+            range: 0,
+            ctr: None,
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+
+        let xa = mod_3_formula_xa(user.pa() as i16, user, target, true, true);
+        let mut chance = (self.base_chance as f32 + xa as f32) / 100.0;
+        chance *= user.zodiac_compatibility(target);
+
+        if sim.roll_auto_succeed() < chance {
+            for condition in self.cancels {
+                sim.cancel_condition(target_id, *condition, Source::Ability);
+            }
         }
     }
 }
