@@ -34,10 +34,25 @@ impl AbilityImpl for JumpImpl {
             return;
         }
 
+        let ct_remaining = 0.max(100 - target.ct);
+        let speed = if target.haste() {
+            // TODO: Real AI doesn't account for this, but, since I haven't implemented
+            //  tile targeting, I'm going to only target those that will certainly hit
+            (target.speed() * 3) / 2
+        } else {
+            target.speed()
+        };
+        let ticks_left = ct_remaining / speed as u8;
+        let jump_ticks = 50 / user.speed() as u8;
+
+        if jump_ticks >= ticks_left {
+            return;
+        }
+
         actions.push(Action {
             ability,
             range: user.info.horizontal_jump,
-            ctr: Some(50 / user.speed() as u8),
+            ctr: Some(jump_ticks),
             target_id: target.id(),
         });
     }
