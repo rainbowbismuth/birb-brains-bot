@@ -110,8 +110,9 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
             // TODO: There should be a 'neutral' element.
             element: Element::None,
             q: 60,
-            ctr: 13,
+            ctr: Some(13),
             range: 5,
+            evadable: true,
         },
     },
 ];

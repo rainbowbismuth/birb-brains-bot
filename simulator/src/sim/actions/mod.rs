@@ -6,6 +6,7 @@ pub mod common;
 pub mod draw_out;
 pub mod item;
 pub mod jump;
+pub mod monster;
 pub mod punch_art;
 pub mod summon_magic;
 pub mod time_magic;

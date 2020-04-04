@@ -5,6 +5,7 @@ use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::draw_out::DRAW_OUT_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::jump::JUMP_ABILITIES;
+use crate::sim::actions::monster::CHOCOBO_ABILITIES;
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
 use crate::sim::actions::summon_magic::SUMMON_MAGIC_ABILITES;
 use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
@@ -93,6 +94,10 @@ impl<'a> CombatantInfo<'a> {
         skills.push(&src.support_skill);
         skills.push(&src.move_skill);
 
+        let mut all_abilities: Vec<&String> = vec![];
+        all_abilities.extend(&src.all_abilities);
+        all_abilities.extend(&base_stats.skills);
+
         let mut abilities = vec![];
         abilities.push(&ATTACK_ABILITY);
         for ability_set in &[
@@ -104,9 +109,10 @@ impl<'a> CombatantInfo<'a> {
             SUMMON_MAGIC_ABILITES,
             DRAW_OUT_ABILITIES,
             PUNCH_ART_ABILITIES,
+            CHOCOBO_ABILITIES,
         ] {
             for ability in ability_set.iter() {
-                if src.all_abilities.iter().any(|n| n == ability.name) {
+                if all_abilities.iter().any(|n| n.as_str() == ability.name) {
                     abilities.push(ability);
                 }
             }

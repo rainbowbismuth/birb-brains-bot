@@ -16,8 +16,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 24,
-            ctr: 4,
+            ctr: Some(4),
             range: 4,
+            evadable: false,
         },
     },
     // Ramuh: 4 range, 2 AoE, 4 CT, 24 MP. Element: Lightning. Effect: Damage Faith(MA * 24).
@@ -29,8 +30,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 24,
-            ctr: 4,
+            ctr: Some(4),
             range: 4,
+            evadable: false,
         },
     },
     // Ifrit: 4 range, 2 AoE, 4 CT, 24 MP. Element: Fire. Effect: Damage Faith(MA * 24).
@@ -42,8 +44,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 24,
-            ctr: 4,
+            ctr: Some(4),
             range: 4,
+            evadable: false,
         },
     },
     // Titan: 4 range, 2 AoE, 5 CT, 30 MP. Element: Earth. Effect: Damage Faith(MA * 28).
@@ -55,8 +58,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Earth,
             q: 28,
-            ctr: 5,
+            ctr: Some(5),
             range: 4,
+            evadable: false,
         },
     },
     // TODO: Golem: 0 range, 0 AoE, 4 CT, 40 MP. Hit: ((Faith/100) * (MA + 200))%. Effect: Set Golem on party equal to Caster HP, which takes all physical damage for party until destroyed.
@@ -89,8 +93,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Dark,
             q: 46,
-            ctr: 10,
+            ctr: Some(10),
             range: 4,
+            evadable: false,
         },
     },
     // Odin: 4 range, 3 AoE, 9 CT, 50 MP. Element: Holy. Effect: Damage Faith(MA * 40).
@@ -102,8 +107,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Holy,
             q: 40,
-            ctr: 9,
+            ctr: Some(9),
             range: 4,
+            evadable: false,
         },
     },
     // Leviathan: 4 range, 3 AoE, 9 CT, 48 MP. Element: Water. Effect: Damage Faith(MA * 38).
@@ -115,8 +121,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Water,
             q: 38,
-            ctr: 9,
+            ctr: Some(9),
             range: 4,
+            evadable: false,
         },
     },
     // Salamander: 4 range, 2 AoE, 9 CT, 44 MP. Element: Fire. Effect: Damage Faith(MA * 36); Chance to add Oil.
@@ -129,8 +136,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 36,
-            ctr: 9,
+            ctr: Some(9),
             range: 4,
+            evadable: false,
         },
     },
     // Silf: 4 range, 2 AoE, 7 CT, 36 MP. Element: Wind. Effect: Damage Faith(MA * 30); Chance to add Silence.
@@ -143,8 +151,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Wind,
             q: 30,
-            ctr: 7,
+            ctr: Some(7),
             range: 4,
+            evadable: false,
         },
     },
     // TODO: Fairy: 4 range, 2 AoE, 6 CT, 28 MP. Effect: Heal Faith(MA * 24).
@@ -158,8 +167,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::None,
             q: 50,
-            ctr: 11,
+            ctr: Some(11),
             range: 4,
+            evadable: false,
         },
     },
     // Zodiac: 4 range, 3 AoE, 12 CT, 99 MP. Effect: Damage Faith(MA * 90).
@@ -171,8 +181,9 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::None,
             q: 90,
-            ctr: 12,
+            ctr: Some(12),
             range: 4,
+            evadable: false,
         },
     },
 ];

@@ -80,7 +80,8 @@ pub struct ElementalDamageSpellImpl {
     pub element: Element,
     pub q: i16,
     pub range: i8,
-    pub ctr: u8,
+    pub ctr: Option<u8>,
+    pub evadable: bool,
 }
 
 impl AbilityImpl for ElementalDamageSpellImpl {
@@ -101,7 +102,7 @@ impl AbilityImpl for ElementalDamageSpellImpl {
         actions.push(Action {
             ability,
             range: self.range,
-            ctr: Some(self.ctr),
+            ctr: self.ctr,
             target_id: target.id(),
         });
     }
@@ -111,7 +112,7 @@ impl AbilityImpl for ElementalDamageSpellImpl {
         if target.cancels(self.element) {
             return;
         }
-        if sim.do_magical_evade(user, target, Source::Ability) {
+        if self.evadable && sim.do_magical_evade(user, target, Source::Ability) {
             return;
         }
         let damage_amount = mod_5_formula(user, target, self.element, self.q);
@@ -368,4 +369,46 @@ pub fn mod_6_formula(
     success_chance *= target.faith_percent();
     success_chance *= (ma as f32 + base_chance as f32) / 100.0;
     success_chance
+}
+
+pub struct CureSpellImpl {
+    pub q: i16,
+    pub ctr: Option<u8>,
+    pub range: i8,
+}
+
+impl AbilityImpl for CureSpellImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        if user.ally(target) && !should_heal_ally(target, true) {
+            return;
+        }
+        if user.foe(target) && !should_heal_foe(target, true) {
+            return;
+        }
+        actions.push(Action {
+            ability,
+            range: self.range,
+            ctr: self.ctr,
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let mut heal_amount = 1.0;
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+        heal_amount *= user.faith_percent();
+        heal_amount *= target.faith_percent();
+        heal_amount *= user.ma() as f32;
+        heal_amount *= self.q as f32;
+        heal_amount *= user.zodiac_compatibility(target);
+
+        do_hp_heal(sim, target_id, heal_amount as i16, true);
+    }
 }

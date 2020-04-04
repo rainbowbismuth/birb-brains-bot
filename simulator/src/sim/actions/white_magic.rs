@@ -1,7 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{
     do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ConditionClearSpellImpl,
-    ElementalDamageSpellImpl,
+    CureSpellImpl, ElementalDamageSpellImpl,
 };
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, NOT_ALIVE_OK, PETRIFY_OK,
@@ -17,7 +17,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         aoe: Some(1),
         implementation: &CureSpellImpl {
             q: 15,
-            ctr: 3,
+            ctr: Some(3),
             range: 5,
         },
     },
@@ -29,7 +29,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         aoe: Some(1),
         implementation: &CureSpellImpl {
             q: 20,
-            ctr: 4,
+            ctr: Some(4),
             range: 5,
         },
     },
@@ -41,7 +41,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         aoe: Some(1),
         implementation: &CureSpellImpl {
             q: 30,
-            ctr: 6,
+            ctr: Some(6),
             range: 5,
         },
     },
@@ -53,7 +53,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         aoe: Some(1),
         implementation: &CureSpellImpl {
             q: 40,
-            ctr: 8,
+            ctr: Some(8),
             range: 5,
         },
     },
@@ -210,53 +210,12 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Holy,
             q: 47,
-            ctr: 6,
+            ctr: Some(6),
             range: 5,
+            evadable: true,
         },
     },
 ];
-
-struct CureSpellImpl {
-    q: i16,
-    ctr: u8,
-    range: i8,
-}
-
-impl AbilityImpl for CureSpellImpl {
-    fn consider<'a>(
-        &self,
-        actions: &mut Vec<Action<'a>>,
-        ability: &'a Ability<'a>,
-        _sim: &Simulation<'a>,
-        user: &Combatant<'a>,
-        target: &Combatant<'a>,
-    ) {
-        if user.ally(target) && !should_heal_ally(target, true) {
-            return;
-        }
-        if user.foe(target) && !should_heal_foe(target, true) {
-            return;
-        }
-        actions.push(Action {
-            ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
-    }
-    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
-        let mut heal_amount = 1.0;
-        let user = sim.combatant(user_id);
-        let target = sim.combatant(target_id);
-        heal_amount *= user.faith_percent();
-        heal_amount *= target.faith_percent();
-        heal_amount *= user.ma() as f32;
-        heal_amount *= self.q as f32;
-        heal_amount *= user.zodiac_compatibility(target);
-
-        do_hp_heal(sim, target_id, heal_amount as i16, true);
-    }
-}
 
 struct RaiseSpellImpl {
     hp_percent: f32,

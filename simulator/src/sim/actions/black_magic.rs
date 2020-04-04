@@ -17,8 +17,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 16,
-            ctr: 3,
+            ctr: Some(3),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -29,8 +30,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 20,
-            ctr: 4,
+            ctr: Some(4),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -41,8 +43,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 28,
-            ctr: 6,
+            ctr: Some(6),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -53,8 +56,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 36,
-            ctr: 8,
+            ctr: Some(8),
             range: 5,
+            evadable: true,
         },
     },
     // Bolt: 5 range, 1 AoE, 3 CT, 6 MP. Element: Lightning. Effect: Damage Faith(MA * 16).
@@ -69,8 +73,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 16,
-            ctr: 3,
+            ctr: Some(3),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -81,8 +86,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 20,
-            ctr: 4,
+            ctr: Some(4),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -93,8 +99,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 28,
-            ctr: 6,
+            ctr: Some(6),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -105,8 +112,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 36,
-            ctr: 8,
+            ctr: Some(8),
             range: 5,
+            evadable: true,
         },
     },
     // Ice: 5 range, 1 AoE, 3 CT, 6 MP. Element: Ice. Effect: Damage Faith(MA * 16).
@@ -121,8 +129,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 16,
-            ctr: 3,
+            ctr: Some(3),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -133,8 +142,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 20,
-            ctr: 4,
+            ctr: Some(4),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -145,8 +155,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 28,
-            ctr: 6,
+            ctr: Some(6),
             range: 5,
+            evadable: true,
         },
     },
     Ability {
@@ -157,8 +168,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 36,
-            ctr: 8,
+            ctr: Some(8),
             range: 5,
+            evadable: true,
         },
     },
     // Poison: 5 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 190)%. Effect: Add Poison.
@@ -216,8 +228,9 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         implementation: &ElementalDamageSpellImpl {
             element: Element::None,
             q: 49,
-            ctr: 7,
+            ctr: Some(7),
             range: 6,
+            evadable: true,
         },
     },
 ];
