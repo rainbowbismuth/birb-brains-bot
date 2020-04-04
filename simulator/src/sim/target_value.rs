@@ -89,8 +89,7 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
 
     // # 		0x08 - Silence					-70.3% [-5a(ffa6) * Silence abilities] + 3 / 4
     if target.silence() {
-        total -= 0.703;
-        // # TODO: Calculate number of silenced abilities
+        total -= (0.703 / 4.0) * target.info.silence_mod as f32;
     }
 
     // # 		0x04 - Blood Suck				-90.6% -74(ff8c) (+1 / 4 if slow/stop/sleep/don't move/act/)

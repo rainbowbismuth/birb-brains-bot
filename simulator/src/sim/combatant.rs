@@ -11,7 +11,7 @@ use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, Condition, ConditionBlock, ConditionFlags, DiamondIterator, Distance, Element,
-    Facing, Gender, Location, RelativeFacing, Sign, SkillBlock, Team, ALL_CONDITIONS,
+    Facing, Gender, Location, RelativeFacing, Sign, SkillBlock, Team, ALL_CONDITIONS, SILENCEABLE,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -55,6 +55,7 @@ pub struct CombatantInfo<'a> {
     pub base_stats: &'a BaseStats,
     pub number_of_mp_using_abilities: i16,
     pub lowest_mp_cost_ability: i16,
+    pub silence_mod: i8,
     pub abilities: Vec<&'a Ability<'a>>,
     pub name: &'a str,
     pub sign: Sign,
@@ -109,10 +110,14 @@ impl<'a> CombatantInfo<'a> {
             }
         }
 
+        let mut number_of_silenceable = 0;
         let mut number_of_mp_using_abilities = 0;
         let mut lowest_mp_cost_ability = 0;
 
         for ability in &abilities {
+            if ability.flags & SILENCEABLE != 0 {
+                number_of_silenceable += 1;
+            }
             if ability.mp_cost == 0 {
                 continue;
             }
@@ -126,6 +131,7 @@ impl<'a> CombatantInfo<'a> {
             team,
             number_of_mp_using_abilities,
             lowest_mp_cost_ability,
+            silence_mod: ((number_of_silenceable as f32 / abilities.len() as f32) * 4.0) as i8,
             name: &src.name,
             sign: src.sign,
             job: &src.class,
