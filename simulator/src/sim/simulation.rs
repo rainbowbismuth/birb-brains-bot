@@ -935,15 +935,5 @@ pub fn can_move_into_range(user: &Combatant, range: i8, target: &Combatant) -> b
 // #      where do I move to selection function? Because I will want to get out of AoEs I guess?
 // #  - Pick up crystal Y/N could just happen after movement.
 // #      will need a state for 'no longer exists at all?' can I just remove from combatants? do I want to?
-// #  - I still don't entirely understand this target value thing, I should continue to read the docs
-// #      if it is used to pick what skills to use, can I separate what is used in that calculation
-// #      into a separate AI data block? That will require rewriting these skills and how they work, bluh.
-// #  - Add 13% rule skip in the action consideration loop.
 // #  - Can I keep statistics on how much different actions happen? Could be a useful part of testing.
 // #  - Would be interesting to see if these true positives align with bird's true positives
-// #  - If I run many simulations per match I could start calculating log loss as well.
-// #  - At that point I should bring in multi-processing :)
-// #
-// #  - Need a hard fail & hard succeed rolling function for the sim-within-a-sim!
-// #  - I'm guessing generally things like weapon adding status are assumed to hard fail
-// #  - While your own abilities are a hard succeed
