@@ -76,6 +76,9 @@ fn filter_target_level(user: &Combatant, ability: &Ability, target: &Combatant) 
         false
     } else if flags & FOE_OK == 0 && user.foe(target) {
         false
+    } else if user.foe(target) && target.death_sentence() {
+        // TODO: Probably not the best place to put this :)
+        false
     } else if flags & NOT_ALIVE_OK == 0 && !target.alive() {
         false
     } else if flags & PETRIFY_OK == 0 && target.petrify() {
