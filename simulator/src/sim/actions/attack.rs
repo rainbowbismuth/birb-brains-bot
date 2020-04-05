@@ -1,13 +1,13 @@
 use crate::dto::rust::Equipment;
 use crate::sim::actions::{
-    Ability, AbilityImpl, Action, ALLY_OK, BERSERK_OK, FOE_OK, TARGET_NOT_SELF,
+    Ability, AbilityImpl, Action, ALLY_OK, BERSERK_OK, FOE_OK, FROG_OK, TARGET_NOT_SELF,
 };
 use crate::sim::{Combatant, CombatantId, Simulation, Source, WeaponType, DAMAGE_CANCELS};
 
 const ATTACK_IMPL: AttackImpl = AttackImpl {};
 
 pub const ATTACK_ABILITY: Ability = Ability {
-    flags: BERSERK_OK | ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+    flags: BERSERK_OK | FROG_OK | ALLY_OK | FOE_OK | TARGET_NOT_SELF,
     mp_cost: 0,
     aoe: None,
     implementation: &AttackImpl {},

@@ -1,3 +1,4 @@
+use crate::sim::Condition::Frog;
 use crate::sim::{Combatant, CombatantId, Event, Simulation};
 
 pub mod attack;
@@ -39,6 +40,7 @@ pub const HITS_ALLIES_ONLY: AbilityFlags = 1 << 8;
 pub const TARGET_SELF_ONLY: AbilityFlags = 1 << 9;
 pub const JUMPING: AbilityFlags = 1 << 10;
 pub const TARGET_NOT_SELF: AbilityFlags = 1 << 11;
+pub const FROG_OK: AbilityFlags = 1 << 12;
 
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
@@ -60,6 +62,8 @@ pub struct Action<'a> {
 fn filter_ability_level(user: &Combatant, ability: &Ability) -> bool {
     let flags = ability.flags;
     if flags & BERSERK_OK == 0 && user.berserk() {
+        false
+    } else if flags & FROG_OK == 0 && user.frog() {
         false
     } else if flags & SILENCEABLE != 0 && user.silence() {
         false
