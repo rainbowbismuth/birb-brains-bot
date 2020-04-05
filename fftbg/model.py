@@ -53,7 +53,7 @@ def main():
 
     skill_columns = get_skill_columns(df)
     all_columns = get_all_columns(df)
-    LOG.info('\n'.join(textwrap.wrap(f"All columns: {', '.join(all_columns)}", 120)))
+    LOG.info('\n'.join(textwrap.wrap(f"All columns: {', '.join(sorted(all_columns))}", 120)))
     dfs = df[all_columns]
     dfs = dfs.sort_index(axis=1)
 
