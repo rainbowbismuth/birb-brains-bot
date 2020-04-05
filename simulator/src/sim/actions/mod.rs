@@ -9,6 +9,7 @@ pub mod jump;
 pub mod monster;
 pub mod punch_art;
 pub mod summon_magic;
+pub mod throw;
 pub mod time_magic;
 pub mod white_magic;
 pub mod yin_yang_magic;

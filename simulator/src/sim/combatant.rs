@@ -8,6 +8,7 @@ use crate::sim::actions::jump::JUMP_ABILITIES;
 use crate::sim::actions::monster::{CHOCOBO_ABILITIES, ULTIMA_DEMON_ABILITIES, WORK_ABILITIES};
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
 use crate::sim::actions::summon_magic::SUMMON_MAGIC_ABILITES;
+use crate::sim::actions::throw::THROW_ABILITIES;
 use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
@@ -112,6 +113,7 @@ impl<'a> CombatantInfo<'a> {
             CHOCOBO_ABILITIES,
             ULTIMA_DEMON_ABILITIES,
             WORK_ABILITIES,
+            THROW_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
