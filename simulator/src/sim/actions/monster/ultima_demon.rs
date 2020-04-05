@@ -167,7 +167,7 @@ impl AbilityImpl for HuricaneImpl {
         let target = sim.combatant(target_id);
         let chance = mod_6_formula(user, target, self.element, self.base_chance, false);
         if !(sim.roll_auto_succeed() < chance) {
-            sim.log_event(Event::AbilityMissed(user_id));
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
         let damage = target.max_hp() / 3;

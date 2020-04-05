@@ -250,6 +250,7 @@ pub struct Equipment {
     pub cancels: ConditionFlags,
     pub cancels_element: ElementFlags,
     pub initial: ConditionFlags,
+    pub permanent: ConditionFlags,
     pub chance_to_add: ConditionFlags,
     pub chance_to_cancel: ConditionFlags,
     pub immune_to: ConditionFlags,
@@ -284,6 +285,7 @@ impl Equipment {
             cancels: 0,
             cancels_element: 0,
             initial: 0,
+            permanent: 0,
             chance_to_add: 0,
             chance_to_cancel: 0,
             immune_to: 0,
@@ -308,6 +310,10 @@ impl Equipment {
 
         equipment
             .initial
+            .iter()
+            .for_each(|cond| new_equipment.initial |= Condition::parse(cond).unwrap().flag());
+        equipment
+            .permanent
             .iter()
             .for_each(|cond| new_equipment.initial |= Condition::parse(cond).unwrap().flag());
         equipment
@@ -365,6 +371,7 @@ pub struct BaseStats {
     pub ma: i8,
     pub c_ev: i8,
     pub innates: Vec<String>,
+    pub innate_conditions: ConditionFlags,
     pub skills: Vec<String>,
     pub absorbs: ElementFlags,
     pub halves: ElementFlags,
@@ -386,12 +393,21 @@ impl BaseStats {
             ma: base_stats.ma,
             c_ev: base_stats.c_ev,
             innates: base_stats.innates,
+            innate_conditions: 0,
             skills: base_stats.skills,
             absorbs: 0,
             halves: 0,
             weaknesses: 0,
             cancels: 0,
         };
+
+        let mut innate_conditions = 0;
+        new_base_stats
+            .innates
+            .iter()
+            .flat_map(|el| Condition::parse(&el))
+            .for_each(|cond| innate_conditions |= cond.flag());
+        new_base_stats.innate_conditions = innate_conditions;
 
         base_stats
             .absorbs

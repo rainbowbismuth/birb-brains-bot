@@ -207,14 +207,25 @@ pub struct Combatant<'a> {
 
 impl<'a> Combatant<'a> {
     pub fn new(info: &'a CombatantInfo<'a>) -> Combatant<'a> {
+        let mut innate_flags = info.base_stats.innate_conditions;
+        innate_flags |= info.main_hand.map_or(0, |eq| eq.permanent);
+        innate_flags |= info.off_hand.map_or(0, |eq| eq.permanent);
+        innate_flags |= info.headgear.map_or(0, |eq| eq.permanent);
+        innate_flags |= info.armor.map_or(0, |eq| eq.permanent);
+        innate_flags |= info.accessory.map_or(0, |eq| eq.permanent);
+
         let mut out = Combatant {
             info,
             raw_hp: 0,
             raw_mp: 0,
             ct: 0,
             speed_mod: 0,
-            conditions: ConditionBlock::new(),
-            facing: Facing::South,
+            conditions: ConditionBlock::new_with_innate(innate_flags),
+            facing: if info.team == Team::Left {
+                Facing::East
+            } else {
+                Facing::West
+            },
             broken_items: 0,
             location: Location::zero(),
             on_active_turn: false,

@@ -256,7 +256,7 @@ impl AbilityImpl for RaiseSpellImpl {
         success_chance *= user.zodiac_compatibility(target);
 
         if !(sim.roll_auto_succeed() < success_chance) {
-            sim.log_event(Event::AbilityMissed(user_id));
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
 

@@ -242,7 +242,7 @@ impl AbilityImpl for AbsorbSpellImpl {
         }
         let success_chance = mod_6_formula(user, target, Element::None, self.base_chance, false);
         if !(sim.roll_auto_succeed() < success_chance) {
-            sim.log_event(Event::AbilityMissed(user_id));
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
 

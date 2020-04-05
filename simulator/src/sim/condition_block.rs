@@ -2,6 +2,7 @@ use crate::sim::enums::*;
 
 #[derive(Copy, Clone, Debug)]
 pub struct ConditionBlock {
+    pub innate_flags: u64,
     pub status_flags: u64,
     pub timed_conditions: [i8; TIMED_CONDITIONS_LEN],
 }
@@ -9,6 +10,15 @@ pub struct ConditionBlock {
 impl ConditionBlock {
     pub fn new() -> ConditionBlock {
         ConditionBlock {
+            innate_flags: 0,
+            status_flags: 0,
+            timed_conditions: [0; TIMED_CONDITIONS_LEN],
+        }
+    }
+
+    pub fn new_with_innate(innate_flags: ConditionFlags) -> ConditionBlock {
+        ConditionBlock {
+            innate_flags,
             status_flags: 0,
             timed_conditions: [0; TIMED_CONDITIONS_LEN],
         }
@@ -16,13 +26,20 @@ impl ConditionBlock {
 
     pub fn add(&mut self, condition: Condition) {
         if let Some(duration) = condition.condition_duration() {
+            if self.innate_flags & condition.flag() != 0 {
+                return;
+            }
             self.timed_conditions[condition.index()] = duration;
         }
         self.status_flags |= condition.flag();
     }
 
     pub fn has(&self, condition: Condition) -> bool {
-        self.status_flags & condition.flag() != 0
+        (self.innate_flags | self.status_flags) & condition.flag() != 0
+    }
+
+    pub fn innate(&self, condition: Condition) -> bool {
+        self.innate_flags & condition.flag() != 0
     }
 
     pub fn tick(&mut self, condition: Condition) -> Option<bool> {

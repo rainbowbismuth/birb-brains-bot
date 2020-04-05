@@ -37,6 +37,7 @@ pub enum Condition {
     Defending,
     Float,
     Performing,
+    Evil,
     Transparent,
 }
 
@@ -99,6 +100,7 @@ const CONDITION_NAMES: [&'static str; CONDITIONS_LEN] = [
     "Defending",
     "Float",
     "Performing",
+    "Evil",
     "Transparent",
 ];
 
@@ -138,6 +140,7 @@ lazy_static! {
         Condition::Defending,
         Condition::Float,
         Condition::Performing,
+        Condition::Evil,
         Condition::Transparent,
     ];
 }
@@ -206,7 +209,7 @@ impl Condition {
             "Berserk" => Some(Condition::Berserk),
             "Petrify" => Some(Condition::Petrify),
             "Jumping" => Some(Condition::Jumping),
-            "Undead" => Some(Condition::Jumping),
+            "Undead" => Some(Condition::Undead),
             "Silence" => Some(Condition::Silence),
             "Oil" => Some(Condition::Oil),
             "Reraise" => Some(Condition::Reraise),
@@ -220,6 +223,7 @@ impl Condition {
             "Defending" => Some(Condition::Defending),
             "Float" => Some(Condition::Float),
             "Performing" => Some(Condition::Performing),
+            "Evil" => Some(Condition::Evil),
             "Transparent" => Some(Condition::Transparent),
             _ => None,
         }

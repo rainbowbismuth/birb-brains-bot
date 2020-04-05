@@ -217,7 +217,7 @@ impl AbilityImpl for CarbunkleImpl {
         let target = sim.combatant(target_id);
         let success_chance = mod_6_formula(user, target, Element::None, self.base_chance, true);
         if !(sim.roll_auto_succeed() < success_chance) {
-            sim.log_event(Event::AbilityMissed(user_id));
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
 

@@ -135,6 +135,7 @@ def combatant_to_dict(combatant: dict, patch: Patch):
     chance_to_cancel = set()
     immune_to = set()
     initial = set()
+    permanent = set()
 
     for equip in all_equips:
         absorbs.update(equip.absorbs)
@@ -146,6 +147,7 @@ def combatant_to_dict(combatant: dict, patch: Patch):
         chance_to_cancel.update(equip.chance_to_cancel)
         immune_to.update(equip.immune_to)
         initial.update(equip.initial)
+        permanent.update(equip.permanent)
 
     for element in absorbs:
         output[f'▲ Absorb-{element}'] = 1.0
@@ -163,6 +165,11 @@ def combatant_to_dict(combatant: dict, patch: Patch):
         output[f'▲ Immune-{status}'] = 1.0
     for status in initial:
         output[f'▲ Initial-{status}'] = 1.0
+    for status in permanent:
+        output[f'▲ Permanent-{status}'] = 1.0
+
+    if 'Undead' in stats.innates:
+        output[f'▲ Permanent-Undead'] = 1.0
 
     damage_1 = damage_calculation(output, mainhand)
     damage_2 = 0

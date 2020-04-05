@@ -69,7 +69,7 @@ impl AbilityImpl for AddConditionSpellImpl {
             self.ignore_magic_def,
         );
         if !(sim.roll_auto_succeed() < success_chance) {
-            sim.log_event(Event::AbilityMissed(user_id));
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
         sim.add_condition(target_id, self.condition, Source::Ability);
@@ -165,7 +165,7 @@ impl AbilityImpl for ConditionClearSpellImpl {
         );
 
         if !(sim.roll_auto_succeed() < success_chance) {
-            sim.log_event(Event::AbilityMissed(user_id));
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
 

@@ -56,12 +56,11 @@ fn main() -> io::Result<()> {
 
 fn run_sims() -> io::Result<()> {
     let patches = data::read_all_patches()?;
-    // let matches = data::read_all_match_ups()?;
 
     println!("{} patches\n", patches.len());
 
     let mut correct = 0;
-    let total = 13287;
+    let total = 14431;
     let mut time_outs = 0;
     let mut log_loss: f64 = 0.0;
 

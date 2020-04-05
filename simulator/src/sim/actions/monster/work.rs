@@ -109,7 +109,7 @@ impl AbilityImpl for RepairImpl {
 
         let chance = (user.pa() as f32 + self.base_chance as f32) / 100.0;
         if !(sim.roll_auto_succeed() < chance) {
-            sim.log_event(Event::AbilityMissed(user_id));
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
 

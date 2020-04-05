@@ -111,6 +111,7 @@ pub struct Equipment {
     pub cancels: Vec<String>,
     pub cancels_element: Vec<String>,
     pub initial: Vec<String>,
+    pub permanent: Vec<String>,
     pub chance_to_add: Vec<String>,
     pub chance_to_cancel: Vec<String>,
     pub immune_to: Vec<String>,

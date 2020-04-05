@@ -28,7 +28,7 @@ pub enum Event<'a> {
     Evaded(CombatantId, EvasionType, Source<'a>),
     Moved(CombatantId, Location, Location),
     UsingAbility(CombatantId, Action<'a>),
-    AbilityMissed(CombatantId),
+    AbilityMissed(CombatantId, CombatantId),
     StartedCharging(CombatantId, Action<'a>),
     SlowActionTargetDied(CombatantId),
     Silenced(CombatantId, Action<'a>),
@@ -187,9 +187,10 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             describe_relative_facing(*target_id, action.target_id, combatants)
         ),
 
-        Event::AbilityMissed(target_id) => format!(
-            "{}'s ability missed!",
-            describe_combatant_short(*target_id, combatants)
+        Event::AbilityMissed(user_id, target_id) => format!(
+            "{}'s ability missed {}!",
+            describe_combatant_short(*user_id, combatants),
+            describe_combatant_short(*target_id, combatants),
         ),
 
         Event::StartedCharging(target_id, action) => format!(
