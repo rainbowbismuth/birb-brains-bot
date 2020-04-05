@@ -328,11 +328,20 @@ pub fn mod_5_formula_xa(
     xa
 }
 
-pub fn mod_5_formula(user: &Combatant, target: &Combatant, element: Element, q: i16) -> i16 {
-    let mut ma = user.ma() as i16;
-    ma = mod_5_formula_xa(ma, user, target, element, false);
+pub fn mod_5_formula_pass_ma(
+    ma: i16,
+    user: &Combatant,
+    target: &Combatant,
+    element: Element,
+    q: i16,
+) -> i16 {
+    let ma = mod_5_formula_xa(ma, user, target, element, false);
     //      damage = [(CFa * TFa * Q * MA5 * N) / (10000 * D)]
     (user.faith_percent() * target.faith_percent() * q as f32 * ma as f32) as i16
+}
+
+pub fn mod_5_formula(user: &Combatant, target: &Combatant, element: Element, q: i16) -> i16 {
+    mod_5_formula_pass_ma(user.ma() as i16, user, target, element, q)
 }
 
 pub fn mod_6_formula(

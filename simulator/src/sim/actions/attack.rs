@@ -1,4 +1,5 @@
 use crate::dto::rust::Equipment;
+use crate::sim::actions::common::mod_5_formula_pass_ma;
 use crate::sim::actions::{
     Ability, AbilityImpl, Action, ALLY_OK, BERSERK_OK, FOE_OK, FROG_OK, TARGET_NOT_SELF,
 };
@@ -109,6 +110,12 @@ fn do_single_weapon_attack<'a, 'b>(
     weapon: Option<&'b Equipment>,
     target_id: CombatantId,
 ) -> (i16, bool) {
+    if let Some(weapon) = weapon {
+        if weapon.weapon_type == Some(WeaponType::Gun) && weapon.weapon_element.is_some() {
+            return do_single_magical_gun_attack(sim, user_id, weapon, target_id);
+        }
+    }
+
     let user = sim.combatant(user_id);
     let target = sim.combatant(target_id);
     let src = Source::Weapon(user_id, weapon);
@@ -202,4 +209,39 @@ fn calculate_damage<'a, 'b>(
     }
 
     (damage, critical_hit)
+}
+
+// Blaze Gun: 13 WP, 7 range, 4% evade, Gun. Element: Fire.
+// Glacier Gun: 13 WP, 7 range, 4% evade, Gun. Element: Ice.
+// Blast Gun: 13 WP, 7 range, 4% evade, Gun. Element: Lightning.
+fn do_single_magical_gun_attack<'a, 'b>(
+    sim: &'a mut Simulation<'b>,
+    user_id: CombatantId,
+    weapon: &'b Equipment,
+    target_id: CombatantId,
+) -> (i16, bool) {
+    let user = sim.combatant(user_id);
+    let target = sim.combatant(target_id);
+    let src = Source::Weapon(user_id, Some(weapon));
+    if sim.do_magical_evade(user, target, src) {
+        return (0, false);
+    }
+
+    let spell_strength = sim.roll_inclusive(1, 10);
+    let q = if spell_strength <= 6 {
+        14
+    } else if spell_strength <= 9 {
+        18
+    } else {
+        24
+    };
+
+    let damage = mod_5_formula_pass_ma(
+        weapon.wp as i16,
+        user,
+        target,
+        weapon.weapon_element.unwrap(),
+        q,
+    );
+    (damage, false)
 }

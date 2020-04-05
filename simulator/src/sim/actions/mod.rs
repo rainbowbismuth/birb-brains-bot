@@ -1,4 +1,3 @@
-use crate::sim::Condition::Frog;
 use crate::sim::{Combatant, CombatantId, Event, Simulation};
 
 pub mod attack;
