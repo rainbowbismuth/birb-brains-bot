@@ -5,7 +5,7 @@ use crate::sim::{
     TARGET_SELF_ONLY,
 };
 
-pub const ULTIMA_DEMON_ABILITES: &[Ability] = &[
+pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
     // Nanoflare: 4 range, 2 AoE, 5 CT. Effect: Damage ((MA + 5) / 2 * MA).
     Ability {
         name: "Nanoflare",
