@@ -3,7 +3,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
 pub enum Condition {
-    Stop = 1,
+    Stop = 0,
     Sleep,
     Slow,
     Shell,
@@ -253,11 +253,11 @@ impl Condition {
     }
 
     pub const fn flag(self) -> u64 {
-        1 << ((self as u64) - 1)
+        1 << (self as u64)
     }
 
     pub const fn index(self) -> usize {
-        (self as usize) - 1
+        self as usize
     }
 
     pub const fn is_timed_condition(self) -> bool {

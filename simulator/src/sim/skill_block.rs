@@ -7,7 +7,7 @@ const DOUBLE_HAND_FLAG: u64 = 1 << 5;
 const MARTIAL_ARTS_FLAG: u64 = 1 << 6;
 const ATTACK_UP_FLAG: u64 = 1 << 7;
 const DEFENSE_UP_FLAG: u64 = 1 << 8;
-const INNATE_UNDEAD_FLAG: u64 = 1 << 9;
+// const INNATE_UNDEAD_FLAG: u64 = 1 << 9;
 const COUNTER_FLAG: u64 = 1 << 10;
 const MOVE_HP_UP_FLAG: u64 = 1 << 11;
 const MOVE_MP_UP_FLAG: u64 = 1 << 12;
@@ -45,7 +45,6 @@ impl SkillBlock {
                 "Martial Arts" => block.flags |= MARTIAL_ARTS_FLAG,
                 "Attack UP" => block.flags |= ATTACK_UP_FLAG,
                 "Defense UP" => block.flags |= DEFENSE_UP_FLAG,
-                "Undead" => block.flags |= INNATE_UNDEAD_FLAG,
                 "Counter" => block.flags |= COUNTER_FLAG,
                 "Move-HP Up" => block.flags |= MOVE_HP_UP_FLAG,
                 "Move-MP Up" => block.flags |= MOVE_MP_UP_FLAG,
@@ -103,10 +102,6 @@ impl SkillBlock {
 
     pub fn defense_up(&self) -> bool {
         self.flags & DEFENSE_UP_FLAG != 0
-    }
-
-    pub fn innate_undead(&self) -> bool {
-        self.flags & INNATE_UNDEAD_FLAG != 0
     }
 
     pub fn counter(&self) -> bool {

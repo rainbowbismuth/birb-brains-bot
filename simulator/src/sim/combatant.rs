@@ -659,7 +659,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn undead(&self) -> bool {
-        self.info.skill_block.innate_undead() || self.conditions.has(Condition::Undead)
+        self.conditions.has(Condition::Undead)
     }
 
     pub fn sleep(&self) -> bool {

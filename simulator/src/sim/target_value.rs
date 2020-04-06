@@ -9,7 +9,7 @@ pub fn ai_target_value_sum(user: &Combatant, combatants: &[Combatant]) -> f32 {
 
 fn ai_calculate_target_value(user: &Combatant, target: &Combatant) -> f32 {
     let mut priority = target.hp_percent();
-    priority += 0.51 * target.broken_equip_count() as f32;
+    priority += -0.51 * target.broken_equip_count() as f32;
     priority += ai_calculate_status_target_value_mod(target);
     priority += ai_calculate_caster_hate_mod(target);
     // TODO: Golem fear
