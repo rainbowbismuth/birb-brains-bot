@@ -7,6 +7,7 @@ use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::jump::JUMP_ABILITIES;
 use crate::sim::actions::monster::{CHOCOBO_ABILITIES, ULTIMA_DEMON_ABILITIES, WORK_ABILITIES};
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
+use crate::sim::actions::steal::STEAL_ABILITIES;
 use crate::sim::actions::summon_magic::SUMMON_MAGIC_ABILITES;
 use crate::sim::actions::throw::THROW_ABILITIES;
 use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
@@ -48,6 +49,22 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
 pub struct SlowAction<'a> {
     pub ctr: u8,
     pub action: Action<'a>,
+}
+
+#[derive(Copy, Clone)]
+#[repr(u8)]
+pub enum EquipSlot {
+    Head = 0,
+    Body,
+    Weapon,
+    Shield,
+    Accessory,
+}
+
+impl EquipSlot {
+    pub fn flag(self) -> u8 {
+        1 << (self as u8)
+    }
 }
 
 #[derive(Clone)]
@@ -115,6 +132,7 @@ impl<'a> CombatantInfo<'a> {
             ULTIMA_DEMON_ABILITIES,
             WORK_ABILITIES,
             THROW_ABILITIES,
+            STEAL_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
@@ -201,7 +219,7 @@ pub struct Combatant<'a> {
     pub crystal_counter: i8,
     pub raw_mp: i16,
     pub facing: Facing,
-    pub broken_items: i8,
+    pub broken_equips: u8,
     pub location: Location,
     pub on_active_turn: bool,
     pub moved_during_active_turn: bool,
@@ -235,7 +253,7 @@ impl<'a> Combatant<'a> {
             } else {
                 Facing::West
             },
-            broken_items: 0,
+            broken_equips: 0,
             location: Location::zero(),
             on_active_turn: false,
             moved_during_active_turn: false,
@@ -380,23 +398,56 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn main_hand(&self) -> Option<&'a Equipment> {
+        if self.broken_equips & EquipSlot::Weapon.flag() != 0 {
+            return None;
+        }
         self.info.main_hand
     }
 
     pub fn off_hand(&self) -> Option<&'a Equipment> {
+        if self.broken_equips & EquipSlot::Shield.flag() != 0 {
+            return None;
+        }
         self.info.off_hand
     }
 
     pub fn headgear(&self) -> Option<&'a Equipment> {
+        if self.broken_equips & EquipSlot::Head.flag() != 0 {
+            return None;
+        }
         self.info.headgear
     }
 
     pub fn armor(&self) -> Option<&'a Equipment> {
+        if self.broken_equips & EquipSlot::Body.flag() != 0 {
+            return None;
+        }
         self.info.armor
     }
 
     pub fn accessory(&self) -> Option<&'a Equipment> {
+        if self.broken_equips & EquipSlot::Accessory.flag() != 0 {
+            return None;
+        }
         self.info.accessory
+    }
+
+    pub fn break_equip(&mut self, slot: EquipSlot) {
+        self.broken_equips |= slot.flag();
+    }
+
+    pub fn broken_equip_count(&self) -> u32 {
+        self.broken_equips.count_ones()
+    }
+
+    pub fn get_equip(&self, slot: EquipSlot) -> Option<&'a Equipment> {
+        match slot {
+            EquipSlot::Weapon => self.main_hand(),
+            EquipSlot::Shield => self.off_hand(),
+            EquipSlot::Head => self.headgear(),
+            EquipSlot::Body => self.armor(),
+            EquipSlot::Accessory => self.accessory(),
+        }
     }
 
     pub fn speed(&self) -> i8 {

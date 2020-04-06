@@ -32,6 +32,7 @@ pub enum Event<'a> {
     StartedCharging(CombatantId, Action<'a>),
     Silenced(CombatantId, Action<'a>),
     NoMP(CombatantId, Action<'a>),
+    Broke(CombatantId, &'a Equipment),
 }
 
 #[derive(Copy, Clone)]
@@ -209,6 +210,12 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             "{} couldn't finish {} due to lack of MP",
             describe_combatant(*target_id, combatants),
             action.ability.name
+        ),
+
+        Event::Broke(target_id, equip) => format!(
+            "{}\'s {} was broken",
+            describe_combatant(*target_id, combatants),
+            equip.name
         ),
     }
 }

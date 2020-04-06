@@ -270,7 +270,9 @@ impl<'a> Simulation<'a> {
             return;
         }
         target.cancel_condition(condition);
-        self.log_event(Event::LostCondition(target_id, condition, src));
+        if !target.has_condition(condition) {
+            self.log_event(Event::LostCondition(target_id, condition, src));
+        }
     }
 
     pub fn add_condition(&mut self, target_id: CombatantId, condition: Condition, src: Source<'a>) {
