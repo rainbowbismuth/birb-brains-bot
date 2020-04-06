@@ -101,5 +101,6 @@ impl AbilityImpl for JumpImpl {
         };
 
         sim.change_target_hp(target_id, damage, Source::Ability);
+        sim.try_countergrasp(user_id, target_id);
     }
 }

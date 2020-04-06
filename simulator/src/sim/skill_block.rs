@@ -20,6 +20,11 @@ const MAGIC_ATTACK_UP: u64 = 1 << 18;
 const MAGIC_DEFENSE_UP: u64 = 1 << 19;
 const SHORT_CHARGE: u64 = 1 << 20;
 const HALVE_MP: u64 = 1 << 21;
+const REGENERATOR: u64 = 1 << 22;
+const PA_SAVE: u64 = 1 << 23;
+const MA_SAVE: u64 = 1 << 24;
+const SPEED_SAVE: u64 = 1 << 25;
+const DRAGON_SPIRIT: u64 = 1 << 26;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -53,6 +58,11 @@ impl SkillBlock {
                 "Magic Defense UP" => block.flags |= MAGIC_DEFENSE_UP,
                 "Short Charge" => block.flags |= SHORT_CHARGE,
                 "Halve MP" => block.flags |= HALVE_MP,
+                "Regenerator" => block.flags |= REGENERATOR,
+                "PA Save" => block.flags |= PA_SAVE,
+                "MA Save" => block.flags |= MA_SAVE,
+                "Speed Save" => block.flags |= SPEED_SAVE,
+                "Dragon Spirit" => block.flags |= DRAGON_SPIRIT,
                 _ => {}
             }
         }
@@ -145,5 +155,25 @@ impl SkillBlock {
 
     pub fn halve_mp(&self) -> bool {
         self.flags & HALVE_MP != 0
+    }
+
+    pub fn regenerator(&self) -> bool {
+        self.flags & REGENERATOR != 0
+    }
+
+    pub fn pa_save(&self) -> bool {
+        self.flags & PA_SAVE != 0
+    }
+
+    pub fn ma_save(&self) -> bool {
+        self.flags & MA_SAVE != 0
+    }
+
+    pub fn speed_save(&self) -> bool {
+        self.flags & SPEED_SAVE != 0
+    }
+
+    pub fn dragon_spirit(&self) -> bool {
+        self.flags & DRAGON_SPIRIT != 0
     }
 }

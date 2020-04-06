@@ -108,6 +108,7 @@ impl AbilityImpl for ThrowImpl {
         let target = sim.combatant(target_id);
 
         if sim.do_physical_evade(user, target, Source::Ability) {
+            sim.try_countergrasp(user_id, target_id);
             return;
         }
 
@@ -124,6 +125,7 @@ impl AbilityImpl for ThrowImpl {
                     least_damage.0,
                     Source::Constant(least_damage.1.name),
                 );
+                sim.try_countergrasp(user_id, target_id);
             }
         } else {
             let most_damage = self
@@ -138,6 +140,7 @@ impl AbilityImpl for ThrowImpl {
                     most_damage.0,
                     Source::Constant(most_damage.1.name),
                 );
+                sim.try_countergrasp(user_id, target_id);
             }
         }
     }

@@ -33,6 +33,9 @@ pub enum Event<'a> {
     Silenced(CombatantId, Action<'a>),
     NoMP(CombatantId, Action<'a>),
     Broke(CombatantId, &'a Equipment),
+    PhysicalAttackBuff(CombatantId, i8, Source<'a>),
+    MagicalAttackBuff(CombatantId, i8, Source<'a>),
+    SpeedBuff(CombatantId, i8, Source<'a>),
 }
 
 #[derive(Copy, Clone)]
@@ -216,6 +219,27 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             "{}\'s {} was broken",
             describe_combatant(*target_id, combatants),
             equip.name
+        ),
+
+        Event::PhysicalAttackBuff(target_id, amount, src) => format!(
+            "{}\'s physical attack increased by {} because of {}",
+            describe_combatant(*target_id, combatants),
+            amount,
+            describe_source(*src, combatants)
+        ),
+
+        Event::MagicalAttackBuff(target_id, amount, src) => format!(
+            "{}\'s magical attack increased by {} because of {}",
+            describe_combatant(*target_id, combatants),
+            amount,
+            describe_source(*src, combatants)
+        ),
+
+        Event::SpeedBuff(target_id, amount, src) => format!(
+            "{}\'s speed increased by {} because of {}",
+            describe_combatant(*target_id, combatants),
+            amount,
+            describe_source(*src, combatants)
         ),
     }
 }

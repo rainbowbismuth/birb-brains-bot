@@ -140,22 +140,20 @@ impl AbilityImpl for StealImpl {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
 
-        if sim.do_physical_evade(user, target, Source::Ability) {
-            sim.log_event(Event::AbilityMissed(user_id, target_id));
-            return;
-        }
-
         let chance = mod_4_formula(user, target, self.base_chance as f32 / 100.0);
 
-        if !(sim.roll_auto_succeed() < chance) {
+        if sim.do_physical_evade(user, target, Source::Ability) {
             sim.log_event(Event::AbilityMissed(user_id, target_id));
-            return;
+        } else if sim.roll_auto_succeed() < chance {
+            let target = sim.combatant_mut(target_id);
+            let old_equip = target.get_equip(self.equip_slot).unwrap();
+            target.break_equip(self.equip_slot);
+            sim.log_event(Event::Broke(target_id, old_equip));
+        } else {
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
         }
 
-        let target = sim.combatant_mut(target_id);
-        let old_equip = target.get_equip(self.equip_slot).unwrap();
-        target.break_equip(self.equip_slot);
-        sim.log_event(Event::Broke(target_id, old_equip));
+        sim.try_countergrasp(user_id, target_id);
     }
 }
 
@@ -200,6 +198,7 @@ impl AbilityImpl for GilTakingImpl {
         } else {
             sim.log_event(Event::AbilityMissed(user_id, target_id));
         }
+        sim.try_countergrasp(user_id, target_id);
     }
 }
 

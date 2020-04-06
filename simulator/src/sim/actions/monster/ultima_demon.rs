@@ -200,9 +200,8 @@ impl AbilityImpl for EmpowerImpl {
         });
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
-        let target = sim.combatant_mut(target_id);
-        target.pa_mod += self.pa_buff;
-        target.ma_mod += self.ma_buff;
-        target.speed_mod += self.speed_buff;
+        sim.change_unit_pa(target_id, self.pa_buff, Source::Ability);
+        sim.change_unit_ma(target_id, self.ma_buff, Source::Ability);
+        sim.change_unit_speed(target_id, self.speed_buff, Source::Ability);
     }
 }

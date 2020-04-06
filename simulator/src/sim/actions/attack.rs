@@ -35,14 +35,14 @@ impl AbilityImpl for AttackImpl {
         if user.frog() || user.berserk() && user.monster() {
             actions.push(Action {
                 ability,
-                range: 1,
+                range: attack_range(user),
                 ctr: None,
                 target_id: target.id(),
             });
         } else {
             actions.push(Action {
                 ability,
-                range: user.main_hand().map_or(1, |eq| eq.range),
+                range: attack_range(user),
                 ctr: None,
                 target_id: target.id(),
             });
@@ -56,6 +56,14 @@ impl AbilityImpl for AttackImpl {
         } else {
             perform_attack(sim, user_id, target_id);
         }
+    }
+}
+
+pub fn attack_range(user: &Combatant) -> i8 {
+    if user.frog() || user.berserk() && user.monster() {
+        1
+    } else {
+        user.main_hand().map_or(1, |eq| eq.range)
     }
 }
 
@@ -93,6 +101,7 @@ fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Combata
             crit = pair.1;
         }
     }
+    sim.try_countergrasp(user_id, target_id);
     if damage > 0 {
         sim.after_damage_reaction(user_id, target_id, damage);
     }
@@ -101,6 +110,7 @@ fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Combata
 fn perform_frog_attack(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
     let pa = sim.combatant(user_id).pa_bang();
     sim.change_target_hp(target_id, pa.into(), Source::Weapon(user_id, None));
+    sim.try_countergrasp(user_id, target_id);
     sim.after_damage_reaction(user_id, target_id, pa.into());
 }
 

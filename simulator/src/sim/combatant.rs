@@ -909,6 +909,26 @@ impl<'a> Combatant<'a> {
         self.info.skill_block.halve_mp()
     }
 
+    pub fn regenerator(&self) -> bool {
+        self.info.skill_block.regenerator()
+    }
+
+    pub fn pa_save(&self) -> bool {
+        self.info.skill_block.pa_save()
+    }
+
+    pub fn ma_save(&self) -> bool {
+        self.info.skill_block.ma_save()
+    }
+
+    pub fn speed_save(&self) -> bool {
+        self.info.skill_block.speed_save()
+    }
+
+    pub fn dragon_spirit(&self) -> bool {
+        self.info.skill_block.dragon_spirit()
+    }
+
     pub fn abilities(&self) -> &[&'a Ability<'a>] {
         self.info.abilities.as_slice()
     }

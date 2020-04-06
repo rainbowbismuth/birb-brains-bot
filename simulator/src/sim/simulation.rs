@@ -5,6 +5,7 @@ use rand::prelude::SmallRng;
 use rand::Rng;
 
 use crate::dto::rust::Equipment;
+use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
     Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log, Phase,
@@ -23,6 +24,7 @@ pub struct Simulation<'a> {
     pub arena_length: i8,
     pub clock_tick: usize,
     pub prediction_mode: bool,
+    pub trigger_countergrasps: bool,
     pub log: Log<'a>,
     pub slow_actions: bool,
     pub active_turns: bool,
@@ -44,6 +46,7 @@ impl<'a> Simulation<'a> {
             arena_length: arena_length / 2,
             clock_tick: 0,
             prediction_mode: false,
+            trigger_countergrasps: true,
             log: if event_log {
                 Log::new()
             } else {
@@ -79,6 +82,7 @@ impl<'a> Simulation<'a> {
             arena_length: self.arena_length,
             clock_tick: self.clock_tick,
             prediction_mode: true,
+            trigger_countergrasps: true,
             log: Log::new_no_log(),
             slow_actions: self.slow_actions,
             active_turns: self.active_turns,
@@ -737,6 +741,45 @@ impl<'a> Simulation<'a> {
         }
     }
 
+    pub fn try_countergrasp(&mut self, user_id: CombatantId, target_id: CombatantId) {
+        if !self.trigger_countergrasps || self.prediction_mode {
+            return;
+        }
+        let target = self.combatant(target_id);
+        if target.dead() || target.sleep() || target.petrify() {
+            return;
+        }
+
+        if target.dragon_spirit() && self.roll_brave_reaction(target) {
+            self.add_condition(
+                target_id,
+                Condition::Reraise,
+                Source::Constant("Dragon Spirit"),
+            );
+            return;
+        }
+
+        if target.counter() && self.roll_brave_reaction(target) {
+            let user = self.combatant(user_id);
+            let range = attack_range(target);
+
+            if !in_range(target, range, user) {
+                return;
+            }
+
+            let action = Action {
+                ability: &ATTACK_ABILITY,
+                range,
+                ctr: None,
+                target_id: user_id,
+            };
+
+            self.trigger_countergrasps = false;
+            perform_action(self, target_id, action);
+            self.trigger_countergrasps = true;
+        }
+    }
+
     // TODO: Make this private, rework the flow, etc etc
     pub fn after_damage_reaction(
         &mut self,
@@ -745,7 +788,7 @@ impl<'a> Simulation<'a> {
         amount: i16,
     ) {
         let target = self.combatant(target_id);
-        if amount == 0 || target.dead() {
+        if amount == 0 || target.dead() || target.sleep() || target.petrify() {
             return;
         }
 
@@ -762,7 +805,46 @@ impl<'a> Simulation<'a> {
         if target.damage_split() && self.roll_brave_reaction(target) {
             self.change_target_hp(target_id, -(amount / 2), Source::Constant("Damage Split"));
             self.change_target_hp(user_id, amount / 2, Source::Constant("Damage Split"));
+            return;
         }
+
+        if target.regenerator() && self.roll_brave_reaction(target) {
+            self.add_condition(target_id, Condition::Regen, Source::Constant("Regenerator"));
+            return;
+        }
+
+        if target.pa_save() && self.roll_brave_reaction(target) {
+            self.change_unit_pa(target_id, 1, Source::Constant("PA Save"));
+            return;
+        }
+
+        if target.ma_save() && self.roll_brave_reaction(target) {
+            self.change_unit_ma(target_id, 1, Source::Constant("MA Save"));
+            return;
+        }
+
+        if target.speed_save() && self.roll_brave_reaction(target) {
+            self.change_unit_speed(target_id, 1, Source::Constant("Speed Save"));
+            return;
+        }
+    }
+
+    pub fn change_unit_pa(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        let target = self.combatant_mut(target_id);
+        target.pa_mod += amount;
+        self.log_event(Event::PhysicalAttackBuff(target_id, amount, src));
+    }
+
+    pub fn change_unit_ma(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        let target = self.combatant_mut(target_id);
+        target.ma_mod += amount;
+        self.log_event(Event::MagicalAttackBuff(target_id, amount, src));
+    }
+
+    pub fn change_unit_speed(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        let target = self.combatant_mut(target_id);
+        target.speed_mod += amount;
+        self.log_event(Event::SpeedBuff(target_id, amount, src));
     }
 
     pub fn calculate_weapon_xa(
