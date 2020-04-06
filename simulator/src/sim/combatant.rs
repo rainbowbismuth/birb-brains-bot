@@ -72,6 +72,7 @@ pub struct CombatantInfo<'a> {
     pub starting_brave: i8,
     pub starting_faith: i8,
     pub horizontal_jump: i8,
+    pub bonus_movement: i8,
 }
 
 impl<'a> CombatantInfo<'a> {
@@ -156,6 +157,13 @@ impl<'a> CombatantInfo<'a> {
             lowest_mp_cost_ability = lowest_mp_cost_ability.min(ability.mp_cost);
         }
 
+        let bonus_movement = match src.move_skill.as_str() {
+            "Move+1" => 1,
+            "Move+2" => 2,
+            "Move+3" => 3,
+            _ => 0,
+        };
+
         CombatantInfo {
             base_stats,
             id,
@@ -177,6 +185,7 @@ impl<'a> CombatantInfo<'a> {
             starting_faith: src.faith,
             abilities,
             horizontal_jump,
+            bonus_movement,
         }
     }
 }
@@ -462,8 +471,8 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn movement(&self) -> i8 {
-        // TODO: Move+ skills
         self.base_stats().movement
+            + self.info.bonus_movement
             + self.headgear().map_or(0, |e| e.move_bonus)
             + self.armor().map_or(0, |e| e.move_bonus)
             + self.accessory().map_or(0, |e| e.move_bonus)

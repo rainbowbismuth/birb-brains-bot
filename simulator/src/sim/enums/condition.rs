@@ -43,7 +43,6 @@ pub enum Condition {
 
 pub type ConditionFlags = u64;
 
-const FIRST_CONDITION: Condition = Condition::Stop;
 const LAST_CONDITION: Condition = Condition::Transparent;
 
 pub const TIMED_CONDITIONS_LEN: usize = Condition::Charm.index() + 1;
@@ -231,14 +230,6 @@ impl Condition {
 
     pub fn name(self) -> &'static str {
         CONDITION_NAMES[self.index()]
-    }
-
-    pub fn from_num(code: u8) -> Option<Condition> {
-        if code >= FIRST_CONDITION as u8 && code <= LAST_CONDITION as u8 {
-            unsafe { Some(std::mem::transmute_copy(&code)) }
-        } else {
-            None
-        }
     }
 
     pub fn condition_duration(self) -> Option<i8> {

@@ -30,7 +30,6 @@ pub enum Event<'a> {
     UsingAbility(CombatantId, Action<'a>),
     AbilityMissed(CombatantId, CombatantId),
     StartedCharging(CombatantId, Action<'a>),
-    SlowActionTargetDied(CombatantId),
     Silenced(CombatantId, Action<'a>),
     NoMP(CombatantId, Action<'a>),
 }
@@ -198,11 +197,6 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             describe_combatant(*target_id, combatants),
             action.ability.name,
             describe_combatant_short(action.target_id, combatants),
-        ),
-
-        Event::SlowActionTargetDied(target_id) => format!(
-            "ability's target, {}, is dead",
-            describe_combatant(*target_id, combatants)
         ),
 
         Event::Silenced(target_id, action) => format!(

@@ -8,6 +8,7 @@ pub struct ConditionBlock {
 }
 
 impl ConditionBlock {
+    #[cfg(test)]
     pub fn new() -> ConditionBlock {
         ConditionBlock {
             innate_flags: 0,
@@ -36,10 +37,6 @@ impl ConditionBlock {
 
     pub fn has(&self, condition: Condition) -> bool {
         (self.innate_flags | self.status_flags) & condition.flag() != 0
-    }
-
-    pub fn innate(&self, condition: Condition) -> bool {
-        self.innate_flags & condition.flag() != 0
     }
 
     pub fn tick(&mut self, condition: Condition) -> Option<bool> {
