@@ -6,10 +6,10 @@ use rand::Rng;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    ai_consider_actions, ai_target_value_sum, perform_action, Action, Combatant, CombatantId,
-    Condition, EvasionType, Event, Facing, Location, Log, Phase, SlowAction, Source, Team,
-    WeaponType, ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS,
-    JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
+    ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
+    Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log, Phase,
+    SlowAction, Source, Team, WeaponType, ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN,
+    DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -190,7 +190,7 @@ impl<'a> Simulation<'a> {
                 }
                 self.log.set_phase(Phase::SlowAction(*c_id));
                 self.log_event(Event::UsingAbility(*c_id, slow_action.action));
-                perform_action(self, *c_id, slow_action.action);
+                perform_action_slow(self, *c_id, slow_action.action);
             }
             let combatant = self.combatant_mut(*c_id);
             combatant.ctr_action = None;

@@ -124,7 +124,7 @@ pub fn ai_consider_actions<'a>(
     }
 }
 
-pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action: Action<'a>) {
+pub fn perform_action_slow<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action: Action<'a>) {
     let ability = action.ability;
     let user = sim.combatant(user_id);
 
@@ -147,6 +147,12 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         // TODO: Log some sort of event for failing to perform an ability
         return;
     }
+
+    perform_action(sim, user_id, action)
+}
+
+pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action: Action<'a>) {
+    let ability = action.ability;
 
     if ability.mp_cost > 0 {
         let user = sim.combatant_mut(user_id);
