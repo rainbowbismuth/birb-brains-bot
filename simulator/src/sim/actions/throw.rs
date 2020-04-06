@@ -1,5 +1,4 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, TARGET_NOT_SELF,
     TARGET_SELF_ONLY,

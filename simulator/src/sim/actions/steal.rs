@@ -1,9 +1,5 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
-
-use crate::sim::{
-    Combatant, CombatantId, Condition, Element, EquipSlot, Event, Simulation, Source,
-    HITS_ALLIES_ONLY, HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,
-};
+use crate::sim::{Combatant, CombatantId, Condition, EquipSlot, Event, Simulation, Source};
 
 pub const STEAL_ABILITIES: &[Ability] = &[
     // Gil Taking: 2 range, 0 AoE. Hit: (Speed + 62)%. Effect: Add Defending, Berserk (Random).

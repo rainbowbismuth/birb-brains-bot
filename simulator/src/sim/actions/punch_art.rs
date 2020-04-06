@@ -105,7 +105,7 @@ impl AbilityImpl for DamagePunchArt {
     ) {
         actions.push(Action {
             ability,
-            range: 1,
+            range: self.range,
             ctr: None,
             target_id: target.id(),
         });

@@ -1,7 +1,6 @@
 use crate::sim::actions::{
     Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, NO_SHORT_CHARGE, TARGET_NOT_SELF,
 };
-
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, WeaponType, DAMAGE_CANCELS,
     HITS_ALLIES_ONLY, HITS_FOES_ONLY, JUMPING, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,

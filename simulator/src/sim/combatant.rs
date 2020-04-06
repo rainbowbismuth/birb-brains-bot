@@ -294,14 +294,6 @@ impl<'a> Combatant<'a> {
         self.info.team
     }
 
-    pub fn same_team(&self, other: &Combatant) -> bool {
-        self.team() == other.team()
-    }
-
-    pub fn different_team(&self, other: &Combatant) -> bool {
-        self.team() != other.team()
-    }
-
     pub fn team_allegiance(&self) -> Team {
         if !self.charm() {
             self.team()

@@ -3,6 +3,7 @@ use std::ffi::OsString;
 use std::fs;
 use std::io;
 use std::io::{Read, Write};
+use std::path::PathBuf;
 
 use bincode;
 use serde::de::DeserializeOwned;
@@ -10,7 +11,6 @@ use serde_json;
 
 use crate::dto::python;
 use crate::dto::rust;
-use std::path::PathBuf;
 
 pub fn convert_data_from_feed() -> io::Result<()> {
     let mut buffer = String::new();
@@ -77,10 +77,6 @@ fn read_files_matching<T: DeserializeOwned>(extension: &str) -> io::Result<Vec<T
 
 pub fn read_all_patches() -> io::Result<Vec<rust::Patch>> {
     return read_files_matching("patch");
-}
-
-pub fn read_all_match_ups() -> io::Result<Vec<(usize, rust::MatchUp)>> {
-    read_files_matching("match")
 }
 
 pub fn find_all_match_ups() -> io::Result<Vec<PathBuf>> {

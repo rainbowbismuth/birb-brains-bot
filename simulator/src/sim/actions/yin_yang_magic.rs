@@ -34,7 +34,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
             range: 5,
         },
     },
-    // TODO: Life Drain: 5 range, 0 AoE, 2 CT, 16 MP. Hit: Faith(MA + 185)%. Effect: AbsorbHP (25)%
+    // Life Drain: 5 range, 0 AoE, 2 CT, 16 MP. Hit: Faith(MA + 185)%. Effect: AbsorbHP (25)%
     Ability {
         name: "Life Drain",
         flags: FOE_OK | SILENCEABLE,

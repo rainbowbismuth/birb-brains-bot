@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 pub use entry::*;
 
-use crate::sim::{Combatant, CombatantId, Phase, Simulation, ALL_CONDITIONS, MAX_COMBATANTS};
+use crate::sim::{Combatant, Phase, MAX_COMBATANTS};
 
 pub mod entry;
 
