@@ -8,7 +8,7 @@ import fftbg.tournament
 
 
 def main():
-    simulator = subprocess.Popen('simulator/target/release/simulator',
+    simulator = subprocess.Popen(['simulator/target/release/simulator', 'feed'],
                                  text=True,
                                  bufsize=1,
                                  stdin=subprocess.PIPE,
