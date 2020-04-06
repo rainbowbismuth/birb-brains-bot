@@ -513,9 +513,18 @@ impl<'a> Combatant<'a> {
         self.evasion_multiplier() * (self.accessory().map_or(0, |e| e.magic_ev) as f32 / 100.0)
     }
 
+    pub fn retreat_movement_bonus(&self) -> i8 {
+        if self.retreat() && self.critical() {
+            4
+        } else {
+            0
+        }
+    }
+
     pub fn movement(&self) -> i8 {
         self.base_stats().movement
             + self.info.bonus_movement
+            + self.retreat_movement_bonus()
             + self.headgear().map_or(0, |e| e.move_bonus)
             + self.armor().map_or(0, |e| e.move_bonus)
             + self.accessory().map_or(0, |e| e.move_bonus)
@@ -919,6 +928,10 @@ impl<'a> Combatant<'a> {
 
     pub fn dragon_spirit(&self) -> bool {
         self.info.skill_block.dragon_spirit()
+    }
+
+    pub fn retreat(&self) -> bool {
+        self.info.skill_block.retreat()
     }
 
     pub fn abilities(&self) -> &[&'a Ability<'a>] {
