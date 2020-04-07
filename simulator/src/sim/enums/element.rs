@@ -3,7 +3,8 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
 pub enum Element {
-    None = 1,
+    None = 0,
+    Weapon,
     Fire,
     Ice,
     Lightning,
@@ -20,6 +21,7 @@ impl Element {
     pub fn parse(name: &str) -> Option<Element> {
         match name {
             "None" => Some(Element::None),
+            "Weapon" => Some(Element::Weapon),
             "Fire" => Some(Element::Fire),
             "Ice" => Some(Element::Ice),
             "Lightning" => Some(Element::Lightning),

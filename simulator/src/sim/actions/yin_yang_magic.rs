@@ -80,7 +80,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     },
     // Zombie: 5 range, 0 AoE, 5 CT, 20 MP. Hit: Faith(MA + 115)%. Effect: Add Undead.
     Ability {
-        name: "Doubt Faith",
+        name: "Zombie",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 20,
         aoe: None,

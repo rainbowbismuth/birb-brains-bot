@@ -27,7 +27,11 @@ fn ai_calculate_stat_buff_mod(target: &Combatant) -> f32 {
     // The game's actual AI doesn't do this kind of calculation, but I'm going to add
     // a teeny bonus for stat buffs to try to emulate the 'only use stat buffs when there is
     // no other options' behaviour.
-    target.pa_mod as f32 * 1e-5 + target.ma_mod as f32 * 1e-5 + target.speed_mod as f32 * 1e-5
+    target.pa_mod as f32 * 1e-5
+        + target.ma_mod as f32 * 1e-5
+        + target.speed_mod as f32 * 1e-5
+        + target.raw_brave as f32 * 1e-5
+        + target.raw_faith as f32 * 1e-5
 }
 
 fn ai_calculate_caster_hate_mod(target: &Combatant) -> f32 {
