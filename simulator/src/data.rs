@@ -83,7 +83,7 @@ pub fn find_all_match_ups() -> io::Result<Vec<PathBuf>> {
     find_files_matching("match")
 }
 
-pub fn read_match(id: usize, buffer: &mut Vec<u8>) -> io::Result<(usize, rust::MatchUp)> {
+pub fn read_match(id: u64, buffer: &mut Vec<u8>) -> io::Result<(usize, rust::MatchUp)> {
     buffer.clear();
     fs::File::open(format!("data/sim/{:06}.match", id))?.read_to_end(buffer)?;
     Ok(bincode::deserialize(&buffer).unwrap())

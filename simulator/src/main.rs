@@ -25,6 +25,10 @@ enum SubCommand {
     #[clap(name = "test")]
     Test(Test),
 
+    /// Run a specific match
+    #[clap(name = "run")]
+    Run(Run),
+
     /// Read match up & patch data from my python code on stdin, writing out the match up &
     /// patch data into a binary format this program expects.
     #[clap(name = "feed")]
@@ -43,6 +47,16 @@ struct Test {
 }
 
 #[derive(Clap)]
+struct Run {
+    /// The number of simulated matches to run
+    #[clap(short = "n")]
+    num_runs: i32,
+
+    /// The match ID
+    match_id: u64,
+}
+
+#[derive(Clap)]
 struct Feed {}
 
 fn main() -> io::Result<()> {
@@ -50,6 +64,7 @@ fn main() -> io::Result<()> {
 
     match opts.sub_cmd {
         SubCommand::Test(test) => runner::run_all_matches(test.num_runs, test.print_worst),
+        SubCommand::Run(run) => runner::run_specific_match(run.match_id, run.num_runs),
         SubCommand::Feed(_feed) => data::convert_data_from_feed(),
     }
 }

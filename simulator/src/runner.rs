@@ -9,6 +9,7 @@ use crate::dto::rust::{MatchUp, Patch};
 use crate::sim::{
     describe_entry, unit_card, Combatant, CombatantId, CombatantInfo, Simulation, Team,
 };
+use std::path::PathBuf;
 
 fn run_many_sims<'a>(num_runs: i32, combatants: &'a [Combatant<'a>; 8]) -> (f64, u64) {
     let mut thread_rng = thread_rng();
@@ -107,6 +108,38 @@ fn match_to_combatants<'a>(combatant_infos: &'a [CombatantInfo<'a>]) -> [Combata
     ]
 }
 
+pub fn run_specific_match(match_id: u64, num_runs: i32) -> io::Result<()> {
+    let patches = data::read_all_patches()?;
+    let mut buffer = Vec::with_capacity(1024 * 1024 * 2);
+    let (patch_num, match_up) = data::read_match(match_id, &mut buffer)?;
+    let patch = patches
+        .iter()
+        .find(|p| p.time as usize == patch_num)
+        .unwrap();
+    let combatant_infos = match_to_combatant_infos(&patch, &match_up);
+    let combatants = match_to_combatants(&combatant_infos);
+    let (left_wins_percent, new_time_outs) = run_many_sims(num_runs, &combatants);
+    let rng = SmallRng::from_entropy();
+    let mut sim = Simulation::new(combatants.clone(), 10, rng, true);
+    sim.run();
+
+    for combatant in &combatants {
+        println!("{}", unit_card(combatant));
+    }
+    for entry in sim.log.entries() {
+        println!("{}", describe_entry(&entry));
+    }
+    let clamped = clamp(left_wins_percent, 1e-15, 1.0 - 1e-15);
+    let current_log_loss = if match_up.left_wins.unwrap() {
+        -clamped.ln()
+    } else {
+        -clamped.ln_1p()
+    };
+    println!("log loss: {:.6}", current_log_loss as f64);
+    println!("time outs: {}", new_time_outs);
+    Ok(())
+}
+
 pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
     let patches = data::read_all_patches()?;
 
@@ -120,7 +153,7 @@ pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
     let mut log_loss: f64 = 0.0;
 
     let mut worst_loss = 0.0;
-    let mut replay_num = 0;
+    let mut replay_path = PathBuf::new();
     let mut replay_data = vec![];
 
     let mut buffer = vec![];
@@ -161,7 +194,7 @@ pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
 
         if print_worst && current_log_loss >= worst_loss {
             worst_loss = current_log_loss;
-            replay_num = match_num;
+            replay_path = match_up_path.clone();
             let rng = SmallRng::from_entropy();
             let mut sim = Simulation::new(combatants.clone(), 10, rng, true);
             sim.run();
@@ -177,7 +210,7 @@ pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
     }
     bar.finish();
 
-    println!("\nmatch {}:", replay_num);
+    println!("\nmatch {}:", replay_path.to_string_lossy());
     for line in replay_data {
         println!("{}", line);
     }
