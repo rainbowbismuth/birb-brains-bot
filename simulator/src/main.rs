@@ -37,9 +37,9 @@ struct Test {
     #[clap(short = "n")]
     num_runs: i32,
 
-    /// Print a random match at the end
-    #[clap(short = "r")]
-    print_random: bool,
+    /// Print the match with the highest log loss at the end
+    #[clap(short = "w")]
+    print_worst: bool,
 }
 
 #[derive(Clap)]
@@ -49,7 +49,7 @@ fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
     match opts.sub_cmd {
-        SubCommand::Test(test) => runner::run_all_matches(test.num_runs, test.print_random),
+        SubCommand::Test(test) => runner::run_all_matches(test.num_runs, test.print_worst),
         SubCommand::Feed(_feed) => data::convert_data_from_feed(),
     }
 }

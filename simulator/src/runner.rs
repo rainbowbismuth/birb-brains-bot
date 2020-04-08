@@ -107,7 +107,7 @@ fn match_to_combatants<'a>(combatant_infos: &'a [CombatantInfo<'a>]) -> [Combata
     ]
 }
 
-pub fn run_all_matches(num_runs: i32, print_random: bool) -> io::Result<()> {
+pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
     let patches = data::read_all_patches()?;
 
     println!("{} patches\n", patches.len());
@@ -119,8 +119,8 @@ pub fn run_all_matches(num_runs: i32, print_random: bool) -> io::Result<()> {
     let mut time_outs = 0;
     let mut log_loss: f64 = 0.0;
 
-    let mut thread_rng = thread_rng();
-    let random_replay = thread_rng.gen_range(0, total);
+    let mut worst_loss = 0.0;
+    let mut replay_num = 0;
     let mut replay_data = vec![];
 
     let mut buffer = vec![];
@@ -152,16 +152,21 @@ pub fn run_all_matches(num_runs: i32, print_random: bool) -> io::Result<()> {
         }
 
         let clamped = clamp(left_wins_percent, 1e-15, 1.0 - 1e-15);
-        if match_up.left_wins.unwrap() {
-            log_loss += -clamped.ln();
+        let current_log_loss = if match_up.left_wins.unwrap() {
+            -clamped.ln()
         } else {
-            log_loss += -clamped.ln_1p();
-        }
+            -clamped.ln_1p()
+        };
+        log_loss += current_log_loss;
 
-        if print_random && random_replay == match_num as u64 {
-            let rng = SmallRng::from_rng(&mut thread_rng).unwrap();
+        if print_worst && current_log_loss >= worst_loss {
+            worst_loss = current_log_loss;
+            replay_num = match_num;
+            let rng = SmallRng::from_entropy();
             let mut sim = Simulation::new(combatants.clone(), 10, rng, true);
             sim.run();
+            replay_data.clear();
+            replay_data.push(format!("log loss: {}", current_log_loss));
             for combatant in &combatants {
                 replay_data.push(unit_card(combatant));
             }
@@ -172,7 +177,7 @@ pub fn run_all_matches(num_runs: i32, print_random: bool) -> io::Result<()> {
     }
     bar.finish();
 
-    println!("\nmatch {}:", random_replay);
+    println!("\nmatch {}:", replay_num);
     for line in replay_data {
         println!("{}", line);
     }
