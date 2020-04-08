@@ -38,6 +38,24 @@ impl Sign {
         }
     }
 
+    pub fn to_emoji(self) -> &'static str {
+        match self {
+            Sign::Aries => "♈",
+            Sign::Taurus => "♉",
+            Sign::Gemini => "♊",
+            Sign::Cancer => "♋",
+            Sign::Leo => "♌",
+            Sign::Virgo => "♍",
+            Sign::Libra => "♎",
+            Sign::Scorpio => "♏",
+            Sign::Sagittarius => "♐",
+            Sign::Capricorn => "♑",
+            Sign::Aquarius => "♒",
+            Sign::Pisces => "♓",
+            Sign::Serpentarius => "⛎",
+        }
+    }
+
     pub fn index(self) -> usize {
         self as usize
     }

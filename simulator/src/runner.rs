@@ -6,7 +6,9 @@ use rand::{thread_rng, Rng, SeedableRng};
 
 use crate::data;
 use crate::dto::rust::{MatchUp, Patch};
-use crate::sim::{describe_entry, Combatant, CombatantId, CombatantInfo, Simulation, Team};
+use crate::sim::{
+    describe_entry, unit_card, Combatant, CombatantId, CombatantInfo, Simulation, Team,
+};
 
 fn run_many_sims<'a>(num_runs: i32, combatants: &'a [Combatant<'a>; 8]) -> (f64, u64) {
     let mut thread_rng = thread_rng();
@@ -160,6 +162,9 @@ pub fn run_all_matches(num_runs: i32, print_random: bool) -> io::Result<()> {
             let rng = SmallRng::from_rng(&mut thread_rng).unwrap();
             let mut sim = Simulation::new(combatants.clone(), 10, rng, true);
             sim.run();
+            for combatant in &combatants {
+                replay_data.push(unit_card(combatant));
+            }
             for entry in sim.log.entries() {
                 replay_data.push(format!("{}", describe_entry(&entry)));
             }
