@@ -96,6 +96,7 @@ pub struct Equipment {
     pub pa_bonus: i8,
     pub ma_bonus: i8,
     pub wp: i8,
+    pub absorbs_hp: bool,
     pub range: i8,
     pub w_ev: i8,
     pub phys_ev: i8,

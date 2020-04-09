@@ -38,6 +38,7 @@ class Equipment:
     pa_bonus: int = 0
     ma_bonus: int = 0
     wp: int = 0
+    absorbs_hp: bool = False
     range: int = 0
     w_ev: int = 0
     phys_ev: int = 0
@@ -161,11 +162,13 @@ def parse_equipment(info_item_path) -> EquipmentData:
             ma_bonus = try_int(BONUS_MA_RE, everything_else)
             move_bonus = try_int(MOVE_RE, everything_else)
             weapon_element = try_str(WEAPON_ELEMENT_RE, everything_else)
+            absorbs_hp = '(absorb)' in item
             by_name[name] = Equipment(name=name,
                                       speed_bonus=speed_bonus,
                                       pa_bonus=pa_bonus,
                                       ma_bonus=ma_bonus,
                                       wp=int(wp),
+                                      absorbs_hp=absorbs_hp,
                                       range=int(w_range),
                                       w_ev=int(w_ev),
                                       weapon_type=weapon_type,

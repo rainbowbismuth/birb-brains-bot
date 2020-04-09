@@ -133,6 +133,9 @@ fn do_single_weapon_attack<'a, 'b>(
     let (damage, crit) = calculate_damage(sim, user, weapon, target, 0);
     sim.change_target_hp(target_id, damage, src);
     sim.weapon_chance_to_add_or_cancel_status(user_id, weapon, target_id);
+    if weapon.map_or(false, |eq| eq.absorbs_hp) {
+        sim.change_target_hp(user_id, -damage, src);
+    }
     (damage, crit)
 }
 
