@@ -1,7 +1,9 @@
 use crate::dto::rust::Equipment;
 use crate::sim::actions::attack::do_single_weapon_attack;
 use crate::sim::actions::common::{do_hp_damage, do_hp_heal, mod_2_formula_xa, mod_3_formula_xa};
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
+use crate::sim::actions::{
+    Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, HITS_FOES_ONLY, TARGET_NOT_SELF,
+};
 use crate::sim::{
     Combatant, CombatantId, Condition, EquipSlot, Event, Simulation, Source, WeaponType,
 };
@@ -69,7 +71,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Stasis Sword: 1 range, 1 AoE, 2 CT, 20 MP. Effect: Damage (PA * (WP + 1)); Chance to Add Stop.
     Ability {
         name: "Stasis Sword",
-        flags: FOE_OK,
+        flags: FOE_OK | HITS_FOES_ONLY,
         mp_cost: 20,
         aoe: Some(1),
         implementation: &ChanceToAddSwordImpl {
@@ -95,7 +97,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Surging Sword: 1 range, 1 AoE, 3 CT, 24 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Silence.
     Ability {
         name: "Surging Sword",
-        flags: FOE_OK,
+        flags: FOE_OK | HITS_FOES_ONLY,
         mp_cost: 24,
         aoe: Some(1),
         implementation: &ChanceToAddSwordImpl {
