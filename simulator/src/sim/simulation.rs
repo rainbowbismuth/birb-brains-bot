@@ -485,6 +485,11 @@ impl<'a> Simulation<'a> {
                 Source::Constant("Move-MP Up"),
             );
         }
+
+        let mut combatant = self.combatant_mut(user_id);
+        if combatant.dont_move_while_charging() {
+            combatant.ctr_action = None;
+        }
     }
 
     pub fn ai_foes_have_non_disabled_units(&self, user: &Combatant) -> bool {
@@ -915,7 +920,7 @@ impl<'a> Simulation<'a> {
 
     fn post_action_move(&mut self, user_id: CombatantId) {
         let user = self.combatant(user_id);
-        if user.dont_move() {
+        if user.dont_move() || user.dont_move_while_charging() {
             return;
         }
         let best_panel = user
@@ -1022,6 +1027,10 @@ impl<'a> Simulation<'a> {
             let mut target = self.combatant_mut(target_id);
             target.location = new_panel;
             self.log_event(Event::Knockback(target_id, new_panel));
+            let mut target = self.combatant_mut(target_id);
+            if target.dont_move_while_charging() {
+                target.ctr_action = None;
+            }
         }
     }
 }

@@ -91,7 +91,7 @@ fn should_attack_foe(user: &Combatant, target: &Combatant) -> bool {
 fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
     let weapon1 = sim.combatant(user_id).main_hand();
     let weapon2 = sim.combatant(user_id).off_hand();
-    let (mut damage, mut crit) = do_single_weapon_attack(sim, user_id, weapon1, target_id);
+    let (mut damage, mut crit) = do_single_weapon_attack(sim, user_id, weapon1, target_id, 0);
     let mut knockback = false;
 
     if crit && sim.roll_auto_fail() < 0.50 {
@@ -104,7 +104,7 @@ fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Combata
         // FIXME: This condition is a little bit of a cheat :)
         && (!knockback || attack_range(sim.combatant(user_id)) > 1)
     {
-        let pair = do_single_weapon_attack(sim, user_id, weapon2, target_id);
+        let pair = do_single_weapon_attack(sim, user_id, weapon2, target_id, 0);
         damage = pair.0;
         crit = pair.1;
     }
@@ -127,6 +127,7 @@ pub fn do_single_weapon_attack<'a, 'b>(
     user_id: CombatantId,
     weapon: Option<&'b Equipment>,
     target_id: CombatantId,
+    k: i16,
 ) -> (i16, bool) {
     let is_gun = weapon.map_or(false, |eq| eq.weapon_type == Some(WeaponType::Gun));
 
@@ -144,7 +145,7 @@ pub fn do_single_weapon_attack<'a, 'b>(
         return (0, false);
     }
 
-    let (damage, crit) = calculate_damage(sim, user, weapon, target, 0);
+    let (damage, crit) = calculate_damage(sim, user, weapon, target, k);
     sim.change_target_hp(target_id, damage, src);
     sim.weapon_chance_to_add_or_cancel_status(user_id, weapon, target_id);
     if weapon.map_or(false, |eq| eq.absorbs_hp) {

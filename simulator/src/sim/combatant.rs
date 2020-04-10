@@ -3,6 +3,7 @@ use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::actions::attack::ATTACK_ABILITY;
 use crate::sim::actions::battle_skill::BATTLE_SKILL_ABILITIES;
 use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
+use crate::sim::actions::charge::CHARGE_ABILITIES;
 use crate::sim::actions::draw_out::DRAW_OUT_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::jump::JUMP_ABILITIES;
@@ -16,7 +17,8 @@ use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, Condition, ConditionBlock, ConditionFlags, DiamondIterator, Distance, Element,
-    Facing, Gender, Location, RelativeFacing, Sign, SkillBlock, Team, ALL_CONDITIONS, SILENCEABLE,
+    Facing, Gender, Location, RelativeFacing, Sign, SkillBlock, Team, ALL_CONDITIONS,
+    DONT_MOVE_WHILE_CHARGING, SILENCEABLE,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -50,6 +52,12 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
 pub struct SlowAction<'a> {
     pub ctr: u8,
     pub action: Action<'a>,
+}
+
+impl<'a> SlowAction<'a> {
+    fn dont_move_while_charging(&self) -> bool {
+        self.action.ability.flags & DONT_MOVE_WHILE_CHARGING != 0
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -135,6 +143,7 @@ impl<'a> CombatantInfo<'a> {
             THROW_ABILITIES,
             STEAL_ABILITIES,
             BATTLE_SKILL_ABILITIES,
+            CHARGE_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
@@ -776,6 +785,11 @@ impl<'a> Combatant<'a> {
 
     pub fn barehanded(&self) -> bool {
         self.main_hand().map_or(true, |e| e.weapon_type.is_none())
+    }
+
+    pub fn dont_move_while_charging(&self) -> bool {
+        self.ctr_action
+            .map_or(false, |sa| sa.dont_move_while_charging())
     }
 
     // FIXME: temporary solution, want to remove this allocation

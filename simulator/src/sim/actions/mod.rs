@@ -3,6 +3,7 @@ use crate::sim::{Combatant, CombatantId, Event, Simulation};
 pub mod attack;
 pub mod battle_skill;
 pub mod black_magic;
+pub mod charge;
 pub mod common;
 pub mod draw_out;
 pub mod item;
@@ -43,6 +44,7 @@ pub const TARGET_SELF_ONLY: AbilityFlags = 1 << 9;
 pub const JUMPING: AbilityFlags = 1 << 10;
 pub const TARGET_NOT_SELF: AbilityFlags = 1 << 11;
 pub const FROG_OK: AbilityFlags = 1 << 12;
+pub const DONT_MOVE_WHILE_CHARGING: AbilityFlags = 1 << 13;
 
 pub struct Ability<'a> {
     pub flags: AbilityFlags,

@@ -1,6 +1,6 @@
 use crate::dto::rust::Equipment;
 use crate::sim::actions::attack::do_single_weapon_attack;
-use crate::sim::actions::common::{do_hp_damage, do_hp_heal, mod_2_formula_xa, mod_3_formula_xa};
+use crate::sim::actions::common::{do_hp_damage, do_hp_heal, mod_3_formula_xa};
 use crate::sim::actions::{
     Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, HITS_FOES_ONLY, TARGET_NOT_SELF,
 };
@@ -276,7 +276,7 @@ impl AbilityImpl for BreakEquipImpl {
 
         let weapon = user.main_hand();
         if target.get_equip(self.equip_slot).is_none() {
-            do_single_weapon_attack(sim, user_id, weapon, target_id);
+            do_single_weapon_attack(sim, user_id, weapon, target_id, 0);
         } else {
             try_break_equip(
                 sim,
@@ -293,7 +293,7 @@ impl AbilityImpl for BreakEquipImpl {
             let weapon = user.off_hand();
             let target = sim.combatant(target_id);
             if target.get_equip(self.equip_slot).is_none() {
-                do_single_weapon_attack(sim, user_id, weapon, target_id);
+                do_single_weapon_attack(sim, user_id, weapon, target_id, 0);
             } else {
                 try_break_equip(
                     sim,
@@ -324,7 +324,7 @@ fn try_break_equip<'a>(
     let mod_pa = mod_3_formula_xa(user.pa() as i16, user, target, false, false);
     let mod_wp = mod_3_formula_xa(wp as i16, user, target, false, false);
 
-    let mut chance = (mod_pa as f32 + mod_wp as f32 + base_chance as f32 / 100.0);
+    let mut chance = mod_pa as f32 + mod_wp as f32 + base_chance as f32 / 100.0;
     chance *= user.zodiac_compatibility(target);
 
     if sim.do_physical_evade(user, target, Source::Ability) {
