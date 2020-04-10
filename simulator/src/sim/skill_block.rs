@@ -26,6 +26,9 @@ const MA_SAVE: u64 = 1 << 24;
 const SPEED_SAVE: u64 = 1 << 25;
 const DRAGON_SPIRIT: u64 = 1 << 26;
 const RETREAT: u64 = 1 << 27;
+const HP_RESTORE: u64 = 1 << 28;
+const MP_RESTORE: u64 = 1 << 29;
+const CRITICAL_QUICK: u64 = 1 << 30;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -64,6 +67,9 @@ impl SkillBlock {
                 "Speed Save" => block.flags |= SPEED_SAVE,
                 "Dragon Spirit" => block.flags |= DRAGON_SPIRIT,
                 "Retreat" => block.flags |= RETREAT,
+                "HP Restore" => block.flags |= HP_RESTORE,
+                "MP Restore" => block.flags |= MP_RESTORE,
+                "Critical Quick" => block.flags |= CRITICAL_QUICK,
                 _ => {}
             }
         }
@@ -176,5 +182,17 @@ impl SkillBlock {
 
     pub fn retreat(&self) -> bool {
         self.flags & RETREAT != 0
+    }
+
+    pub fn hp_restore(&self) -> bool {
+        self.flags & HP_RESTORE != 0
+    }
+
+    pub fn mp_restore(&self) -> bool {
+        self.flags & MP_RESTORE != 0
+    }
+
+    pub fn critical_quick(&self) -> bool {
+        self.flags & CRITICAL_QUICK != 0
     }
 }

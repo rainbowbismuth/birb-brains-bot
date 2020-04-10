@@ -227,14 +227,28 @@ impl<'a> Simulation<'a> {
             combatant.on_active_turn = false;
             combatant.moved_during_active_turn = false;
             combatant.acted_during_active_turn = false;
-            combatant.took_damage_during_active_turn = false;
+            combatant.damage_took_during_active_turn = None;
+        }
+    }
+
+    pub fn end_of_action_checks(&mut self, user_id: CombatantId) {
+        if self.prediction_mode {
+            return;
+        }
+        for cid in &COMBATANT_IDS {
+            let combatant = self.combatant(*cid);
+            if let Some(amount) = combatant.damage_took_during_active_turn {
+                self.after_damage_reaction(user_id, *cid, amount);
+            }
         }
     }
 
     fn end_of_active_turn_checks(&mut self) {
         for cid in &COMBATANT_IDS {
             let combatant = self.combatant(*cid);
-            if combatant.acted_during_active_turn || combatant.took_damage_during_active_turn {
+            if combatant.acted_during_active_turn
+                || combatant.damage_took_during_active_turn.is_some()
+            {
                 self.cancel_condition(*cid, Condition::Transparent, Source::Phase);
             }
 
@@ -704,19 +718,26 @@ impl<'a> Simulation<'a> {
             }
         }
         let target = self.combatant_mut(target_id);
+        let was_critical = target.critical();
         target.set_hp_within_bounds(target.hp() - amount);
         let now_dead = target.dead();
+        let now_critical = target.critical();
         if amount > 0 {
-            target.took_damage_during_active_turn = true;
+            // TODO: Technically amount == 0 would do this, but, that would require me to distinguish
+            //   between damage and healing.
+            target.damage_took_during_active_turn = Some(amount);
 
             self.log_event(Event::HpDamage(target_id, amount, src));
             for condition in &DAMAGE_CANCELS {
                 self.cancel_condition(target_id, *condition, src)
             }
+
+            if !was_critical && now_critical {
+                self.became_critical_reaction(target_id);
+            }
         } else {
             self.log_event(Event::HpHeal(target_id, amount.abs(), src));
         }
-
         if now_dead {
             self.target_died(target_id, src);
         }
@@ -785,13 +806,33 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    // TODO: Make this private, rework the flow, etc etc
-    pub fn after_damage_reaction(
-        &mut self,
-        user_id: CombatantId,
-        target_id: CombatantId,
-        amount: i16,
-    ) {
+    pub fn became_critical_reaction(&mut self, target_id: CombatantId) {
+        let target = self.combatant(target_id);
+        if target.hp_restore() && self.roll_brave_reaction(target) {
+            let amount = -target.max_hp();
+            self.change_target_hp(target_id, amount, Source::Constant("HP Restore"));
+            return;
+        }
+
+        if target.mp_restore() && self.roll_brave_reaction(target) {
+            let amount = -target.max_hp();
+            self.change_target_mp(target_id, amount, Source::Constant("MP Restore"));
+            return;
+        }
+
+        if target.critical_quick() && self.roll_brave_reaction(target) {
+            let mut target = self.combatant_mut(target_id);
+            // TODO: There's the whole quick flag thing...
+            target.ct = target.ct.max(100);
+            self.log_event(Event::CriticalQuick(target_id));
+        }
+    }
+
+    fn after_damage_reaction(&mut self, user_id: CombatantId, target_id: CombatantId, amount: i16) {
+        if user_id == target_id {
+            return;
+        }
+
         let target = self.combatant(target_id);
         if amount == 0 || target.dead() || target.sleep() || target.petrify() {
             return;

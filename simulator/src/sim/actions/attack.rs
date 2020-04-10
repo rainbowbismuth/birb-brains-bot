@@ -110,16 +110,12 @@ fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Combata
     }
 
     sim.try_countergrasp(user_id, target_id);
-    if damage > 0 {
-        sim.after_damage_reaction(user_id, target_id, damage);
-    }
 }
 
 fn perform_frog_attack(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
     let pa = sim.combatant(user_id).pa_bang();
     sim.change_target_hp(target_id, pa.into(), Source::Weapon(user_id, None));
     sim.try_countergrasp(user_id, target_id);
-    sim.after_damage_reaction(user_id, target_id, pa.into());
 }
 
 pub fn do_single_weapon_attack<'a, 'b>(

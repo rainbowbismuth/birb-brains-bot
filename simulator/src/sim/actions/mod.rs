@@ -205,4 +205,5 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             .implementation
             .perform(sim, user_id, action.target_id);
     }
+    sim.end_of_action_checks(user_id);
 }

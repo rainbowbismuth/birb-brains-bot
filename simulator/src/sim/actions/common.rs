@@ -130,7 +130,6 @@ impl AbilityImpl for ElementalDamageSpellImpl {
         }
         let damage_amount = mod_5_formula(user, target, self.element, self.q);
         sim.change_target_hp(target_id, damage_amount, Source::Ability);
-        sim.after_damage_reaction(user_id, target_id, damage_amount);
     }
 }
 

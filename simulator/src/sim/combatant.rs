@@ -235,7 +235,7 @@ pub struct Combatant<'a> {
     pub on_active_turn: bool,
     pub moved_during_active_turn: bool,
     pub acted_during_active_turn: bool,
-    pub took_damage_during_active_turn: bool,
+    pub damage_took_during_active_turn: Option<i16>,
     pub raw_brave: i8,
     pub raw_faith: i8,
     pub pa_mod: i8,
@@ -269,7 +269,7 @@ impl<'a> Combatant<'a> {
             on_active_turn: false,
             moved_during_active_turn: false,
             acted_during_active_turn: false,
-            took_damage_during_active_turn: false,
+            damage_took_during_active_turn: None,
             raw_brave: info.starting_brave,
             raw_faith: info.starting_faith,
             ctr_action: None,
@@ -948,6 +948,18 @@ impl<'a> Combatant<'a> {
 
     pub fn retreat(&self) -> bool {
         self.info.skill_block.retreat()
+    }
+
+    pub fn hp_restore(&self) -> bool {
+        self.info.skill_block.hp_restore()
+    }
+
+    pub fn mp_restore(&self) -> bool {
+        self.info.skill_block.mp_restore()
+    }
+
+    pub fn critical_quick(&self) -> bool {
+        self.info.skill_block.critical_quick()
     }
 
     pub fn abilities(&self) -> &[&'a Ability<'a>] {

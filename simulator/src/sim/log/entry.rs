@@ -37,6 +37,7 @@ pub enum Event<'a> {
     MagicalAttackBuff(CombatantId, i8, Source<'a>),
     SpeedBuff(CombatantId, i8, Source<'a>),
     Knockback(CombatantId, Location),
+    CriticalQuick(CombatantId),
 }
 
 #[derive(Copy, Clone)]
@@ -248,6 +249,11 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             describe_combatant_short(*target_id, combatants),
             new_location.x,
             new_location.y
+        ),
+
+        Event::CriticalQuick(target_id) => format!(
+            "{} had critical quick triggered!",
+            describe_combatant_short(*target_id, combatants)
         ),
     }
 }
