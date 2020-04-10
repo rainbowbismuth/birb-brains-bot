@@ -95,12 +95,7 @@ impl AbilityImpl for ThrowImpl {
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action {
-            ability,
-            range: user.movement(),
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, user.movement(), None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);

@@ -164,12 +164,7 @@ impl AbilityImpl for PotionAbilityImpl {
         if user.foe(target) && !should_heal_foe(target, true) {
             return;
         }
-        actions.push(Action {
-            ability,
-            range: item_range(user),
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, item_range(user), None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
         if self.hp_amount > 0 {
@@ -197,12 +192,7 @@ impl AbilityImpl for ConditionCureItemImpl {
         if !self.cures.iter().any(|cond| target.has_condition(*cond)) {
             return;
         }
-        actions.push(Action {
-            ability,
-            range: item_range(user),
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, item_range(user), None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
         for condition in self.cures {
@@ -231,19 +221,9 @@ impl AbilityImpl for PhoenixDownImpl {
         target: &Combatant<'a>,
     ) {
         if user.foe(target) && !target.dead() && target.undead() {
-            actions.push(Action {
-                ability,
-                range: item_range(user),
-                ctr: None,
-                target_id: target.id(),
-            });
+            actions.push(Action::new(ability, item_range(user), None, target.id()));
         } else if user.ally(target) && !target.undead() && target.dead() && !target.reraise() {
-            actions.push(Action {
-                ability,
-                range: item_range(user),
-                ctr: None,
-                target_id: target.id(),
-            });
+            actions.push(Action::new(ability, item_range(user), None, target.id()));
         }
     }
 

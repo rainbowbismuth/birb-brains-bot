@@ -227,12 +227,12 @@ impl AbilityImpl for AbsorbSpellImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
+            self.range,
+            Some(self.ctr),
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);

@@ -31,19 +31,9 @@ impl AbilityImpl for AttackImpl {
             return;
         }
         if user.frog() || user.berserk() && user.monster() {
-            actions.push(Action {
-                ability,
-                range: attack_range(user),
-                ctr: None,
-                target_id: target.id(),
-            });
+            actions.push(Action::new(ability, attack_range(user), None, target.id()));
         } else {
-            actions.push(Action {
-                ability,
-                range: attack_range(user),
-                ctr: None,
-                target_id: target.id(),
-            });
+            actions.push(Action::new(ability, attack_range(user), None, target.id()));
         }
     }
 

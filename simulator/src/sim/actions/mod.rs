@@ -1,4 +1,4 @@
-use crate::sim::{Combatant, CombatantId, Event, Simulation};
+use crate::sim::{Combatant, CombatantId, Event, Location, Simulation};
 
 pub mod attack;
 pub mod battle_skill;
@@ -55,12 +55,78 @@ pub struct Ability<'a> {
     pub name: &'a str,
 }
 
+#[derive(Clone, Copy)]
+pub enum ActionTarget {
+    Id(CombatantId),
+    Panel(Location),
+}
+
+impl ActionTarget {
+    pub fn to_location(self, sim: &Simulation) -> Location {
+        match self {
+            ActionTarget::Id(target_id) => sim.combatant(target_id).location,
+            ActionTarget::Panel(location) => location,
+        }
+    }
+
+    pub fn to_location_combatant_slice(self, combatants: &[Combatant]) -> Location {
+        match self {
+            ActionTarget::Id(target_id) => combatants[target_id.index()].location,
+            ActionTarget::Panel(location) => location,
+        }
+    }
+
+    pub fn to_target_id(self, sim: &Simulation) -> Option<CombatantId> {
+        match self {
+            ActionTarget::Id(target_id) => Some(target_id),
+            ActionTarget::Panel(location) => sim.combatant_on_panel(location),
+        }
+    }
+
+    pub fn to_target_id_only(self) -> Option<CombatantId> {
+        match self {
+            ActionTarget::Id(target_id) => Some(target_id),
+            ActionTarget::Panel(_location) => None,
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Action<'a> {
     pub ability: &'a Ability<'a>,
     pub range: i8,
     pub ctr: Option<u8>,
-    pub target_id: CombatantId,
+    pub target: ActionTarget,
+}
+
+impl<'a> Action<'a> {
+    pub fn new(
+        ability: &'a Ability<'a>,
+        range: i8,
+        ctr: Option<u8>,
+        target_id: CombatantId,
+    ) -> Action<'a> {
+        Action {
+            ability,
+            range,
+            ctr,
+            target: ActionTarget::Id(target_id),
+        }
+    }
+
+    pub fn target_panel(
+        ability: &'a Ability<'a>,
+        range: i8,
+        ctr: Option<u8>,
+        location: Location,
+    ) -> Action<'a> {
+        Action {
+            ability,
+            range,
+            ctr,
+            target: ActionTarget::Panel(location),
+        }
+    }
 }
 
 fn filter_ability_level(user: &Combatant, ability: &Ability) -> bool {
@@ -144,13 +210,6 @@ pub fn perform_action_slow<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, a
     if !filter_ability_level(user, ability) {
         return;
     }
-    let target = sim.combatant(action.target_id);
-    // TODO: I should add a version that ignores the ALLY/FOE_OK because an ability
-    //  should still go off even if the target was charmed
-    if !filter_target_level(user, ability, target) {
-        // TODO: Log some sort of event for failing to perform an ability
-        return;
-    }
 
     perform_action(sim, user_id, action)
 }
@@ -171,8 +230,7 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
 
     if let Some(aoe) = ability.aoe {
         // TODO: Do summons go off even if the target dies? *think*
-        let target = sim.combatant(action.target_id);
-        for location in target.location.diamond(aoe) {
+        for location in action.target.to_location(sim).diamond(aoe) {
             if let Some(real_target_id) = sim.combatant_on_panel(location) {
                 let user = sim.combatant(user_id);
                 let target = sim.combatant(real_target_id);
@@ -196,14 +254,23 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             }
         }
     } else {
-        let target = sim.combatant(action.target_id);
-        if target.jumping() {
-            return;
-        }
+        if let Some(target_id) = action.target.to_target_id(sim) {
+            let target = sim.combatant(target_id);
+            if target.jumping() {
+                return;
+            }
 
-        ability
-            .implementation
-            .perform(sim, user_id, action.target_id);
+            let user = sim.combatant(user_id);
+            // TODO: Not a great place for this.. re: MP costs.
+            if !filter_target_level(user, ability, target) {
+                // TODO: Log some sort of event for failing to perform an ability
+                return;
+            }
+
+            ability.implementation.perform(sim, user_id, target_id);
+        } else {
+            // TODO: Something about the ability missing.
+        }
     }
     sim.end_of_action_checks(user_id);
 }

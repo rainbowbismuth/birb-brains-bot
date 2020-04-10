@@ -48,12 +48,12 @@ impl AbilityImpl for JumpImpl {
             return;
         }
 
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: user.info.horizontal_jump,
-            ctr: Some(jump_ticks),
-            target_id: target.id(),
-        });
+            user.info.horizontal_jump,
+            Some(jump_ticks),
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         sim.cancel_condition(user_id, Condition::Jumping, Source::Ability);

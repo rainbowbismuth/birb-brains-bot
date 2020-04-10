@@ -2,8 +2,8 @@ use colored::Colorize;
 
 use crate::dto::rust::Equipment;
 use crate::sim::{
-    Action, Combatant, CombatantId, Condition, Facing, Location, Phase, RelativeFacing, Team,
-    MAX_COMBATANTS,
+    Action, ActionTarget, Combatant, CombatantId, Condition, Facing, Location, Phase,
+    RelativeFacing, Team, MAX_COMBATANTS,
 };
 
 #[derive(Clone)]
@@ -188,8 +188,8 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             "{} is using {} on {} from the {}",
             describe_combatant(*target_id, combatants),
             action.ability.name,
-            describe_combatant_short(action.target_id, combatants),
-            describe_relative_facing(*target_id, action.target_id, combatants)
+            describe_target_short(action.target, combatants),
+            describe_relative_facing(*target_id, action.target, combatants)
         ),
 
         Event::AbilityMissed(user_id, target_id) => format!(
@@ -202,7 +202,7 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             "{} started charging {} on {}",
             describe_combatant(*target_id, combatants),
             action.ability.name,
-            describe_combatant_short(action.target_id, combatants),
+            describe_target_short(action.target, combatants),
         ),
 
         Event::Silenced(target_id, action) => format!(
@@ -255,6 +255,13 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             "{} had critical quick triggered!",
             describe_combatant_short(*target_id, combatants)
         ),
+    }
+}
+
+pub fn describe_target_short(target: ActionTarget, combatants: &[Combatant]) -> String {
+    match target {
+        ActionTarget::Id(target_id) => describe_combatant_short(target_id, combatants),
+        ActionTarget::Panel(location) => format!("({},{})", location.x, location.y),
     }
 }
 
@@ -318,15 +325,20 @@ pub fn describe_facing(facing: Facing) -> &'static str {
 
 pub fn describe_relative_facing(
     user_id: CombatantId,
-    target_id: CombatantId,
+    target: ActionTarget,
     combatants: &[Combatant],
 ) -> &'static str {
-    let user = combatants[user_id.index()];
-    let target = combatants[target_id.index()];
-    match user.relative_facing(&target) {
-        RelativeFacing::Front => "front",
-        RelativeFacing::Side => "side",
-        RelativeFacing::Back => "back",
+    if let Some(target_id) = target.to_target_id_only() {
+        let user = combatants[user_id.index()];
+        let target = combatants[target_id.index()];
+        match user.relative_facing(&target) {
+            RelativeFacing::Front => "front",
+            RelativeFacing::Side => "side",
+            RelativeFacing::Back => "back",
+        }
+    } else {
+        // TODO: Fix this and remove this ugly case lol
+        "n/a"
     }
 }
 

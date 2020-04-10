@@ -101,12 +101,12 @@ impl AbilityImpl for ChargeImpl {
         if self.ct >= ticks_left {
             return;
         }
-        actions.push(Action {
+        actions.push(Action::target_panel(
             ability,
-            range: user.main_hand().map_or(1, |eq| eq.range),
-            ctr: Some(self.ct),
-            target_id: target.id(),
-        });
+            user.main_hand().map_or(1, |eq| eq.range),
+            Some(self.ct),
+            target.location,
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);

@@ -549,9 +549,12 @@ impl<'a> Simulation<'a> {
                         return None;
                     }
                     // TODO: This isn't strictly correct..
-                    if !can_move_into_range(user, action.range, self.combatant(action.target_id)) {
-                        return None;
+                    if let Some(target_id) = action.target.to_target_id(self) {
+                        if !can_move_into_range(user, action.range, self.combatant(target_id)) {
+                            return None;
+                        }
                     }
+
                     let mut simulated_world = self.prediction_clone();
                     perform_action(&mut simulated_world, user_id, *action);
                     let new_value = ai_target_value_sum(
@@ -571,9 +574,9 @@ impl<'a> Simulation<'a> {
 
         if let Some((_, action)) = best_action {
             let user = self.combatant(user_id);
-            let target = self.combatant(action.target_id);
-            if !in_range(user, action.range, target) {
-                self.pre_action_move(user_id, action.range as u8, action.target_id);
+            let target_panel = action.target.to_location(self);
+            if !in_range_panel(user, action.range, target_panel) {
+                self.pre_action_move(user_id, action.range as u8, target_panel);
             }
             if let Some(mut ctr) = action.ctr {
                 let user = self.combatant(user_id);
@@ -793,13 +796,7 @@ impl<'a> Simulation<'a> {
                 return;
             }
 
-            let action = Action {
-                ability: &ATTACK_ABILITY,
-                range,
-                ctr: None,
-                target_id: user_id,
-            };
-
+            let action = Action::new(&ATTACK_ABILITY, range, None, user_id);
             self.trigger_countergrasps = false;
             perform_action(self, target_id, action);
             self.trigger_countergrasps = true;
@@ -931,15 +928,13 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn pre_action_move(&mut self, user_id: CombatantId, range: u8, target_id: CombatantId) {
+    fn pre_action_move(&mut self, user_id: CombatantId, range: u8, target_panel: Location) {
         let user = self.combatant(user_id);
-        let target = self.combatant(target_id);
         let movement = if user.dont_move() { 0 } else { user.movement() };
-        if in_range(user, range as i8, target) {
+        if in_range_panel(user, range as i8, target_panel) {
             return;
         }
-        let best_panel = target
-            .location
+        let best_panel = target_panel
             .diamond(range)
             .flat_map(|location| {
                 if user.location.distance(location) > movement as i16 {
@@ -1078,6 +1073,11 @@ impl<'a> Simulation<'a> {
 
 pub fn in_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
     let dist = user.distance(target);
+    dist <= range as i16
+}
+
+pub fn in_range_panel(user: &Combatant, range: i8, panel: Location) -> bool {
+    let dist = user.location.distance(panel);
     dist <= range as i16
 }
 

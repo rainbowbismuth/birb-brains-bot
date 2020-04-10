@@ -149,12 +149,7 @@ impl AbilityImpl for DrawOutDamageImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action {
-            ability,
-            range: 0,
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, 0, None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -210,12 +205,7 @@ impl AbilityImpl for DrawOutBuffImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action {
-            ability,
-            range: 0,
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, 0, None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
         // TODO: Do we ever add more than one?

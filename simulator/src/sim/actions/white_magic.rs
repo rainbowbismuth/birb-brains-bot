@@ -239,12 +239,12 @@ impl AbilityImpl for RaiseSpellImpl {
         if user.foe(target) && !should_heal_foe(target, true) {
             return;
         }
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
+            self.range,
+            Some(self.ctr),
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let mut success_chance = 1.0;

@@ -61,12 +61,12 @@ impl AbilityImpl for AddConditionSpellImpl {
         if target.has_condition(self.condition) {
             return;
         }
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
+            self.range,
+            Some(self.ctr),
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -112,12 +112,7 @@ impl AbilityImpl for ElementalDamageSpellImpl {
         if user.foe(target) && target.absorbs(self.element) {
             return;
         }
-        actions.push(Action {
-            ability,
-            range: self.range,
-            ctr: self.ctr,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, self.range, self.ctr, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -158,12 +153,12 @@ impl AbilityImpl for ConditionClearSpellImpl {
         {
             return;
         }
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
+            self.range,
+            Some(self.ctr),
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -424,12 +419,7 @@ impl AbilityImpl for CureSpellImpl {
         if user.foe(target) && !should_heal_foe(target, true) {
             return;
         }
-        actions.push(Action {
-            ability,
-            range: self.range,
-            ctr: self.ctr,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, self.range, self.ctr, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let mut heal_amount = 1.0;

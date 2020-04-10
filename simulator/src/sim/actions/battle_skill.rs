@@ -157,12 +157,12 @@ impl AbilityImpl for AbsorbSwordImpl {
             return;
         }
 
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
+            self.range,
+            Some(self.ctr),
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -215,12 +215,12 @@ impl AbilityImpl for ChanceToAddSwordImpl {
             return;
         }
 
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: self.range,
-            ctr: Some(self.ctr),
-            target_id: target.id(),
-        });
+            self.range,
+            Some(self.ctr),
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -263,12 +263,12 @@ impl AbilityImpl for BreakEquipImpl {
         if target.monster() {
             return;
         }
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: user.main_hand().map_or(1, |eq| eq.range),
-            ctr: None,
-            target_id: target.id(),
-        });
+            user.main_hand().map_or(1, |eq| eq.range),
+            None,
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -353,12 +353,12 @@ impl AbilityImpl for MagicBreakImpl {
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action {
+        actions.push(Action::new(
             ability,
-            range: user.main_hand().map_or(1, |eq| eq.range),
-            ctr: None,
-            target_id: target.id(),
-        });
+            user.main_hand().map_or(1, |eq| eq.range),
+            None,
+            target.id(),
+        ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);

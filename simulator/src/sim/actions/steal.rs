@@ -125,12 +125,7 @@ impl AbilityImpl for StealImpl {
                 }
             }
         }
-        actions.push(Action {
-            ability,
-            range: 1,
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, 1, None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -170,12 +165,7 @@ impl AbilityImpl for GilTakingImpl {
         if target.berserk() {
             return;
         }
-        actions.push(Action {
-            ability,
-            range: self.range,
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, self.range, None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -216,12 +206,7 @@ impl AbilityImpl for StealHeartImpl {
             // ;-;
             return;
         }
-        actions.push(Action {
-            ability,
-            range: self.range,
-            ctr: None,
-            target_id: target.id(),
-        });
+        actions.push(Action::new(ability, self.range, None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
