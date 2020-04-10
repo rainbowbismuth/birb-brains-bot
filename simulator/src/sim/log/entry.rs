@@ -36,6 +36,7 @@ pub enum Event<'a> {
     PhysicalAttackBuff(CombatantId, i8, Source<'a>),
     MagicalAttackBuff(CombatantId, i8, Source<'a>),
     SpeedBuff(CombatantId, i8, Source<'a>),
+    Knockback(CombatantId, Location),
 }
 
 #[derive(Copy, Clone)]
@@ -240,6 +241,13 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             describe_combatant(*target_id, combatants),
             amount,
             describe_source(*src, combatants)
+        ),
+
+        Event::Knockback(target_id, new_location) => format!(
+            "{} was knocked back into ({},{})",
+            describe_combatant_short(*target_id, combatants),
+            new_location.x,
+            new_location.y
         ),
     }
 }

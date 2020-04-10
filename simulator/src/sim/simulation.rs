@@ -1012,6 +1012,18 @@ impl<'a> Simulation<'a> {
         }
         None
     }
+
+    pub fn do_knockback(&mut self, user_id: CombatantId, target_id: CombatantId) {
+        let user = self.combatant(user_id);
+        let target = self.combatant(target_id);
+        let direction = Facing::towards(user.location, target.location).offset();
+        let new_panel = target.location + direction;
+        if self.combatant_on_panel(new_panel).is_none() {
+            let mut target = self.combatant_mut(target_id);
+            target.location = new_panel;
+            self.log_event(Event::Knockback(target_id, new_panel));
+        }
+    }
 }
 
 pub fn in_range(user: &Combatant, range: i8, target: &Combatant) -> bool {

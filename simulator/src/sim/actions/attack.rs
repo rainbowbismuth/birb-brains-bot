@@ -92,13 +92,23 @@ fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Combata
     let weapon1 = sim.combatant(user_id).main_hand();
     let weapon2 = sim.combatant(user_id).off_hand();
     let (mut damage, mut crit) = do_single_weapon_attack(sim, user_id, weapon1, target_id);
-    if sim.combatant(user_id).dual_wield() && weapon2.is_some() {
-        if sim.roll_auto_succeed() < 0.05 {
-            let pair = do_single_weapon_attack(sim, user_id, weapon2, target_id);
-            damage = pair.0;
-            crit = pair.1;
-        }
+    let mut knockback = false;
+
+    if crit && sim.roll_auto_fail() < 0.50 {
+        sim.do_knockback(user_id, target_id);
+        knockback = true;
     }
+
+    if sim.combatant(user_id).dual_wield()
+        && weapon2.is_some()
+        // FIXME: This condition is a little bit of a cheat :)
+        && (!knockback || attack_range(sim.combatant(user_id)) > 1)
+    {
+        let pair = do_single_weapon_attack(sim, user_id, weapon2, target_id);
+        damage = pair.0;
+        crit = pair.1;
+    }
+
     sim.try_countergrasp(user_id, target_id);
     if damage > 0 {
         sim.after_damage_reaction(user_id, target_id, damage);
@@ -118,8 +128,10 @@ fn do_single_weapon_attack<'a, 'b>(
     weapon: Option<&'b Equipment>,
     target_id: CombatantId,
 ) -> (i16, bool) {
+    let is_gun = weapon.map_or(false, |eq| eq.weapon_type == Some(WeaponType::Gun));
+
     if let Some(weapon) = weapon {
-        if weapon.weapon_type == Some(WeaponType::Gun) && weapon.weapon_element.is_some() {
+        if is_gun && weapon.weapon_element.is_some() {
             return do_single_magical_gun_attack(sim, user_id, weapon, target_id);
         }
     }
@@ -127,9 +139,11 @@ fn do_single_weapon_attack<'a, 'b>(
     let user = sim.combatant(user_id);
     let target = sim.combatant(target_id);
     let src = Source::Weapon(user_id, weapon);
-    if sim.do_physical_evade(user, target, src) {
+
+    if !is_gun && sim.do_physical_evade(user, target, src) {
         return (0, false);
     }
+
     let (damage, crit) = calculate_damage(sim, user, weapon, target, 0);
     sim.change_target_hp(target_id, damage, src);
     sim.weapon_chance_to_add_or_cancel_status(user_id, weapon, target_id);
@@ -146,7 +160,6 @@ fn calculate_damage<'a, 'b>(
     target: &Combatant,
     k: i16,
 ) -> (i16, bool) {
-    // FIXME: These modifiers do not apply to magical guns
     let mut critical_hit = false;
     let mut xa = sim.calculate_weapon_xa(user, weapon, k);
     let mut damage = 0;
@@ -233,10 +246,6 @@ fn do_single_magical_gun_attack<'a, 'b>(
 ) -> (i16, bool) {
     let user = sim.combatant(user_id);
     let target = sim.combatant(target_id);
-    let src = Source::Weapon(user_id, Some(weapon));
-    if sim.do_magical_evade(user, target, src) {
-        return (0, false);
-    }
 
     let spell_strength = sim.roll_inclusive(1, 10);
     let q = if spell_strength <= 6 {
