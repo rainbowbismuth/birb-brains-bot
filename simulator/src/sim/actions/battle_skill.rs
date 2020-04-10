@@ -1,6 +1,6 @@
 use crate::dto::rust::Equipment;
 use crate::sim::actions::attack::do_single_weapon_attack;
-use crate::sim::actions::common::{mod_2_formula_xa, mod_3_formula_xa};
+use crate::sim::actions::common::{do_hp_damage, do_hp_heal, mod_2_formula_xa, mod_3_formula_xa};
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
 use crate::sim::{
     Combatant, CombatantId, Condition, EquipSlot, Event, Simulation, Source, WeaponType,
@@ -84,7 +84,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Justice Sword",
         flags: FOE_OK,
         mp_cost: 22,
-        aoe: Some(1),
+        aoe: None,
         implementation: &ChanceToAddSwordImpl {
             wp_plus: 2,
             chance_to_add: Condition::DeathSentence,
@@ -108,8 +108,87 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Explosion Sword: 4 range, 4 AoE (line), 2 CT, 26 MP. Effect: Damage (PA * (WP + 3)); Chance to Add Confusion.
     // Shellburst Stab: 2 range, 0 AoE, 15 MP. Effect: Break target's body equipment; If successful Damage (PA * WP).
     // Dark Sword: 2 range, 0 AoE, 2 CT, 18 MP. Effect: AbsorbMP (PA * WP).
+    Ability {
+        name: "Dark Sword",
+        flags: FOE_OK,
+        mp_cost: 18,
+        aoe: None,
+        implementation: &AbsorbSwordImpl {
+            hp_not_mp: false,
+            range: 2,
+            ctr: 2,
+        },
+    },
     // Night Sword: 2 range, 0 AoE, 3 CT, 22 MP. Effect: AbsorbHP (PA * WP).
+    Ability {
+        name: "Night Sword",
+        flags: FOE_OK,
+        mp_cost: 22,
+        aoe: None,
+        implementation: &AbsorbSwordImpl {
+            hp_not_mp: true,
+            range: 2,
+            ctr: 3,
+        },
+    },
 ];
+
+struct AbsorbSwordImpl {
+    hp_not_mp: bool,
+    range: i8,
+    ctr: u8,
+}
+
+impl AbilityImpl for AbsorbSwordImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        if user.main_hand().map_or(true, |eq| {
+            eq.weapon_type != Some(WeaponType::Sword)
+                && eq.weapon_type != Some(WeaponType::KnightSword)
+        }) {
+            return;
+        }
+
+        actions.push(Action {
+            ability,
+            range: self.range,
+            ctr: Some(self.ctr),
+            target_id: target.id(),
+        });
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+
+        if user.main_hand().map_or(true, |eq| {
+            eq.weapon_type != Some(WeaponType::Sword)
+                && eq.weapon_type != Some(WeaponType::KnightSword)
+        }) {
+            return;
+        }
+
+        // TODO: This is a weapon elemental attack sooo...
+        let mut xa = mod_3_formula_xa(user.pa() as i16, user, target, false, false);
+        if sim.roll_auto_fail() < 0.05 {
+            xa += sim.roll_inclusive(1, xa.max(1)) - 1;
+        }
+        let damage = xa * user.main_hand().unwrap().wp as i16;
+
+        if self.hp_not_mp {
+            do_hp_damage(sim, target_id, damage, true);
+            do_hp_heal(sim, user_id, damage, true);
+        } else {
+            sim.change_target_mp(target_id, damage, Source::Ability);
+            sim.change_target_mp(user_id, -damage, Source::Ability);
+        }
+    }
+}
 
 struct ChanceToAddSwordImpl {
     wp_plus: i16,

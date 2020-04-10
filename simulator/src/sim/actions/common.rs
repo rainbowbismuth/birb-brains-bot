@@ -13,6 +13,19 @@ pub fn should_heal_ally(target: &Combatant, hurts_undead: bool) -> bool {
     }
 }
 
+pub fn do_hp_damage(
+    sim: &mut Simulation,
+    target_id: CombatantId,
+    mut amount: i16,
+    heals_undead: bool,
+) {
+    let target = sim.combatant(target_id);
+    if heals_undead && target.undead() {
+        amount = -amount;
+    }
+    sim.change_target_hp(target_id, amount, Source::Ability);
+}
+
 pub fn do_hp_heal(
     sim: &mut Simulation,
     target_id: CombatantId,
