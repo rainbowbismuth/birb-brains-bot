@@ -45,6 +45,10 @@ struct Test {
     #[clap(short = "w")]
     print_worst: bool,
 
+    /// Filter out all matches with any monsters
+    #[clap(long = "filter-no-monsters")]
+    filter_no_monsters: bool,
+
     /// Filter for a piece of equipment
     #[clap(long = "filter-equip")]
     filter_equip: Vec<String>,
@@ -76,6 +80,7 @@ fn main() -> io::Result<()> {
             test.print_worst,
             test.filter_equip,
             test.filter_ability,
+            test.filter_no_monsters,
         ),
         SubCommand::Run(run) => runner::run_specific_match(run.match_id, run.num_runs),
         SubCommand::Feed(_feed) => data::convert_data_from_feed(),

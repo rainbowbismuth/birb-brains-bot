@@ -7,7 +7,7 @@ use rand::{thread_rng, SeedableRng};
 use crate::data;
 use crate::dto::rust::{MatchUp, Patch};
 use crate::sim::{
-    describe_entry, unit_card, Combatant, CombatantId, CombatantInfo, Simulation, Team,
+    describe_entry, unit_card, Combatant, CombatantId, CombatantInfo, Gender, Simulation, Team,
 };
 use std::path::PathBuf;
 
@@ -156,11 +156,16 @@ pub fn has_ability(combatants: &[CombatantInfo], name: &str) -> bool {
         .any(|info| info.abilities.iter().any(|ability| ability.name == name))
 }
 
+pub fn has_monster(combatants: &[CombatantInfo]) -> bool {
+    combatants.iter().any(|info| info.gender == Gender::Monster)
+}
+
 pub fn run_all_matches(
     num_runs: i32,
     print_worst: bool,
     filter_equip: Vec<String>,
     filter_ability: Vec<String>,
+    filter_no_monsters: bool,
 ) -> io::Result<()> {
     let patches = data::read_all_patches()?;
 
@@ -207,6 +212,9 @@ pub fn run_all_matches(
             if !has_ability(&combatant_infos, ability) {
                 continue 'filter;
             }
+        }
+        if filter_no_monsters && has_monster(&combatant_infos) {
+            continue 'filter;
         }
 
         match_ups.push((match_up_path, patch, match_up));
