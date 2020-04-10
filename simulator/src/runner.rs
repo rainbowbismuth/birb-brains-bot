@@ -150,10 +150,17 @@ pub fn has_equip(combatants: &[CombatantInfo], name: &str) -> bool {
     })
 }
 
+pub fn has_ability(combatants: &[CombatantInfo], name: &str) -> bool {
+    combatants
+        .iter()
+        .any(|info| info.abilities.iter().any(|ability| ability.name == name))
+}
+
 pub fn run_all_matches(
     num_runs: i32,
     print_worst: bool,
-    filter_equip: Option<String>,
+    filter_equip: Vec<String>,
+    filter_ability: Vec<String>,
 ) -> io::Result<()> {
     let patches = data::read_all_patches()?;
 
@@ -182,7 +189,7 @@ pub fn run_all_matches(
             .progress_chars("##-"),
     );
 
-    for match_up_path in match_up_paths.iter() {
+    'filter: for match_up_path in match_up_paths.iter() {
         bar1.inc(1);
         let (patch_num, match_up) = data::read_match_at_path(&match_up_path, &mut buffer)?;
         let patch = patches
@@ -190,14 +197,22 @@ pub fn run_all_matches(
             .find(|p| p.time as usize == patch_num)
             .unwrap();
         let combatant_infos = match_to_combatant_infos(&patch, &match_up);
-        if let Some(ref equip) = filter_equip {
+
+        for equip in &filter_equip {
             if !has_equip(&combatant_infos, equip) {
-                continue;
+                continue 'filter;
             }
         }
+        for ability in &filter_ability {
+            if !has_ability(&combatant_infos, ability) {
+                continue 'filter;
+            }
+        }
+
         match_ups.push((match_up_path, patch, match_up));
     }
     bar1.finish();
+
     let total = match_ups.len() as u64 * num_runs as u64;
 
     let bar = ProgressBar::new(total);

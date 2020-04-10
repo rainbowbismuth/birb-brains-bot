@@ -1,6 +1,7 @@
 use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::actions::attack::ATTACK_ABILITY;
+use crate::sim::actions::battle_skill::BATTLE_SKILL_ABILITIES;
 use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::draw_out::DRAW_OUT_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
@@ -133,6 +134,7 @@ impl<'a> CombatantInfo<'a> {
             WORK_ABILITIES,
             THROW_ABILITIES,
             STEAL_ABILITIES,
+            BATTLE_SKILL_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {

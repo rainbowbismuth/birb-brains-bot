@@ -122,7 +122,7 @@ fn perform_frog_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Co
     sim.after_damage_reaction(user_id, target_id, pa.into());
 }
 
-fn do_single_weapon_attack<'a, 'b>(
+pub fn do_single_weapon_attack<'a, 'b>(
     sim: &'a mut Simulation<'b>,
     user_id: CombatantId,
     weapon: Option<&'b Equipment>,

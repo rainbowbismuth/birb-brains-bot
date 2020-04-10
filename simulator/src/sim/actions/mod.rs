@@ -1,6 +1,7 @@
 use crate::sim::{Combatant, CombatantId, Event, Simulation};
 
 pub mod attack;
+pub mod battle_skill;
 pub mod black_magic;
 pub mod common;
 pub mod draw_out;
