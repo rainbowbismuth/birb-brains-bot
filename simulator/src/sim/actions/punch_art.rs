@@ -20,7 +20,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         },
     },
     // TODO: Pummel: 1 range, 0 AoE. Effect: Damage (Random(1-9) * PA * 3 / 2).
-    // TODO: Wave Fist: 3 range, 0 AoE. Element: Wind. Effect: Damage ((PA + 2) / 2 * PA).
+    // Wave Fist: 3 range, 0 AoE. Element: Wind. Effect: Damage ((PA + 2) / 2 * PA).
     Ability {
         name: "Wave Fist",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
@@ -32,7 +32,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
             range: 3,
         },
     },
-    // Earth Slash: 8 range, 8 AoE (line). Element: Earth. Effect: Damage (PA / 2 * PA).
+    // TODO: Earth Slash: 8 range, 8 AoE (line). Element: Earth. Effect: Damage (PA / 2 * PA).
     // Secret Fist: 1 range, 0 AoE. Hit: (MA + 50)%. Effect: Add Death Sentence.
     Ability {
         name: "Secret Fist",
