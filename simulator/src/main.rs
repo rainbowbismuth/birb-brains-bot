@@ -44,6 +44,10 @@ struct Test {
     /// Print the match with the highest log loss at the end
     #[clap(short = "w")]
     print_worst: bool,
+
+    /// Filter for a piece of equipment
+    #[clap(long = "filter-equip")]
+    filter_equip: Option<String>,
 }
 
 #[derive(Clap)]
@@ -63,7 +67,9 @@ fn main() -> io::Result<()> {
     let opts: Opts = Opts::parse();
 
     match opts.sub_cmd {
-        SubCommand::Test(test) => runner::run_all_matches(test.num_runs, test.print_worst),
+        SubCommand::Test(test) => {
+            runner::run_all_matches(test.num_runs, test.print_worst, test.filter_equip)
+        }
         SubCommand::Run(run) => runner::run_specific_match(run.match_id, run.num_runs),
         SubCommand::Feed(_feed) => data::convert_data_from_feed(),
     }

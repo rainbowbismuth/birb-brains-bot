@@ -140,7 +140,21 @@ pub fn run_specific_match(match_id: u64, num_runs: i32) -> io::Result<()> {
     Ok(())
 }
 
-pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
+pub fn has_equip(combatants: &[CombatantInfo], name: &str) -> bool {
+    combatants.iter().any(|info| {
+        info.main_hand.map_or(false, |eq| eq.name == name)
+            || info.off_hand.map_or(false, |eq| eq.name == name)
+            || info.headgear.map_or(false, |eq| eq.name == name)
+            || info.armor.map_or(false, |eq| eq.name == name)
+            || info.accessory.map_or(false, |eq| eq.name == name)
+    })
+}
+
+pub fn run_all_matches(
+    num_runs: i32,
+    print_worst: bool,
+    filter_equip: Option<String>,
+) -> io::Result<()> {
     let patches = data::read_all_patches()?;
 
     println!("{} patches\n", patches.len());
@@ -148,7 +162,7 @@ pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
     let match_up_paths = data::find_all_match_ups()?;
 
     let mut correct = 0;
-    let total = match_up_paths.len() as u64;
+
     let mut time_outs = 0;
     let mut log_loss: f64 = 0.0;
 
@@ -157,21 +171,46 @@ pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
     let mut replay_data = vec![];
 
     let mut buffer = vec![];
-    let bar = ProgressBar::new(total);
-    bar.set_style(
+    let mut match_ups = vec![];
+
+    let bar1 = ProgressBar::new(match_up_paths.len() as u64);
+    bar1.set_style(
         ProgressStyle::default_bar()
             .template(
-                "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg} {per_sec} {eta}",
+                "Loading... [{elapsed_precise}] {bar:40.purple/blue} {pos:>9}/{len:9} {msg} {per_sec} {eta}",
             )
             .progress_chars("##-"),
     );
-    for (match_num, match_up_path) in match_up_paths.iter().enumerate() {
-        bar.inc(1);
+
+    for match_up_path in match_up_paths.iter() {
+        bar1.inc(1);
         let (patch_num, match_up) = data::read_match_at_path(&match_up_path, &mut buffer)?;
         let patch = patches
             .iter()
             .find(|p| p.time as usize == patch_num)
             .unwrap();
+        let combatant_infos = match_to_combatant_infos(&patch, &match_up);
+        if let Some(ref equip) = filter_equip {
+            if !has_equip(&combatant_infos, equip) {
+                continue;
+            }
+        }
+        match_ups.push((match_up_path, patch, match_up));
+    }
+    bar1.finish();
+    let total = match_ups.len() as u64 * num_runs as u64;
+
+    let bar = ProgressBar::new(total);
+    bar.set_style(
+        ProgressStyle::default_bar()
+            .template(
+                "Simulating [{elapsed_precise}] {bar:40.cyan/blue} {pos:>9}/{len:9} {msg} {per_sec} {eta}",
+            )
+            .progress_chars("##-"),
+    );
+
+    for (match_up_path, patch, match_up) in match_ups.iter() {
+        bar.inc(num_runs as u64);
 
         let combatant_infos = match_to_combatant_infos(&patch, &match_up);
         let combatants = match_to_combatants(&combatant_infos);
@@ -194,7 +233,7 @@ pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
 
         if print_worst && current_log_loss >= worst_loss {
             worst_loss = current_log_loss;
-            replay_path = match_up_path.clone();
+            replay_path = (*match_up_path).clone();
             let rng = SmallRng::from_entropy();
             let mut sim = Simulation::new(combatants.clone(), 10, rng, true);
             sim.run();
@@ -215,15 +254,16 @@ pub fn run_all_matches(num_runs: i32, print_worst: bool) -> io::Result<()> {
         println!("{}", line);
     }
 
-    let correct_percent = correct as f32 / total as f32;
-    println!("\ntotal: {}", total);
+    let total_matches = match_ups.len();
+    let correct_percent = correct as f32 / total_matches as f32;
+    println!("\ntotal: {}", total_matches);
     println!("correct: {:.1}%", correct_percent * 100.0);
     println!(
         "time_outs: {:.1}%",
-        ((time_outs as f32 / num_runs as f32) / total as f32) * 100.0
+        ((time_outs as f32 / num_runs as f32) / total_matches as f32) * 100.0
     );
     println!("improvement: {:.1}%", (correct_percent - 0.5) * 200.0);
-    println!("log loss: {:.6}", log_loss / total as f64);
+    println!("log loss: {:.6}", log_loss / total_matches as f64);
 
     return Ok(());
 }
