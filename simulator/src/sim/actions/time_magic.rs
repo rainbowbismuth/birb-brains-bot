@@ -1,14 +1,15 @@
 use crate::sim::actions::{Ability, ALLY_OK, FOE_OK};
 use crate::sim::common::{AddConditionSpellImpl, ElementalDamageSpellImpl};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
+    Combatant, CombatantId, Condition, Element, Simulation, Source, CAN_BE_CALCULATED,
+    CAN_BE_REFLECTED, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
     // Haste: 4 range, 1 AoE, 2 CT, 8 MP. Hit: Faith(MA + 180)%. Effect: Add Haste.
     Ability {
         name: "Haste",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -38,7 +39,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
     // Slow: 4 range, 1 AoE, 2 CT, 8 MP. Hit: Faith(MA + 180)%. Effect: Add Slow.
     Ability {
         name: "Slow",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -68,7 +69,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
     // Stop: 4 range, 1 AoE, 7 CT, 14 MP. Hit: Faith(MA + 130)%. Effect: Add Stop.
     Ability {
         name: "Stop",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 14,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -83,7 +84,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
     // Immobilize: 5 range, 1 AoE, 3 CT, 10 MP. Hit: Faith(MA + 190)%. Effect: Add Don't Move.
     Ability {
         name: "Immobilize",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {

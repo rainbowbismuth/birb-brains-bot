@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct Location {
@@ -43,6 +43,28 @@ impl Add for Location {
         Self {
             x: self.x + other.x,
             y: self.y + other.y,
+        }
+    }
+}
+
+impl Sub for Location {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
+    }
+}
+
+impl Mul<i16> for Location {
+    type Output = Self;
+
+    fn mul(self, other: i16) -> Self {
+        Self {
+            x: self.x * other,
+            y: self.y * other,
         }
     }
 }

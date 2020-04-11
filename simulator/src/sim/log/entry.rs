@@ -38,6 +38,7 @@ pub enum Event<'a> {
     SpeedBuff(CombatantId, i8, Source<'a>),
     Knockback(CombatantId, Location),
     CriticalQuick(CombatantId),
+    SpellReflected(CombatantId, Location),
 }
 
 #[derive(Copy, Clone)]
@@ -254,6 +255,13 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
         Event::CriticalQuick(target_id) => format!(
             "{} had critical quick triggered!",
             describe_combatant_short(*target_id, combatants)
+        ),
+
+        Event::SpellReflected(target_id, new_location) => format!(
+            "A spell was reflected off of {} onto ({},{})",
+            describe_combatant_short(*target_id, combatants),
+            new_location.x,
+            new_location.y
         ),
     }
 }

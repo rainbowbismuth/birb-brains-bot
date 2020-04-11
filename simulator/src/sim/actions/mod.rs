@@ -45,6 +45,8 @@ pub const JUMPING: AbilityFlags = 1 << 10;
 pub const TARGET_NOT_SELF: AbilityFlags = 1 << 11;
 pub const FROG_OK: AbilityFlags = 1 << 12;
 pub const DONT_MOVE_WHILE_CHARGING: AbilityFlags = 1 << 13;
+pub const CAN_BE_REFLECTED: AbilityFlags = 1 << 14;
+pub const CAN_BE_CALCULATED: AbilityFlags = 1 << 15;
 
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
@@ -226,6 +228,23 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         };
         let new_mp = user.mp() - mp_cost;
         user.set_mp_within_bounds(new_mp);
+    }
+
+    let mut action_target = action.target;
+    if action.ability.flags & CAN_BE_REFLECTED != 0 {
+        // TODO: FFT AI has some awesome decision making around the AI planning it's actions
+        //  based on reflect, if the reflective unit can move by the time the spell goes off,
+        //  etc.
+        if let Some(target_id) = action_target.to_target_id(sim) {
+            let target = sim.combatant(target_id);
+            if target.reflect() {
+                let user = sim.combatant(user_id);
+                let direction = target.location - user.location;
+                let new_location = direction * 2;
+                action_target = ActionTarget::Panel(new_location);
+                sim.log_event(Event::SpellReflected(target_id, new_location));
+            }
+        }
     }
 
     if let Some(aoe) = ability.aoe {

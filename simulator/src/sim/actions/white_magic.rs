@@ -4,15 +4,15 @@ use crate::sim::common::{
     CureSpellImpl, ElementalDamageSpellImpl,
 };
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Event, Simulation, NOT_ALIVE_OK, PETRIFY_OK,
-    SILENCEABLE,
+    Combatant, CombatantId, Condition, Element, Event, Simulation, CAN_BE_CALCULATED,
+    CAN_BE_REFLECTED, NOT_ALIVE_OK, PETRIFY_OK, SILENCEABLE,
 };
 
 pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Cure: 5 range, 1 AoE, 3 CT, 6 MP. Effect: Heal Faith(MA * 15).
     Ability {
         name: "Cure",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: Some(1),
         implementation: &CureSpellImpl {
@@ -24,7 +24,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Cure 2: 5 range, 1 AoE, 4 CT, 10 MP. Effect: Heal Faith(MA * 20).
     Ability {
         name: "Cure 2",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
         aoe: Some(1),
         implementation: &CureSpellImpl {
@@ -36,7 +36,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Cure 3: 5 range, 1 AoE, 6 CT, 16 MP. Effect: Heal Faith(MA * 30).
     Ability {
         name: "Cure 3",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
         aoe: Some(1),
         implementation: &CureSpellImpl {
@@ -60,7 +60,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Raise: 5 range, 0 AoE, 4 CT, 10 MP. Hit: Faith(MA + 190)%. Effect: Cancel Death; If successful Heal (50)%.
     Ability {
         name: "Raise",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
         aoe: None,
         implementation: &RaiseSpellImpl {
@@ -73,7 +73,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Raise 2: 5 range, 0 AoE, 10 CT, 20 MP. Hit: Faith(MA + 160)%. Effect: Cancel Death; If successful Heal (100)%.
     Ability {
         name: "Raise 2",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 20,
         aoe: None,
         implementation: &RaiseSpellImpl {
@@ -86,7 +86,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Reraise: 4 range, 0 AoE, 7 CT, 16 MP. Hit: Faith(MA + 140)%. Effect: Add Reraise.
     Ability {
         name: "Reraise",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -101,7 +101,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Regen: 4 range, 1 AoE, 4 CT, 8 MP. Hit: Faith(MA + 170)%. Effect: Add Regen.
     Ability {
         name: "Regen",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -116,7 +116,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Protect: 4 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 200)%. Effect: Add Protect.
     Ability {
         name: "Protect",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -146,7 +146,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Shell: 4 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 200)%. Effect: Add Shell.
     Ability {
         name: "Shell",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -178,7 +178,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     //  Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act.
     Ability {
         name: "Esuna",
-        flags: ALLY_OK | PETRIFY_OK | SILENCEABLE,
+        flags: ALLY_OK | PETRIFY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
         aoe: Some(1),
         implementation: &ConditionClearSpellImpl {
@@ -204,7 +204,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Holy: 5 range, 0 AoE, 6 CT, 56 MP. Element: Holy. Effect: Damage Faith(MA * 47).
     Ability {
         name: "Holy",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 56,
         aoe: None,
         implementation: &ElementalDamageSpellImpl {

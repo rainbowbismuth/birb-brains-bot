@@ -1,14 +1,15 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ConditionClearSpellImpl};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Event, Simulation, Source, SILENCEABLE,
+    Combatant, CombatantId, Condition, Element, Event, Simulation, Source, CAN_BE_CALCULATED,
+    CAN_BE_REFLECTED, SILENCEABLE,
 };
 
 pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Blind: 5 range, 1 AoE, 2 CT, 4 MP. Hit: Faith(MA + 200)%. Effect: Add Blind.
     Ability {
         name: "Blind",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 4,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -51,7 +52,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Pray Faith: 5 range, 0 AoE, 4 CT, 6 MP. Hit: Faith(MA + 150)%. Effect: Add Faith.
     Ability {
         name: "Pray Faith",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -66,7 +67,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Doubt Faith: 5 range, 0 AoE, 4 CT, 6 MP. Hit: Faith(MA + 150)%. Effect: Add Innocent.
     Ability {
         name: "Doubt Faith",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -81,7 +82,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Zombie: 5 range, 0 AoE, 5 CT, 20 MP. Hit: Faith(MA + 115)%. Effect: Add Undead.
     Ability {
         name: "Zombie",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 20,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -96,7 +97,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Silence Song: 5 range, 1 AoE, 3 CT, 16 MP. Hit: Faith(MA + 180)%. Effect: Add Silence.
     Ability {
         name: "Silence Song",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -111,7 +112,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Blind Rage: 5 range, 0 AoE, 5 CT, 16 MP. Hit: Faith(MA + 130)%. Effect: Add Berserk.
     Ability {
         name: "Blind Rage",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -127,7 +128,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Confusion Song: 5 range, 0 AoE, 5 CT, 20 MP. Hit: Faith(MA + 135)%. Effect: Add Confusion.
     Ability {
         name: "Confusion Song",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 20,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -142,7 +143,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Dispel Magic: 5 range, 0 AoE, 3 CT, 34 MP. Hit: Faith(MA + 200)%. Effect: Cancel Float, Reraise, Transparent, Regen, Protect, Shell, Haste, Faith, Reflect
     Ability {
         name: "Dispel Magic",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_CALCULATED,
         mp_cost: 34,
         aoe: None,
         implementation: &ConditionClearSpellImpl {
@@ -166,7 +167,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Paralyze: 5 range, 1 AoE, 5 CT, 10 MP. Hit: Faith(MA + 185)%. Effect: Add Don't Act.
     Ability {
         name: "Paralyze",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -181,7 +182,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Sleep: 5 range, 1 AoE, 6 CT, 24 MP. Hit: Faith(MA + 175)%. Effect: Add Sleep.
     Ability {
         name: "Sleep",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -196,7 +197,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
     // Petrify: 5 range, 0 AoE, 9 CT, 16 MP. Hit: Faith(MA + 125)%. Effect: Add Petrify.
     Ability {
         name: "Petrify",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
         aoe: None,
         implementation: &AddConditionSpellImpl {

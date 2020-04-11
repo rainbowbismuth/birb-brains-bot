@@ -1,7 +1,8 @@
 use crate::sim::actions::{Ability, ALLY_OK, FOE_OK};
 use crate::sim::common::{AddConditionSpellImpl, ElementalDamageSpellImpl};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, NOT_ALIVE_OK, SILENCEABLE,
+    Combatant, CombatantId, Condition, Element, Simulation, Source, CAN_BE_CALCULATED,
+    CAN_BE_REFLECTED, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
@@ -11,7 +12,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     // Fire 4: 5 range, 2 AoE, 8 CT, 48 MP. Element: Fire. Effect: Damage Faith(MA * 36).
     Ability {
         name: "Fire",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -24,7 +25,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Fire 2",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -37,7 +38,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Fire 3",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -67,7 +68,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     // Bolt 4: 5 range, 2 AoE, 8 CT, 48 MP. Element: Lightning. Effect: Damage Faith(MA * 36).
     Ability {
         name: "Bolt",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -80,7 +81,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Bolt 2",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -93,7 +94,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Bolt 3",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -123,7 +124,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     // Ice 4: 5 range, 2 AoE, 8 CT, 48 MP. Element: Ice. Effect: Damage Faith(MA * 36).
     Ability {
         name: "Ice",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -136,7 +137,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Ice 2",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -149,7 +150,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Ice 3",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
         aoe: Some(1),
         implementation: &ElementalDamageSpellImpl {
@@ -176,7 +177,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     // Poison: 5 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 190)%. Effect: Add Poison.
     Ability {
         name: "Poison",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: Some(1),
         implementation: &AddConditionSpellImpl {
@@ -191,7 +192,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     // Frog: 4 range, 0 AoE, 5 CT, 12 MP. Hit: Faith(MA + 120)%. Effect: Add Frog.
     Ability {
         name: "Frog",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -207,7 +208,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     // TODO: Heals undead!!
     Ability {
         name: "Death",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
         aoe: None,
         implementation: &AddConditionSpellImpl {
@@ -222,7 +223,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     // Flare: 6 range, 0 AoE, 7 CT, 60 MP. Effect: Damage Faith(MA * 49).
     Ability {
         name: "Flare",
-        flags: FOE_OK | SILENCEABLE,
+        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 60,
         aoe: None,
         implementation: &ElementalDamageSpellImpl {
