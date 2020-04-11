@@ -54,6 +54,10 @@ impl Facing {
         unsafe { std::mem::transmute_copy(&(((self as u8) + amount as u8) % 4)) }
     }
 
+    pub fn rotations_to(self, other: Facing) -> i8 {
+        (((other as i16 + 4) - self as i16).abs() % 4) as i8
+    }
+
     pub fn relative(self, target_loc: Location, from: Location) -> RelativeFacing {
         let front = target_loc + Facing::North.rotate(self as i8).offset();
         let right = target_loc + Facing::East.rotate(self as i8).offset();
@@ -162,5 +166,28 @@ pub mod tests {
             Facing::South,
             Facing::towards(Location::zero(), Location::new(0, 100))
         );
+    }
+
+    #[test]
+    pub fn rotations_to_test() {
+        for facing_a in &[Facing::North, Facing::East, Facing::South, Facing::West] {
+            for facing_b in &[Facing::North, Facing::East, Facing::South, Facing::West] {
+                let rotations = facing_a.rotations_to(*facing_b);
+                assert_eq!(facing_a.rotate(rotations), *facing_b);
+            }
+        }
+    }
+
+    #[test]
+    pub fn rotations_match_offsets() {
+        let zero = Location::zero();
+        for facing in &[Facing::North, Facing::East, Facing::South, Facing::West] {
+            for i in 0..=3 {
+                assert_eq!(
+                    facing.offset().rotate_around(zero, i),
+                    facing.rotate(i).offset()
+                );
+            }
+        }
     }
 }

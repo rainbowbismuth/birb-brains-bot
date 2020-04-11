@@ -101,6 +101,7 @@ pub struct CombatantInfo<'a> {
     pub starting_faith: i8,
     pub horizontal_jump: i8,
     pub bonus_movement: i8,
+    pub all_skills: Vec<&'a str>,
 }
 
 impl<'a> CombatantInfo<'a> {
@@ -117,8 +118,8 @@ impl<'a> CombatantInfo<'a> {
             .by_job_gender
             .get(&(short_class, src.gender))
             .unwrap();
-        let mut skills = vec![];
-        skills.extend(&base_stats.innates);
+        let mut skills: Vec<&str> = vec![];
+        skills.extend(base_stats.innates.iter().map(|s| s.as_str()));
         skills.push(&src.action_skill);
         skills.push(&src.reaction_skill);
         skills.push(&src.support_skill);
@@ -218,6 +219,7 @@ impl<'a> CombatantInfo<'a> {
             abilities,
             horizontal_jump,
             bonus_movement,
+            all_skills: skills,
         }
     }
 }
@@ -964,6 +966,14 @@ impl<'a> Combatant<'a> {
 
     pub fn critical_quick(&self) -> bool {
         self.info.skill_block.critical_quick()
+    }
+
+    pub fn mimic(&self) -> bool {
+        self.info.skill_block.mimic()
+    }
+
+    pub fn no_mp(&self) -> bool {
+        self.info.skill_block.no_mp()
     }
 
     pub fn abilities(&self) -> &[&'a Ability<'a>] {

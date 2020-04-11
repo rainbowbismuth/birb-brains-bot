@@ -131,6 +131,10 @@ impl AbilityImpl for StealImpl {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
 
+        if target.get_equip(self.equip_slot).is_none() {
+            return;
+        }
+
         let chance = mod_4_formula(user, target, self.base_chance as f32 / 100.0);
 
         if sim.do_physical_evade(user, target, Source::Ability) {

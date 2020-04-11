@@ -32,6 +32,20 @@ impl Location {
         x_dist * x_dist + y_dist * y_dist
     }
 
+    pub fn rotate_around(self, center: Location, mut rotations: i8) -> Self {
+        let vector = self - center;
+        if rotations < 0 {
+            rotations = 4 - rotations.abs();
+        }
+        match rotations {
+            0 => self,
+            1 => Location::new(-vector.y, vector.x) + center,
+            2 => Location::new(-vector.x, -vector.y) + center,
+            3 => Location::new(vector.y, -vector.x) + center,
+            _ => unimplemented!("rotations -4..=3 supported"),
+        }
+    }
+
     pub fn diamond(self, size: u8) -> DiamondIterator {
         DiamondIterator {
             iter: DIAMOND_PRECOMPUTED[size as usize].iter(),
@@ -134,6 +148,25 @@ pub mod tests {
         ];
         let result: Vec<_> = Location::zero().diamond(1).collect();
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    pub fn test_rotations() {
+        let vec1 = Location::new(2, 5);
+        let center = Location::new(1, 1);
+        assert_eq!(vec1.rotate_around(center, 0), vec1);
+
+        let mut rotate1_twice = vec1;
+        for _i in 1..=2 {
+            rotate1_twice = rotate1_twice.rotate_around(center, 1);
+        }
+        assert_eq!(vec1.rotate_around(center, 2), rotate1_twice);
+
+        let mut rotate1_thrice = vec1;
+        for _i in 1..=3 {
+            rotate1_thrice = rotate1_thrice.rotate_around(center, 1);
+        }
+        assert_eq!(vec1.rotate_around(center, 3), rotate1_thrice);
     }
 }
 

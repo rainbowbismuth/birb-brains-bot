@@ -156,6 +156,12 @@ pub fn has_ability(combatants: &[CombatantInfo], name: &str) -> bool {
         .any(|info| info.abilities.iter().any(|ability| ability.name == name))
 }
 
+pub fn has_skill(combatants: &[CombatantInfo], name: &str) -> bool {
+    combatants
+        .iter()
+        .any(|info| info.all_skills.iter().any(|skill| *skill == name))
+}
+
 pub fn has_monster(combatants: &[CombatantInfo]) -> bool {
     combatants.iter().any(|info| info.gender == Gender::Monster)
 }
@@ -165,6 +171,7 @@ pub fn run_all_matches(
     print_worst: bool,
     filter_equip: Vec<String>,
     filter_ability: Vec<String>,
+    filter_skill: Vec<String>,
     filter_no_monsters: bool,
 ) -> io::Result<()> {
     let patches = data::read_all_patches()?;
@@ -210,6 +217,11 @@ pub fn run_all_matches(
         }
         for ability in &filter_ability {
             if !has_ability(&combatant_infos, ability) {
+                continue 'filter;
+            }
+        }
+        for skill in &filter_skill {
+            if !has_skill(&combatant_infos, skill) {
                 continue 'filter;
             }
         }

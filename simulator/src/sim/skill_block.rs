@@ -29,6 +29,8 @@ const RETREAT: u64 = 1 << 27;
 const HP_RESTORE: u64 = 1 << 28;
 const MP_RESTORE: u64 = 1 << 29;
 const CRITICAL_QUICK: u64 = 1 << 30;
+const MIMIC: u64 = 1 << 31;
+const NO_MP: u64 = 1 << 32;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -36,10 +38,10 @@ pub struct SkillBlock {
 }
 
 impl SkillBlock {
-    pub fn new(skills: &[&String]) -> SkillBlock {
+    pub fn new(skills: &[&str]) -> SkillBlock {
         let mut block = SkillBlock { flags: 0 };
         for skill in skills {
-            match skill.as_str() {
+            match *skill {
                 "Abandon" => block.flags |= ABANDON_FLAG,
                 "Parry" => block.flags |= PARRY_FLAG,
                 "Blade Grasp" => block.flags |= BLADE_GRASP_FLAG,
@@ -70,6 +72,8 @@ impl SkillBlock {
                 "HP Restore" => block.flags |= HP_RESTORE,
                 "MP Restore" => block.flags |= MP_RESTORE,
                 "Critical Quick" => block.flags |= CRITICAL_QUICK,
+                "Mimic" => block.flags |= MIMIC,
+                "No MP" => block.flags |= NO_MP,
                 _ => {}
             }
         }
@@ -194,5 +198,13 @@ impl SkillBlock {
 
     pub fn critical_quick(&self) -> bool {
         self.flags & CRITICAL_QUICK != 0
+    }
+
+    pub fn mimic(&self) -> bool {
+        self.flags & MIMIC != 0
+    }
+
+    pub fn no_mp(&self) -> bool {
+        self.flags & NO_MP != 0
     }
 }

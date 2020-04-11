@@ -56,6 +56,10 @@ struct Test {
     /// Filter for an implemented ability
     #[clap(long = "filter-ability")]
     filter_ability: Vec<String>,
+
+    /// Filter for any skill
+    #[clap(long = "filter-skill")]
+    filter_skill: Vec<String>,
 }
 
 #[derive(Clap)]
@@ -80,6 +84,7 @@ fn main() -> io::Result<()> {
             test.print_worst,
             test.filter_equip,
             test.filter_ability,
+            test.filter_skill,
             test.filter_no_monsters,
         ),
         SubCommand::Run(run) => runner::run_specific_match(run.match_id, run.num_runs),

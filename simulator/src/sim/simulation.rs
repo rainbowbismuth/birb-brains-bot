@@ -8,8 +8,8 @@ use crate::dto::rust::Equipment;
 use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
-    Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log, Phase,
-    SlowAction, Source, Team, WeaponType, ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN,
+    ActionTarget, Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log,
+    Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN,
     DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 
@@ -195,9 +195,14 @@ impl<'a> Simulation<'a> {
                 self.log.set_phase(Phase::SlowAction(*c_id));
                 self.log_event(Event::UsingAbility(*c_id, slow_action.action));
                 perform_action_slow(self, *c_id, slow_action.action);
+
+                let combatant = self.combatant_mut(*c_id);
+                combatant.ctr_action = None;
+
+                if !self.combatant(*c_id).monster() && !self.combatant(*c_id).mimic() {
+                    self.do_mime_cycle(*c_id, slow_action.action);
+                }
             }
-            let combatant = self.combatant_mut(*c_id);
-            combatant.ctr_action = None;
         }
     }
 
@@ -362,6 +367,8 @@ impl<'a> Simulation<'a> {
                         -heal_amount,
                         Source::Condition(Condition::Undead),
                     );
+                } else {
+                    self.combatant_mut(*c_id).ct = 0;
                 }
 
                 let combatant = self.combatant(*c_id);
@@ -597,6 +604,10 @@ impl<'a> Simulation<'a> {
             } else {
                 self.log_event(Event::UsingAbility(user_id, action));
                 perform_action(self, user_id, action);
+
+                if !self.combatant(user_id).monster() && !self.combatant(user_id).mimic() {
+                    self.do_mime_cycle(user_id, action);
+                }
             }
             self.combatant_mut(user_id).acted_during_active_turn = true;
         }
@@ -616,6 +627,40 @@ impl<'a> Simulation<'a> {
         }
 
         self.post_action_move(user_id);
+    }
+
+    pub fn do_mime_cycle(&mut self, user_id: CombatantId, action: Action<'a>) {
+        let user = self.combatant(user_id);
+        let original_target = action.target.to_location(self);
+        let original_vec = user.location - original_target;
+        let original_facing = Facing::towards(user.location, original_target);
+        for c_id in &COMBATANT_IDS {
+            let user = self.combatant(user_id);
+            let possible_mime = self.combatant(*c_id);
+
+            if possible_mime.mimic() && user.ally(possible_mime) && user_id != *c_id {
+                if !possible_mime.healthy()
+                    || possible_mime.sleep()
+                    || possible_mime.confusion()
+                    || possible_mime.berserk()
+                    || possible_mime.dont_act()
+                    || possible_mime.blood_suck()
+                    || possible_mime.sleep()
+                    || possible_mime.frog()
+                    || possible_mime.chicken()
+                    || possible_mime.stop()
+                {
+                    continue;
+                }
+                let rotations = original_facing.rotations_to(possible_mime.facing);
+                let vec_on_mime = possible_mime.location + original_vec;
+                let new_target_loc = vec_on_mime.rotate_around(possible_mime.location, rotations);
+                let mut new_action = action;
+                new_action.target = ActionTarget::Panel(new_target_loc);
+                self.log_event(Event::UsingAbility(*c_id, new_action));
+                perform_action(self, *c_id, new_action);
+            }
+        }
     }
 
     pub fn do_physical_evade(&self, user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {

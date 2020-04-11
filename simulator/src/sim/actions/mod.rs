@@ -243,9 +243,8 @@ pub fn perform_action_slow<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, a
 
 pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action: Action<'a>) {
     let ability = action.ability;
-
-    if ability.mp_cost > 0 {
-        let user = sim.combatant_mut(user_id);
+    let user = sim.combatant_mut(user_id);
+    if ability.mp_cost > 0 && !user.no_mp() {
         let mp_cost = if user.halve_mp() {
             1.max(ability.mp_cost / 2)
         } else {
