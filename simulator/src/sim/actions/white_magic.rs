@@ -1,12 +1,12 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
+use crate::sim::actions::{
+    Ability, AbilityImpl, Action, AoE, ALLY_OK, CAN_BE_CALCULATED, CAN_BE_REFLECTED, FOE_OK,
+    NOT_ALIVE_OK, PETRIFY_OK, SILENCEABLE, UNDER_50_PERCENT_HP_ONLY,
+};
 use crate::sim::common::{
     do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ConditionClearSpellImpl,
     CureSpellImpl, ElementalDamageSpellImpl,
 };
-use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Event, Simulation, CAN_BE_CALCULATED,
-    CAN_BE_REFLECTED, NOT_ALIVE_OK, PETRIFY_OK, SILENCEABLE,
-};
+use crate::sim::{Combatant, CombatantId, Condition, Element, Event, Simulation};
 
 pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Cure: 5 range, 1 AoE, 3 CT, 6 MP. Effect: Heal Faith(MA * 15).
@@ -86,7 +86,11 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Reraise: 4 range, 0 AoE, 7 CT, 16 MP. Hit: Faith(MA + 140)%. Effect: Add Reraise.
     Ability {
         name: "Reraise",
-        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
+        flags: ALLY_OK
+            | SILENCEABLE
+            | UNDER_50_PERCENT_HP_ONLY
+            | CAN_BE_REFLECTED
+            | CAN_BE_CALCULATED,
         mp_cost: 16,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
@@ -101,7 +105,11 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Regen: 4 range, 1 AoE, 4 CT, 8 MP. Hit: Faith(MA + 170)%. Effect: Add Regen.
     Ability {
         name: "Regen",
-        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
+        flags: ALLY_OK
+            | SILENCEABLE
+            | UNDER_50_PERCENT_HP_ONLY
+            | CAN_BE_REFLECTED
+            | CAN_BE_CALCULATED,
         mp_cost: 8,
         aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
@@ -116,7 +124,11 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Protect: 4 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 200)%. Effect: Add Protect.
     Ability {
         name: "Protect",
-        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
+        flags: ALLY_OK
+            | SILENCEABLE
+            | UNDER_50_PERCENT_HP_ONLY
+            | CAN_BE_REFLECTED
+            | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
@@ -131,7 +143,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Protect 2: 4 range, 1 AoE, 6 CT, 18 MP. Hit: Faith(MA + 240)%. Effect: Add Protect.
     Ability {
         name: "Protect 2",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | UNDER_50_PERCENT_HP_ONLY | SILENCEABLE,
         mp_cost: 18,
         aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
@@ -146,7 +158,11 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Shell: 4 range, 1 AoE, 3 CT, 6 MP. Hit: Faith(MA + 200)%. Effect: Add Shell.
     Ability {
         name: "Shell",
-        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
+        flags: ALLY_OK
+            | SILENCEABLE
+            | UNDER_50_PERCENT_HP_ONLY
+            | CAN_BE_REFLECTED
+            | CAN_BE_CALCULATED,
         mp_cost: 6,
         aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
@@ -161,7 +177,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
     // Shell 2: 4 range, 1 AoE, 6 CT, 18 MP. Hit: Faith(MA + 240)%. Effect: Add Shell.
     Ability {
         name: "Shell 2",
-        flags: ALLY_OK | SILENCEABLE,
+        flags: ALLY_OK | UNDER_50_PERCENT_HP_ONLY | SILENCEABLE,
         mp_cost: 18,
         aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {

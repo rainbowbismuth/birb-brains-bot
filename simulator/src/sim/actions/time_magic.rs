@@ -2,7 +2,7 @@ use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ElementalDamageSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, Source, CAN_BE_CALCULATED,
-    CAN_BE_REFLECTED, SILENCEABLE,
+    CAN_BE_REFLECTED, SILENCEABLE, USE_ON_CRITICAL_ONLY,
 };
 
 pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
@@ -99,7 +99,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
     // Float: 5 range, 1 AoE, 2 CT, 8 MP. Hit: Faith(MA + 170)%. Effect: Add Float.
     Ability {
         name: "Float",
-        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
+        flags: ALLY_OK | SILENCEABLE | USE_ON_CRITICAL_ONLY | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
         aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
@@ -114,7 +114,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
     // Reflect: 5 range, 0 AoE, 2 CT, 12 MP. Hit: Faith(MA + 180)%. Effect: Add Reflect.
     Ability {
         name: "Reflect",
-        flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
+        flags: ALLY_OK | SILENCEABLE | USE_ON_CRITICAL_ONLY | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {

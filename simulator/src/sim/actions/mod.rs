@@ -29,7 +29,7 @@ pub trait AbilityImpl: Sync {
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId);
 }
 
-pub type AbilityFlags = u16;
+pub type AbilityFlags = u32;
 
 pub const BERSERK_OK: AbilityFlags = 1;
 pub const ALLY_OK: AbilityFlags = 1 << 1;
@@ -47,6 +47,8 @@ pub const FROG_OK: AbilityFlags = 1 << 12;
 pub const DONT_MOVE_WHILE_CHARGING: AbilityFlags = 1 << 13;
 pub const CAN_BE_REFLECTED: AbilityFlags = 1 << 14;
 pub const CAN_BE_CALCULATED: AbilityFlags = 1 << 15;
+pub const USE_ON_CRITICAL_ONLY: AbilityFlags = 1 << 16;
+pub const UNDER_50_PERCENT_HP_ONLY: AbilityFlags = 1 << 17;
 
 #[derive(Copy, Clone)]
 pub enum AoE {
@@ -180,6 +182,10 @@ fn filter_target_level(user: &Combatant, ability: &Ability, target: &Combatant) 
     } else if flags & NOT_ALIVE_OK == 0 && !target.alive() {
         false
     } else if flags & PETRIFY_OK == 0 && target.petrify() {
+        false
+    } else if flags & USE_ON_CRITICAL_ONLY != 0 && !target.critical() {
+        false
+    } else if flags & UNDER_50_PERCENT_HP_ONLY != 0 && target.hp_percent() > 0.50 {
         false
     } else {
         true
