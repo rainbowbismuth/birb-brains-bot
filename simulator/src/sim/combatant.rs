@@ -482,21 +482,28 @@ impl<'a> Combatant<'a> {
         }
     }
 
-    fn evasion_multiplier(&self) -> f32 {
+    fn evasion_multiplier(&self, attacker_blind: bool) -> f32 {
+        let mut mult = 1.0;
         if self.charging() || self.sleep() {
-            0.0
-        } else if self.abandon() {
-            2.0
-        } else {
-            1.0
+            mult *= 0.0;
         }
+        if self.abandon() {
+            mult *= 2.0;
+        }
+        if self.defending() {
+            mult *= 2.0;
+        }
+        if attacker_blind {
+            mult *= 2.0;
+        }
+        mult
     }
 
-    pub fn class_evasion(&self) -> f32 {
-        self.evasion_multiplier() * (self.base_stats().c_ev as f32 / 100.0)
+    pub fn class_evasion(&self, attacker_blind: bool) -> f32 {
+        self.evasion_multiplier(attacker_blind) * (self.base_stats().c_ev as f32 / 100.0)
     }
 
-    pub fn weapon_evasion(&self) -> f32 {
+    pub fn weapon_evasion(&self, attacker_blind: bool) -> f32 {
         if !self.parry() {
             0.0
         } else {
@@ -505,28 +512,29 @@ impl<'a> Combatant<'a> {
                 .main_hand()
                 .map_or(0, |e| e.w_ev)
                 .max(self.off_hand().map_or(0, |e| e.w_ev));
-            self.evasion_multiplier() * (base_w_ev as f32 / 100.0)
+            self.evasion_multiplier(attacker_blind) * (base_w_ev as f32 / 100.0)
         }
     }
 
-    pub fn physical_shield_evasion(&self) -> f32 {
+    pub fn physical_shield_evasion(&self, attacker_blind: bool) -> f32 {
         let base_phys_ev =
             self.main_hand().map_or(0, |e| e.phys_ev) + self.off_hand().map_or(0, |e| e.phys_ev);
-        self.evasion_multiplier() * (base_phys_ev as f32 / 100.0)
+        self.evasion_multiplier(attacker_blind) * (base_phys_ev as f32 / 100.0)
     }
 
     pub fn magical_shield_evasion(&self) -> f32 {
         let base_magical_ev =
             self.main_hand().map_or(0, |e| e.magic_ev) + self.off_hand().map_or(0, |e| e.magic_ev);
-        self.evasion_multiplier() * (base_magical_ev as f32 / 100.0)
+        self.evasion_multiplier(false) * (base_magical_ev as f32 / 100.0)
     }
 
-    pub fn physical_accessory_evasion(&self) -> f32 {
-        self.evasion_multiplier() * (self.accessory().map_or(0, |e| e.phys_ev) as f32 / 100.0)
+    pub fn physical_accessory_evasion(&self, attacker_blind: bool) -> f32 {
+        self.evasion_multiplier(attacker_blind)
+            * (self.accessory().map_or(0, |e| e.phys_ev) as f32 / 100.0)
     }
 
     pub fn magical_accessory_evasion(&self) -> f32 {
-        self.evasion_multiplier() * (self.accessory().map_or(0, |e| e.magic_ev) as f32 / 100.0)
+        self.evasion_multiplier(false) * (self.accessory().map_or(0, |e| e.magic_ev) as f32 / 100.0)
     }
 
     pub fn retreat_movement_bonus(&self) -> i8 {
@@ -669,6 +677,10 @@ impl<'a> Combatant<'a> {
 
     pub fn crystal(&self) -> bool {
         self.crystal_counter == 0
+    }
+
+    pub fn defending(&self) -> bool {
+        self.conditions.has(Condition::Defending)
     }
 
     pub fn reraise(&self) -> bool {
@@ -974,6 +986,10 @@ impl<'a> Combatant<'a> {
 
     pub fn no_mp(&self) -> bool {
         self.info.skill_block.no_mp()
+    }
+
+    pub fn caution(&self) -> bool {
+        self.info.skill_block.caution()
     }
 
     pub fn abilities(&self) -> &[&'a Ability<'a>] {

@@ -379,6 +379,11 @@ impl<'a> Simulation<'a> {
             }
 
             let combatant = self.combatant(*c_id);
+            if combatant.defending() {
+                self.cancel_condition(*c_id, Condition::Defending, Source::Phase);
+            }
+
+            let combatant = self.combatant(*c_id);
             if combatant.death_sentence() {
                 let is_undead = combatant.undead();
                 let now_dead = self.combatant_mut(*c_id).tick_death_sentence_counter();
@@ -680,21 +685,23 @@ impl<'a> Simulation<'a> {
 
         let bonus = if user.confusion() { 2.0 } else { 1.0 };
         let facing = user.relative_facing(target);
-
-        if self.roll_auto_fail() < target.physical_accessory_evasion() * bonus {
+        let attacker_blind = user.darkness();
+        if self.roll_auto_fail() < target.physical_accessory_evasion(attacker_blind) * bonus {
             self.log_event(Event::Evaded(target.id(), EvasionType::Guarded, src));
             true
         } else if facing.is_front_or_side()
-            && self.roll_auto_fail() < target.physical_shield_evasion() * bonus
+            && self.roll_auto_fail() < target.physical_shield_evasion(attacker_blind) * bonus
         {
             self.log_event(Event::Evaded(target.id(), EvasionType::Blocked, src));
             true
         } else if facing.is_front_or_side()
-            && self.roll_auto_fail() < target.weapon_evasion() * bonus
+            && self.roll_auto_fail() < target.weapon_evasion(attacker_blind) * bonus
         {
             self.log_event(Event::Evaded(target.id(), EvasionType::Parried, src));
             true
-        } else if facing.is_front() && self.roll_auto_fail() < target.class_evasion() * bonus {
+        } else if facing.is_front()
+            && self.roll_auto_fail() < target.class_evasion(attacker_blind) * bonus
+        {
             self.log_event(Event::Evaded(target.id(), EvasionType::Evaded, src));
             true
         } else {
@@ -892,6 +899,11 @@ impl<'a> Simulation<'a> {
                 auto_potion_amount,
                 Source::Constant("Auto Potion"),
             );
+            return;
+        }
+
+        if target.defending() && self.roll_brave_reaction(target) {
+            self.add_condition(target_id, Condition::Defending, Source::Constant("Caution"));
             return;
         }
 

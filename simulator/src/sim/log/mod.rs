@@ -122,9 +122,9 @@ pub fn unit_card(user: &Combatant) -> String {
         user.main_hand().map_or(0, |w| w.wp),
         user.main_hand().map_or(0, |w| w.w_ev),
         user.pa(),
-        (user.class_evasion() * 100.0) as i16,
-        (user.physical_shield_evasion() * 100.0) as i16,
-        (user.physical_accessory_evasion() * 100.0) as i16
+        (user.class_evasion(false) * 100.0) as i16,
+        (user.physical_shield_evasion(false) * 100.0) as i16,
+        (user.physical_accessory_evasion(false) * 100.0) as i16
     );
     let l7 = format!(
         "Speed ... {:<02}     L ... {:>03} / {:>02}%   🔮 {:>02} / {:>02}% / {:>02}% / {:>02}%",
