@@ -27,7 +27,7 @@ fn run_many_sims<'a>(num_runs: i32, combatants: &'a [Combatant<'a>; 8]) -> (f64,
         }
     }
     let left_wins_percent = left_wins as f64 / num_runs as f64;
-    (left_wins_percent, time_outs)
+    (clamp(left_wins_percent, 0.01, 0.99), time_outs)
 }
 
 fn clamp(n: f64, min: f64, max: f64) -> f64 {
