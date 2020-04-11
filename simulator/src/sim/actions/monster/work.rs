@@ -1,6 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Event, Simulation, Source, TARGET_NOT_SELF, TARGET_SELF_ONLY,
+    AoE, Combatant, CombatantId, Condition, Event, Simulation, Source, TARGET_NOT_SELF,
+    TARGET_SELF_ONLY,
 };
 
 pub const WORK_ABILITIES: &[Ability] = &[
@@ -9,7 +10,7 @@ pub const WORK_ABILITIES: &[Ability] = &[
         name: "Destroy",
         flags: FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &WorkDamageImpl {
             pa_factor: 10,
             hurt_div: 4,
@@ -21,7 +22,7 @@ pub const WORK_ABILITIES: &[Ability] = &[
         name: "Compress",
         flags: FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &WorkDamageImpl {
             pa_factor: 15,
             hurt_div: 3,
@@ -33,7 +34,7 @@ pub const WORK_ABILITIES: &[Ability] = &[
         name: "Dispose",
         flags: FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &WorkDamageImpl {
             pa_factor: 5,
             hurt_div: 5,
@@ -45,7 +46,7 @@ pub const WORK_ABILITIES: &[Ability] = &[
         name: "Repair",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &RepairImpl { base_chance: 80 },
     },
 ];

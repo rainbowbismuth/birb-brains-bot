@@ -550,12 +550,17 @@ impl<'a> Simulation<'a> {
                     }
                     // TODO: This isn't strictly correct..
                     if let Some(target_id) = action.target.to_target_id(self) {
-                        if !can_move_into_range(user, action.range, self.combatant(target_id)) {
+                        if !can_move_into_range(user, action, self.combatant(target_id)) {
                             return None;
                         }
                     }
 
                     let mut simulated_world = self.prediction_clone();
+                    let user = self.combatant(user_id);
+                    let target_panel = action.target.to_location(self);
+                    if !in_range_panel(user, action, target_panel) {
+                        simulated_world.pre_action_move(user_id, action, target_panel);
+                    }
                     perform_action(&mut simulated_world, user_id, *action);
                     let new_value = ai_target_value_sum(
                         simulated_world.combatant(user_id),
@@ -575,8 +580,8 @@ impl<'a> Simulation<'a> {
         if let Some((_, action)) = best_action {
             let user = self.combatant(user_id);
             let target_panel = action.target.to_location(self);
-            if !in_range_panel(user, action.range, target_panel) {
-                self.pre_action_move(user_id, action.range as u8, target_panel);
+            if !in_range_panel(user, &action, target_panel) {
+                self.pre_action_move(user_id, &action, target_panel);
             }
             if let Some(mut ctr) = action.ctr {
                 let user = self.combatant(user_id);
@@ -928,15 +933,18 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn pre_action_move(&mut self, user_id: CombatantId, range: u8, target_panel: Location) {
+    fn pre_action_move(&mut self, user_id: CombatantId, action: &Action, target_panel: Location) {
         let user = self.combatant(user_id);
         let movement = if user.dont_move() { 0 } else { user.movement() };
-        if in_range_panel(user, range as i8, target_panel) {
+        if in_range_panel(user, action, target_panel) {
             return;
         }
         let best_panel = target_panel
-            .diamond(range)
+            .diamond(action.range as u8)
             .flat_map(|location| {
+                if action.ability.aoe.is_line() && !location.lined_up(target_panel) {
+                    return None;
+                }
                 if user.location.distance(location) > movement as i16 {
                     return None;
                 }
@@ -1076,14 +1084,32 @@ pub fn in_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
     dist <= range as i16
 }
 
-pub fn in_range_panel(user: &Combatant, range: i8, panel: Location) -> bool {
-    let dist = user.location.distance(panel);
-    dist <= range as i16
+pub fn in_range_panel(user: &Combatant, action: &Action, panel: Location) -> bool {
+    if action.ability.aoe.is_line() {
+        user.location.lined_up(panel) && user.location.distance(panel) <= action.range as i16
+    } else {
+        let dist = user.location.distance(panel);
+        dist <= action.range as i16
+    }
 }
 
-pub fn can_move_into_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
+pub fn can_move_into_range(user: &Combatant, action: &Action, target: &Combatant) -> bool {
+    if action.ability.aoe.is_line() {
+        return can_move_into_range_line(user, action, target);
+    }
+
     let movement = if user.dont_move() { 0 } else { user.movement() };
-    user.distance(target) <= range as i16 + movement as i16
+    user.distance(target) <= action.range as i16 + movement as i16
+}
+
+pub fn can_move_into_range_line(user: &Combatant, action: &Action, target: &Combatant) -> bool {
+    let movement = if user.dont_move() { 0 } else { user.movement() } as i16;
+    let x_diff = (user.location.x - target.location.x).abs();
+    let y_diff = (user.location.y - target.location.y).abs();
+    let min_diff = x_diff.min(y_diff);
+    let max_diff = x_diff.max(y_diff);
+    // TODO: Revisit, I'm nearly certain this isn't correct though it should be... mostly ok.
+    movement >= min_diff && movement + action.range as i16 >= min_diff + max_diff
 }
 
 //

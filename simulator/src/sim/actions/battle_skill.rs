@@ -2,7 +2,7 @@ use crate::dto::rust::Equipment;
 use crate::sim::actions::attack::do_single_weapon_attack;
 use crate::sim::actions::common::{do_hp_damage, do_hp_heal, mod_3_formula_xa};
 use crate::sim::actions::{
-    Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, HITS_FOES_ONLY, TARGET_NOT_SELF,
+    Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, HITS_FOES_ONLY, TARGET_NOT_SELF,
 };
 use crate::sim::{
     Combatant, CombatantId, Condition, EquipSlot, Event, Simulation, Source, WeaponType,
@@ -14,7 +14,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Head Break",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &BreakEquipImpl {
             base_chance: 45,
             equip_slot: EquipSlot::Head,
@@ -25,7 +25,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Armor Break",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &BreakEquipImpl {
             base_chance: 40,
             equip_slot: EquipSlot::Body,
@@ -36,7 +36,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Shield Break",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &BreakEquipImpl {
             base_chance: 55,
             equip_slot: EquipSlot::Shield,
@@ -47,7 +47,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Weapon Break",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &BreakEquipImpl {
             base_chance: 30,
             equip_slot: EquipSlot::Weapon,
@@ -58,7 +58,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Magic Break",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &MagicBreakImpl {
             base_chance: 50,
             mp_percent: 0.5,
@@ -73,7 +73,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Stasis Sword",
         flags: FOE_OK | HITS_FOES_ONLY,
         mp_cost: 20,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &ChanceToAddSwordImpl {
             wp_plus: 1,
             chance_to_add: Condition::Stop,
@@ -86,7 +86,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Justice Sword",
         flags: FOE_OK,
         mp_cost: 22,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChanceToAddSwordImpl {
             wp_plus: 2,
             chance_to_add: Condition::DeathSentence,
@@ -99,7 +99,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Surging Sword",
         flags: FOE_OK | HITS_FOES_ONLY,
         mp_cost: 24,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &ChanceToAddSwordImpl {
             wp_plus: 2,
             chance_to_add: Condition::Silence,
@@ -114,7 +114,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Dark Sword",
         flags: FOE_OK,
         mp_cost: 18,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AbsorbSwordImpl {
             hp_not_mp: false,
             range: 2,
@@ -126,7 +126,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Night Sword",
         flags: FOE_OK,
         mp_cost: 22,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AbsorbSwordImpl {
             hp_not_mp: true,
             range: 2,

@@ -1,8 +1,8 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ElementalDamageSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, Source, CAN_BE_CALCULATED,
-    CAN_BE_REFLECTED, NOT_ALIVE_OK, SILENCEABLE,
+    CAN_BE_REFLECTED, SILENCEABLE,
 };
 
 pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
@@ -11,7 +11,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Haste",
         flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Haste,
             can_be_evaded: false,
@@ -26,7 +26,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Haste 2",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 20,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Haste,
             can_be_evaded: false,
@@ -41,7 +41,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Slow",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Slow,
             can_be_evaded: true,
@@ -56,7 +56,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Slow 2",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 20,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Slow,
             can_be_evaded: true,
@@ -71,7 +71,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Stop",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 14,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Stop,
             can_be_evaded: true,
@@ -86,7 +86,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Immobilize",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::DontMove,
             can_be_evaded: true,
@@ -101,7 +101,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Float",
         flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Float,
             can_be_evaded: false,
@@ -116,7 +116,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Reflect",
         flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Reflect,
             can_be_evaded: false,
@@ -132,7 +132,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Demi",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 20,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &DemiImpl {
             base_chance: 205,
             hp_percent: 0.25,
@@ -145,7 +145,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Demi 2",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 40,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &DemiImpl {
             base_chance: 165,
             hp_percent: 0.50,
@@ -158,7 +158,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         name: "Meteor",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 70,
-        aoe: Some(3),
+        aoe: AoE::Diamond(3),
         implementation: &ElementalDamageSpellImpl {
             element: Element::None,
             q: 60,

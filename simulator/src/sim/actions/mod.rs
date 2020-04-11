@@ -1,4 +1,4 @@
-use crate::sim::{Combatant, CombatantId, Event, Location, Simulation};
+use crate::sim::{Combatant, CombatantId, Event, Facing, Location, Simulation};
 
 pub mod attack;
 pub mod battle_skill;
@@ -48,10 +48,29 @@ pub const DONT_MOVE_WHILE_CHARGING: AbilityFlags = 1 << 13;
 pub const CAN_BE_REFLECTED: AbilityFlags = 1 << 14;
 pub const CAN_BE_CALCULATED: AbilityFlags = 1 << 15;
 
+#[derive(Copy, Clone)]
+pub enum AoE {
+    None,
+    Diamond(u8),
+    Line,
+    TriLine, // Like that Tiamat ability
+}
+
+impl AoE {
+    pub fn is_line(self) -> bool {
+        match self {
+            AoE::None => false,
+            AoE::Diamond(_size) => false,
+            AoE::Line => true,
+            AoE::TriLine => true,
+        }
+    }
+}
+
 pub struct Ability<'a> {
     pub flags: AbilityFlags,
     pub mp_cost: i16,
-    pub aoe: Option<u8>,
+    pub aoe: AoE,
     // TODO: Refactor this, consider if it needs to be in the ability impl itself?
     pub implementation: &'a (dyn AbilityImpl + 'a),
     pub name: &'a str,
@@ -247,49 +266,88 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         }
     }
 
-    if let Some(aoe) = ability.aoe {
-        // TODO: Do summons go off even if the target dies? *think*
-        for location in action.target.to_location(sim).diamond(aoe) {
-            if let Some(real_target_id) = sim.combatant_on_panel(location) {
-                let user = sim.combatant(user_id);
-                let target = sim.combatant(real_target_id);
-                if target.crystal() || target.jumping() {
-                    continue;
-                }
-                if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {
-                    continue;
-                }
-                if ability.flags & HITS_ALLIES_ONLY != 0 && !user.ally(target) {
-                    continue;
-                }
-                if ability.flags & NOT_ALIVE_OK == 0 && !target.alive() {
-                    continue;
-                }
-                if ability.flags & PETRIFY_OK == 0 && target.petrify() {
-                    continue;
+    match ability.aoe {
+        AoE::None => {
+            if let Some(target_id) = action.target.to_target_id(sim) {
+                let target = sim.combatant(target_id);
+                if target.jumping() {
+                    return;
                 }
 
-                ability.implementation.perform(sim, user_id, real_target_id);
+                let user = sim.combatant(user_id);
+                // TODO: Not a great place for this.. re: MP costs.
+                if !filter_target_level(user, ability, target) {
+                    // TODO: Log some sort of event for failing to perform an ability
+                    return;
+                }
+
+                ability.implementation.perform(sim, user_id, target_id);
+            } else {
+                // TODO: Something about the ability missing.
             }
         }
-    } else {
-        if let Some(target_id) = action.target.to_target_id(sim) {
-            let target = sim.combatant(target_id);
-            if target.jumping() {
-                return;
+        AoE::Diamond(size) => {
+            for target_panel in action.target.to_location(sim).diamond(size) {
+                perform_aoe_on_panel(sim, user_id, ability, target_panel)
             }
-
+        }
+        AoE::Line => {
             let user = sim.combatant(user_id);
-            // TODO: Not a great place for this.. re: MP costs.
-            if !filter_target_level(user, ability, target) {
-                // TODO: Log some sort of event for failing to perform an ability
-                return;
+            let target_location = action_target.to_location(sim);
+            let user_location = user.location;
+            let facing = Facing::towards(user.location, target_location);
+            for i in 1..=action.range {
+                let target_panel = user_location + facing.offset() * i as i16;
+                perform_aoe_on_panel(sim, user_id, ability, target_panel);
             }
+        }
+        AoE::TriLine => {
+            let user = sim.combatant(user_id);
+            let target_location = action_target.to_location(sim);
+            let facing = Facing::towards(user.location, target_location);
+            let user_location = user.location;
+            let left_facing = facing.rotate(-1);
+            let right_facing = facing.rotate(1);
+            for i in 1..=action.range {
+                let target_panel = user_location + facing.offset() * i as i16;
+                perform_aoe_on_panel(sim, user_id, ability, target_panel);
 
-            ability.implementation.perform(sim, user_id, target_id);
-        } else {
-            // TODO: Something about the ability missing.
+                let target_panel = user_location + left_facing.offset() * i as i16;
+                perform_aoe_on_panel(sim, user_id, ability, target_panel);
+
+                let target_panel = user_location + right_facing.offset() * i as i16;
+                perform_aoe_on_panel(sim, user_id, ability, target_panel);
+            }
         }
     }
     sim.end_of_action_checks(user_id);
+}
+
+fn perform_aoe_on_panel(
+    sim: &mut Simulation,
+    user_id: CombatantId,
+    ability: &Ability,
+    location: Location,
+) {
+    if let Some(real_target_id) = sim.combatant_on_panel(location) {
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(real_target_id);
+        if target.crystal() || target.jumping() {
+            return;
+        }
+        if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {
+            return;
+        }
+        if ability.flags & HITS_ALLIES_ONLY != 0 && !user.ally(target) {
+            return;
+        }
+        if ability.flags & NOT_ALIVE_OK == 0 && !target.alive() {
+            return;
+        }
+        if ability.flags & PETRIFY_OK == 0 && target.petrify() {
+            return;
+        }
+
+        ability.implementation.perform(sim, user_id, real_target_id);
+    }
 }

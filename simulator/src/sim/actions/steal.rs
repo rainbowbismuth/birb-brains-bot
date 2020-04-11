@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
 use crate::sim::{Combatant, CombatantId, Condition, EquipSlot, Event, Simulation, Source};
 
 pub const STEAL_ABILITIES: &[Ability] = &[
@@ -7,7 +7,7 @@ pub const STEAL_ABILITIES: &[Ability] = &[
         name: "Gil Taking",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &GilTakingImpl {
             base_chance: 62,
             range: 2,
@@ -18,7 +18,7 @@ pub const STEAL_ABILITIES: &[Ability] = &[
         name: "Steal Heart",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &StealHeartImpl {
             base_chance: 44,
             range: 3,
@@ -29,7 +29,7 @@ pub const STEAL_ABILITIES: &[Ability] = &[
         name: "Steal Helmet",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &StealImpl {
             base_chance: 50,
             equip_slot: EquipSlot::Head,
@@ -40,7 +40,7 @@ pub const STEAL_ABILITIES: &[Ability] = &[
         name: "Steal Armor",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &StealImpl {
             base_chance: 40,
             equip_slot: EquipSlot::Body,
@@ -51,7 +51,7 @@ pub const STEAL_ABILITIES: &[Ability] = &[
         name: "Steal Shield",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &StealImpl {
             base_chance: 35,
             equip_slot: EquipSlot::Shield,
@@ -62,7 +62,7 @@ pub const STEAL_ABILITIES: &[Ability] = &[
         name: "Steal Weapon",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &StealImpl {
             base_chance: 45,
             equip_slot: EquipSlot::Weapon,
@@ -73,7 +73,7 @@ pub const STEAL_ABILITIES: &[Ability] = &[
         name: "Steal Accessory",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &StealImpl {
             base_chance: 55,
             equip_slot: EquipSlot::Accessory,

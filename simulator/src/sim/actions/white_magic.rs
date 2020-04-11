@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::common::{
     do_hp_heal, should_heal_ally, should_heal_foe, AddConditionSpellImpl, ConditionClearSpellImpl,
     CureSpellImpl, ElementalDamageSpellImpl,
@@ -14,7 +14,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Cure",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &CureSpellImpl {
             q: 15,
             ctr: Some(3),
@@ -26,7 +26,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Cure 2",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &CureSpellImpl {
             q: 20,
             ctr: Some(4),
@@ -38,7 +38,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Cure 3",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &CureSpellImpl {
             q: 30,
             ctr: Some(6),
@@ -50,7 +50,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Cure 4",
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 24,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &CureSpellImpl {
             q: 40,
             ctr: Some(8),
@@ -62,7 +62,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Raise",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &RaiseSpellImpl {
             hp_percent: 0.5,
             base_chance: 190,
@@ -75,7 +75,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Raise 2",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | NOT_ALIVE_OK | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 20,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &RaiseSpellImpl {
             hp_percent: 1.0,
             base_chance: 160,
@@ -88,7 +88,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Reraise",
         flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Reraise,
             can_be_evaded: false,
@@ -103,7 +103,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Regen",
         flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 8,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Regen,
             can_be_evaded: false,
@@ -118,7 +118,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Protect",
         flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
             can_be_evaded: false,
@@ -133,7 +133,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Protect 2",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 18,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Protect,
             can_be_evaded: false,
@@ -148,7 +148,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Shell",
         flags: ALLY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
             can_be_evaded: false,
@@ -163,7 +163,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Shell 2",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 18,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Shell,
             can_be_evaded: false,
@@ -180,7 +180,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Esuna",
         flags: ALLY_OK | PETRIFY_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &ConditionClearSpellImpl {
             conditions: &[
                 Condition::Petrify,
@@ -206,7 +206,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Holy",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 56,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ElementalDamageSpellImpl {
             element: Element::Holy,
             q: 47,

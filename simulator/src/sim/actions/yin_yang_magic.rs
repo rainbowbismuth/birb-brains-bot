@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ConditionClearSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, Source, CAN_BE_CALCULATED,
@@ -11,7 +11,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Blind",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 4,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Darkness,
             can_be_evaded: true,
@@ -26,7 +26,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Spell Absorb",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 2,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AbsorbSpellImpl {
             hp_not_mp: false,
             amount: 0.33,
@@ -40,7 +40,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Life Drain",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 16,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AbsorbSpellImpl {
             hp_not_mp: true,
             amount: 0.25,
@@ -54,7 +54,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Pray Faith",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Faith,
             can_be_evaded: false,
@@ -69,7 +69,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Doubt Faith",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Innocent,
             can_be_evaded: false,
@@ -84,7 +84,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Zombie",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 20,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Undead,
             can_be_evaded: true,
@@ -99,7 +99,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Silence Song",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Silence,
             can_be_evaded: true,
@@ -114,7 +114,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Blind Rage",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Berserk,
             can_be_evaded: true,
@@ -130,7 +130,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Confusion Song",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 20,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Confusion,
             can_be_evaded: true,
@@ -145,7 +145,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Dispel Magic",
         flags: FOE_OK | SILENCEABLE | CAN_BE_CALCULATED,
         mp_cost: 34,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionClearSpellImpl {
             conditions: &[
                 Condition::Float,
@@ -169,7 +169,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Paralyze",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::DontAct,
             can_be_evaded: true,
@@ -184,7 +184,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Sleep",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Sleep,
             can_be_evaded: true,
@@ -199,7 +199,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Petrify",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: Condition::Petrify,
             can_be_evaded: true,

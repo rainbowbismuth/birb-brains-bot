@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
 use crate::sim::common::{mod_2_formula_xa, mod_3_formula_xa};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
@@ -12,7 +12,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         // TODO: Pretty sure this could hit allies, need to add 'DOESNT HIT SELF'
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &DamagePunchArt {
             element: Element::None,
             pa_plus: 1,
@@ -25,20 +25,31 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         name: "Wave Fist",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &DamagePunchArt {
             element: Element::Wind,
             pa_plus: 2,
             range: 3,
         },
     },
-    // TODO: Earth Slash: 8 range, 8 AoE (line). Element: Earth. Effect: Damage (PA / 2 * PA).
+    // Earth Slash: 8 range, 8 AoE (line). Element: Earth. Effect: Damage (PA / 2 * PA).
+    Ability {
+        name: "Earth Slash",
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::Line,
+        implementation: &DamagePunchArt {
+            element: Element::Earth,
+            pa_plus: 0,
+            range: 8,
+        },
+    },
     // Secret Fist: 1 range, 0 AoE. Hit: (MA + 50)%. Effect: Add Death Sentence.
     Ability {
         name: "Secret Fist",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &SecretFistImpl { base_chance: 50 },
     },
     // Purification: 0 range, 1 AoE. Hit: (PA + 80)%. Effect: Cancel Petrify, Darkness, Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act.
@@ -46,7 +57,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         name: "Purification",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &PurificationImpl {
             base_chance: 80,
             cancels: &[
@@ -69,7 +80,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         name: "Chakra",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &ChakraImpl {
             hp_multiplier: 5,
             mp_multiplier: 5,
@@ -80,7 +91,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         name: "Revive",
         flags: ALLY_OK | NOT_ALIVE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ReviveImpl {
             base_chance: 70,
             heal_amount: 0.25,

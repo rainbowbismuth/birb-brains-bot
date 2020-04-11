@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_6_formula, ElementalDamageSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, Source, HITS_ALLIES_ONLY,
@@ -12,7 +12,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Shiva",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 24,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 24,
@@ -26,7 +26,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Ramuh",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 24,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 24,
@@ -40,7 +40,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Ifrit",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 24,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 24,
@@ -54,7 +54,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Titan",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 30,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Earth,
             q: 28,
@@ -69,7 +69,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Carbunkle",
         flags: ALLY_OK | NOT_ALIVE_OK | PETRIFY_OK | SILENCEABLE | HITS_ALLIES_ONLY,
         mp_cost: 30,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &CarbunkleImpl {
             base_chance: 140,
             heal_percent: 0.25,
@@ -89,7 +89,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Bahamut",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 60,
-        aoe: Some(3),
+        aoe: AoE::Diamond(3),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Dark,
             q: 46,
@@ -103,7 +103,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Odin",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 50,
-        aoe: Some(3),
+        aoe: AoE::Diamond(3),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Holy,
             q: 40,
@@ -117,7 +117,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Leviathan",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 48,
-        aoe: Some(3),
+        aoe: AoE::Diamond(3),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Water,
             q: 38,
@@ -132,7 +132,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Salamander",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 44,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 36,
@@ -147,7 +147,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Silf",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 36,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Wind,
             q: 30,
@@ -163,7 +163,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Cyclops",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 62,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &ElementalDamageSpellImpl {
             element: Element::None,
             q: 50,
@@ -177,7 +177,7 @@ pub const SUMMON_MAGIC_ABILITES: &[Ability] = &[
         name: "Zodiac",
         flags: FOE_OK | SILENCEABLE | HITS_FOES_ONLY,
         mp_cost: 99,
-        aoe: Some(3),
+        aoe: AoE::Diamond(3),
         implementation: &ElementalDamageSpellImpl {
             element: Element::None,
             q: 90,

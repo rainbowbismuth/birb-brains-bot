@@ -1,5 +1,5 @@
 use crate::sim::actions::{
-    Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, NO_SHORT_CHARGE, TARGET_NOT_SELF,
+    Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, NO_SHORT_CHARGE, TARGET_NOT_SELF,
 };
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, WeaponType, DAMAGE_CANCELS,
@@ -9,7 +9,7 @@ use crate::sim::{
 pub const JUMP_ABILITIES: &[Ability] = &[Ability {
     flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | JUMPING,
     mp_cost: 0,
-    aoe: None,
+    aoe: AoE::None,
     implementation: &JumpImpl {},
     name: "Jump",
 }];

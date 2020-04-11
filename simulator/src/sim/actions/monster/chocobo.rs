@@ -1,7 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{do_hp_heal, mod_2_formula_xa, mod_5_formula_xa};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, TARGET_NOT_SELF,
+    AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, TARGET_NOT_SELF,
     TARGET_SELF_ONLY,
 };
 
@@ -12,7 +12,7 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
         name: "Choco Ball",
         flags: FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChocoBallImpl {
             element: Element::Water,
             range: 4,
@@ -23,7 +23,7 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
         name: "Choco Meteor",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChocoMeteorImpl {
             ma_factor: 4,
             range: 5,
@@ -34,7 +34,7 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
         name: "Choco Esuna",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &ChocoEsunaImpl {
             cures: &[
                 Condition::Petrify,
@@ -52,7 +52,7 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
         name: "Choco Cure",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &ChocoCureImpl { ma_factor: 3 },
     },
 ];

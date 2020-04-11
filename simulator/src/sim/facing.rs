@@ -50,15 +50,15 @@ impl Facing {
         OFFSETS[self.index()]
     }
 
-    pub fn rotate(self, amount: u8) -> Facing {
-        unsafe { std::mem::transmute_copy(&(((self as u8) + amount) % 4)) }
+    pub fn rotate(self, amount: i8) -> Facing {
+        unsafe { std::mem::transmute_copy(&(((self as u8) + amount as u8) % 4)) }
     }
 
     pub fn relative(self, target_loc: Location, from: Location) -> RelativeFacing {
-        let front = target_loc + Facing::North.rotate(self as u8).offset();
-        let right = target_loc + Facing::East.rotate(self as u8).offset();
-        let back = target_loc + Facing::South.rotate(self as u8).offset();
-        let left = target_loc + Facing::West.rotate(self as u8).offset();
+        let front = target_loc + Facing::North.rotate(self as i8).offset();
+        let right = target_loc + Facing::East.rotate(self as i8).offset();
+        let back = target_loc + Facing::South.rotate(self as i8).offset();
+        let left = target_loc + Facing::West.rotate(self as i8).offset();
 
         let front_dist = from.distance_squared(front);
         let right_dist = from.distance_squared(right);

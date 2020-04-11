@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, TARGET_NOT_SELF,
     TARGET_SELF_ONLY,
@@ -24,7 +24,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
         name: "Shuriken",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ThrowImpl {
             items: &[
                 ThrowableItem {
@@ -53,7 +53,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
         name: "Bomb",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ThrowImpl {
             items: &[
                 ThrowableItem {

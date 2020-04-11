@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::common::{do_hp_heal, should_heal_ally, should_heal_foe};
 use crate::sim::{Combatant, CombatantId, Condition, Simulation, Source, NOT_ALIVE_OK};
 
@@ -7,7 +7,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Potion",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &PotionAbilityImpl {
             hp_amount: 100,
             mp_amount: 0,
@@ -17,7 +17,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Hi-Potion",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &PotionAbilityImpl {
             hp_amount: 120,
             mp_amount: 0,
@@ -27,7 +27,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "X-Potion",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &PotionAbilityImpl {
             hp_amount: 150,
             mp_amount: 0,
@@ -37,7 +37,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Ether",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &PotionAbilityImpl {
             hp_amount: 0,
             mp_amount: 20,
@@ -47,7 +47,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Hi-Ether",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &PotionAbilityImpl {
             hp_amount: 0,
             mp_amount: 50,
@@ -57,7 +57,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Elixir",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &PotionAbilityImpl {
             hp_amount: 999,
             mp_amount: 999,
@@ -67,14 +67,14 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Phoenix Down",
         flags: ALLY_OK | FOE_OK | NOT_ALIVE_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &PhoenixDownImpl {},
     },
     Ability {
         name: "Antidote",
         flags: ALLY_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionCureItemImpl {
             cures: &[Condition::Poison],
         },
@@ -83,7 +83,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Eye Drop",
         flags: ALLY_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionCureItemImpl {
             cures: &[Condition::Darkness],
         },
@@ -92,7 +92,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Echo Grass",
         flags: ALLY_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionCureItemImpl {
             cures: &[Condition::Silence],
         },
@@ -101,7 +101,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Maiden's Kiss",
         flags: ALLY_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionCureItemImpl {
             cures: &[Condition::Frog],
         },
@@ -110,7 +110,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Soft",
         flags: ALLY_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionCureItemImpl {
             cures: &[Condition::Petrify],
         },
@@ -119,7 +119,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Holy Water",
         flags: ALLY_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionCureItemImpl {
             cures: &[Condition::Undead],
         },
@@ -128,7 +128,7 @@ pub const ITEM_ABILITIES: &[Ability] = &[
         name: "Remedy",
         flags: ALLY_OK,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ConditionCureItemImpl {
             cures: &[
                 Condition::Petrify,

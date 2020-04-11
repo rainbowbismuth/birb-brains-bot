@@ -1,7 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, SILENCEABLE};
 use crate::sim::common::{mod_5_formula_xa, mod_6_formula, ElementalDamageSpellImpl};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Event, Simulation, Source, TARGET_NOT_SELF,
+    AoE, Combatant, CombatantId, Condition, Element, Event, Simulation, Source, TARGET_NOT_SELF,
     TARGET_SELF_ONLY,
 };
 
@@ -11,7 +11,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Nanoflare",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 0,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &NanoflareImpl {
             ma_plus: 5,
             ctr: 5,
@@ -23,7 +23,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Dark Holy",
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 40,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ElementalDamageSpellImpl {
             element: Element::Dark,
             q: 41,
@@ -37,7 +37,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Ultima",
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 10,
-        aoe: Some(1),
+        aoe: AoE::Diamond(1),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Holy,
             q: 25,
@@ -51,7 +51,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Hurricane",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &HuricaneImpl {
             element: Element::Wind,
             base_chance: 50,
@@ -63,7 +63,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Ulmaguest",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: Some(2),
+        aoe: AoE::Diamond(2),
         implementation: &UlmaguestImpl { range: 4 },
     },
     // Empower: 4 range, 0 AoE, 8 CT, 13 MP. Effect: +2 PA, +2 MA, +2 Speed.
@@ -71,7 +71,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Empower",
         flags: ALLY_OK,
         mp_cost: 13,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &EmpowerImpl {
             range: 4,
             ctr: 8,

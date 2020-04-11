@@ -1,7 +1,7 @@
 use crate::sim::actions::attack::do_single_weapon_attack;
 
 use crate::sim::actions::{
-    Ability, AbilityImpl, Action, ALLY_OK, DONT_MOVE_WHILE_CHARGING, FOE_OK, NO_SHORT_CHARGE,
+    Ability, AbilityImpl, Action, AoE, ALLY_OK, DONT_MOVE_WHILE_CHARGING, FOE_OK, NO_SHORT_CHARGE,
     TARGET_NOT_SELF,
 };
 use crate::sim::{
@@ -14,7 +14,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+1",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 1, ct: 3 },
     },
     // Charge+2: weapon range, 0 AoE, 4 CT. Effect: Normal Attack with +2 Charge.
@@ -22,7 +22,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+2",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 2, ct: 4 },
     },
     // Charge+3: weapon range, 0 AoE, 5 CT. Effect: Normal Attack with +3 Charge.
@@ -30,7 +30,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+3",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 3, ct: 5 },
     },
     // Charge+4: weapon range, 0 AoE, 6 CT. Effect: Normal Attack with +4 Charge.
@@ -38,7 +38,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+4",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 4, ct: 6 },
     },
     // Charge+5: weapon range, 0 AoE, 7 CT. Effect: Normal Attack with +5 Charge.
@@ -46,7 +46,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+5",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 5, ct: 7 },
     },
     // Charge+7: weapon range, 0 AoE, 9 CT. Effect: Normal Attack with +7 Charge.
@@ -54,7 +54,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+7",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 7, ct: 9 },
     },
     // Charge+10: weapon range, 0 AoE, 12 CT. Effect: Normal Attack with +10 Charge.
@@ -62,7 +62,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+10",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 10, ct: 12 },
     },
     // Charge+20: weapon range, 0 AoE, 20 CT. Effect: Normal Attack with +20 Charge.
@@ -70,7 +70,7 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
         name: "Charge+20",
         flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
         mp_cost: 0,
-        aoe: None,
+        aoe: AoE::None,
         implementation: &ChargeImpl { k: 20, ct: 20 },
     },
 ];

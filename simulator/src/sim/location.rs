@@ -22,6 +22,10 @@ impl Location {
         (self.x - other.x).abs() + (self.y - other.y).abs()
     }
 
+    pub fn lined_up(self, other: Self) -> bool {
+        self.x == other.x || self.y == other.y
+    }
+
     pub fn distance_squared(self, other: Self) -> DistanceSquared {
         let x_dist = (self.x - other.x).abs() as i32;
         let y_dist = (self.y - other.y).abs() as i32;
