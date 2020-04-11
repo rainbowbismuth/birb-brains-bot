@@ -434,3 +434,38 @@ impl AbilityImpl for CureSpellImpl {
         do_hp_heal(sim, target_id, heal_amount as i16, true);
     }
 }
+
+pub struct DemiImpl {
+    pub base_chance: i16,
+    pub hp_percent: f32,
+    pub range: i8,
+    pub ctr: Option<u8>,
+}
+
+impl AbilityImpl for DemiImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        actions.push(Action::new(ability, self.range, self.ctr, target.id()));
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+        if sim.do_magical_evade(user, target, Source::Ability) {
+            return;
+        }
+        let success_chance = mod_6_formula(user, target, Element::None, self.base_chance, false);
+        if !(sim.roll_auto_succeed() < success_chance) {
+            sim.log_event(Event::AbilityMissed(user_id, target_id));
+            return;
+        }
+
+        let damage = (target.max_hp() as f32 * self.hp_percent) as i16;
+        sim.change_target_hp(target_id, damage, Source::Ability);
+    }
+}

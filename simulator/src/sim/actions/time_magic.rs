@@ -1,5 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
-use crate::sim::common::{mod_6_formula, AddConditionSpellImpl, ElementalDamageSpellImpl};
+use crate::sim::common::{
+    mod_6_formula, AddConditionSpellImpl, DemiImpl, ElementalDamageSpellImpl,
+};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, Source, CAN_BE_CALCULATED,
     CAN_BE_REFLECTED, SILENCEABLE, USE_ON_CRITICAL_ONLY,
@@ -137,7 +139,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
             base_chance: 205,
             hp_percent: 0.25,
             range: 5,
-            ctr: 3,
+            ctr: Some(3),
         },
     },
     // Demi 2: 5 range, 1 AoE, 6 CT, 40 MP. Hit: Faith(MA + 165)%. Effect: Damage (50)%.
@@ -150,7 +152,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
             base_chance: 165,
             hp_percent: 0.50,
             range: 5,
-            ctr: 6,
+            ctr: Some(6),
         },
     },
     // Meteor: 5 range, 3 AoE, 13 CT, 70 MP. Effect: Damage Faith(MA * 60).
@@ -168,43 +170,3 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         },
     },
 ];
-
-struct DemiImpl {
-    base_chance: i16,
-    hp_percent: f32,
-    range: i8,
-    ctr: u8,
-}
-
-impl AbilityImpl for DemiImpl {
-    fn consider<'a>(
-        &self,
-        actions: &mut Vec<Action<'a>>,
-        ability: &'a Ability<'a>,
-        _sim: &Simulation<'a>,
-        _user: &Combatant<'a>,
-        target: &Combatant<'a>,
-    ) {
-        actions.push(Action::new(
-            ability,
-            self.range,
-            Some(self.ctr),
-            target.id(),
-        ));
-    }
-    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
-        let user = sim.combatant(user_id);
-        let target = sim.combatant(target_id);
-        if sim.do_magical_evade(user, target, Source::Ability) {
-            return;
-        }
-        let success_chance = mod_6_formula(user, target, Element::None, self.base_chance, false);
-        if !(sim.roll_auto_succeed() < success_chance) {
-            sim.log_event(Event::AbilityMissed(user_id, target_id));
-            return;
-        }
-
-        let damage = (target.max_hp() as f32 * self.hp_percent) as i16;
-        sim.change_target_hp(target_id, damage, Source::Ability);
-    }
-}
