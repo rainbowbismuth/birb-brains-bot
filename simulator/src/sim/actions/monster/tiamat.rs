@@ -1,4 +1,4 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, SILENCEABLE};
+use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::attack::AttackImpl;
 use crate::sim::common::{
     mod_5_formula, mod_5_formula_xa, mod_6_formula, DemiImpl, ElementalDamageSpellImpl,
@@ -88,7 +88,6 @@ impl AbilityImpl for TripleElementalImpl {
         actions.push(Action::new(ability, self.range, self.ctr, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
-        let user = sim.combatant(user_id);
         let target_location = sim.combatant(target_id).location;
 
         for _i in 1..=3 {

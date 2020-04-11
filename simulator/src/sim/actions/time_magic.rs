@@ -1,7 +1,5 @@
-use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
-use crate::sim::common::{
-    mod_6_formula, AddConditionSpellImpl, DemiImpl, ElementalDamageSpellImpl,
-};
+use crate::sim::actions::{Ability, AoE, ALLY_OK, FOE_OK};
+use crate::sim::common::{AddConditionSpellImpl, DemiImpl, ElementalDamageSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, Source, CAN_BE_CALCULATED,
     CAN_BE_REFLECTED, SILENCEABLE, USE_ON_CRITICAL_ONLY,
