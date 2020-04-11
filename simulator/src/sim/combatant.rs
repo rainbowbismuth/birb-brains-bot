@@ -840,6 +840,7 @@ impl<'a> Combatant<'a> {
     pub fn cancels(&self, element: Element) -> bool {
         self.base_stats().cancels & element.flag() != 0
             || self.any_equip(|eq| eq.cancels_element & element.flag() != 0)
+            || (element == Element::Earth && self.float())
     }
 
     pub fn abandon(&self) -> bool {
