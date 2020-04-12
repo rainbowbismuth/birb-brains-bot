@@ -916,7 +916,7 @@ impl<'a> Simulation<'a> {
             return;
         }
 
-        if target.defending() && self.roll_brave_reaction(target) {
+        if target.caution() && self.roll_brave_reaction(target) {
             self.add_condition(target_id, Condition::Defending, Source::Constant("Caution"));
             return;
         }
@@ -949,21 +949,39 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn change_unit_pa(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        if amount == 0 {
+            return;
+        }
         let target = self.combatant_mut(target_id);
-        target.pa_mod += amount;
+        target.pa_mod = (target.pa_mod + amount).min(100);
         self.log_event(Event::PhysicalAttackBuff(target_id, amount, src));
     }
 
     pub fn change_unit_ma(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        if amount == 0 {
+            return;
+        }
         let target = self.combatant_mut(target_id);
-        target.ma_mod += amount;
+        target.ma_mod = (target.ma_mod + amount).min(100);
         self.log_event(Event::MagicalAttackBuff(target_id, amount, src));
     }
 
     pub fn change_unit_speed(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        if amount == 0 {
+            return;
+        }
         let target = self.combatant_mut(target_id);
-        target.speed_mod += amount;
+        target.speed_mod = (target.speed_mod + amount).min(100);
         self.log_event(Event::SpeedBuff(target_id, amount, src));
+    }
+
+    pub fn change_unit_brave(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        if amount == 0 {
+            return;
+        }
+        let target = self.combatant_mut(target_id);
+        target.raw_brave = (target.raw_brave + amount).min(100);
+        self.log_event(Event::BraveBuff(target_id, amount, src));
     }
 
     pub fn calculate_weapon_xa(

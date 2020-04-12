@@ -97,7 +97,7 @@ impl AbilityImpl for ChargeImpl {
         } else {
             target.speed()
         };
-        let ticks_left = ct_remaining / speed as u8;
+        let ticks_left = ct_remaining / speed.max(1) as u8;
         if self.ct >= ticks_left {
             return;
         }

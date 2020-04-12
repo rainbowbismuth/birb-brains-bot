@@ -1,5 +1,5 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, SILENCEABLE};
-use crate::sim::common::{mod_5_formula_xa, mod_6_formula, ElementalDamageSpellImpl};
+use crate::sim::common::{mod_5_formula_xa, mod_6_formula, ElementalDamageSpellImpl, EmpowerImpl};
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Event, Simulation, Source, TARGET_NOT_SELF,
     TARGET_SELF_ONLY,
@@ -74,7 +74,8 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         aoe: AoE::None,
         implementation: &EmpowerImpl {
             range: 4,
-            ctr: 8,
+            ctr: Some(8),
+            brave_mod: 0,
             pa_buff: 2,
             ma_buff: 2,
             speed_buff: 2,
@@ -162,36 +163,5 @@ impl AbilityImpl for HuricaneImpl {
         }
         let damage = target.max_hp() / 3;
         sim.change_target_hp(target_id, damage, Source::Ability);
-    }
-}
-
-struct EmpowerImpl {
-    range: i8,
-    ctr: u8,
-    pa_buff: i8,
-    ma_buff: i8,
-    speed_buff: i8,
-}
-
-impl AbilityImpl for EmpowerImpl {
-    fn consider<'a>(
-        &self,
-        actions: &mut Vec<Action<'a>>,
-        ability: &'a Ability<'a>,
-        _sim: &Simulation<'a>,
-        _user: &Combatant<'a>,
-        target: &Combatant<'a>,
-    ) {
-        actions.push(Action::new(
-            ability,
-            self.range,
-            Some(self.ctr),
-            target.id(),
-        ));
-    }
-    fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
-        sim.change_unit_pa(target_id, self.pa_buff, Source::Ability);
-        sim.change_unit_ma(target_id, self.ma_buff, Source::Ability);
-        sim.change_unit_speed(target_id, self.speed_buff, Source::Ability);
     }
 }

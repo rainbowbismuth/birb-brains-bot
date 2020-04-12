@@ -39,6 +39,7 @@ pub enum Event<'a> {
     Knockback(CombatantId, Location),
     CriticalQuick(CombatantId),
     SpellReflected(CombatantId, Location),
+    BraveBuff(CombatantId, i8, Source<'a>),
 }
 
 #[derive(Copy, Clone)]
@@ -262,6 +263,13 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
             describe_combatant_short(*target_id, combatants),
             new_location.x,
             new_location.y
+        ),
+
+        Event::BraveBuff(target_id, amount, src) => format!(
+            "{}\'s brave increased by {} because of {}",
+            describe_combatant(*target_id, combatants),
+            amount,
+            describe_source(*src, combatants)
         ),
     }
 }

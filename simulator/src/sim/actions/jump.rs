@@ -41,8 +41,8 @@ impl AbilityImpl for JumpImpl {
         } else {
             target.speed()
         };
-        let ticks_left = ct_remaining / speed as u8;
-        let jump_ticks = 50 / user.speed() as u8;
+        let ticks_left = ct_remaining / speed.max(1) as u8;
+        let jump_ticks = 50 / user.speed().max(1) as u8;
 
         if jump_ticks >= ticks_left {
             return;

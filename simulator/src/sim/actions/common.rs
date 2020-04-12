@@ -469,3 +469,31 @@ impl AbilityImpl for DemiImpl {
         sim.change_target_hp(target_id, damage, Source::Ability);
     }
 }
+
+pub struct EmpowerImpl {
+    pub range: i8,
+    pub ctr: Option<u8>,
+    pub brave_mod: i8,
+    pub pa_buff: i8,
+    pub ma_buff: i8,
+    pub speed_buff: i8,
+}
+
+impl AbilityImpl for EmpowerImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        actions.push(Action::new(ability, self.range, self.ctr, target.id()));
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
+        sim.change_unit_brave(target_id, self.brave_mod, Source::Ability);
+        sim.change_unit_pa(target_id, self.pa_buff, Source::Ability);
+        sim.change_unit_ma(target_id, self.ma_buff, Source::Ability);
+        sim.change_unit_speed(target_id, self.speed_buff, Source::Ability);
+    }
+}
