@@ -1,6 +1,7 @@
 use crate::dto::rust;
 use crate::dto::rust::{BaseStats, Equipment, Patch};
 use crate::sim::actions::attack::ATTACK_ABILITY;
+use crate::sim::actions::basic_skill::BASIC_SKILL_ABILITIES;
 use crate::sim::actions::battle_skill::BATTLE_SKILL_ABILITIES;
 use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::charge::CHARGE_ABILITIES;
@@ -148,6 +149,7 @@ impl<'a> CombatantInfo<'a> {
             BATTLE_SKILL_ABILITIES,
             CHARGE_ABILITIES,
             TIAMAT_ABILITIES,
+            BASIC_SKILL_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
@@ -990,6 +992,10 @@ impl<'a> Combatant<'a> {
 
     pub fn caution(&self) -> bool {
         self.info.skill_block.caution()
+    }
+
+    pub fn counter_tackle(&self) -> bool {
+        self.info.skill_block.counter_tackle()
     }
 
     pub fn abilities(&self) -> &[&'a Ability<'a>] {

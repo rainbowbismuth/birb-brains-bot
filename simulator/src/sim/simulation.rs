@@ -6,6 +6,7 @@ use rand::Rng;
 
 use crate::dto::rust::Equipment;
 use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
+use crate::sim::actions::basic_skill::DASH_ABILITY;
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
     ActionTarget, Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log,
@@ -854,6 +855,19 @@ impl<'a> Simulation<'a> {
             }
 
             let action = Action::new(&ATTACK_ABILITY, range, None, user_id);
+            self.trigger_countergrasps = false;
+            perform_action(self, target_id, action);
+            self.trigger_countergrasps = true;
+            return;
+        }
+
+        if target.counter_tackle() && self.roll_brave_reaction(target) {
+            let user = self.combatant(user_id);
+            if !in_range(target, 1, user) {
+                return;
+            }
+
+            let action = Action::new(&DASH_ABILITY, 1, None, user_id);
             self.trigger_countergrasps = false;
             perform_action(self, target_id, action);
             self.trigger_countergrasps = true;

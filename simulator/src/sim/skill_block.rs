@@ -32,6 +32,7 @@ const CRITICAL_QUICK: u64 = 1 << 30;
 const MIMIC: u64 = 1 << 31;
 const NO_MP: u64 = 1 << 32;
 const CAUTION: u64 = 1 << 33;
+const COUNTER_TACKLE: u64 = 1 << 34;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -76,6 +77,7 @@ impl SkillBlock {
                 "Mimic" => block.flags |= MIMIC,
                 "No MP" => block.flags |= NO_MP,
                 "Caution" => block.flags |= CAUTION,
+                "Counter Tackle" => block.flags |= COUNTER_TACKLE,
                 _ => {}
             }
         }
@@ -212,5 +214,9 @@ impl SkillBlock {
 
     pub fn caution(&self) -> bool {
         self.flags & CAUTION != 0
+    }
+
+    pub fn counter_tackle(&self) -> bool {
+        self.flags & COUNTER_TACKLE != 0
     }
 }

@@ -1,6 +1,7 @@
 use crate::sim::{Combatant, CombatantId, Event, Facing, Location, Simulation};
 
 pub mod attack;
+pub mod basic_skill;
 pub mod battle_skill;
 pub mod black_magic;
 pub mod charge;
