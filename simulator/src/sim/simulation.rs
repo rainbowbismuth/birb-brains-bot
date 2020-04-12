@@ -953,7 +953,7 @@ impl<'a> Simulation<'a> {
             return;
         }
         let target = self.combatant_mut(target_id);
-        target.pa_mod = (target.pa_mod + amount).min(100);
+        target.pa_mod = (target.pa_mod + amount).min(75);
         self.log_event(Event::PhysicalAttackBuff(target_id, amount, src));
     }
 
@@ -962,7 +962,7 @@ impl<'a> Simulation<'a> {
             return;
         }
         let target = self.combatant_mut(target_id);
-        target.ma_mod = (target.ma_mod + amount).min(100);
+        target.ma_mod = (target.ma_mod + amount).min(75);
         self.log_event(Event::MagicalAttackBuff(target_id, amount, src));
     }
 
@@ -971,7 +971,7 @@ impl<'a> Simulation<'a> {
             return;
         }
         let target = self.combatant_mut(target_id);
-        target.speed_mod = (target.speed_mod + amount).min(100);
+        target.speed_mod = (target.speed_mod + amount).min(50);
         self.log_event(Event::SpeedBuff(target_id, amount, src));
     }
 

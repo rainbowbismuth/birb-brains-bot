@@ -1,7 +1,5 @@
 use crate::sim::actions::common::{mod_2_formula_xa, EmpowerImpl};
-use crate::sim::actions::{
-    Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, HITS_FOES_ONLY, TARGET_NOT_SELF,
-};
+use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, EquipSlot, Event, Simulation, Source, WeaponType,
     TARGET_SELF_ONLY,

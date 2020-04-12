@@ -312,7 +312,7 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             let target_location = action_target.to_location(sim);
             let facing = Facing::towards(user.location, target_location);
             let user_location = user.location;
-            let left_facing = facing.rotate(-1);
+            let left_facing = facing.rotate(3);
             let right_facing = facing.rotate(1);
             for i in 1..=action.range {
                 let target_panel = user_location + facing.offset() * i as i16;

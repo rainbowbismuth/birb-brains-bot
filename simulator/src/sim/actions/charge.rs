@@ -89,7 +89,7 @@ impl AbilityImpl for ChargeImpl {
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        let ct_remaining = 0.max(100 - target.ct);
+        let ct_remaining = 0.max(100 - target.ct.min(100));
         let speed = if target.haste() {
             // TODO: Real AI doesn't account for this, but, since I haven't implemented
             //  tile targeting, I'm going to only target those that will certainly hit

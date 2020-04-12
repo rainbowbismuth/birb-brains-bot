@@ -460,14 +460,14 @@ impl<'a> Combatant<'a> {
         }
     }
 
-    pub fn speed(&self) -> i8 {
-        self.base_stats().speed
+    pub fn speed(&self) -> u8 {
+        (self.base_stats().speed
             + self.speed_mod
             + self.main_hand().map_or(0, |e| e.speed_bonus)
             + self.off_hand().map_or(0, |e| e.speed_bonus)
             + self.headgear().map_or(0, |e| e.speed_bonus)
             + self.armor().map_or(0, |e| e.speed_bonus)
-            + self.accessory().map_or(0, |e| e.speed_bonus)
+            + self.accessory().map_or(0, |e| e.speed_bonus)) as u8
     }
 
     pub fn brave_percent(&self) -> f32 {
@@ -556,30 +556,30 @@ impl<'a> Combatant<'a> {
             + self.accessory().map_or(0, |e| e.move_bonus)
     }
 
-    pub fn pa_bang(&self) -> i8 {
-        self.base_stats().pa + self.pa_mod
+    pub fn pa_bang(&self) -> i16 {
+        (self.base_stats().pa + self.pa_mod) as i16
     }
 
-    pub fn ma_bang(&self) -> i8 {
-        self.base_stats().ma + self.ma_mod
+    pub fn ma_bang(&self) -> i16 {
+        (self.base_stats().ma + self.ma_mod) as i16
     }
 
-    pub fn pa(&self) -> i8 {
+    pub fn pa(&self) -> i16 {
         self.pa_bang()
-            + self.main_hand().map_or(0, |e| e.pa_bonus)
-            + self.off_hand().map_or(0, |e| e.pa_bonus)
-            + self.headgear().map_or(0, |e| e.pa_bonus)
-            + self.armor().map_or(0, |e| e.pa_bonus)
-            + self.accessory().map_or(0, |e| e.pa_bonus)
+            + self.main_hand().map_or(0, |e| e.pa_bonus as i16)
+            + self.off_hand().map_or(0, |e| e.pa_bonus as i16)
+            + self.headgear().map_or(0, |e| e.pa_bonus as i16)
+            + self.armor().map_or(0, |e| e.pa_bonus as i16)
+            + self.accessory().map_or(0, |e| e.pa_bonus as i16)
     }
 
-    pub fn ma(&self) -> i8 {
+    pub fn ma(&self) -> i16 {
         self.ma_bang()
-            + self.main_hand().map_or(0, |e| e.ma_bonus)
-            + self.off_hand().map_or(0, |e| e.ma_bonus)
-            + self.headgear().map_or(0, |e| e.ma_bonus)
-            + self.armor().map_or(0, |e| e.ma_bonus)
-            + self.accessory().map_or(0, |e| e.ma_bonus)
+            + self.main_hand().map_or(0, |e| e.ma_bonus as i16)
+            + self.off_hand().map_or(0, |e| e.ma_bonus as i16)
+            + self.headgear().map_or(0, |e| e.ma_bonus as i16)
+            + self.armor().map_or(0, |e| e.ma_bonus as i16)
+            + self.accessory().map_or(0, |e| e.ma_bonus as i16)
     }
 
     //     @property
