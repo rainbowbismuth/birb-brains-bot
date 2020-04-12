@@ -173,7 +173,10 @@ class Tournament:
     teams: {str: Team}
     match_ups: List[MatchUp]
 
-    def to_combatants(self, patch: Patch, sim_data: dict) -> List[dict]:
+    def to_combatants(self, patch: Patch, sim_data: dict = None) -> List[dict]:
+        if not sim_data:
+            sim_data = {}
+
         tournament = {'TID': self.id, 'Modified': self.modified}
         out = []
 
