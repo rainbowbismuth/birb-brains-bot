@@ -216,7 +216,7 @@ def model_three(combatant_size,
         # return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    first_layer = make_dense(combatant_size)
+    first_layer = make_dense(combatant_size // 10)
     first_nodes = [first_layer(input_node) for input_node in inputs]
 
     nodes = [first_nodes]
@@ -259,7 +259,7 @@ def score_model(model, tag, X, y):
     LOG.info(f'{tag:>8} accuracy   {accuracy_score(y, pred_y):.1%}')
     LOG.info(f'{tag:>8} precision  {precision_score(y, pred_y):.1%}')
     LOG.info(f'{tag:>8} recall     {recall_score(y, pred_y):.1%}')
-    LOG.info(f'{tag:>8} log loss   {log_loss(y, pred_y):.4}')
+    LOG.info(f'{tag:>8} log loss   {log_loss(y, predictions):.4}')
     y_scores = predictions[:, 1]
     LOG.info(f'{tag:>8} roc auc    {roc_auc_score(y, y_scores):.1%}')
     return y_scores

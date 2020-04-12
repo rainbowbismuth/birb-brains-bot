@@ -1,14 +1,15 @@
 use std::io;
 
-use indicatif::{ProgressBar, ProgressStyle};
-use rand::rngs::SmallRng;
-use rand::{thread_rng, SeedableRng};
-
 use crate::data;
 use crate::dto::rust::{MatchUp, Patch};
 use crate::sim::{
     describe_entry, unit_card, Combatant, CombatantId, CombatantInfo, Gender, Simulation, Team,
 };
+use indicatif::{ProgressBar, ProgressStyle};
+use rand::rngs::SmallRng;
+use rand::{thread_rng, SeedableRng};
+use std::collections::HashMap;
+use std::io::Write;
 use std::path::PathBuf;
 
 fn run_many_sims<'a>(num_runs: i32, combatants: &'a [Combatant<'a>; 8]) -> (f64, u64) {
@@ -169,11 +170,14 @@ pub fn has_monster(combatants: &[CombatantInfo]) -> bool {
 pub fn run_all_matches(
     num_runs: i32,
     print_worst: bool,
+    save: bool,
     filter_equip: Vec<String>,
     filter_ability: Vec<String>,
     filter_skill: Vec<String>,
     filter_no_monsters: bool,
 ) -> io::Result<()> {
+    let mut results: HashMap<String, HashMap<String, f64>> = HashMap::new();
+
     let patches = data::read_all_patches()?;
 
     println!("{} patches\n", patches.len());
@@ -252,6 +256,12 @@ pub fn run_all_matches(
         let (left_wins_percent, new_time_outs) = run_many_sims(num_runs, &combatants);
         time_outs += new_time_outs;
 
+        let tournament_map = results
+            .entry(match_up.tournament_id.to_string())
+            .or_insert(HashMap::new());
+        let key = format!("{},{}", match_up.left.color, match_up.right.color);
+        tournament_map.insert(key, left_wins_percent);
+
         if match_up.left_wins.unwrap() && left_wins_percent > 0.5 {
             correct += 1;
         } else if !match_up.left_wins.unwrap() && left_wins_percent <= 0.5 {
@@ -299,6 +309,12 @@ pub fn run_all_matches(
     );
     println!("improvement: {:.1}%", (correct_percent - 0.5) * 200.0);
     println!("log loss: {:.6}", log_loss / total_matches as f64);
+
+    if save {
+        let bin = serde_json::to_vec_pretty(&results).unwrap();
+        let mut file = std::fs::File::create("data/sim.json")?;
+        file.write_all(&bin)?;
+    }
 
     return Ok(());
 }

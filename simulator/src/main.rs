@@ -45,6 +45,10 @@ struct Test {
     #[clap(short = "w")]
     print_worst: bool,
 
+    /// Save the predictions to a file
+    #[clap(long = "save")]
+    save: bool,
+
     /// Filter out all matches with any monsters
     #[clap(long = "filter-no-monsters")]
     filter_no_monsters: bool,
@@ -82,6 +86,7 @@ fn main() -> io::Result<()> {
         SubCommand::Test(test) => runner::run_all_matches(
             test.num_runs,
             test.print_worst,
+            test.save,
             test.filter_equip,
             test.filter_ability,
             test.filter_skill,

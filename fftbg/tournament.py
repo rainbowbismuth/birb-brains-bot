@@ -32,7 +32,7 @@ OFFENSIVE_STATUSES = [
 ]
 CAUSE_STATUS = [f'Can-{status}-Enemy-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
 CANCEL_STATUS = [f'Can-Cancel-{status}-Team-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
-NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
+NUMERIC = ['Sim-Win-Percent', 'Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
            'Map-Min-Dimension', 'Map-Max-Dimension', 'Map-Archer-Boon', 'Map-Meat-Grinder'] \
           + CAN_HEAL_TEAM + CAN_HURT_ENEMY + CAN_LETHAL_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
           + CAUSE_STATUS + CANCEL_STATUS
@@ -173,13 +173,24 @@ class Tournament:
     teams: {str: Team}
     match_ups: List[MatchUp]
 
-    def to_combatants(self, patch: Patch) -> List[dict]:
+    def to_combatants(self, patch: Patch, sim_data: dict) -> List[dict]:
         tournament = {'TID': self.id, 'Modified': self.modified}
         out = []
+
+        tourny_sim_data = sim_data.get(str(self.id), {})
+
         for i, match_up in enumerate(self.match_ups):
-            for combatant in match_up.to_combatants(patch):
+            match_sim_data = tourny_sim_data.get(f'{match_up.left.color},{match_up.right.color}', 0.5)
+
+            for j, combatant in enumerate(match_up.to_combatants(patch)):
                 combatant.update(tournament)
                 combatant['MatchUp'] = i
+
+                if j < 4:
+                    combatant['Sim-Win-Percent'] = match_sim_data
+                else:
+                    combatant['Sim-Win-Percent'] = 1 - match_sim_data
+
                 out.append(combatant)
         return out
 
@@ -263,12 +274,20 @@ def parse_tournaments() -> List[Tournament]:
     return out
 
 
+def load_sim_json_if_exists():
+    path = Path('data/sim.json')
+    if path.exists():
+        return json.loads(path.read_text())
+    return {}
+
+
 def tournament_to_combatants(tournaments: List[Tournament]) -> pandas.DataFrame:
     LOG.debug('Converting tournaments to by-combatant DataFrame')
     data = []
+    sim_data = load_sim_json_if_exists()
     for tournament in progress_bar(tournaments):
         patch = fftbg.patch.get_patch(tournament.modified)
-        data.extend(tournament.to_combatants(patch))
+        data.extend(tournament.to_combatants(patch, sim_data))
 
     _add_composite_id(data, 'UID', lambda c: f"{c['TID']}{c['Color']}{c['Name']}")
     _add_composite_id(data, 'MID', lambda c: f"{c['TID']}{c['MatchUp']}")
