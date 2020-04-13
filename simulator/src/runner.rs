@@ -135,8 +135,9 @@ pub fn run_specific_match(match_id: u64, num_runs: i32) -> io::Result<()> {
     for combatant in &combatants {
         println!("{}", unit_card(combatant));
     }
+    println!("Playing on {}", &match_up.arena_name);
     for entry in sim.log.entries() {
-        println!("{}", describe_entry(&entry));
+        println!("{}", describe_entry(&entry, &match_up.arena));
     }
     let clamped = clamp(left_wins_percent, 1e-15, 1.0 - 1e-15);
     let current_log_loss = if match_up.left_wins.unwrap() {
@@ -294,12 +295,14 @@ pub fn run_all_matches(
                 Simulation::new(combatants.clone(), &match_up.arena, &pathfinder, rng, true);
             sim.run();
             replay_data.clear();
-            replay_data.push(format!("log loss: {}", current_log_loss));
+            replay_data.push(format!("log loss: {}\n", current_log_loss));
+
             for combatant in &combatants {
                 replay_data.push(unit_card(combatant));
             }
+            replay_data.push(format!("Playing on {}", &match_up.arena_name));
             for entry in sim.log.entries() {
-                replay_data.push(format!("{}", describe_entry(&entry)));
+                replay_data.push(format!("{}", describe_entry(&entry, &match_up.arena)));
             }
         }
     }

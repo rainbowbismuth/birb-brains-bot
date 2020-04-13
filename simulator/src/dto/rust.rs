@@ -458,6 +458,10 @@ impl Arena {
         }
         new_arena
     }
+
+    pub fn to_index(&self, x: usize, y: usize) -> usize {
+        (self.width as usize) * (y as usize) + (x as usize)
+    }
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone)]

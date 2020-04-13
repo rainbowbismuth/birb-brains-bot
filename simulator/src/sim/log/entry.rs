@@ -1,6 +1,6 @@
 use colored::Colorize;
 
-use crate::dto::rust::Equipment;
+use crate::dto::rust::{Arena, Equipment};
 use crate::sim::{
     Action, ActionTarget, Combatant, CombatantId, Condition, Facing, Location, Phase,
     RelativeFacing, Team, MAX_COMBATANTS,
@@ -60,12 +60,12 @@ pub enum EvasionType {
     BladeGrasp,
 }
 
-pub fn describe_entry(entry: &Entry) -> String {
+pub fn describe_entry(entry: &Entry, arena: &Arena) -> String {
     format!(
         "CT {}: {}: {}",
         entry.clock_tick,
         describe_phase(&entry.phase, &entry.combatants),
-        describe_event(&entry.event, &entry.combatants)
+        describe_event(&entry.event, &entry.combatants, arena),
     )
 }
 
@@ -87,110 +87,121 @@ pub fn describe_phase(phase: &Phase, combatants: &[Combatant]) -> String {
     }
 }
 
-pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
+pub fn describe_location(panel: Location, arena: &Arena) -> String {
+    if panel.x < 0
+        || panel.y < 0
+        || (panel.x >= arena.width as i16)
+        || (panel.y >= arena.height as i16)
+    {
+        return format!("({},{})", panel.x, panel.y);
+    }
+    let panel_idx = arena.to_index(panel.x as usize, panel.y as usize);
+    let tile = arena.lower[panel_idx];
+    format!("({},{},{}h)", panel.x, panel.y, tile.height)
+}
+
+pub fn describe_event(event: &Event, combatants: &[Combatant], arena: &Arena) -> String {
     match event {
         Event::DidNothing(target_id) => format!(
             "{} did nothing!",
-            describe_combatant(*target_id, combatants)
+            describe_combatant(*target_id, combatants, arena)
         ),
 
         Event::HpDamage(target_id, amount, src) => format!(
             "{} took {} damage from {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount,
             describe_source(*src, combatants)
         ),
 
         Event::HpHeal(target_id, amount, src) => format!(
             "{} was healed for {} HP from {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount.abs(),
             describe_source(*src, combatants)
         ),
 
         Event::MpDamage(target_id, amount, src) => format!(
             "{} lost {} MP from {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount,
             describe_source(*src, combatants)
         ),
 
         Event::MpHeal(target_id, amount, src) => format!(
             "{} gained {} MP from {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount.abs(),
             describe_source(*src, combatants)
         ),
 
         Event::AddedCondition(target_id, cond, src) => format!(
             "{} now has {} because of {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             cond.name(),
             describe_source(*src, combatants)
         ),
 
         Event::LostCondition(target_id, cond, src) => format!(
             "{} no longer has {} because of {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             cond.name(),
             describe_source(*src, combatants)
         ),
 
         Event::Died(target_id, src) => format!(
             "{} died from {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             describe_source(*src, combatants)
         ),
 
         Event::BecameCrystal(target_id) => format!(
             "{} is now a crystal",
-            describe_combatant(*target_id, combatants)
+            describe_combatant(*target_id, combatants, arena)
         ),
 
         Event::Evaded(target_id, EvasionType::Guarded, src) => format!(
             "{} guarded {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             describe_source(*src, combatants)
         ),
 
         Event::Evaded(target_id, EvasionType::Blocked, src) => format!(
             "{} blocked {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             describe_source(*src, combatants)
         ),
 
         Event::Evaded(target_id, EvasionType::Parried, src) => format!(
             "{} parried {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             describe_source(*src, combatants)
         ),
 
         Event::Evaded(target_id, EvasionType::Evaded, src) => format!(
             "{} evaded {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             describe_source(*src, combatants)
         ),
 
         Event::Evaded(target_id, EvasionType::BladeGrasp, src) => format!(
             "{} blade grasped {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             describe_source(*src, combatants)
         ),
 
         Event::Moved(target_id, old_location, new_location) => format!(
-            "{} moved from ({},{}) to ({},{})",
-            describe_combatant(*target_id, combatants),
-            old_location.x,
-            old_location.y,
-            new_location.x,
-            new_location.y
+            "{} moved from {} to {}",
+            describe_combatant(*target_id, combatants, arena),
+            describe_location(*old_location, arena),
+            describe_location(*new_location, arena),
         ),
 
         Event::UsingAbility(target_id, action) => format!(
             "{} is using {} on {} from the {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             action.ability.name,
-            describe_target_short(action.target, combatants),
+            describe_target_short(action.target, combatants, arena),
             describe_relative_facing(*target_id, action.target, combatants)
         ),
 
@@ -202,55 +213,54 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
 
         Event::StartedCharging(target_id, action) => format!(
             "{} started charging {} on {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             action.ability.name,
-            describe_target_short(action.target, combatants),
+            describe_target_short(action.target, combatants, arena),
         ),
 
         Event::Silenced(target_id, action) => format!(
             "{} couldn't finish charging {} because they were silenced",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             action.ability.name
         ),
 
         Event::NoMP(target_id, action) => format!(
             "{} couldn't finish {} due to lack of MP",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             action.ability.name
         ),
 
         Event::Broke(target_id, equip) => format!(
             "{}\'s {} was broken",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             equip.name
         ),
 
         Event::PhysicalAttackBuff(target_id, amount, src) => format!(
             "{}\'s physical attack increased by {} because of {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount,
             describe_source(*src, combatants)
         ),
 
         Event::MagicalAttackBuff(target_id, amount, src) => format!(
             "{}\'s magical attack increased by {} because of {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount,
             describe_source(*src, combatants)
         ),
 
         Event::SpeedBuff(target_id, amount, src) => format!(
             "{}\'s speed increased by {} because of {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount,
             describe_source(*src, combatants)
         ),
 
         Event::Knockback(target_id, new_location) => format!(
-            "{} was knocked back into ({},{})",
+            "{} was knocked back into {}",
             describe_combatant_short(*target_id, combatants),
-            new_location.x,
-            new_location.y
+            describe_location(*new_location, arena),
         ),
 
         Event::CriticalQuick(target_id) => format!(
@@ -259,25 +269,28 @@ pub fn describe_event(event: &Event, combatants: &[Combatant]) -> String {
         ),
 
         Event::SpellReflected(target_id, new_location) => format!(
-            "A spell was reflected off of {} onto ({},{})",
+            "A spell was reflected off of {} onto {}",
             describe_combatant_short(*target_id, combatants),
-            new_location.x,
-            new_location.y
+            describe_location(*new_location, arena),
         ),
 
         Event::BraveBuff(target_id, amount, src) => format!(
             "{}\'s brave increased by {} because of {}",
-            describe_combatant(*target_id, combatants),
+            describe_combatant(*target_id, combatants, arena),
             amount,
             describe_source(*src, combatants)
         ),
     }
 }
 
-pub fn describe_target_short(target: ActionTarget, combatants: &[Combatant]) -> String {
+pub fn describe_target_short(
+    target: ActionTarget,
+    combatants: &[Combatant],
+    arena: &Arena,
+) -> String {
     match target {
         ActionTarget::Id(target_id) => describe_combatant_short(target_id, combatants),
-        ActionTarget::Panel(location) => format!("({},{})", location.x, location.y),
+        ActionTarget::Panel(location) => describe_location(location, arena),
     }
 }
 
@@ -289,7 +302,7 @@ pub fn describe_combatant_short(c_id: CombatantId, combatants: &[Combatant]) -> 
     }
 }
 
-pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String {
+pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant], arena: &Arena) -> String {
     let combatant = &combatants[c_id.index()];
     let conditions = combatant.all_conditions();
     let cond_str = if conditions.is_empty() {
@@ -307,23 +320,21 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant]) -> String
 
     match combatant.team() {
         Team::Left => format!(
-            "{} [{} HP, {} MP, ({},{},{}){}]",
+            "{} [{} HP, {} MP, {}{}{}]",
             combatant.name().red(),
             combatant.hp(),
             combatant.mp(),
-            combatant.location.x,
-            combatant.location.y,
+            describe_location(combatant.location, arena),
             describe_facing(combatant.facing),
             cond_str
         ),
 
         Team::Right => format!(
-            "{} [{} HP, {} MP, ({},{},{}){}]",
+            "{} [{} HP, {} MP, {}{}{}]",
             combatant.name().blue(),
             combatant.hp(),
             combatant.mp(),
-            combatant.location.x,
-            combatant.location.y,
+            describe_location(combatant.location, arena),
             describe_facing(combatant.facing),
             cond_str
         ),
