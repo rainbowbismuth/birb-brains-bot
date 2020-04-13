@@ -101,7 +101,8 @@ pub struct CombatantInfo<'a> {
     pub starting_brave: i8,
     pub starting_faith: i8,
     pub horizontal_jump: i8,
-    pub bonus_movement: i8,
+    pub bonus_movement: u8,
+    pub bonus_jump: u8,
     pub all_skills: Vec<&'a str>,
 }
 
@@ -199,6 +200,13 @@ impl<'a> CombatantInfo<'a> {
             _ => 0,
         };
 
+        let bonus_jump = match src.move_skill.as_str() {
+            "Jump+1" => 1,
+            "Jump+2" => 2,
+            "Jump+3" => 3,
+            _ => 0,
+        };
+
         CombatantInfo {
             base_stats,
             id,
@@ -221,6 +229,7 @@ impl<'a> CombatantInfo<'a> {
             abilities,
             horizontal_jump,
             bonus_movement,
+            bonus_jump,
             all_skills: skills,
         }
     }
@@ -539,7 +548,7 @@ impl<'a> Combatant<'a> {
         self.evasion_multiplier(false) * (self.accessory().map_or(0, |e| e.magic_ev) as f32 / 100.0)
     }
 
-    pub fn retreat_movement_bonus(&self) -> i8 {
+    pub fn retreat_movement_bonus(&self) -> u8 {
         if self.retreat() && self.critical() {
             4
         } else {
@@ -547,13 +556,13 @@ impl<'a> Combatant<'a> {
         }
     }
 
-    pub fn movement(&self) -> i8 {
-        self.base_stats().movement
-            + self.info.bonus_movement
+    pub fn movement(&self) -> u8 {
+        self.base_stats().movement as u8
+            + self.info.bonus_movement as u8
             + self.retreat_movement_bonus()
-            + self.headgear().map_or(0, |e| e.move_bonus)
-            + self.armor().map_or(0, |e| e.move_bonus)
-            + self.accessory().map_or(0, |e| e.move_bonus)
+            + self.headgear().map_or(0, |e| e.move_bonus as u8)
+            + self.armor().map_or(0, |e| e.move_bonus as u8)
+            + self.accessory().map_or(0, |e| e.move_bonus as u8)
     }
 
     pub fn pa_bang(&self) -> i16 {
@@ -582,18 +591,29 @@ impl<'a> Combatant<'a> {
             + self.accessory().map_or(0, |e| e.ma_bonus as i16)
     }
 
-    //     @property
-    //     def jump(self) -> int:
-    //         jump = self.stats.jump + sum([e.jump_bonus for e in self.all_equips])
-    //         if self.raw_combatant['MoveSkill'].startswith('Jump+'):
-    //             jump += int(self.raw_combatant['MoveSkill'][-1])
-    //         elif self.raw_combatant['MoveSkill'] == 'Ignore Height':
-    //             jump = 20
-    //         elif self.raw_combatant['MoveSkill'].startswith('Teleport'):
-    //             jump = 20
-    //         elif 'Fly' in self.stats.innates or 'Fly' == self.raw_combatant['MoveSkill']:
-    //             jump = 20
-    //         return jump
+    pub fn jump(&self) -> u8 {
+        self.base_stats().jump as u8
+            + self.info.bonus_jump
+            + self.headgear().map_or(0, |e| e.jump_bonus as u8)
+            + self.armor().map_or(0, |e| e.jump_bonus as u8)
+            + self.accessory().map_or(0, |e| e.jump_bonus as u8)
+    }
+
+    pub fn ignore_height(&self) -> bool {
+        self.info.skill_block.ignore_height()
+    }
+
+    pub fn fly(&self) -> bool {
+        self.info.skill_block.fly()
+    }
+
+    pub fn teleport(&self) -> bool {
+        self.info.skill_block.teleport()
+    }
+
+    pub fn landlocked(&self) -> bool {
+        self.info.skill_block.landlocked()
+    }
 
     pub fn gender(&self) -> Gender {
         self.info.gender

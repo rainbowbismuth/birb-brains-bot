@@ -21,7 +21,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
 ];
 
 struct ElementalImpl {
-    range: i8,
+    range: u8,
     element: Element,
     terrain: &'static [u8],
     add_conditions: &'static [Condition],

@@ -1,5 +1,5 @@
 use crate::dto::rust::Arena;
-use crate::sim::{Location, OFFSETS};
+use crate::sim::{Combatant, Location, OFFSETS};
 
 pub struct Pathfinder<'a> {
     arena: &'a Arena,
@@ -13,6 +13,17 @@ pub struct MovementInfo {
     jump: u8,
     fly_teleport: bool,
     water_ok: bool,
+}
+
+impl MovementInfo {
+    pub fn new(combatant: &Combatant) -> MovementInfo {
+        MovementInfo {
+            movement: combatant.movement(),
+            jump: combatant.jump(),
+            fly_teleport: combatant.fly() || combatant.teleport(),
+            water_ok: !combatant.landlocked(),
+        }
+    }
 }
 
 impl<'a> Pathfinder<'a> {

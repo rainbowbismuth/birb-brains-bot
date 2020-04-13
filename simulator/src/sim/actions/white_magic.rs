@@ -237,7 +237,7 @@ struct RaiseSpellImpl {
     hp_percent: f32,
     base_chance: i16,
     ctr: u8,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for RaiseSpellImpl {

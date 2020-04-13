@@ -49,7 +49,7 @@ impl AbilityImpl for JumpImpl {
 
         actions.push(Action::new(
             ability,
-            user.info.horizontal_jump,
+            user.info.horizontal_jump as u8,
             Some(jump_ticks),
             target.id(),
         ));

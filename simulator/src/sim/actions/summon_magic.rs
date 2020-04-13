@@ -192,7 +192,7 @@ struct CarbunkleImpl {
     base_chance: i16,
     heal_percent: f32,
     conditions: &'static [Condition],
-    range: i8,
+    range: u8,
     ctr: u8,
 }
 

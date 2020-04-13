@@ -1168,7 +1168,7 @@ impl<'a> Simulation<'a> {
     }
 }
 
-pub fn in_range(user: &Combatant, range: i8, target: &Combatant) -> bool {
+pub fn in_range(user: &Combatant, range: u8, target: &Combatant) -> bool {
     let dist = user.distance(target);
     dist <= range as i16
 }

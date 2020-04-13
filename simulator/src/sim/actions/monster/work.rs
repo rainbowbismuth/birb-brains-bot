@@ -52,7 +52,7 @@ pub const WORK_ABILITIES: &[Ability] = &[
 ];
 
 struct WorkDamageImpl {
-    range: i8,
+    range: u8,
     pa_factor: i16,
     hurt_div: i16,
 }

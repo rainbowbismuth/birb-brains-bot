@@ -154,7 +154,7 @@ impl AbilityImpl for StealImpl {
 
 struct GilTakingImpl {
     base_chance: i16,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for GilTakingImpl {
@@ -194,7 +194,7 @@ impl AbilityImpl for GilTakingImpl {
 
 struct StealHeartImpl {
     base_chance: i16,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for StealHeartImpl {

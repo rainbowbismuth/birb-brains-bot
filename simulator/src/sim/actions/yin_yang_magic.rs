@@ -215,7 +215,7 @@ struct AbsorbSpellImpl {
     hp_not_mp: bool,
     amount: f32,
     base_chance: i16,
-    range: i8,
+    range: u8,
     ctr: u8,
 }
 

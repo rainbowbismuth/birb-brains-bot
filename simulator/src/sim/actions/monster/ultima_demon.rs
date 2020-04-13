@@ -85,7 +85,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
 
 struct NanoflareImpl {
     ma_plus: i16,
-    range: i8,
+    range: u8,
     ctr: u8,
 }
 
@@ -115,7 +115,7 @@ impl AbilityImpl for NanoflareImpl {
 }
 
 struct UlmaguestImpl {
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for UlmaguestImpl {
@@ -139,7 +139,7 @@ impl AbilityImpl for UlmaguestImpl {
 struct HuricaneImpl {
     element: Element,
     base_chance: i16,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for HuricaneImpl {

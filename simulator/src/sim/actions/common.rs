@@ -44,7 +44,7 @@ pub struct AddConditionSpellImpl {
     pub can_be_evaded: bool,
     pub ignore_magic_def: bool,
     pub base_chance: i16,
-    pub range: i8,
+    pub range: u8,
     pub ctr: u8,
 }
 
@@ -92,7 +92,7 @@ impl AbilityImpl for AddConditionSpellImpl {
 pub struct ElementalDamageSpellImpl {
     pub element: Element,
     pub q: i16,
-    pub range: i8,
+    pub range: u8,
     pub ctr: Option<u8>,
     pub evadable: bool,
 }
@@ -132,7 +132,7 @@ pub struct ConditionClearSpellImpl {
     pub conditions: &'static [Condition],
     pub base_chance: i16,
     pub ignore_magic_def: bool,
-    pub range: i8,
+    pub range: u8,
     pub ctr: u8,
 }
 
@@ -401,7 +401,7 @@ pub fn mod_6_formula(
 pub struct CureSpellImpl {
     pub q: i16,
     pub ctr: Option<u8>,
-    pub range: i8,
+    pub range: u8,
 }
 
 impl AbilityImpl for CureSpellImpl {
@@ -438,7 +438,7 @@ impl AbilityImpl for CureSpellImpl {
 pub struct DemiImpl {
     pub base_chance: i16,
     pub hp_percent: f32,
-    pub range: i8,
+    pub range: u8,
     pub ctr: Option<u8>,
 }
 
@@ -471,7 +471,7 @@ impl AbilityImpl for DemiImpl {
 }
 
 pub struct EmpowerImpl {
-    pub range: i8,
+    pub range: u8,
     pub ctr: Option<u8>,
     pub brave_mod: i8,
     pub pa_buff: i8,

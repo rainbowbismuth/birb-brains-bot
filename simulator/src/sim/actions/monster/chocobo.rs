@@ -89,7 +89,7 @@ impl AbilityImpl for ChocoEsunaImpl {
 
 struct ChocoBallImpl {
     element: Element,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for ChocoBallImpl {
@@ -134,7 +134,7 @@ impl AbilityImpl for ChocoBallImpl {
 
 struct ChocoMeteorImpl {
     ma_factor: i16,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for ChocoMeteorImpl {

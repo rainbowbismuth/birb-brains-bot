@@ -102,7 +102,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
 struct DamagePunchArt {
     element: Element,
     pa_plus: i16,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for DamagePunchArt {

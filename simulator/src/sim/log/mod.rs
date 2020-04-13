@@ -118,7 +118,7 @@ pub fn unit_card(user: &Combatant) -> String {
     let line_break = "-".repeat(l5.len());
     let l6 = format!(
         " Jump ... {:<3}    R ... {:>03} / {:>02}%   🔪 {:>02} / {:>02}% / {:>02}% / {:>02}%",
-        "n/a",
+        user.jump(),
         user.main_hand().map_or(0, |w| w.wp),
         user.main_hand().map_or(0, |w| w.w_ev),
         user.pa(),

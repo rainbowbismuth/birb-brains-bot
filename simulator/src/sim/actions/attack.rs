@@ -47,11 +47,11 @@ impl AbilityImpl for AttackImpl {
     }
 }
 
-pub fn attack_range(user: &Combatant) -> i8 {
+pub fn attack_range(user: &Combatant) -> u8 {
     if user.frog() || user.berserk() && user.monster() {
         1
     } else {
-        user.main_hand().map_or(1, |eq| eq.range)
+        user.main_hand().map_or(1, |eq| eq.range as u8)
     }
 }
 

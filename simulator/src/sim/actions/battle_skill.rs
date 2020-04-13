@@ -137,7 +137,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
 
 struct AbsorbSwordImpl {
     hp_not_mp: bool,
-    range: i8,
+    range: u8,
     ctr: u8,
 }
 
@@ -195,7 +195,7 @@ impl AbilityImpl for AbsorbSwordImpl {
 struct ChanceToAddSwordImpl {
     wp_plus: i16,
     chance_to_add: Condition,
-    range: i8,
+    range: u8,
     ctr: u8,
 }
 

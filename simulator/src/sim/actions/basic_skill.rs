@@ -85,7 +85,7 @@ pub const DASH_ABILITY: Ability = Ability {
 struct DashImpl {
     rand_min: i16,
     rand_max: i16,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for DashImpl {

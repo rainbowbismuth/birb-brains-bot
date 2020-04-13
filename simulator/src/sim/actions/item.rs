@@ -201,7 +201,7 @@ impl AbilityImpl for ConditionCureItemImpl {
     }
 }
 
-fn item_range(user: &Combatant) -> i8 {
+fn item_range(user: &Combatant) -> u8 {
     if user.throw_item() {
         4
     } else {

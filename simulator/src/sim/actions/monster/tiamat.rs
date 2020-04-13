@@ -63,7 +63,7 @@ struct TripleElementalImpl {
     ma_plus: i16,
     ctr: Option<u8>,
     element: Element,
-    range: i8,
+    range: u8,
 }
 
 impl AbilityImpl for TripleElementalImpl {

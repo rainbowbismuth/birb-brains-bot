@@ -119,7 +119,7 @@ impl ActionTarget {
 #[derive(Copy, Clone)]
 pub struct Action<'a> {
     pub ability: &'a Ability<'a>,
-    pub range: i8,
+    pub range: u8,
     pub ctr: Option<u8>,
     pub target: ActionTarget,
 }
@@ -127,7 +127,7 @@ pub struct Action<'a> {
 impl<'a> Action<'a> {
     pub fn new(
         ability: &'a Ability<'a>,
-        range: i8,
+        range: u8,
         ctr: Option<u8>,
         target_id: CombatantId,
     ) -> Action<'a> {
@@ -141,7 +141,7 @@ impl<'a> Action<'a> {
 
     pub fn target_panel(
         ability: &'a Ability<'a>,
-        range: i8,
+        range: u8,
         ctr: Option<u8>,
         location: Location,
     ) -> Action<'a> {

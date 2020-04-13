@@ -33,6 +33,10 @@ const MIMIC: u64 = 1 << 31;
 const NO_MP: u64 = 1 << 32;
 const CAUTION: u64 = 1 << 33;
 const COUNTER_TACKLE: u64 = 1 << 34;
+const IGNORE_HEIGHT: u64 = 1 << 35;
+const FLY: u64 = 1 << 36;
+const TELEPORT: u64 = 1 << 37;
+const LANDLOCKED: u64 = 1 << 38;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -78,6 +82,10 @@ impl SkillBlock {
                 "No MP" => block.flags |= NO_MP,
                 "Caution" => block.flags |= CAUTION,
                 "Counter Tackle" => block.flags |= COUNTER_TACKLE,
+                "Ignore Height" => block.flags |= IGNORE_HEIGHT,
+                "Fly" => block.flags |= FLY,
+                "Teleport" => block.flags |= TELEPORT,
+                "Landlocked" => block.flags |= LANDLOCKED,
                 _ => {}
             }
         }
@@ -218,5 +226,21 @@ impl SkillBlock {
 
     pub fn counter_tackle(&self) -> bool {
         self.flags & COUNTER_TACKLE != 0
+    }
+
+    pub fn ignore_height(&self) -> bool {
+        self.flags & IGNORE_HEIGHT != 0
+    }
+
+    pub fn fly(&self) -> bool {
+        self.flags & FLY != 0
+    }
+
+    pub fn teleport(&self) -> bool {
+        self.flags & TELEPORT != 0
+    }
+
+    pub fn landlocked(&self) -> bool {
+        self.flags & LANDLOCKED != 0
     }
 }
