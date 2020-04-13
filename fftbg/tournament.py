@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -90,6 +91,7 @@ class MatchUp:
     right: Team
     left_wins: Optional[bool]
     game_map: str
+    game_map_num: int
 
     def to_combatants(self, patch: Patch) -> List[dict]:
         arena = get_arena(self.game_map)
@@ -206,7 +208,9 @@ def parse_hypothetical_tournament(tournament: dict) -> Tournament:
     for (left_color, right_color, map_index) in HYPOTHETICAL_MATCHES:
         left = teams[left_color]
         right = teams[right_color]
-        match_ups.append(MatchUp(tid, modified, left, right, None, maps[map_index]))
+        game_map = maps[map_index]
+        map_num = int(re.match(r'(\d+)', game_map)[0])
+        match_ups.append(MatchUp(tid, modified, left, right, None, game_map, map_num))
 
     return Tournament(tid, modified, teams, match_ups)
 
@@ -234,7 +238,8 @@ def parse_tournament(path: Path) -> Tournament:
             right = teams[bracket[i * 2 + 1]]
             assert winner == left.color or winner == right.color
             left_wins = winner == left.color
-            match_up = MatchUp(tid, modified, left, right, left_wins, game_map)
+            map_num = int(re.match(r'(\d+)', game_map)[0])
+            match_up = MatchUp(tid, modified, left, right, left_wins, game_map, map_num)
             match_ups.append(match_up)
             if left_wins:
                 new_bracket.append(left.color)
@@ -247,7 +252,8 @@ def parse_tournament(path: Path) -> Tournament:
     right = teams['champion']
     assert winner == left.color or winner == right.color
     left_wins = winner == left.color
-    match_up = MatchUp(tid, modified, left, right, left_wins, game_map)
+    map_num = int(re.match(r'(\d+)', game_map)[0])
+    match_up = MatchUp(tid, modified, left, right, left_wins, game_map, map_num)
     match_ups.append(match_up)
     return Tournament(tid, modified, teams, match_ups)
 

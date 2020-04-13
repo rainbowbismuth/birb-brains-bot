@@ -13,6 +13,8 @@ data/*.db
 data/*.tar.gz
 data/sim.json
 data/sim
+data/MAP
+data/arena
 simulator/target
 *.rdb
 logs

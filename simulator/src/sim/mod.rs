@@ -1,6 +1,7 @@
 pub use actions::*;
 pub use combatant::*;
 pub use condition_block::*;
+pub use constants::*;
 pub use enums::*;
 pub use facing::*;
 pub use location::*;
@@ -13,6 +14,7 @@ pub use target_value::*;
 pub mod actions;
 pub mod combatant;
 pub mod condition_block;
+pub mod constants;
 pub mod enums;
 pub mod facing;
 pub mod location;

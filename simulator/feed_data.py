@@ -15,6 +15,7 @@ def main():
                                  stdout=subprocess.PIPE)
 
     patch_texts = {}
+    arena_texts = {}
 
     for path in tqdm.tqdm(list(Path('data/tournaments').glob('*.json'))):
         tourny = fftbg.tournament.parse_tournament(path)
@@ -28,8 +29,16 @@ def main():
             patch_texts[patch.time] = patch_json
         patch_text = patch_texts[patch.time]
         for match_up in tourny.match_ups:
+            if match_up.game_map_num not in arena_texts:
+                map_path = Path(f'data/arena/MAP{match_up.game_map_num:03d}.json')
+                if map_path.exists():
+                    txt = map_path.read_text().replace('\n', ' ')
+                    arena_texts[match_up.game_map_num] = txt
+            arena_text = arena_texts.get(match_up.game_map_num)
+            if not arena_text:
+                continue
             match_text = match_up.to_json()
-            simulator.stdin.writelines([patch_text, '\n', match_text, '\n'])
+            simulator.stdin.writelines([patch_text, '\n', arena_text, '\n', match_text, '\n'])
 
 
 if __name__ == '__main__':

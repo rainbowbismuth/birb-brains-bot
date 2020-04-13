@@ -1,0 +1,78 @@
+Software Requirements
+---------------------
+
+ - Windows XP, Vista, or 7, or Mac OS X 10.5 or greater,
+   or a recent version of Linux
+ - Panda3D 1.6.2
+ - NVIDIA Cg Toolkit (Mac only)
+ - wxPython 2.8.10.1 or later for Python 2.5
+   (May already be included in Mac OS X?)
+
+Download links:
+http://www.panda3d.org/download.php
+http://developer.nvidia.com/object/cg_toolkit.html
+http://wxpython.org/download.php#binaries
+
+
+Installing Software Requirements
+--------------------------------
+
+- Windows
+
+If you already have wxPython installed, uninstall it. If you already have
+Panda3D installed, uninstall it. If you already have Python installed,
+uninstall it.
+
+Install Panda3D, then install wxPython. Do not install Python, because
+the Windows version of Panda3D includes its own copy of Python. Having
+two Python installations will lead to confusion.
+
+- Linux
+
+Most Linux distributions come with Python installed. If yours doesn't,
+use your package manager to install it. Then visit the Panda3D website
+and download the Linux installation package for your distribution. Then
+use your package manager to install wxPython.
+
+- Mac OS X
+
+Mac OS X 10.5 comes with Python installed. It may also come with
+wxPython installed. (Mine did, anyway.) To verify this, run Terminal and
+type:
+
+python -c "import wx"
+
+Then press Return. If you see "python: command not found", then you need
+to install Python. If you see "ImportError: No module named wx", then
+you already have Python but you need to install wxPython. If you just
+see another prompt with no errors, then you already have Python and
+wxPython. Quit Terminal.
+
+Once you have Python and wxPython installed, visit the Panda3D website
+and download the OS X installation package. Open it and follow its
+instructions. It'll have a link to download the NVIDIA Cg Toolkit; do
+that too.
+
+
+Installing Ganesha
+------------------
+
+After you've installed Panda3D and wxPython, copy the contents of this
+ZIP to a folder in a convenient location.
+
+
+Running
+-------
+
+To run Ganesha, double-click the main.py icon.
+
+You can also run Ganesha from the command line (terminal) by typing one
+of the following (depending on your system):
+
+Linux / Mac OS X:
+./main.py
+./main.py /path/to/maps/MAP001.GNS
+
+Windows:
+python main.py
+python main.py C:\path\to\maps\MAP001.GNS

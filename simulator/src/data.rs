@@ -26,6 +26,11 @@ pub fn convert_data_from_feed() -> io::Result<()> {
         if std::io::stdin().read_line(&mut buffer)? == 0 {
             return Ok(());
         }
+        let arena: python::Arena = serde_json::from_str(&buffer).unwrap();
+        buffer.clear();
+        if std::io::stdin().read_line(&mut buffer)? == 0 {
+            return Ok(());
+        }
         let match_up: python::MatchUp = serde_json::from_str(&buffer).unwrap();
         buffer.clear();
 
@@ -38,7 +43,7 @@ pub fn convert_data_from_feed() -> io::Result<()> {
             file.write_all(&rust_bin)?;
         }
 
-        let rust_match_up = rust::MatchUp::from_python(match_up);
+        let rust_match_up = rust::MatchUp::from_python(match_up, arena);
         let rust_bin = bincode::serialize(&(int_time, rust_match_up)).unwrap();
         let mut file = std::fs::File::create(format!("data/sim/{:06}.match", match_counter))?;
         file.write_all(&rust_bin)?;

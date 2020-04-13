@@ -1,0 +1,68 @@
+=======
+Ganesha
+=======
+
+A map editor for Final Fantasy Tactics (PSX).
+
+
+Hardware Requirements
+=====================
+
+ - Video card with at least:
+   - 2MB of VRAM
+   - Support for OpenGL 1.x
+
+
+Using Ganesha
+=============
+
+For instructions on how to use Ganesha, please visit:
+
+http://gomtuu.org/fft/Ganesha/instructions.html
+
+
+Changelog
+=========
+
+2010-08-04 - v0.60
+ - Added code to detect and fix broken polygons created in 0.55.
+ - Put new polygons at maxY+12 instead of maxY+1.
+ - Added ability to edit UV coordinates in a popup window.
+ - Fixed texture import bug when used in Windows.
+ - Fixed bug that prevented Guess Normal Coordinates from working on triangles.
+
+2010-02-18 - v0.57
+ - Fixed bug that caused new polygons to look wrong.
+ - Made new polygons appear 1 unit above the highest polygon.
+ - Prevented zoom from resetting when clicking polygons.
+ - Made text inputs in polygon edit window smaller.
+ - Added +28/-28 and +12/-12 buttons for moving polygons.
+ - Improved the sizing and behavior of edit windows.
+
+2010-02-14 - v0.55
+ - Changed texture output dialog into a Save dialog.
+ - Added Terr. Lvl input in polygon edit window.
+ - Fixed Terrain X, Terrain Z inputs in polygon edit window.
+ - Added ability to toggle in-game lighting preview.
+ - Added terrain X, Z coordinates to terrain edit window for reference.
+ - Added buttons to switch between terrain edit window and polygon edit window.
+ - Made Ganesha close files while it's not using them.
+ - Added ability to add polygons.
+ - Added notification of any change in the number of sectors a file requires.
+ - Added ability to delete polygons.
+ - Made the right mouse button rotate the camera just like the mouse wheel.
+ - Added ability to set terrain dimensions.
+ - Let Ganesha load data files regardless of sector number listed in GNS file.
+
+2010-02-10 - v0.40
+ - Added ability to edit most things.
+
+2009-04-07 - v0.02
+ - Added background gradient.
+ - Added Mac OSX readme file.
+
+2009-03-12 - v0.01
+ - First release.
+
+2009-02-24
+ - Started development.

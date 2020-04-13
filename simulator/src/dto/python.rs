@@ -10,6 +10,7 @@ pub struct MatchUp {
     pub right: Team,
     pub left_wins: Option<bool>,
     pub game_map: String,
+    pub game_map_num: u8,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -142,4 +143,29 @@ pub struct BaseStats {
     pub halves: Vec<String>,
     pub weaknesses: Vec<String>,
     pub cancels: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Arena {
+    pub gns: String,
+    pub lower: Vec<Vec<Tile>>,
+    pub upper: Vec<Vec<Tile>>,
+    pub width: u8,
+    pub height: u8,
+    pub surface_types: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Tile {
+    pub x: u8,
+    pub y: u8,
+    pub no_cursor: bool,
+    pub no_walk: bool,
+    pub depth: u8,
+    pub height: u8,
+    pub slope_type: Option<String>,
+    pub slope_type_numeric: u8,
+    pub surface_type: Option<String>,
+    pub surface_type_numeric: u8,
+    pub slope_height: u8,
 }

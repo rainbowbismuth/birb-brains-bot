@@ -13,18 +13,20 @@ pub struct MatchUp {
     pub left: Team,
     pub right: Team,
     pub left_wins: Option<bool>,
-    pub game_map: String,
+    pub arena_name: String,
+    pub arena: Arena,
 }
 
 impl MatchUp {
-    pub fn from_python(match_up: python::MatchUp) -> MatchUp {
+    pub fn from_python(match_up: python::MatchUp, arena: python::Arena) -> MatchUp {
         MatchUp {
             tournament_id: match_up.tournament_id,
             modified: match_up.tournament_id as u64,
             left: Team::from_python(match_up.left),
             right: Team::from_python(match_up.right),
             left_wins: match_up.left_wins,
-            game_map: match_up.game_map,
+            arena_name: match_up.game_map,
+            arena: Arena::from_python(arena),
         }
     }
 }
@@ -429,5 +431,56 @@ impl BaseStats {
             .for_each(|el| new_base_stats.cancels |= Element::parse(el).unwrap().flag());
 
         new_base_stats
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Arena {
+    pub lower: Vec<Tile>,
+    pub upper: Vec<Tile>,
+    pub width: u8,
+    pub height: u8,
+}
+
+impl Arena {
+    pub fn from_python(arena: python::Arena) -> Arena {
+        let mut new_arena = Arena {
+            lower: vec![],
+            upper: vec![],
+            width: arena.width,
+            height: arena.height,
+        };
+        for y in 0..arena.height as usize {
+            for x in 0..arena.width as usize {
+                new_arena.lower.push(Tile::from_python(&arena.lower[y][x]));
+                new_arena.upper.push(Tile::from_python(&arena.upper[y][x]));
+            }
+        }
+        new_arena
+    }
+}
+
+#[derive(Serialize, Deserialize, Copy, Clone)]
+pub struct Tile {
+    pub height: u8,
+    pub depth: u8,
+    pub slope_type: u8,
+    pub surface_type: u8,
+    pub slope_height: u8,
+    pub no_cursor: bool,
+    pub no_walk: bool,
+}
+
+impl Tile {
+    pub fn from_python(tile: &python::Tile) -> Tile {
+        Tile {
+            height: tile.height,
+            depth: tile.depth,
+            slope_type: tile.slope_type_numeric,
+            surface_type: tile.surface_type_numeric,
+            slope_height: tile.slope_height,
+            no_cursor: tile.no_cursor,
+            no_walk: tile.no_walk,
+        }
     }
 }

@@ -7,6 +7,7 @@ pub mod black_magic;
 pub mod charge;
 pub mod common;
 pub mod draw_out;
+pub mod elemental;
 pub mod item;
 pub mod jump;
 pub mod monster;
