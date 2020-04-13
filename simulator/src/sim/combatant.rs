@@ -24,7 +24,7 @@ use crate::sim::{
     DONT_MOVE_WHILE_CHARGING, SILENCEABLE,
 };
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct CombatantId {
     pub id: u8,
 }

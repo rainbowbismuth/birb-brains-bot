@@ -17,8 +17,13 @@ pub struct MovementInfo {
 
 impl MovementInfo {
     pub fn new(combatant: &Combatant) -> MovementInfo {
+        let movement = if combatant.dont_move() {
+            0
+        } else {
+            combatant.movement()
+        };
         MovementInfo {
-            movement: combatant.movement(),
+            movement,
             jump: combatant.jump(),
             fly_teleport: combatant.fly() || combatant.teleport(),
             water_ok: !combatant.landlocked(),

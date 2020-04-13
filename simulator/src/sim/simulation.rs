@@ -10,8 +10,9 @@ use crate::sim::actions::basic_skill::DASH_ABILITY;
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
     ActionTarget, Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log,
-    Pathfinder, Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS, COMBATANT_IDS,
-    COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
+    MovementInfo, Pathfinder, Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS,
+    COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE,
+    TIMED_CONDITIONS,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -62,7 +63,9 @@ impl<'a> Simulation<'a> {
             time_out_win: None,
         };
 
-        let middle = Location::new(arena.height as i16 / 2, arena.width as i16 / 2);
+        let middle = Location::new(arena.width as i16 / 2, arena.height as i16 / 2);
+        // dbg!(arena.width, arena.height);
+        // dbg!(middle);
         for combatant in &mut sim.combatants {
             combatant.location = middle;
         }
@@ -73,7 +76,12 @@ impl<'a> Simulation<'a> {
         }
         for i in 0..4 {
             let combatant = &mut sim.combatants[i + 4];
-            combatant.location + combatant.location + Location::new(5 as i16, (i * 2) as i16 - 3);
+            combatant.location = combatant.location + Location::new(5 as i16, (i * 2) as i16 - 3);
+        }
+        for combatant in &mut sim.combatants {
+            combatant.location.x = combatant.location.x.min(arena.width as i16 - 1).max(0);
+            combatant.location.y = combatant.location.y.min(arena.height as i16 - 1).max(0);
+            // dbg!(combatant.id(), combatant.location);
         }
 
         sim
@@ -625,7 +633,7 @@ impl<'a> Simulation<'a> {
         }
 
         let user = self.combatant(user_id);
-        if user.jumping() {
+        if !user.healthy() || user.jumping() {
             return;
         }
 
@@ -1030,27 +1038,33 @@ impl<'a> Simulation<'a> {
 
     fn pre_action_move(&mut self, user_id: CombatantId, action: &Action, target_panel: Location) {
         let user = self.combatant(user_id);
-        let movement = if user.dont_move() { 0 } else { user.movement() };
         if in_range_panel(user, action, target_panel) {
             return;
         }
-        let best_panel = target_panel
-            .diamond(action.range as u8)
-            .flat_map(|location| {
-                if action.ability.aoe.is_line() && !location.lined_up(target_panel) {
-                    return None;
-                }
-                if user.location.distance(location) > movement as i16 {
-                    return None;
-                }
-                if self.occupied_panel(location) {
-                    return None;
-                }
-                let enemy_distance = self.enemy_distance_metric(user, location);
-                Some((enemy_distance, location))
-            })
-            .max_by_key(|p| p.0)
-            .map(|p| p.1);
+
+        let best_panel = {
+            let movement_info = MovementInfo::new(user);
+            let mut pathfinder = self.pathfinder.borrow_mut();
+            pathfinder.calculate_reachable(&movement_info, user.location);
+
+            target_panel
+                .diamond(action.range as u8)
+                .flat_map(|location| {
+                    if action.ability.aoe.is_line() && !location.lined_up(target_panel) {
+                        return None;
+                    }
+                    if !pathfinder.can_reach_and_end_turn_on(&movement_info, location) {
+                        return None;
+                    }
+                    if self.occupied_panel(location) {
+                        return None;
+                    }
+                    let enemy_distance = self.enemy_distance_metric(user, location);
+                    Some((enemy_distance, location))
+                })
+                .max_by_key(|p| p.0)
+                .map(|p| p.1)
+        };
 
         if let Some(panel) = best_panel {
             self.do_move_with_bounds(user_id, panel);
@@ -1062,18 +1076,25 @@ impl<'a> Simulation<'a> {
         if user.dont_move() || user.dont_move_while_charging() {
             return;
         }
-        let best_panel = user
-            .movement_diamond()
-            .flat_map(|location| {
-                if self.occupied_panel(location) {
-                    return None;
-                }
-                let enemy_distance = self.enemy_distance_metric(user, location);
-                // TODO: Add metric based on currently charging slow actions.
-                Some((enemy_distance, location))
-            })
-            .max_by_key(|p| p.0)
-            .map(|p| p.1);
+        let best_panel = {
+            let movement_info = MovementInfo::new(user);
+            let mut pathfinder = self.pathfinder.borrow_mut();
+            pathfinder.calculate_reachable(&movement_info, user.location);
+
+            pathfinder
+                .reachable_set()
+                .iter()
+                .flat_map(|location| {
+                    if self.occupied_panel(*location) {
+                        return None;
+                    }
+                    let enemy_distance = self.enemy_distance_metric(user, *location);
+                    // TODO: Add metric based on currently charging slow actions.
+                    Some((enemy_distance, *location))
+                })
+                .max_by_key(|p| p.0)
+                .map(|p| p.1)
+        };
 
         if let Some(panel) = best_panel {
             self.do_move_with_bounds(user_id, panel);
@@ -1105,17 +1126,24 @@ impl<'a> Simulation<'a> {
         if user.dont_move() {
             return;
         }
-        let best_panel = user
-            .movement_diamond()
-            .flat_map(|location| {
-                if self.occupied_panel(location) {
-                    return None;
-                }
-                let enemy_distance = self.enemy_distance_metric(user, location);
-                // TODO: Add metric based on currently charging slow actions.
-                Some((enemy_distance, location))
-            })
-            .min_by_key(|p| p.0);
+        let best_panel = {
+            let movement_info = MovementInfo::new(user);
+            let mut pathfinder = self.pathfinder.borrow_mut();
+            pathfinder.calculate_reachable(&movement_info, user.location);
+
+            pathfinder
+                .reachable_set()
+                .iter()
+                .flat_map(|location| {
+                    if self.occupied_panel(*location) {
+                        return None;
+                    }
+                    let enemy_distance = self.enemy_distance_metric(user, *location);
+                    // TODO: Add metric based on currently charging slow actions.
+                    Some((enemy_distance, *location))
+                })
+                .min_by_key(|p| p.0)
+        };
 
         if let Some((_, panel)) = best_panel {
             self.do_move_with_bounds(user_id, panel);
@@ -1162,6 +1190,12 @@ impl<'a> Simulation<'a> {
         let target = self.combatant(target_id);
         let direction = Facing::towards(user.location, target.location).offset();
         let new_panel = target.location + direction;
+        {
+            let pathfinder = self.pathfinder.borrow();
+            if !pathfinder.inside_map(new_panel) {
+                return;
+            }
+        }
         if self.combatant_on_panel(new_panel).is_none() {
             let mut target = self.combatant_mut(target_id);
             target.location = new_panel;
