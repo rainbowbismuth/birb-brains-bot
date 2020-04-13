@@ -22,9 +22,14 @@ impl MovementInfo {
         } else {
             combatant.movement()
         };
+        let jump = if combatant.ignore_height() {
+            100
+        } else {
+            combatant.jump()
+        };
         MovementInfo {
             movement,
-            jump: combatant.jump(),
+            jump,
             fly_teleport: combatant.fly() || combatant.teleport(),
             water_ok: !combatant.landlocked(),
         }

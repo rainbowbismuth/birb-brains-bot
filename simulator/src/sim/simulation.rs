@@ -588,6 +588,10 @@ impl<'a> Simulation<'a> {
                     if !in_range_panel(user, action, target_panel) {
                         simulated_world.pre_action_move(user_id, action, target_panel);
                     }
+                    let sim_user = simulated_world.combatant(user_id);
+                    if !in_range_panel(sim_user, action, target_panel) {
+                        return None;
+                    }
                     perform_action(&mut simulated_world, user_id, *action);
                     let new_value = ai_target_value_sum(
                         simulated_world.combatant(user_id),
