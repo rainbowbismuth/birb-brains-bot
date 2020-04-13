@@ -4,14 +4,14 @@ use rand;
 use rand::prelude::SmallRng;
 use rand::Rng;
 
-use crate::dto::rust::Equipment;
+use crate::dto::rust::{Arena, Equipment};
 use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
 use crate::sim::actions::basic_skill::DASH_ABILITY;
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
     ActionTarget, Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log,
-    Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN,
-    DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
+    Pathfinder, Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS, COMBATANT_IDS,
+    COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
@@ -22,7 +22,8 @@ pub struct Simulation<'a> {
     pub rng: RefCell<SmallRng>,
     pub combatants: [Combatant<'a>; MAX_COMBATANTS],
     pub actions: RefCell<Vec<Action<'a>>>,
-    pub arena_length: i8,
+    pub arena: &'a Arena,
+    pub pathfinder: &'a RefCell<Pathfinder<'a>>,
     pub clock_tick: usize,
     pub prediction_mode: bool,
     pub trigger_countergrasps: bool,
@@ -36,7 +37,8 @@ pub struct Simulation<'a> {
 impl<'a> Simulation<'a> {
     pub fn new(
         combatants: [Combatant<'a>; MAX_COMBATANTS],
-        arena_length: i8,
+        arena: &'a Arena,
+        pathfinder: &'a RefCell<Pathfinder<'a>>,
         rng: SmallRng,
         event_log: bool,
     ) -> Simulation<'a> {
@@ -44,7 +46,8 @@ impl<'a> Simulation<'a> {
             rng: RefCell::new(rng),
             combatants,
             actions: RefCell::new(vec![]),
-            arena_length: arena_length / 2,
+            arena,
+            pathfinder,
             clock_tick: 0,
             prediction_mode: false,
             trigger_countergrasps: true,
@@ -58,20 +61,21 @@ impl<'a> Simulation<'a> {
             left_wins: None,
             time_out_win: None,
         };
+
+        let middle = Location::new(arena.height as i16 / 2, arena.width as i16 / 2);
+        for combatant in &mut sim.combatants {
+            combatant.location = middle;
+        }
+
         for i in 0..4 {
             let combatant = &mut sim.combatants[i];
-            combatant.location = Location::new(
-                -arena_length as i16,
-                combatant.location.y + (i * 2) as i16 - 3,
-            );
+            combatant.location = combatant.location + Location::new(-5 as i16, (i * 2) as i16 - 3);
         }
         for i in 0..4 {
             let combatant = &mut sim.combatants[i + 4];
-            combatant.location = Location::new(
-                arena_length as i16,
-                combatant.location.y + (i * 2) as i16 - 3,
-            );
+            combatant.location + combatant.location + Location::new(5 as i16, (i * 2) as i16 - 3);
         }
+
         sim
     }
 
@@ -80,7 +84,8 @@ impl<'a> Simulation<'a> {
             rng: self.rng.clone(),
             combatants: self.combatants.clone(),
             actions: RefCell::new(vec![]),
-            arena_length: self.arena_length,
+            arena: self.arena,
+            pathfinder: self.pathfinder,
             clock_tick: self.clock_tick,
             prediction_mode: true,
             trigger_countergrasps: true,
@@ -482,19 +487,20 @@ impl<'a> Simulation<'a> {
     }
 
     fn do_move_with_bounds(&mut self, user_id: CombatantId, desired_location: Location) {
-        let arena_length = self.arena_length;
+        {
+            let pathfinder = self.pathfinder.borrow();
+            if !pathfinder.inside_map(desired_location) {
+                return;
+            }
+        }
         let user = self.combatant_mut(user_id);
         let old_location = user.location;
-        let new_location = Location::new(
-            (-arena_length as i16).max(desired_location.x.min(arena_length as i16)),
-            (-arena_length as i16).max(desired_location.y.min(arena_length as i16)),
-        );
-        if old_location == new_location {
+        if old_location == desired_location {
             return;
         }
-        user.location = new_location;
+        user.location = desired_location;
         user.moved_during_active_turn = true;
-        self.log_event(Event::Moved(user_id, old_location, new_location));
+        self.log_event(Event::Moved(user_id, old_location, desired_location));
 
         let combatant = self.combatant(user_id);
         if combatant.moved_during_active_turn && combatant.move_hp_up() && !combatant.confusion() {

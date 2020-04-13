@@ -104,7 +104,7 @@ impl<'a> Pathfinder<'a> {
         }
     }
 
-    fn inside_map(&self, end: Location) -> bool {
+    pub fn inside_map(&self, end: Location) -> bool {
         if end.x < 0 || end.y < 0 {
             return false;
         }
