@@ -17,7 +17,7 @@ pub enum RelativeFacing {
     Back,
 }
 
-const OFFSETS: [Location; 4] = [
+pub const OFFSETS: [Location; 4] = [
     Location::new(0, -1),
     Location::new(1, 0),
     Location::new(0, 1),
