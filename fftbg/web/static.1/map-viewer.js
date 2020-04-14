@@ -49,7 +49,7 @@ function create_map_scene(vnode) {
     MapState.scene.add( directionalLight );
     // const helper = new THREE.DirectionalLightHelper( directionalLight, 5, 0xFFFFFF );
     // MapState.scene.add(helper);
-
+    const height = 0.25;
     for (let y = 0; y < MapState.map.height; y++) {
         for (let x = 0; x < MapState.map.width; x++) {
             const tile = MapState.map.lower[y][MapState.map.width-(x+1)];
@@ -57,7 +57,7 @@ function create_map_scene(vnode) {
             //     continue;
             // }
 
-            const height = 0.25;
+
             const big_height = (tile.height + tile.depth) + height;
             const big_geo = new THREE.BoxGeometry(1,big_height/2,1);
             const big_mat = new THREE.MeshLambertMaterial( {
@@ -85,6 +85,19 @@ function create_map_scene(vnode) {
             // }
         }
     }
+
+    const spriteMap = new THREE.TextureLoader().load( "static.1/Ramza2-NW.gif" );
+    spriteMap.wrapS = THREE.RepeatWrapping;
+    spriteMap.repeat.x = - 1;
+    const spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
+    const sprite = new THREE.Sprite( spriteMaterial );
+
+    // sprite.center = new THREE.Vector2(0.5,0);
+    sprite.scale.set(0.5, 1, 1);
+    sprite.position.set(5,(3+height)/2+height,0);
+    MapState.scene.add( sprite );
+    console.log(sprite);
+
     const axesHelper = new THREE.AxesHelper( 5 );
     axesHelper.position.set(MapState.map.width,2,-1);
     MapState.scene.add(axesHelper);
@@ -95,7 +108,10 @@ function create_map_scene(vnode) {
 
     vnode.dom.innerHTML = '';
     vnode.dom.appendChild(MapState.renderer.domElement);
-    MapState.renderer.render(MapState.scene, MapState.camera);
+    MapState.renderer.setPixelRatio( window.devicePixelRatio );
+    setTimeout(() => {
+        MapState.renderer.render(MapState.scene, MapState.camera);
+    }, 1000);
 }
 
 const MapViewer = {
