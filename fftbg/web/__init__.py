@@ -5,6 +5,7 @@ import logging
 import numpy as np
 import pandas
 from flask import Flask, render_template
+from pathlib import Path
 
 import fftbg.brains.api
 from fftbg.bird.memory import Memory
@@ -83,3 +84,8 @@ def get_team_summary():
         'right_team_units': right_team_units
     }
     return json.dumps(data)
+
+
+@app.route('/map/<int:map_id>')
+def get_map(map_id: int):
+    return Path(f'data/arena/MAP{map_id:03d}.json').read_text()

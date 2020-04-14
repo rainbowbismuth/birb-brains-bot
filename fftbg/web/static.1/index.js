@@ -3,7 +3,7 @@
 const State = {
     balance_log: [],
     placed_bet: null,
-    team_summary: null
+    team_summary: null,
 };
 
 function load_balance_log() {
@@ -531,7 +531,8 @@ const Stream = {
 m.route(document.body, '/home', {
     '/home': Home,
     '/stats': Stats,
-    '/stream': Stream
+    '/stream': Stream,
+    '/map/:map_num': MapViewer,
 });
 
 load_summary_info();
