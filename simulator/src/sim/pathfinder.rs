@@ -96,10 +96,10 @@ impl<'a> Pathfinder<'a> {
                 }
                 let end_idx = self.to_index(end);
                 let new_distance = distance + 1;
-                if !self.can_transition(info, start, end) {
+                if new_distance > self.distance[end_idx] {
                     continue;
                 }
-                if new_distance > self.distance[end_idx] {
+                if !self.can_transition(info, start, end) {
                     continue;
                 }
                 self.distance[end_idx] = new_distance;
