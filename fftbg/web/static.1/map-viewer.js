@@ -157,8 +157,10 @@ function create_map_scene(vnode) {
     for (let y = 0; y < MapState.map.height; y++) {
         for (let x = 0; x < MapState.map.width; x++) {
             const tile = MapState.map.upper[y][MapState.map.width - (x + 1)];
+            const lower_tile = MapState.map.lower[y][MapState.map.width - (x + 1)];
             const big_height = (tile.height + tile.depth) + height;
-            if (tile.height === 0 || tile.no_walk) {
+            const lower_height = (lower_tile.height + lower_tile.depth) + height;
+            if (tile.height === 0 || tile.no_walk || lower_height >= big_height) {
                 continue;
             }
             const geometry = new THREE.BoxGeometry(1, height, 1);
@@ -174,14 +176,15 @@ function create_map_scene(vnode) {
     }
 
     for (let i = 0; i < 100; i++) {
-        const y = getRandomInt(0, MapState.map.height);
-        const x = getRandomInt(0, MapState.map.width);
+        let y = getRandomInt(0, MapState.map.height);
+        let x = getRandomInt(0, MapState.map.width);
         const ramza_tile = MapState.map.lower[y][MapState.map.width - (x+1)];
-        if (ramza_tile.no_walk || ramza_tile.no_cursor) {
+        if (ramza_tile.no_walk || ramza_tile.no_cursor || ramza_tile.slope_height > 0) {
             continue;
         }
         let spriteMap;
-        if (getRandomInt(0,2)===0) {
+        const sprite_nw = getRandomInt(0,2)===0;
+        if (sprite_nw) {
             spriteMap = new THREE.TextureLoader().load("static.1/BlackChocobo-NW.gif");
         } else {
             spriteMap = new THREE.TextureLoader().load("static.1/BlackChocobo-SW.gif");
@@ -194,8 +197,16 @@ function create_map_scene(vnode) {
         const spriteMaterial = new THREE.SpriteMaterial({map: spriteMap});
         const sprite = new THREE.Sprite(spriteMaterial);
 
-        sprite.scale.set(1, 1, 1);
-        sprite.position.set(x-0.1, (ramza_tile.height + height + 1 + ramza_tile.slope_height / 2) / 2 + height, y-0.1);
+        //if (sprite_nw) {
+        sprite.center.set(0.45, 0.30);
+        // } else {
+        //     sprite.center.set(0.45, 0.30);
+        // }
+
+
+        const big_height = (ramza_tile.height) + height;
+        const y_coord = (big_height / 2) + height*2;
+        sprite.position.set(x, y_coord, y);
         MapState.scene.add(sprite);
         MapState.dispose_me.push(spriteMaterial, spriteMap);
         break;
