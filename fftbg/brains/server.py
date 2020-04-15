@@ -12,7 +12,7 @@ import fftbg.server
 import fftbg.tournament
 import fftbg.twitch.msg_types as msg_types
 from fftbg.brains.api import CURRENT_TOURNAMENT_KEY, CURRENT_MATCH_KEY, get_current_tournament_id, get_prediction_key, \
-    get_prediction, get_importance_key
+    get_prediction, get_importance_key, get_map_key
 from fftbg.brains.baked_model import BakedModel
 from fftbg.brains.msg_types import NEW_PREDICTIONS
 from fftbg.brains.predictions import Predictions
@@ -75,6 +75,11 @@ def set_importance(db: Database, tournament_id, match_up: MatchUp, importance: L
     db.set(key, json.dumps(importance))
 
 
+def set_map(db: Database, tournament_id, match_up: MatchUp):
+    key = get_map_key(tournament_id, match_up.left.color, match_up.right.color)
+    db.set(key, match_up.game_map)
+
+
 def post_importance(db: Database, model: BakedModel, tournament_id, match_up: MatchUp, patch_time):
     LOG.info(f'Computing importance for {tournament_id}, {match_up.left.color} vs {match_up.right.color}')
     importance = fftbg.brains.importance.compute(model, match_up, patch_time)
@@ -108,6 +113,8 @@ def run_server():
                     post_prediction(db, event_stream, model, tournament)
                 idx = fftbg.tournament.look_up_prediction_index(left_team, right_team)
                 match_up = tournament.match_ups[idx]
+
+                set_map(db, tournament.id, match_up)
                 post_importance(db, model, tournament.id, match_up, tournament.modified)
                 set_current_match(db, left_team, right_team)
 

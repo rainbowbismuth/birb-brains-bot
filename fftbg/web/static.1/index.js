@@ -453,8 +453,14 @@ const TeamSummary = {
         if (!State.team_summary) {
             return ''
         }
-
+        const map_num = (/(\d+)/).exec(State.team_summary.map)[0];
         return [
+            m('.row', m('.col-md', [
+                m('h2.text-center', State.team_summary.map),
+                m('h6.text-center', 'Use left and right arrow keys to rotate map.'),
+                m('h6.text-center', {id: 'surface-type-display'}, 'Mouse over a surface to display the surface\'s type here.'),
+                m(MapViewer, {map_num}),
+            ])),
             m('.row', [
                 m('.col-md', m(IndividualTeam, {
                     'left': true,

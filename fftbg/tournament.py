@@ -33,7 +33,8 @@ OFFENSIVE_STATUSES = [
 ]
 CAUSE_STATUS = [f'Can-{status}-Enemy-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
 CANCEL_STATUS = [f'Can-Cancel-{status}-Team-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
-NUMERIC = ['Sim-Win-Percent', 'Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
+# TODO: Not ready to include this 'Sim-Win-Percent'
+NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
            'Map-Min-Dimension', 'Map-Max-Dimension', 'Map-Archer-Boon', 'Map-Meat-Grinder'] \
           + CAN_HEAL_TEAM + CAN_HURT_ENEMY + CAN_LETHAL_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
           + CAUSE_STATUS + CANCEL_STATUS

@@ -41,3 +41,12 @@ def get_importance(db: Database, tournament_id, left_team, right_team) -> List[d
     if data is not None:
         data = json.loads(data)
     return data
+
+
+def get_map_key(tournament_id, left_team, right_team):
+    return f'brains.map:{tournament_id}-{left_team}-{right_team}'
+
+
+def get_map(db: Database, tournament_id, left_team, right_team) -> str:
+    key = get_map_key(tournament_id, left_team, right_team)
+    return db.get(key)
