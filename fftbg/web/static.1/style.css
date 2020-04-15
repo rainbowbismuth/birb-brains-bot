@@ -7,6 +7,12 @@ body {
     background-size: 15%;
 }
 
+.map-renderer {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
 .jr {
     text-align: right;
 }

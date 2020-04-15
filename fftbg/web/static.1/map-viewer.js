@@ -84,11 +84,16 @@ function add_layer_tile(tile, geometry, height, x, big_height, y) {
 function create_map_scene(vnode) {
     MapState.scene = new THREE.Scene();
     MapState.scene.background = new THREE.Color( 0x222222 );
-    const aspect = window.innerWidth / window.innerHeight;
+
+    const dw = vnode.dom.clientWidth;
+    const dh = vnode.dom.clientHeight;
+    console.log(dw,dh);
+    const aspect = dw / dh;
     MapState.camera = new THREE.OrthographicCamera( - D * aspect, D * aspect, D, - D, 1, 1000 );
 
-    MapState.renderer = new THREE.WebGLRenderer();
-    MapState.renderer.setSize(window.innerWidth*0.75, window.innerHeight*0.75);
+    MapState.renderer = new THREE.WebGLRenderer({canvas: vnode.dom});
+    MapState.renderer.setPixelRatio( window.devicePixelRatio );
+    MapState.renderer.setSize(dw, dh);
 
     const light = new THREE.AmbientLight( 0x606060 ); // soft white light
     MapState.scene.add( light );
@@ -97,6 +102,7 @@ function create_map_scene(vnode) {
     MapState.scene.add( directionalLight );
     // const helper = new THREE.DirectionalLightHelper( directionalLight, 5, 0xFFFFFF );
     // MapState.scene.add(helper);
+
     const height = 0.25;
     for (let y = 0; y < MapState.map.height; y++) {
         for (let x = 0; x < MapState.map.width; x++) {
@@ -121,11 +127,6 @@ function create_map_scene(vnode) {
 
             const geometry = new THREE.BoxGeometry(1,height,1);
             add_layer_tile(tile, geometry, height, x, big_height, y);
-
-            // if (tile.slope_type !== 'Flat 0') {
-            //     console.log(cube.position, height, tile.slope_type, {height: tile.height, slope: tile.slope_height});
-            // }
-
         }
     }
     for (let y = 0; y < MapState.map.height; y++) {
@@ -146,31 +147,33 @@ function create_map_scene(vnode) {
     const spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap } );
     const sprite = new THREE.Sprite( spriteMaterial );
 
-    // sprite.center = new THREE.Vector2(0.5,0);
     sprite.scale.set(0.5, 1, 1);
-    const ramza_tile = MapState.map.lower[0][MapState.map.width-(5+1)];
-    sprite.position.set(5,(ramza_tile.height+height+1+ramza_tile.slope_height/2)/2+height,0);
+    const ramza_tile = MapState.map.lower[0][MapState.map.width-(3+1)];
+    sprite.position.set(3,(ramza_tile.height+height+1+ramza_tile.slope_height/2)/2+height,0);
     MapState.scene.add( sprite );
-    console.log(sprite);
 
     const axesHelper = new THREE.AxesHelper( 5 );
     axesHelper.position.set(MapState.map.width,2,-1);
     set_camera_pos(0);
-    vnode.dom.innerHTML = '';
-    vnode.dom.appendChild(MapState.renderer.domElement);
-    MapState.renderer.setPixelRatio( window.devicePixelRatio );
     animate();
 }
 
 document.onkeydown = function(e) {
+  if (MapState.renderer === null) {
+    return;
+  }
   if (e.key === "ArrowLeft") {
       set_camera_pos(-1);
   } else if (e.key === "ArrowRight") {
       set_camera_pos(1);
   }
+  e.preventDefault();
 };
 
 function set_camera_pos(n) {
+    if (MapState.renderer === null) {
+        return;
+    }
     const camera_positions = [
         [0, 0],
         [0, MapState.map.height],
@@ -194,7 +197,7 @@ function animate() {
 
 const MapViewer = {
     view: function (vnode) {
-        return m('div');
+        return m('canvas.map-renderer');
     },
     onupdate: function (vnode) {
         load_map(vnode.attrs.map_num, vnode);
