@@ -60,7 +60,7 @@ const cyrb53 = function(str, seed = 0) {
 const D = 8;
 
 function surface_type_color(surface_type) {
-    return (cyrb53(surface_type) & 0xFFFFFF) * 0.95;
+    return 0xFFFFFF - (cyrb53(surface_type) & 0x5F8F5F);
 }
 
 function add_layer_tile(tile, geometry, height, x, big_height, y) {
@@ -262,7 +262,8 @@ function animate() {
         if (display != null ) {
             if (MapState.selected_tile != null) {
                 const tile = MapState.selected_tile;
-                display.style.color = '#'+(surface_type_color(tile.surface_type)|0).toString(16);
+                const hex = (surface_type_color(tile.surface_type)|0).toString(16);
+                display.style.color = '#' + '000000'.substr(0, 6-hex.length) + hex;
                 display.textContent = `${tile.surface_type} (${tile.height + tile.slope_height/2}h)`;
                 if (tile.no_walk) {
                     display.textContent += ' (No walk)';
