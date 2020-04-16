@@ -64,18 +64,20 @@ function surface_type_color(surface_type) {
 }
 
 function add_layer_tile(tile, geometry, height, x, big_height, y) {
-    if (tile.slope_type.startsWith('Incline')) {
-        const [offset1, offset2] = OFFSETS_INCLINE[tile.slope_type[tile.slope_type.length - 1]];
-        geometry.vertices[offset1].y += (height * tile.slope_height * 2);
-        geometry.vertices[offset2].y += (height * tile.slope_height * 2);
-    } else if (tile.slope_type.startsWith('Convex')) {
-        const offset = OFFSET_CONVEX[tile.slope_type.slice(tile.slope_type.length - 2)];
-        geometry.vertices[offset].y += (height * tile.slope_height * 2);
-    } else if (tile.slope_type.startsWith('Concave')) {
-        const [offset1, offset2, offset3] = OFFSETS_CONCAVE[tile.slope_type.slice(tile.slope_type.length - 2)];
-        geometry.vertices[offset1].y += (height * tile.slope_height * 2);
-        geometry.vertices[offset2].y += (height * tile.slope_height * 2);
-        geometry.vertices[offset3].y += (height * tile.slope_height * 2);
+    if (tile.slope_type != null) {
+        if (tile.slope_type.startsWith('Incline')) {
+            const [offset1, offset2] = OFFSETS_INCLINE[tile.slope_type[tile.slope_type.length - 1]];
+            geometry.vertices[offset1].y += (height * tile.slope_height * 2);
+            geometry.vertices[offset2].y += (height * tile.slope_height * 2);
+        } else if (tile.slope_type.startsWith('Convex')) {
+            const offset = OFFSET_CONVEX[tile.slope_type.slice(tile.slope_type.length - 2)];
+            geometry.vertices[offset].y += (height * tile.slope_height * 2);
+        } else if (tile.slope_type.startsWith('Concave')) {
+            const [offset1, offset2, offset3] = OFFSETS_CONCAVE[tile.slope_type.slice(tile.slope_type.length - 2)];
+            geometry.vertices[offset1].y += (height * tile.slope_height * 2);
+            geometry.vertices[offset2].y += (height * tile.slope_height * 2);
+            geometry.vertices[offset3].y += (height * tile.slope_height * 2);
+        }
     }
     geometry.verticesNeedUpdate = true;
     geometry.computeVertexNormals();
