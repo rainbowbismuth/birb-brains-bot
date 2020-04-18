@@ -6,6 +6,7 @@ use crate::sim::actions::battle_skill::BATTLE_SKILL_ABILITIES;
 use crate::sim::actions::black_magic::BLACK_MAGIC_ABILITIES;
 use crate::sim::actions::charge::CHARGE_ABILITIES;
 use crate::sim::actions::draw_out::DRAW_OUT_ABILITIES;
+use crate::sim::actions::elemental::ELEMENTAL_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::jump::JUMP_ABILITIES;
 use crate::sim::actions::monster::{
@@ -151,6 +152,7 @@ impl<'a> CombatantInfo<'a> {
             CHARGE_ABILITIES,
             TIAMAT_ABILITIES,
             BASIC_SKILL_ABILITIES,
+            ELEMENTAL_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {

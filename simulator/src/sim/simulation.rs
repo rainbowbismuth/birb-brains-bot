@@ -4,7 +4,7 @@ use rand;
 use rand::prelude::SmallRng;
 use rand::Rng;
 
-use crate::dto::rust::{Arena, Equipment};
+use crate::dto::rust::{Arena, Equipment, Tile};
 use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
 use crate::sim::actions::basic_skill::DASH_ABILITY;
 use crate::sim::{
@@ -444,6 +444,13 @@ impl<'a> Simulation<'a> {
 
             self.end_of_active_turn_checks()
         }
+    }
+
+    pub fn get_tile(&self, location: Location) -> Tile {
+        let idx = self
+            .arena
+            .to_index(location.x as usize, location.y as usize);
+        self.arena.lower[idx]
     }
 
     pub fn roll_inclusive(&self, min: i16, max: i16) -> i16 {

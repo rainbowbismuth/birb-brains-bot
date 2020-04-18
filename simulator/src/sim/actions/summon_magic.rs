@@ -221,6 +221,7 @@ impl AbilityImpl for CarbunkleImpl {
             return;
         }
 
+        // TODO: Carbunkle heals if it cures any status condition
         if target.dead() {
             let heal_amount = (target.max_hp() as f32 * self.heal_percent) as i16;
             sim.change_target_hp(target_id, -heal_amount, Source::Ability);
