@@ -105,7 +105,7 @@ class IRCBot(commands.Bot):
         bet = {'type': msg_types.RECV_BET,
                'user': user,
                'team': team}
-        if amount.endswith('%'):
+        if '%' in amount:
             percent = parse.parse_comma_int(amount.replace('%', ''))
             bet['percent'] = percent
         else:
