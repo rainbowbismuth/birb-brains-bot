@@ -52,6 +52,21 @@ impl Location {
             constant: self,
         }
     }
+
+    pub fn line(self, end: Location) -> LineIterator {
+        let dx = (self.x - end.x).abs();
+        let dy = -(self.y - end.y).abs();
+        LineIterator {
+            cur: self,
+            end,
+            dx,
+            dy,
+            sx: if self.x < end.x { 1 } else { -1 },
+            sy: if self.y < end.y { 1 } else { -1 },
+            err: dx + dy,
+            done: false,
+        }
+    }
 }
 
 impl Add for Location {
@@ -100,31 +115,41 @@ impl Iterator for DiamondIterator {
     }
 }
 
-// pub struct DiamondIterator {
-//     size: u8,
-//     idx: u16,
-//     constant: Location,
-// }
-//
-// // TODO: This implementation is going to be bare bones simple for now
-// impl Iterator for DiamondIterator {
-//     type Item = Location;
-//
-//     fn next(&mut self) -> Option<Self::Item> {
-//         let length = (self.size * 2 + 1) as u16;
-//         let squared = length * length;
-//         while self.idx < squared {
-//             let x = (self.idx % length) as i8 - self.size as i8;
-//             let y = (self.idx / length) as i8 - self.size as i8;
-//             let loc = Location::new(x as i16, y as i16);
-//             self.idx += 1;
-//             if Location::zero().distance(loc) <= self.size as i16 {
-//                 return Some(loc + self.constant);
-//             }
-//         }
-//         None
-//     }
-// }
+pub struct LineIterator {
+    cur: Location,
+    end: Location,
+    dx: i16,
+    dy: i16,
+    sx: i16,
+    sy: i16,
+    err: i16,
+    done: bool,
+}
+
+impl Iterator for LineIterator {
+    type Item = Location;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
+        let ret = Some(self.cur);
+        if self.cur == self.end {
+            self.done = true;
+            return ret;
+        }
+        let e2 = 2 * self.err;
+        if e2 >= self.dy {
+            self.err += self.dy;
+            self.cur.x += self.sx;
+        }
+        if e2 <= self.dx {
+            self.err += self.dx;
+            self.cur.y += self.sy;
+        }
+        ret
+    }
+}
 
 #[cfg(test)]
 pub mod tests {
@@ -167,6 +192,28 @@ pub mod tests {
             rotate1_thrice = rotate1_thrice.rotate_around(center, 1);
         }
         assert_eq!(vec1.rotate_around(center, 3), rotate1_thrice);
+    }
+
+    #[test]
+    pub fn test_simple_line() {
+        let start = Location::new(-2, 2);
+        let end = Location::new(2, 2);
+        let locations: Vec<_> = start.line(end).collect();
+        assert_eq!(locations.len(), 5);
+        for location in locations {
+            assert!(start.lined_up(location));
+        }
+    }
+
+    #[test]
+    pub fn test_diag_line() {
+        let start = Location::new(-2, -2);
+        let end = Location::new(2, 2);
+        let locations: Vec<_> = start.line(end).collect();
+        assert_eq!(locations.len(), 5);
+        for i in -2..=2 {
+            assert!(locations.contains(&Location::new(i, i)));
+        }
     }
 }
 
