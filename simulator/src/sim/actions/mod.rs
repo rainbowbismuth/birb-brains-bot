@@ -14,6 +14,7 @@ pub mod monster;
 pub mod punch_art;
 pub mod steal;
 pub mod summon_magic;
+pub mod talk_skill;
 pub mod throw;
 pub mod time_magic;
 pub mod white_magic;

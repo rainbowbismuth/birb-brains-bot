@@ -79,12 +79,7 @@ impl<'a> Pathfinder<'a> {
     }
 
     pub fn calculate_reachable(&mut self, info: &MovementInfo, start: Location) {
-        if !self.inside_map(start) {
-            dbg!(start);
-            dbg!(self.arena.width, self.arena.height);
-            panic!("location not inside map");
-        }
-        // assert!(self.inside_map(start));
+        assert!(self.inside_map(start));
         self.reset();
         self.open_set.push(start);
         self.reachable.push(start);

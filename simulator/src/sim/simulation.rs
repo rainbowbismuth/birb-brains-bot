@@ -71,7 +71,7 @@ impl<'a> Simulation<'a> {
     fn set_starting_locations(&mut self) {
         let middle = Location::new(self.arena.width as i16 / 2, self.arena.height as i16 / 2);
         let mut movement_info = MovementInfo {
-            movement: 10,
+            movement: 4,
             jump: 3,
             fly_teleport: false,
             water_ok: false,
@@ -91,6 +91,7 @@ impl<'a> Simulation<'a> {
             .map(|p| p.1)
             .unwrap();
 
+        movement_info.movement = 8;
         pathfinder.calculate_reachable(&movement_info, largest);
 
         let largest_north;

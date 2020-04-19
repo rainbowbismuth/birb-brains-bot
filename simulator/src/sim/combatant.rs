@@ -15,6 +15,7 @@ use crate::sim::actions::monster::{
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
 use crate::sim::actions::steal::STEAL_ABILITIES;
 use crate::sim::actions::summon_magic::SUMMON_MAGIC_ABILITES;
+use crate::sim::actions::talk_skill::TALK_SKILL_ABILITIES;
 use crate::sim::actions::throw::THROW_ABILITIES;
 use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
@@ -153,6 +154,7 @@ impl<'a> CombatantInfo<'a> {
             TIAMAT_ABILITIES,
             BASIC_SKILL_ABILITIES,
             ELEMENTAL_ABILITIES,
+            TALK_SKILL_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
