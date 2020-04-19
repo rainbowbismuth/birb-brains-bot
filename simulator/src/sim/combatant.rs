@@ -10,7 +10,7 @@ use crate::sim::actions::elemental::ELEMENTAL_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::jump::JUMP_ABILITIES;
 use crate::sim::actions::monster::{
-    CHOCOBO_ABILITIES, TIAMAT_ABILITIES, ULTIMA_DEMON_ABILITIES, WORK_ABILITIES,
+    CHOCOBO_ABILITIES, DRAGON_ABILITIES, TIAMAT_ABILITIES, ULTIMA_DEMON_ABILITIES, WORK_ABILITIES,
 };
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
 use crate::sim::actions::steal::STEAL_ABILITIES;
@@ -155,6 +155,7 @@ impl<'a> CombatantInfo<'a> {
             BASIC_SKILL_ABILITIES,
             ELEMENTAL_ABILITIES,
             TALK_SKILL_ABILITIES,
+            DRAGON_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
