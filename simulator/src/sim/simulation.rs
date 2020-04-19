@@ -7,7 +7,7 @@ use rand::Rng;
 use crate::dto::rust::{Arena, Equipment, Tile};
 use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
 use crate::sim::actions::basic_skill::DASH_ABILITY;
-use crate::sim::Facing::North;
+
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
     ActionTarget, Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log,

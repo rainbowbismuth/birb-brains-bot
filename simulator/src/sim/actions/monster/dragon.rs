@@ -1,5 +1,5 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-use crate::sim::attack::AttackImpl;
+
 use crate::sim::common::{mod_2_formula_xa, mod_5_formula_xa};
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Event, Simulation, Source, TARGET_NOT_SELF,
