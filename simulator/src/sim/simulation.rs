@@ -7,6 +7,7 @@ use rand::Rng;
 use crate::dto::rust::{Arena, Equipment, Tile};
 use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
 use crate::sim::actions::basic_skill::DASH_ABILITY;
+use crate::sim::Facing::North;
 use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
     ActionTarget, Combatant, CombatantId, Condition, EvasionType, Event, Facing, Location, Log,
@@ -14,6 +15,7 @@ use crate::sim::{
     COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE,
     TIMED_CONDITIONS,
 };
+use std::borrow::Borrow;
 
 pub const MAX_COMBATANTS: usize = COMBATANT_IDS_LEN;
 const TIME_OUT_CT: usize = 1_000;
@@ -62,29 +64,75 @@ impl<'a> Simulation<'a> {
             left_wins: None,
             time_out_win: None,
         };
-
-        let middle = Location::new(arena.width as i16 / 2, arena.height as i16 / 2);
-        // dbg!(arena.width, arena.height);
-        // dbg!(middle);
-        for combatant in &mut sim.combatants {
-            combatant.location = middle;
-        }
-
-        for i in 0..4 {
-            let combatant = &mut sim.combatants[i];
-            combatant.location = combatant.location + Location::new(-5 as i16, (i * 2) as i16 - 3);
-        }
-        for i in 0..4 {
-            let combatant = &mut sim.combatants[i + 4];
-            combatant.location = combatant.location + Location::new(5 as i16, (i * 2) as i16 - 3);
-        }
-        for combatant in &mut sim.combatants {
-            combatant.location.x = combatant.location.x.min(arena.width as i16 - 1).max(0);
-            combatant.location.y = combatant.location.y.min(arena.height as i16 - 1).max(0);
-            // dbg!(combatant.id(), combatant.location);
-        }
-
+        sim.set_starting_locations();
         sim
+    }
+
+    fn set_starting_locations(&mut self) {
+        let middle = Location::new(self.arena.width as i16 / 2, self.arena.height as i16 / 2);
+        let mut movement_info = MovementInfo {
+            movement: 10,
+            jump: 3,
+            fly_teleport: false,
+            water_ok: false,
+        };
+        let mut pathfinder = self.pathfinder.borrow_mut();
+
+        let largest = middle
+            .diamond(3)
+            .flat_map(|location| {
+                if !pathfinder.inside_map(location) {
+                    return None;
+                }
+                pathfinder.calculate_reachable(&movement_info, location);
+                Some((pathfinder.reachable_set().len(), location))
+            })
+            .max_by_key(|p| p.0)
+            .map(|p| p.1)
+            .unwrap();
+
+        pathfinder.calculate_reachable(&movement_info, largest);
+
+        let largest_north;
+        let largest_south;
+        if self.arena.height > self.arena.width {
+            largest_north = largest + Facing::North.offset() * 5;
+            largest_south = largest + Facing::South.offset() * 5;
+        } else {
+            largest_north = largest + Facing::East.offset() * 5;
+            largest_south = largest + Facing::West.offset() * 5;
+        }
+
+        let furthest_south = pathfinder
+            .reachable_set()
+            .iter()
+            .map(|location| (location.distance_squared(largest_north), location))
+            .max_by_key(|p| p.0)
+            .map(|p| *p.1)
+            .unwrap();
+
+        let furthest_north = pathfinder
+            .reachable_set()
+            .iter()
+            .map(|location| (location.distance_squared(largest_south), location))
+            .max_by_key(|p| p.0)
+            .map(|p| *p.1)
+            .unwrap();
+
+        movement_info.movement = 4;
+        pathfinder.calculate_reachable(&movement_info, furthest_south);
+        for i in 0..4 {
+            let combatant = &mut self.combatants[i];
+            combatant.location = pathfinder.reachable_set()[i];
+            combatant.facing = Facing::towards(combatant.location, middle);
+        }
+
+        pathfinder.calculate_reachable(&movement_info, furthest_north);
+        for i in 0..4 {
+            let combatant = &mut self.combatants[i + 4];
+            combatant.location = pathfinder.reachable_set()[i];
+            combatant.facing = Facing::towards(combatant.location, middle);
+        }
     }
 
     fn prediction_clone(&self) -> Simulation<'a> {

@@ -9,10 +9,10 @@ pub struct Pathfinder<'a> {
 }
 
 pub struct MovementInfo {
-    movement: u8,
-    jump: u8,
-    fly_teleport: bool,
-    water_ok: bool,
+    pub movement: u8,
+    pub jump: u8,
+    pub fly_teleport: bool,
+    pub water_ok: bool,
 }
 
 impl MovementInfo {
@@ -79,7 +79,12 @@ impl<'a> Pathfinder<'a> {
     }
 
     pub fn calculate_reachable(&mut self, info: &MovementInfo, start: Location) {
-        assert!(self.inside_map(start));
+        if !self.inside_map(start) {
+            dbg!(start);
+            dbg!(self.arena.width, self.arena.height);
+            panic!("location not inside map");
+        }
+        // assert!(self.inside_map(start));
         self.reset();
         self.open_set.push(start);
         self.reachable.push(start);
