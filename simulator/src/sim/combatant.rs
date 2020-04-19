@@ -468,6 +468,10 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn break_equip(&mut self, slot: EquipSlot) {
+        if let Some(equip) = self.get_equip(slot) {
+            // TODO: Should be handling doubles
+            self.conditions.clear_innates(equip.permanent);
+        }
         self.broken_equips |= slot.flag();
     }
 

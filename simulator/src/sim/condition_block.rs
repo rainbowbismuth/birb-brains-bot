@@ -25,6 +25,10 @@ impl ConditionBlock {
         }
     }
 
+    pub fn clear_innates(&mut self, innate_flags: ConditionFlags) {
+        self.innate_flags &= !innate_flags;
+    }
+
     pub fn add(&mut self, condition: Condition) {
         if let Some(duration) = condition.condition_duration() {
             if self.innate_flags & condition.flag() != 0 {
