@@ -103,6 +103,7 @@ pub struct CombatantInfo<'a> {
     pub starting_brave: i8,
     pub starting_faith: i8,
     pub horizontal_jump: i8,
+    pub vertical_jump: i8,
     pub bonus_movement: u8,
     pub bonus_jump: u8,
     pub all_skills: Vec<&'a str>,
@@ -165,17 +166,26 @@ impl<'a> CombatantInfo<'a> {
         }
 
         let mut horizontal_jump = 0;
+        let mut vertical_jump = 0;
         if src.action_skill == "Jump" || &src.class == "Lancer" {
             horizontal_jump = 1;
-        }
-        for ability in &src.all_abilities {
-            match ability.as_str() {
-                "Level Jump2" => horizontal_jump = 2.max(horizontal_jump),
-                "Level Jump3" => horizontal_jump = 3.max(horizontal_jump),
-                "Level Jump4" => horizontal_jump = 4.max(horizontal_jump),
-                "Level Jump5" => horizontal_jump = 5.max(horizontal_jump),
-                "Level Jump8" => horizontal_jump = 8.max(horizontal_jump),
-                _ => {}
+            vertical_jump = 1;
+            for ability in &src.all_abilities {
+                match ability.as_str() {
+                    "Level Jump2" => horizontal_jump = 2.max(horizontal_jump),
+                    "Level Jump3" => horizontal_jump = 3.max(horizontal_jump),
+                    "Level Jump4" => horizontal_jump = 4.max(horizontal_jump),
+                    "Level Jump5" => horizontal_jump = 5.max(horizontal_jump),
+                    "Level Jump8" => horizontal_jump = 8.max(horizontal_jump),
+                    "Vertical Jump2" => vertical_jump = 2.max(vertical_jump),
+                    "Vertical Jump3" => vertical_jump = 3.max(vertical_jump),
+                    "Vertical Jump4" => vertical_jump = 4.max(vertical_jump),
+                    "Vertical Jump5" => vertical_jump = 5.max(vertical_jump),
+                    "Vertical Jump6" => vertical_jump = 6.max(vertical_jump),
+                    "Vertical Jump7" => vertical_jump = 7.max(vertical_jump),
+                    "Vertical Jump8" => vertical_jump = 8.max(vertical_jump),
+                    _ => {}
+                }
             }
         }
 
@@ -233,6 +243,7 @@ impl<'a> CombatantInfo<'a> {
             starting_faith: src.faith,
             abilities,
             horizontal_jump,
+            vertical_jump,
             bonus_movement,
             bonus_jump,
             all_skills: skills,

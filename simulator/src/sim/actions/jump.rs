@@ -21,7 +21,7 @@ impl AbilityImpl for JumpImpl {
         &self,
         actions: &mut Vec<Action<'a>>,
         ability: &'a Ability<'a>,
-        _sim: &Simulation<'a>,
+        sim: &Simulation<'a>,
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
@@ -44,6 +44,15 @@ impl AbilityImpl for JumpImpl {
         let jump_ticks = 50 / user.speed().max(1) as u8;
 
         if jump_ticks >= ticks_left {
+            return;
+        }
+
+        // TODO: This isn't strictly correct, because this should be checked AFTER the move..
+        //  also this isn't accounting for slope height atm;
+        let user_tile = sim.get_tile(user.location);
+        let target_tile = sim.get_tile(target.location);
+        let height_diff = (user_tile.height as i8 - target_tile.height as i8).abs();
+        if height_diff > user.info.vertical_jump {
             return;
         }
 
