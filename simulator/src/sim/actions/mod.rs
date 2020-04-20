@@ -1,4 +1,4 @@
-use crate::sim::{Combatant, CombatantId, Event, Facing, Location, Simulation};
+use crate::sim::{Combatant, CombatantId, Condition, Event, Facing, Location, Simulation, Source};
 
 pub mod attack;
 pub mod basic_skill;
@@ -274,22 +274,21 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         }
     }
 
+    if ability.flags & JUMPING != 0 {
+        sim.cancel_condition(user_id, Condition::Jumping, Source::Ability);
+    }
+
     match ability.aoe {
         AoE::None => {
             if let Some(target_id) = action.target.to_target_id(sim) {
-                let target = sim.combatant(target_id);
-                if target.jumping() {
-                    return;
-                }
-
                 let user = sim.combatant(user_id);
+                let target = sim.combatant(target_id);
                 // TODO: Not a great place for this.. re: MP costs.
-                if !filter_target_level(user, ability, target) {
+                if !target.jumping() && filter_target_level(user, ability, target) {
+                    ability.implementation.perform(sim, user_id, target_id);
+                } else {
                     // TODO: Log some sort of event for failing to perform an ability
-                    return;
                 }
-
-                ability.implementation.perform(sim, user_id, target_id);
             } else {
                 // TODO: Something about the ability missing.
             }

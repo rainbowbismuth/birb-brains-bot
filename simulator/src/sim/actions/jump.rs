@@ -32,15 +32,9 @@ impl AbilityImpl for JumpImpl {
         {
             return;
         }
+
         let ct_remaining = 0.max(100 - target.ct.min(100));
-        let speed = if target.haste() {
-            // TODO: Real AI doesn't account for this, but, since I haven't implemented
-            //  tile targeting, I'm going to only target those that will certainly hit
-            (target.speed() * 3) / 2
-        } else {
-            target.speed()
-        };
-        let ticks_left = ct_remaining / speed.max(1) as u8;
+        let ticks_left = ct_remaining / target.speed().max(1) as u8;
         let jump_ticks = 50 / user.speed().max(1) as u8;
 
         if jump_ticks >= ticks_left {
@@ -48,24 +42,19 @@ impl AbilityImpl for JumpImpl {
         }
 
         // TODO: This isn't strictly correct, because this should be checked AFTER the move..
-        //  also this isn't accounting for slope height atm;
-        let user_tile = sim.get_tile(user.location);
-        let target_tile = sim.get_tile(target.location);
-        let height_diff = (user_tile.height as i8 - target_tile.height as i8).abs();
-        if height_diff > user.info.vertical_jump {
+        let height_diff = sim.height_diff(user.id(), target.id()).abs();
+        if height_diff > user.info.vertical_jump as f32 {
             return;
         }
 
-        actions.push(Action::new(
+        actions.push(Action::target_panel(
             ability,
             user.info.horizontal_jump as u8,
             Some(jump_ticks),
-            target.id(),
+            target.location,
         ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
-        sim.cancel_condition(user_id, Condition::Jumping, Source::Ability);
-
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
 

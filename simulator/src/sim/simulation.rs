@@ -502,6 +502,28 @@ impl<'a> Simulation<'a> {
         self.arena.lower[idx]
     }
 
+    pub fn height(&self, location: Location) -> f32 {
+        let tile = self.get_tile(location);
+        tile.height as f32 + tile.slope_height as f32 / 2.0
+    }
+
+    pub fn combatant_height(&self, combatant_id: CombatantId) -> f32 {
+        let combatant = self.combatant(combatant_id);
+        let location = combatant.location;
+        let tile = self.get_tile(location);
+        let tile_height = self.height(location);
+        let float_bonus = if combatant.float() {
+            0.5 + tile.depth as f32
+        } else {
+            0.0
+        };
+        tile_height + float_bonus
+    }
+
+    pub fn height_diff(&self, user_id: CombatantId, target_id: CombatantId) -> f32 {
+        self.combatant_height(user_id) - self.combatant_height(target_id)
+    }
+
     pub fn roll_inclusive(&self, min: i16, max: i16) -> i16 {
         self.rng.borrow_mut().gen_range(min, max + 1)
     }
