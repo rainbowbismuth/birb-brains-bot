@@ -78,6 +78,36 @@ fn should_attack_foe(user: &Combatant, target: &Combatant) -> bool {
     true
 }
 
+fn real_target(
+    sim: &Simulation,
+    user_id: CombatantId,
+    weapon: Option<&Equipment>,
+    target_id: CombatantId,
+) -> Option<CombatantId> {
+    let is_gun = weapon.map_or(false, |eq| eq.weapon_type == Some(WeaponType::Gun));
+
+    if !is_gun {
+        return Some(target_id);
+    }
+
+    let user = sim.combatant(user_id);
+    let user_height = sim.combatant_height(user_id);
+    let target = sim.combatant(target_id);
+    let mut real_target = Some(target_id);
+    for location in user.location.line(target.location).skip(1) {
+        // TODO: Not really sure what to do here...
+        if sim.height(location) > user_height + 3.0 {
+            real_target = None;
+            break;
+        }
+        if let Some(new_target_id) = sim.combatant_on_panel(location) {
+            real_target = Some(new_target_id);
+            break;
+        }
+    }
+    real_target
+}
+
 fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
     let weapon1 = sim.combatant(user_id).main_hand();
     let weapon2 = sim.combatant(user_id).off_hand();
@@ -112,9 +142,14 @@ pub fn do_single_weapon_attack<'a, 'b>(
     sim: &'a mut Simulation<'b>,
     user_id: CombatantId,
     weapon: Option<&'b Equipment>,
-    target_id: CombatantId,
+    original_target_id: CombatantId,
     k: i16,
 ) -> (i16, bool) {
+    let target_id = match real_target(sim, user_id, weapon, original_target_id) {
+        Some(target_id) => target_id,
+        None => return (0, false),
+    };
+
     let is_gun = weapon.map_or(false, |eq| eq.weapon_type == Some(WeaponType::Gun));
 
     if let Some(weapon) = weapon {
