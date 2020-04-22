@@ -504,20 +504,14 @@ impl<'a> Simulation<'a> {
 
     pub fn height(&self, location: Location) -> f32 {
         let tile = self.get_tile(location);
-        tile.height as f32 + tile.slope_height as f32 / 2.0
+        tile_height(&tile)
     }
 
     pub fn combatant_height(&self, combatant_id: CombatantId) -> f32 {
         let combatant = self.combatant(combatant_id);
         let location = combatant.location;
         let tile = self.get_tile(location);
-        let tile_height = self.height(location);
-        let float_bonus = if combatant.float() {
-            0.5 + tile.depth as f32
-        } else {
-            0.0
-        };
-        tile_height + float_bonus
+        combatant_height(&tile, combatant)
     }
 
     pub fn height_diff(&self, user_id: CombatantId, target_id: CombatantId) -> f32 {
@@ -1333,3 +1327,17 @@ pub fn can_move_into_range_line(user: &Combatant, action: &Action, target: &Comb
 // #      will need a state for 'no longer exists at all?' can I just remove from combatants? do I want to?
 // #  - Can I keep statistics on how much different actions happen? Could be a useful part of testing.
 // #  - Would be interesting to see if these true positives align with bird's true positives
+
+pub fn combatant_height(tile: &Tile, combatant: &Combatant) -> f32 {
+    let tile_height = tile_height(tile);
+    let float_bonus = if combatant.float() {
+        0.5 + tile.depth as f32
+    } else {
+        0.0
+    };
+    tile_height + float_bonus
+}
+
+pub fn tile_height(tile: &Tile) -> f32 {
+    tile.height as f32 + tile.slope_height as f32 / 2.0
+}

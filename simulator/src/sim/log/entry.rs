@@ -2,8 +2,8 @@ use colored::Colorize;
 
 use crate::dto::rust::{Arena, Equipment};
 use crate::sim::{
-    Action, ActionTarget, Combatant, CombatantId, Condition, Facing, Location, Phase,
-    RelativeFacing, Team, MAX_COMBATANTS,
+    combatant_height, tile_height, Action, ActionTarget, Combatant, CombatantId, Condition, Facing,
+    Location, Phase, RelativeFacing, Team, MAX_COMBATANTS,
 };
 
 #[derive(Clone)]
@@ -97,7 +97,26 @@ pub fn describe_location(panel: Location, arena: &Arena) -> String {
     }
     let panel_idx = arena.to_index(panel.x as usize, panel.y as usize);
     let tile = arena.lower[panel_idx];
-    format!("({},{},{}h)", panel.x, panel.y, tile.height)
+    format!("({},{},{}h)", panel.x, panel.y, tile_height(&tile))
+}
+
+pub fn describe_location_combatant(combatant: &Combatant, arena: &Arena) -> String {
+    let panel = combatant.location;
+    if panel.x < 0
+        || panel.y < 0
+        || (panel.x >= arena.width as i16)
+        || (panel.y >= arena.height as i16)
+    {
+        return format!("({},{})", panel.x, panel.y);
+    }
+    let panel_idx = arena.to_index(panel.x as usize, panel.y as usize);
+    let tile = arena.lower[panel_idx];
+    format!(
+        "({},{},{}h)",
+        panel.x,
+        panel.y,
+        combatant_height(&tile, combatant)
+    )
 }
 
 pub fn describe_event(event: &Event, combatants: &[Combatant], arena: &Arena) -> String {
@@ -324,7 +343,7 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant], arena: &A
             combatant.name().red(),
             combatant.hp(),
             combatant.mp(),
-            describe_location(combatant.location, arena),
+            describe_location_combatant(combatant, arena),
             describe_facing(combatant.facing),
             cond_str
         ),
@@ -334,7 +353,7 @@ pub fn describe_combatant(c_id: CombatantId, combatants: &[Combatant], arena: &A
             combatant.name().blue(),
             combatant.hp(),
             combatant.mp(),
-            describe_location(combatant.location, arena),
+            describe_location_combatant(combatant, arena),
             describe_facing(combatant.facing),
             cond_str
         ),
