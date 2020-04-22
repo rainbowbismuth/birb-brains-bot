@@ -1119,9 +1119,10 @@ impl<'a> Simulation<'a> {
         }
 
         let best_panel = {
+            self.mark_enemy_occupied_panels(user);
             let movement_info = MovementInfo::new(user);
             let mut pathfinder = self.pathfinder.borrow_mut();
-            pathfinder.calculate_reachable(&movement_info, user.location);
+            pathfinder.calculate_reachable_no_reset(&movement_info, user.location);
 
             target_panel
                 .diamond(action.range as u8)
@@ -1130,9 +1131,6 @@ impl<'a> Simulation<'a> {
                         return None;
                     }
                     if !pathfinder.can_reach_and_end_turn_on(&movement_info, location) {
-                        return None;
-                    }
-                    if self.occupied_panel(location) {
                         return None;
                     }
                     let enemy_distance = self.enemy_distance_metric(user, location);
@@ -1153,20 +1151,18 @@ impl<'a> Simulation<'a> {
             return;
         }
         let best_panel = {
+            self.mark_enemy_occupied_panels(user);
             let movement_info = MovementInfo::new(user);
             let mut pathfinder = self.pathfinder.borrow_mut();
-            pathfinder.calculate_reachable(&movement_info, user.location);
+            pathfinder.calculate_reachable_no_reset(&movement_info, user.location);
 
             pathfinder
                 .reachable_set()
                 .iter()
-                .flat_map(|location| {
-                    if self.occupied_panel(*location) {
-                        return None;
-                    }
+                .map(|location| {
                     let enemy_distance = self.enemy_distance_metric(user, *location);
                     // TODO: Add metric based on currently charging slow actions.
-                    Some((enemy_distance, *location))
+                    (enemy_distance, *location)
                 })
                 .max_by_key(|p| p.0)
                 .map(|p| p.1)
@@ -1203,20 +1199,18 @@ impl<'a> Simulation<'a> {
             return;
         }
         let best_panel = {
+            self.mark_enemy_occupied_panels(user);
             let movement_info = MovementInfo::new(user);
             let mut pathfinder = self.pathfinder.borrow_mut();
-            pathfinder.calculate_reachable(&movement_info, user.location);
+            pathfinder.calculate_reachable_no_reset(&movement_info, user.location);
 
             pathfinder
                 .reachable_set()
                 .iter()
-                .flat_map(|location| {
-                    if self.occupied_panel(*location) {
-                        return None;
-                    }
+                .map(|location| {
                     let enemy_distance = self.enemy_distance_metric(user, *location);
                     // TODO: Add metric based on currently charging slow actions.
-                    Some((enemy_distance, *location))
+                    (enemy_distance, *location)
                 })
                 .min_by_key(|p| p.0)
         };
@@ -1235,6 +1229,20 @@ impl<'a> Simulation<'a> {
             }
         }
         false
+    }
+
+    fn mark_enemy_occupied_panels(&self, user: &Combatant) {
+        let mut pathfinder = self.pathfinder.borrow_mut();
+        pathfinder.reset_all();
+        for combatant in &self.combatants {
+            if user.ally(combatant) {
+                continue;
+            }
+            if combatant.dead() || combatant.crystal() {
+                continue;
+            }
+            pathfinder.set_occupied(combatant.location);
+        }
     }
 
     fn enemy_distance_metric(&self, user: &Combatant, location: Location) -> i16 {

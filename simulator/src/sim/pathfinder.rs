@@ -1,6 +1,9 @@
 use crate::dto::rust::Arena;
 use crate::sim::{Combatant, Location, OFFSETS};
 
+const MAX_DISTANCE: u8 = 254;
+const OCCUPIED: u8 = 255;
+
 pub struct Pathfinder<'a> {
     arena: &'a Arena,
     distance: Vec<u8>,
@@ -45,17 +48,32 @@ impl<'a> Pathfinder<'a> {
             reachable: Vec::with_capacity(255),
         };
         for _i in 0..pathfinder.distance.capacity() {
-            pathfinder.distance.push(255);
+            pathfinder.distance.push(MAX_DISTANCE);
         }
         pathfinder
     }
 
-    pub fn reset(&mut self) {
+    pub fn reset_all(&mut self) {
         for i in 0..self.distance.len() {
-            self.distance[i] = 255;
+            self.distance[i] = MAX_DISTANCE;
         }
         self.open_set.clear();
         self.reachable.clear();
+    }
+
+    pub fn reset(&mut self) {
+        for i in 0..self.distance.len() {
+            if self.distance[i] != OCCUPIED {
+                self.distance[i] = MAX_DISTANCE;
+            }
+        }
+        self.open_set.clear();
+        self.reachable.clear();
+    }
+
+    pub fn set_occupied(&mut self, panel: Location) {
+        let idx = self.to_index(panel);
+        self.distance[idx] = OCCUPIED;
     }
 
     fn to_index(&self, panel: Location) -> usize {
@@ -71,7 +89,7 @@ impl<'a> Pathfinder<'a> {
             return false;
         }
         let end_idx = self.to_index(end);
-        self.distance[end_idx] < 255
+        self.distance[end_idx] < MAX_DISTANCE
     }
 
     pub fn can_reach_and_end_turn_on(&self, info: &MovementInfo, end: Location) -> bool {
@@ -79,8 +97,12 @@ impl<'a> Pathfinder<'a> {
     }
 
     pub fn calculate_reachable(&mut self, info: &MovementInfo, start: Location) {
-        assert!(self.inside_map(start));
         self.reset();
+        self.calculate_reachable_no_reset(info, start);
+    }
+
+    pub fn calculate_reachable_no_reset(&mut self, info: &MovementInfo, start: Location) {
+        assert!(self.inside_map(start));
         self.open_set.push(start);
         self.reachable.push(start);
         let start_idx = self.to_index(start);
@@ -97,6 +119,9 @@ impl<'a> Pathfinder<'a> {
                 let end_idx = self.to_index(end);
                 let new_distance = distance + 1;
                 if new_distance > self.distance[end_idx] {
+                    continue;
+                }
+                if OCCUPIED == self.distance[end_idx] {
                     continue;
                 }
                 if !self.can_transition(info, start, end) {
@@ -138,6 +163,7 @@ impl<'a> Pathfinder<'a> {
         if end_tile.no_walk {
             return false;
         }
+        // TODO: Slopes matter because it's based on the edges.. oh gosh.
         let height_diff = (start_tile.height as i16 - end_tile.height as i16).abs() as u8;
         if height_diff > info.jump {
             return false;
@@ -163,6 +189,7 @@ impl<'a> Pathfinder<'a> {
 pub mod tests {
     use super::*;
     use crate::dto::rust::Tile;
+    use crate::sim::Facing;
 
     fn make_simple_map() -> Arena {
         let tile = Tile {
@@ -259,6 +286,30 @@ pub mod tests {
         assert_eq!(pathfinder.is_reachable(middle), false);
         assert_eq!(
             pathfinder.can_reach_and_end_turn_on(&movement_info, middle),
+            false
+        );
+    }
+
+    #[test]
+    pub fn cant_cross_occupied() {
+        let arena = make_simple_map();
+        let mut pathfinder = Pathfinder::new(&arena);
+        let start = Location::new(1, 1);
+        let outside = Location::new(3, 3);
+        let movement_info = MovementInfo {
+            movement: 10,
+            jump: 0,
+            fly_teleport: false,
+            water_ok: false,
+        };
+        for facing in &[Facing::North, Facing::East, Facing::South, Facing::West] {
+            pathfinder.set_occupied(start + facing.offset());
+        }
+        pathfinder.calculate_reachable(&movement_info, start);
+        assert_eq!(pathfinder.reachable_set(), &[start]);
+        assert_eq!(pathfinder.is_reachable(outside), false);
+        assert_eq!(
+            pathfinder.can_reach_and_end_turn_on(&movement_info, outside),
             false
         );
     }
