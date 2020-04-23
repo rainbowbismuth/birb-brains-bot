@@ -1,7 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
-    HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,
+    Combatant, CombatantId, Condition, Element, Simulation, Source, FOE_OK, HITS_ALLIES_ONLY,
+    HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, TARGET_NOT_SELF, TARGET_SELF_ONLY,
 };
 
 pub const DRAW_OUT_ABILITIES: &[Ability] = &[
@@ -13,6 +13,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         aoe: AoE::Diamond(2),
         implementation: &DrawOutDamageImpl {
             ma_factor: 8,
+            range: 0,
             damage_hp_not_mp: true,
             chance_to_cancel: &[
                 Condition::Undead,
@@ -40,6 +41,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         aoe: AoE::Diamond(2),
         implementation: &DrawOutDamageImpl {
             ma_factor: 10,
+            range: 0,
             damage_hp_not_mp: true,
             chance_to_cancel: &[],
             chance_to_add_random: &[Condition::Oil, Condition::Darkness],
@@ -53,6 +55,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         aoe: AoE::Diamond(2),
         implementation: &DrawOutDamageImpl {
             ma_factor: 5,
+            range: 0,
             damage_hp_not_mp: false,
             chance_to_cancel: &[],
             chance_to_add_random: &[],
@@ -66,6 +69,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         aoe: AoE::Diamond(2),
         implementation: &DrawOutDamageImpl {
             ma_factor: -9,
+            range: 0,
             damage_hp_not_mp: true,
             chance_to_cancel: &[],
             chance_to_add_random: &[],
@@ -79,6 +83,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         aoe: AoE::Diamond(2),
         implementation: &DrawOutDamageImpl {
             ma_factor: 11,
+            range: 0,
             damage_hp_not_mp: true,
             chance_to_cancel: &[],
             chance_to_add_random: &[Condition::Slow],
@@ -102,12 +107,26 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         aoe: AoE::Diamond(2),
         implementation: &DrawOutDamageImpl {
             ma_factor: 14,
+            range: 0,
             damage_hp_not_mp: true,
             chance_to_cancel: &[],
             chance_to_add_random: &[Condition::Confusion, Condition::DeathSentence],
         },
     },
-    // TODO: Kikuichimoji: 6 range, 6 AoE (line). Effect: Damage (MA * 12).
+    // Kikuichimoji: 6 range, 6 AoE (line). Effect: Damage (MA * 12).
+    Ability {
+        name: "Kikuichimoji",
+        flags: FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::Line,
+        implementation: &DrawOutDamageImpl {
+            ma_factor: 12,
+            range: 6,
+            damage_hp_not_mp: true,
+            chance_to_cancel: &[],
+            chance_to_add_random: &[],
+        },
+    },
     // Masamune: 0 range, 2 AoE. Effect: Add Regen, Haste (Random).
     Ability {
         name: "Masamune",
@@ -126,6 +145,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         aoe: AoE::Diamond(2),
         implementation: &DrawOutDamageImpl {
             ma_factor: 18,
+            range: 0,
             damage_hp_not_mp: true,
             chance_to_cancel: &[],
             chance_to_add_random: &[],
@@ -135,6 +155,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
 
 struct DrawOutDamageImpl {
     ma_factor: i16,
+    range: u8,
     damage_hp_not_mp: bool,
     chance_to_add_random: &'static [Condition],
     chance_to_cancel: &'static [Condition],
@@ -149,7 +170,7 @@ impl AbilityImpl for DrawOutDamageImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action::new(ability, 0, None, target.id()));
+        actions.push(Action::new(ability, self.range, None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
