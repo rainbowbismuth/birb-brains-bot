@@ -153,7 +153,7 @@ impl<'a> Pathfinder<'a> {
         let start_idx = self.to_index(start);
         let start_tile = self.arena.lower[start_idx];
         let distance = self.distance[start_idx];
-        for (i, end) in start.line(end_point).skip(1).enumerate() {
+        for (i, end) in start.line(end_point).enumerate().skip(1) {
             if !self.inside_map(end) {
                 return;
             }

@@ -6,16 +6,113 @@ use crate::sim::{
 
 pub const THROW_ABILITIES: &[Ability] = &[
     // Knife: movement range, 0 AoE. Effect: Throw Knife Damage (Speed * ThrownWP).
+    // // Air Knife: 10 WP, 1 range, 5% evade, Knife. Element: Wind.
+    // // Zorlin Shape: 12 WP, 1 range, 10% evade, Knife. Effect: Chance to Add Sleep.
+    Ability {
+        name: "Knife",
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &ThrowImpl {
+            items: &[
+                ThrowableItem {
+                    wp: 10,
+                    element: Element::Wind,
+                    name: "Air Knife",
+                },
+                ThrowableItem {
+                    wp: 12,
+                    element: Element::None,
+                    name: "Zorlin Shape",
+                },
+            ],
+        },
+    },
     // Sword: movement range, 0 AoE. Effect: Throw Sword Damage (Speed * ThrownWP).
-    // Hammer: movement range, 0 AoE. Effect: Throw Flail Damage (Speed * ThrownWP).
-    // Staff: movement range, 0 AoE. Effect: Throw Staff Damage (Speed * ThrownWP).
+    // // Coral Sword: 10 WP, 1 range, 5% evade, Sword. Element: Lightning.
+    // // Ice Brand: 13 WP, 1 range, 10% evade, Sword. Element: Ice. Effect: Chance to cast Ice 2.
+    // // Materia Blade: 15 WP, 1 range, 10% evade, Sword. Effect: Strengthen Wind, Earth, Water.
+    Ability {
+        name: "Sword",
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &ThrowImpl {
+            items: &[
+                ThrowableItem {
+                    wp: 10,
+                    element: Element::Lightning,
+                    name: "Coral Sword",
+                },
+                ThrowableItem {
+                    wp: 13,
+                    element: Element::Ice,
+                    name: "Ice Brand",
+                },
+                ThrowableItem {
+                    wp: 15,
+                    element: Element::None,
+                    name: "Materia Blade",
+                },
+            ],
+        },
+    },
+    // TODO: Hammer: movement range, 0 AoE. Effect: Throw Flail Damage (Speed * ThrownWP).
+    // TODO: Staff: movement range, 0 AoE. Effect: Throw Staff Damage (Speed * ThrownWP).
     // Ninja Sword: movement range, 0 AoE. Effect: Throw Ninja Blade Damage (Speed * ThrownWP).
-    // Axe: movement range, 0 AoE. Effect: Throw Axe Damage (Speed * ThrownWP).
+    // // Koga Knife: 17 WP, 1 range, 5% evade, Ninja Blade.
+    Ability {
+        name: "Ninja Sword",
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &ThrowImpl {
+            items: &[ThrowableItem {
+                wp: 17,
+                element: Element::Water,
+                name: "Koga Knife",
+            }],
+        },
+    },
+    // TODO: Axe: movement range, 0 AoE. Effect: Throw Axe Damage (Speed * ThrownWP).
     // Spear: movement range, 0 AoE. Effect: Throw Spear Damage (Speed * ThrownWP).
-    // Stick: movement range, 0 AoE. Effect: Throw Pole Damage (Speed * ThrownWP).
-    // Wand: movement range, 0 AoE. Effect: Throw Rod Damage (Speed * ThrownWP).
-    // Dictionary: movement range, 0 AoE. Effect: Throw Book Damage (Speed * ThrownWP).
-
+    // // Obelisk: 12 WP, 2 range, 10% evade, Spear. Element: Water.
+    // // Holy Lance: 14 WP, 2 range, 10% evade, Spear. Element: Holy. Effect: Chance to cast Holy.
+    // // Dragon Whisker: 16 WP, 2 range, 10% evade, Spear. Effect: Permanent Shell.
+    // // Gungnir: 18 WP, 2 range, 10% evade, Spear. Element: Wind.
+    Ability {
+        name: "Spear",
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &ThrowImpl {
+            items: &[
+                ThrowableItem {
+                    wp: 12,
+                    element: Element::Water,
+                    name: "Obelisk",
+                },
+                ThrowableItem {
+                    wp: 14,
+                    element: Element::Holy,
+                    name: "Holy Lance",
+                },
+                ThrowableItem {
+                    wp: 16,
+                    element: Element::None,
+                    name: "Dragon Whisker",
+                },
+                ThrowableItem {
+                    wp: 18,
+                    element: Element::Wind,
+                    name: "Gungnir",
+                },
+            ],
+        },
+    },
+    // TODO: Stick: movement range, 0 AoE. Effect: Throw Pole Damage (Speed * ThrownWP).
+    // TODO: Wand: movement range, 0 AoE. Effect: Throw Rod Damage (Speed * ThrownWP).
+    // TODO: Dictionary: movement range, 0 AoE. Effect: Throw Book Damage (Speed * ThrownWP).
     // Shuriken: movement range, 0 AoE. Effect: Throw Shuriken Damage (Speed * ThrownWP).
     // // Shuriken: 5 WP, Shuriken.
     // // Magic Shuriken: 7 WP, Shuriken. Element: Ice.
