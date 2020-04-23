@@ -72,7 +72,8 @@ impl<'a> Simulation<'a> {
         let middle = Location::new(self.arena.width as i16 / 2, self.arena.height as i16 / 2);
         let mut movement_info = MovementInfo {
             movement: 4,
-            jump: 3,
+            vertical_jump: 3,
+            horizontal_jump: 3 / 2,
             fly_teleport: false,
             water_ok: false,
         };

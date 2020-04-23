@@ -1,5 +1,5 @@
 use crate::dto::rust::Arena;
-use crate::sim::{Combatant, Location, OFFSETS};
+use crate::sim::{tile_height, tile_height_from_direction, Combatant, Facing, Location, OFFSETS};
 
 const MAX_DISTANCE: u8 = 254;
 const OCCUPIED: u8 = 255;
@@ -13,7 +13,8 @@ pub struct Pathfinder<'a> {
 
 pub struct MovementInfo {
     pub movement: u8,
-    pub jump: u8,
+    pub vertical_jump: u8,
+    pub horizontal_jump: u8,
     pub fly_teleport: bool,
     pub water_ok: bool,
 }
@@ -25,14 +26,13 @@ impl MovementInfo {
         } else {
             combatant.movement()
         };
-        let jump = if combatant.ignore_height() {
-            100
-        } else {
-            combatant.jump()
-        };
+        let jump = combatant.jump();
+        let vertical_jump = if combatant.ignore_height() { 100 } else { jump };
+        let horizontal_jump = jump / 2;
         MovementInfo {
             movement,
-            jump,
+            vertical_jump,
+            horizontal_jump,
             fly_teleport: combatant.fly() || combatant.teleport(),
             water_ok: !combatant.landlocked(),
         }
@@ -124,18 +124,63 @@ impl<'a> Pathfinder<'a> {
                 if OCCUPIED == self.distance[end_idx] {
                     continue;
                 }
-                if !self.can_transition(info, start, end) {
-                    continue;
-                }
-                self.distance[end_idx] = new_distance;
-                if new_distance >= info.movement {
-                    continue;
-                }
-                self.open_set.push(end);
-                if self.can_end_on(info, end) {
-                    self.reachable.push(end);
+                if self.can_transition(info, start, end) {
+                    self.distance[end_idx] = new_distance;
+                    if new_distance >= info.movement {
+                        continue;
+                    }
+                    self.open_set.push(end);
+                    if self.can_end_on(info, end) {
+                        self.reachable.push(end);
+                    }
+                } else {
+                    self.horizontal_jump_search(info, start, *direction);
                 }
             }
+        }
+    }
+    pub fn horizontal_jump_search(
+        &mut self,
+        info: &MovementInfo,
+        start: Location,
+        direction: Location,
+    ) {
+        if info.horizontal_jump == 0 {
+            return;
+        }
+        let end_point = start + direction * (info.horizontal_jump as i16 + 1);
+        let towards_direction = Facing::towards(start, end_point);
+        let start_idx = self.to_index(start);
+        let start_tile = self.arena.lower[start_idx];
+        let distance = self.distance[start_idx];
+        for (i, end) in start.line(end_point).skip(1).enumerate() {
+            if !self.inside_map(end) {
+                return;
+            }
+            let end_idx = self.to_index(end);
+            let end_tile = self.arena.lower[end_idx];
+            let end_tile_height = tile_height_from_direction(&end_tile, towards_direction);
+            let highest_part = end_tile.height + end_tile.slope_height;
+            let start_tile_height =
+                tile_height_from_direction(&start_tile, towards_direction.opposite());
+
+            if highest_part > start_tile_height {
+                return;
+            }
+            if end_tile_height < start_tile_height {
+                continue;
+            }
+            if !self.can_end_on(info, end) {
+                continue;
+            }
+
+            let new_distance = distance + i as u8;
+            self.distance[end_idx] = new_distance;
+            if new_distance >= info.movement {
+                continue;
+            }
+            self.open_set.push(end);
+            self.reachable.push(end);
         }
     }
 
@@ -163,9 +208,15 @@ impl<'a> Pathfinder<'a> {
         if end_tile.no_walk {
             return false;
         }
-        // TODO: Slopes matter because it's based on the edges.. oh gosh.
-        let height_diff = (start_tile.height as i16 - end_tile.height as i16).abs() as u8;
-        if height_diff > info.jump {
+
+        // TODO: Still not entirely sure of this logic
+        let towards_direction = Facing::towards(start, end);
+        let end_tile_height = tile_height_from_direction(&end_tile, towards_direction);
+        let start_tile_height =
+            tile_height_from_direction(&start_tile, towards_direction.opposite());
+        let height_diff = (start_tile_height as i16 - end_tile_height as i16).abs() as u8;
+
+        if height_diff > info.vertical_jump {
             return false;
         }
         true
@@ -181,6 +232,9 @@ impl<'a> Pathfinder<'a> {
         if !info.water_ok && end_tile.depth > 0 {
             return false;
         }
+        if self.distance[end_idx] == OCCUPIED {
+            return false;
+        }
         return true;
     }
 }
@@ -189,7 +243,7 @@ impl<'a> Pathfinder<'a> {
 pub mod tests {
     use super::*;
     use crate::dto::rust::Tile;
-    use crate::sim::Facing;
+    use crate::sim::{Facing, SLOPE_FLAT_0, SLOPE_INCLINE_E, SLOPE_INCLINE_W};
 
     fn make_simple_map() -> Arena {
         let tile = Tile {
@@ -221,7 +275,8 @@ pub mod tests {
         for movement in 0..4 {
             let movement_info = MovementInfo {
                 movement,
-                jump: 0,
+                horizontal_jump: 0,
+                vertical_jump: 0,
                 fly_teleport: false,
                 water_ok: false,
             };
@@ -267,6 +322,97 @@ pub mod tests {
         }
     }
 
+    fn make_high_slope_map() -> Arena {
+        let walk = Tile {
+            height: 0,
+            depth: 0,
+            slope_type: SLOPE_FLAT_0,
+            surface_type: 0,
+            slope_height: 0,
+            no_cursor: false,
+            no_walk: false,
+        };
+        let up_east = Tile {
+            height: 0,
+            depth: 0,
+            slope_type: SLOPE_INCLINE_E,
+            surface_type: 0,
+            slope_height: 8,
+            no_cursor: false,
+            no_walk: false,
+        };
+        let up_west = Tile {
+            height: 0,
+            depth: 0,
+            slope_type: SLOPE_INCLINE_W,
+            surface_type: 0,
+            slope_height: 8,
+            no_cursor: false,
+            no_walk: false,
+        };
+        let tiles = vec![walk, up_east, walk, up_west, walk];
+        Arena {
+            lower: tiles,
+            upper: vec![],
+            width: 5,
+            height: 1,
+        }
+    }
+
+    #[test]
+    pub fn test_walk_up_and_jump_slope() {
+        let arena = make_high_slope_map();
+        let mut pathfinder = Pathfinder::new(&arena);
+        let start = Location::new(0, 0);
+        let middle = Location::new(2, 0);
+        let end = Location::new(4, 0);
+        let movement_info = MovementInfo {
+            movement: 10,
+            vertical_jump: 2,
+            horizontal_jump: 1,
+            fly_teleport: false,
+            water_ok: false,
+        };
+        pathfinder.calculate_reachable(&movement_info, start);
+        assert_eq!(pathfinder.is_reachable(end), true);
+        assert_eq!(pathfinder.is_reachable(middle), false);
+        assert_eq!(
+            pathfinder.can_reach_and_end_turn_on(&movement_info, middle),
+            false
+        );
+        assert_eq!(
+            pathfinder.can_reach_and_end_turn_on(&movement_info, end),
+            true
+        );
+    }
+
+    #[test]
+    pub fn test_jump_over_no_walk() {
+        let arena = make_impassible_map();
+        let mut pathfinder = Pathfinder::new(&arena);
+        let start = Location::new(0, 0);
+        let middle = Location::new(2, 0);
+        let end = Location::new(4, 0);
+        let movement_info = MovementInfo {
+            movement: 10,
+            vertical_jump: 2,
+            horizontal_jump: 1,
+            fly_teleport: false,
+            water_ok: false,
+        };
+        pathfinder.calculate_reachable(&movement_info, start);
+        assert_eq!(pathfinder.is_reachable(end), true);
+        assert_eq!(pathfinder.is_reachable(middle), false);
+        assert_eq!(
+            pathfinder.can_reach_and_end_turn_on(&movement_info, middle),
+            false
+        );
+        assert_eq!(
+            pathfinder.can_reach_and_end_turn_on(&movement_info, end),
+            true
+        );
+    }
+
     #[test]
     pub fn cant_cross_no_fly() {
         let arena = make_impassible_map();
@@ -276,7 +422,8 @@ pub mod tests {
         let end = Location::new(4, 0);
         let movement_info = MovementInfo {
             movement: 10,
-            jump: 0,
+            horizontal_jump: 0,
+            vertical_jump: 0,
             fly_teleport: false,
             water_ok: false,
         };
@@ -298,7 +445,8 @@ pub mod tests {
         let outside = Location::new(3, 3);
         let movement_info = MovementInfo {
             movement: 10,
-            jump: 0,
+            horizontal_jump: 0,
+            vertical_jump: 0,
             fly_teleport: false,
             water_ok: false,
         };
@@ -323,7 +471,8 @@ pub mod tests {
         let end = Location::new(4, 0);
         let movement_info = MovementInfo {
             movement: 10,
-            jump: 0,
+            horizontal_jump: 0,
+            vertical_jump: 0,
             fly_teleport: true,
             water_ok: false,
         };

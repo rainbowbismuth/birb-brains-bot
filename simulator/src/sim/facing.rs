@@ -54,6 +54,10 @@ impl Facing {
         unsafe { std::mem::transmute_copy(&(((self as u8) + amount as u8) % 4)) }
     }
 
+    pub fn opposite(self) -> Facing {
+        self.rotate(2)
+    }
+
     pub fn rotations_to(self, other: Facing) -> i8 {
         (((other as i16 + 4) - self as i16).abs() % 4) as i8
     }
@@ -99,6 +103,12 @@ impl RelativeFacing {
 #[cfg(test)]
 pub mod tests {
     use super::*;
+
+    #[test]
+    pub fn facing_test_opposite() {
+        assert_eq!(Facing::East.opposite(), Facing::West);
+        assert_eq!(Facing::East.opposite().opposite(), Facing::East);
+    }
 
     #[test]
     pub fn facing_tests() {
