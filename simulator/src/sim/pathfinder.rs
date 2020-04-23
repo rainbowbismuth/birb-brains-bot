@@ -1,5 +1,5 @@
 use crate::dto::rust::Arena;
-use crate::sim::{tile_height, tile_height_from_direction, Combatant, Facing, Location, OFFSETS};
+use crate::sim::{tile_height_from_direction, Combatant, Facing, Location, OFFSETS};
 
 const MAX_DISTANCE: u8 = 254;
 const OCCUPIED: u8 = 255;
