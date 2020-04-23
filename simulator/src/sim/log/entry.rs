@@ -2,8 +2,8 @@ use colored::Colorize;
 
 use crate::dto::rust::{Arena, Equipment};
 use crate::sim::{
-    combatant_height, tile_height, Action, ActionTarget, Combatant, CombatantId, Condition, Facing,
-    Location, Phase, RelativeFacing, Team, MAX_COMBATANTS,
+    combatant_height, tile_height, Action, ActionTarget, CalcAlgorithm, CalcAttribute, Combatant,
+    CombatantId, Condition, Facing, Location, Phase, RelativeFacing, Team, MAX_COMBATANTS,
 };
 
 #[derive(Clone)]
@@ -216,13 +216,21 @@ pub fn describe_event(event: &Event, combatants: &[Combatant], arena: &Arena) ->
             describe_location(*new_location, arena),
         ),
 
-        Event::UsingAbility(target_id, action) => format!(
-            "{} is using {} on {} from the {}",
-            describe_combatant(*target_id, combatants, arena),
-            action.ability.name,
-            describe_target_short(action.target, combatants, arena),
-            describe_relative_facing(*target_id, action.target, combatants)
-        ),
+        Event::UsingAbility(target_id, action) => {
+            let combatant_desc = describe_combatant(*target_id, combatants, arena);
+            let ability_name = action.ability.name;
+            let target_desc = describe_target_short(action.target, combatants, arena);
+            match describe_relative_facing(*target_id, action.target, combatants) {
+                Some(relative_facing) => format!(
+                    "{} is using {} on {} from the {}",
+                    combatant_desc, ability_name, target_desc, relative_facing
+                ),
+                None => format!(
+                    "{} is using {} on {}",
+                    combatant_desc, ability_name, target_desc
+                ),
+            }
+        }
 
         Event::AbilityMissed(user_id, target_id) => format!(
             "{}'s ability missed {}!",
@@ -310,6 +318,20 @@ pub fn describe_target_short(
     match target {
         ActionTarget::Id(target_id) => describe_combatant_short(target_id, combatants),
         ActionTarget::Panel(location) => describe_location(location, arena),
+        ActionTarget::Math(attr, algo) => describe_math(attr, algo),
+    }
+}
+
+pub fn describe_math(attr: CalcAttribute, algo: CalcAlgorithm) -> String {
+    let attr_name = match attr {
+        CalcAttribute::CT => "CT",
+        CalcAttribute::Height => "Height",
+    };
+    match algo {
+        CalcAlgorithm::Prime => format!("everyone with a prime {}", attr_name),
+        CalcAlgorithm::M5 => format!("everyone with a {} divisible by 5", attr_name),
+        CalcAlgorithm::M4 => format!("everyone with a {} divisible by 4", attr_name),
+        CalcAlgorithm::M3 => format!("everyone with a {} divisible by 3", attr_name),
     }
 }
 
@@ -373,18 +395,17 @@ pub fn describe_relative_facing(
     user_id: CombatantId,
     target: ActionTarget,
     combatants: &[Combatant],
-) -> &'static str {
+) -> Option<&'static str> {
     if let Some(target_id) = target.to_target_id_only() {
         let user = combatants[user_id.index()];
         let target = combatants[target_id.index()];
-        match user.relative_facing(&target) {
+        Some(match user.relative_facing(&target) {
             RelativeFacing::Front => "front",
             RelativeFacing::Side => "side",
             RelativeFacing::Back => "back",
-        }
+        })
     } else {
-        // TODO: Fix this and remove this ugly case lol
-        "n/a"
+        None
     }
 }
 

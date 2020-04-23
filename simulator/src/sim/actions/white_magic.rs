@@ -255,6 +255,9 @@ impl AbilityImpl for RaiseSpellImpl {
         if user.foe(target) && !should_heal_foe(target, true) {
             return;
         }
+        if !target.dead() && !target.undead() {
+            return;
+        }
         actions.push(Action::new(
             ability,
             self.range,
@@ -266,6 +269,9 @@ impl AbilityImpl for RaiseSpellImpl {
         let mut success_chance = 1.0;
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
+        if !target.dead() && !target.undead() {
+            return;
+        }
         success_chance *= user.faith_percent();
         success_chance *= target.faith_percent();
         success_chance *= (user.ma() as f32 + self.base_chance as f32) / 100.0;

@@ -656,13 +656,14 @@ impl<'a> Simulation<'a> {
 
                     let mut simulated_world = self.prediction_clone();
                     let user = self.combatant(user_id);
-                    let target_panel = action.target.to_location(self);
-                    if !in_range_panel(user, action, target_panel) {
-                        simulated_world.pre_action_move(user_id, action, target_panel);
-                    }
-                    let sim_user = simulated_world.combatant(user_id);
-                    if !in_range_panel(sim_user, action, target_panel) {
-                        return None;
+                    if let Some(target_panel) = action.target.to_location(self) {
+                        if !in_range_panel(user, action, target_panel) {
+                            simulated_world.pre_action_move(user_id, action, target_panel);
+                        }
+                        let sim_user = simulated_world.combatant(user_id);
+                        if !in_range_panel(sim_user, action, target_panel) {
+                            return None;
+                        }
                     }
                     perform_action(&mut simulated_world, user_id, *action);
                     let new_value = ai_target_value_sum(
@@ -682,9 +683,10 @@ impl<'a> Simulation<'a> {
 
         if let Some((_, action)) = best_action {
             let user = self.combatant(user_id);
-            let target_panel = action.target.to_location(self);
-            if !in_range_panel(user, &action, target_panel) {
-                self.pre_action_move(user_id, &action, target_panel);
+            if let Some(target_panel) = action.target.to_location(self) {
+                if !in_range_panel(user, &action, target_panel) {
+                    self.pre_action_move(user_id, &action, target_panel);
+                }
             }
             if let Some(mut ctr) = action.ctr {
                 let user = self.combatant(user_id);
@@ -726,10 +728,6 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn do_mime_cycle(&mut self, user_id: CombatantId, action: Action<'a>) {
-        let user = self.combatant(user_id);
-        let original_target = action.target.to_location(self);
-        let original_vec = user.location - original_target;
-        let original_facing = Facing::towards(user.location, original_target);
         for c_id in &COMBATANT_IDS {
             let user = self.combatant(user_id);
             let possible_mime = self.combatant(*c_id);
@@ -748,13 +746,22 @@ impl<'a> Simulation<'a> {
                 {
                     continue;
                 }
-                let rotations = original_facing.rotations_to(possible_mime.facing);
-                let vec_on_mime = possible_mime.location + original_vec;
-                let new_target_loc = vec_on_mime.rotate_around(possible_mime.location, rotations);
-                let mut new_action = action;
-                new_action.target = ActionTarget::Panel(new_target_loc);
-                self.log_event(Event::UsingAbility(*c_id, new_action));
-                perform_action(self, *c_id, new_action);
+                if let Some(original_target) = action.target.to_location(self) {
+                    let original_vec = user.location - original_target;
+                    let original_facing = Facing::towards(user.location, original_target);
+                    let rotations = original_facing.rotations_to(possible_mime.facing);
+                    let vec_on_mime = possible_mime.location + original_vec;
+                    let new_target_loc =
+                        vec_on_mime.rotate_around(possible_mime.location, rotations);
+                    let mut new_action = action;
+                    new_action.target = ActionTarget::Panel(new_target_loc);
+                    self.log_event(Event::UsingAbility(*c_id, new_action));
+                    perform_action(self, *c_id, new_action);
+                } else {
+                    // If we are using math, then execute the same action.
+                    self.log_event(Event::UsingAbility(*c_id, action));
+                    perform_action(self, *c_id, action);
+                }
             }
         }
     }

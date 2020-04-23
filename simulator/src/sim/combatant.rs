@@ -9,6 +9,7 @@ use crate::sim::actions::draw_out::DRAW_OUT_ABILITIES;
 use crate::sim::actions::elemental::ELEMENTAL_ABILITIES;
 use crate::sim::actions::item::ITEM_ABILITIES;
 use crate::sim::actions::jump::JUMP_ABILITIES;
+use crate::sim::actions::math_skill::MATH_SKILL_ABILITY;
 use crate::sim::actions::monster::{
     CHOCOBO_ABILITIES, DRAGON_ABILITIES, TIAMAT_ABILITIES, ULTIMA_DEMON_ABILITIES, WORK_ABILITIES,
 };
@@ -21,9 +22,9 @@ use crate::sim::actions::time_magic::TIME_MAGIC_ABILITIES;
 use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
 use crate::sim::{
-    Ability, Action, Condition, ConditionBlock, ConditionFlags, DiamondIterator, Distance, Element,
-    Facing, Gender, Location, RelativeFacing, Sign, SkillBlock, Team, ALL_CONDITIONS,
-    DONT_MOVE_WHILE_CHARGING, SILENCEABLE,
+    Ability, Action, CalcAlgorithm, CalcAttribute, Condition, ConditionBlock, ConditionFlags,
+    DiamondIterator, Distance, Element, Facing, Gender, Location, RelativeFacing, Sign, SkillBlock,
+    Team, ALL_CONDITIONS, DONT_MOVE_WHILE_CHARGING, SILENCEABLE,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -106,6 +107,8 @@ pub struct CombatantInfo<'a> {
     pub vertical_jump: i8,
     pub bonus_movement: u8,
     pub bonus_jump: u8,
+    pub known_calc_attributes: u8,
+    pub known_calc_algorithms: u8,
     pub all_skills: Vec<&'a str>,
 }
 
@@ -189,6 +192,25 @@ impl<'a> CombatantInfo<'a> {
             }
         }
 
+        let mut known_calc_attributes = 0;
+        let mut known_calc_algorithms = 0;
+        if src.action_skill == "Math Skill" || &src.class == "Calculator" {
+            for ability in &src.all_abilities {
+                match ability.as_str() {
+                    "CT" => known_calc_attributes |= CalcAttribute::CT.flag(),
+                    "Height" => known_calc_attributes |= CalcAttribute::Height.flag(),
+                    "Prime Number" => known_calc_algorithms |= CalcAlgorithm::Prime.flag(),
+                    "5" => known_calc_algorithms |= CalcAlgorithm::M5.flag(),
+                    "4" => known_calc_algorithms |= CalcAlgorithm::M4.flag(),
+                    "3" => known_calc_algorithms |= CalcAlgorithm::M3.flag(),
+                    _ => {}
+                }
+            }
+            if known_calc_attributes > 0 && known_calc_algorithms > 0 {
+                abilities.push(&MATH_SKILL_ABILITY);
+            }
+        }
+
         if horizontal_jump > 0 {
             abilities.extend(JUMP_ABILITIES);
         }
@@ -246,6 +268,8 @@ impl<'a> CombatantInfo<'a> {
             vertical_jump,
             bonus_movement,
             bonus_jump,
+            known_calc_algorithms,
+            known_calc_attributes,
             all_skills: skills,
         }
     }

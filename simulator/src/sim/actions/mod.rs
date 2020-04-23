@@ -1,4 +1,6 @@
-use crate::sim::{Combatant, CombatantId, Condition, Event, Facing, Location, Simulation, Source};
+use crate::sim::{
+    Combatant, CombatantId, Condition, Event, Facing, Location, Simulation, Source, COMBATANT_IDS,
+};
 
 pub mod attack;
 pub mod basic_skill;
@@ -10,6 +12,7 @@ pub mod draw_out;
 pub mod elemental;
 pub mod item;
 pub mod jump;
+pub mod math_skill;
 pub mod monster;
 pub mod punch_art;
 pub mod steal;
@@ -82,23 +85,61 @@ pub struct Ability<'a> {
 }
 
 #[derive(Clone, Copy)]
+#[repr(u8)]
+pub enum CalcAttribute {
+    CT = 0,
+    Height,
+}
+
+impl CalcAttribute {
+    pub fn flag(self) -> u8 {
+        1 << self as u8
+    }
+}
+
+#[derive(Clone, Copy)]
+#[repr(u8)]
+pub enum CalcAlgorithm {
+    Prime = 0,
+    M3,
+    M4,
+    M5,
+}
+
+impl CalcAlgorithm {
+    pub fn flag(self) -> u8 {
+        1 << self as u8
+    }
+}
+
+#[derive(Clone, Copy)]
 pub enum ActionTarget {
     Id(CombatantId),
     Panel(Location),
+    Math(CalcAttribute, CalcAlgorithm),
 }
 
 impl ActionTarget {
-    pub fn to_location(self, sim: &Simulation) -> Location {
+    pub fn is_math(self) -> bool {
         match self {
-            ActionTarget::Id(target_id) => sim.combatant(target_id).location,
-            ActionTarget::Panel(location) => location,
+            ActionTarget::Math(_, _) => true,
+            _ => false,
         }
     }
 
-    pub fn to_location_combatant_slice(self, combatants: &[Combatant]) -> Location {
+    pub fn to_location(self, sim: &Simulation) -> Option<Location> {
         match self {
-            ActionTarget::Id(target_id) => combatants[target_id.index()].location,
-            ActionTarget::Panel(location) => location,
+            ActionTarget::Id(target_id) => Some(sim.combatant(target_id).location),
+            ActionTarget::Panel(location) => Some(location),
+            ActionTarget::Math(_, _) => None,
+        }
+    }
+
+    pub fn to_location_combatant_slice(self, combatants: &[Combatant]) -> Option<Location> {
+        match self {
+            ActionTarget::Id(target_id) => Some(combatants[target_id.index()].location),
+            ActionTarget::Panel(location) => Some(location),
+            ActionTarget::Math(_, _) => None,
         }
     }
 
@@ -106,6 +147,7 @@ impl ActionTarget {
         match self {
             ActionTarget::Id(target_id) => Some(target_id),
             ActionTarget::Panel(location) => sim.combatant_on_panel(location),
+            ActionTarget::Math(_, _) => None,
         }
     }
 
@@ -113,6 +155,7 @@ impl ActionTarget {
         match self {
             ActionTarget::Id(target_id) => Some(target_id),
             ActionTarget::Panel(_location) => None,
+            ActionTarget::Math(_, _) => None,
         }
     }
 }
@@ -246,8 +289,9 @@ pub fn perform_action_slow<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, a
 
 pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action: Action<'a>) {
     let ability = action.ability;
+    let mut action_target = action.target;
     let user = sim.combatant_mut(user_id);
-    if ability.mp_cost > 0 && !user.no_mp() {
+    if !action_target.is_math() && ability.mp_cost > 0 && !user.no_mp() {
         let mp_cost = if user.halve_mp() {
             1.max(ability.mp_cost / 2)
         } else {
@@ -257,7 +301,6 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         user.set_mp_within_bounds(new_mp);
     }
 
-    let mut action_target = action.target;
     if action.ability.flags & CAN_BE_REFLECTED != 0 {
         // TODO: FFT AI has some awesome decision making around the AI planning it's actions
         //  based on reflect, if the reflective unit can move by the time the spell goes off,
@@ -278,6 +321,77 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         sim.cancel_condition(user_id, Condition::Jumping, Source::Ability);
     }
 
+    if let ActionTarget::Math(attr, algo) = action_target {
+        handle_math_ability(sim, user_id, ability, attr, algo);
+    } else {
+        handle_normal_ability(sim, user_id, action, ability, action_target);
+    }
+    sim.end_of_action_checks(user_id);
+}
+
+fn handle_math_ability(
+    sim: &mut Simulation,
+    user_id: CombatantId,
+    ability: &Ability,
+    attr: CalcAttribute,
+    algo: CalcAlgorithm,
+) {
+    for cid in &COMBATANT_IDS {
+        if !math_match(sim, *cid, attr, algo) {
+            continue;
+        }
+        let target = sim.combatant(*cid);
+        if ability.flags & NOT_ALIVE_OK == 0 && !target.alive() {
+            return;
+        }
+        if ability.flags & PETRIFY_OK == 0 && target.petrify() {
+            return;
+        }
+        ability.implementation.perform(sim, user_id, *cid);
+    }
+}
+
+const PRIME_NUMBERS: &[u8] = &[
+    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+    101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193,
+];
+
+fn math_match(
+    sim: &Simulation,
+    combatant_id: CombatantId,
+    attr: CalcAttribute,
+    algo: CalcAlgorithm,
+) -> bool {
+    let combatant = sim.combatant(combatant_id);
+    if combatant.crystal() {
+        return false;
+    }
+    let val = match attr {
+        CalcAttribute::CT => combatant.ct,
+        CalcAttribute::Height => {
+            let height = sim.combatant_height(combatant_id);
+            if height.floor() != height.ceil() {
+                return false;
+            } else {
+                height as u8
+            }
+        }
+    };
+    match algo {
+        CalcAlgorithm::Prime => PRIME_NUMBERS.binary_search(&val).is_ok(),
+        CalcAlgorithm::M5 => val % 5 == 0,
+        CalcAlgorithm::M4 => val % 4 == 0,
+        CalcAlgorithm::M3 => val % 3 == 0,
+    }
+}
+
+fn handle_normal_ability(
+    sim: &mut Simulation,
+    user_id: CombatantId,
+    action: Action,
+    ability: &Ability,
+    action_target: ActionTarget,
+) {
     match ability.aoe {
         AoE::None => {
             if let Some(target_id) = action.target.to_target_id(sim) {
@@ -294,13 +408,20 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             }
         }
         AoE::Diamond(size) => {
-            for target_panel in action.target.to_location(sim).diamond(size) {
+            for target_panel in action
+                .target
+                .to_location(sim)
+                .expect("should only be none if math")
+                .diamond(size)
+            {
                 perform_aoe_on_panel(sim, user_id, ability, target_panel)
             }
         }
         AoE::Line => {
             let user = sim.combatant(user_id);
-            let target_location = action_target.to_location(sim);
+            let target_location = action_target
+                .to_location(sim)
+                .expect("should only be none if math");
             let user_location = user.location;
             let facing = Facing::towards(user.location, target_location);
             for i in 1..=action.range {
@@ -310,7 +431,9 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
         }
         AoE::TriLine => {
             let user = sim.combatant(user_id);
-            let target_location = action_target.to_location(sim);
+            let target_location = action_target
+                .to_location(sim)
+                .expect("should only be none if math");
             let facing = Facing::towards(user.location, target_location);
             let user_location = user.location;
             let left_facing = facing.rotate(3);
@@ -327,7 +450,6 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             }
         }
     }
-    sim.end_of_action_checks(user_id);
 }
 
 fn perform_aoe_on_panel(
