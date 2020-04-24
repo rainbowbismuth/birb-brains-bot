@@ -266,6 +266,10 @@ pub fn run_all_matches(
             run_many_sims(num_runs, &combatants, &match_up.arena);
         time_outs += new_time_outs;
 
+        // if new_time_outs > (num_runs as u64 / 2) {
+        //     println!("time out heavy match: {}", replay_path.to_string_lossy());
+        // }
+
         let tournament_map = results
             .entry(match_up.tournament_id.to_string())
             .or_insert(HashMap::new());

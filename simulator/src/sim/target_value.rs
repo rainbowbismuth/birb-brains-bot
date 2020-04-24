@@ -1,16 +1,20 @@
 pub use crate::sim::Combatant;
 
-pub fn ai_target_value_sum(user: &Combatant, combatants: &[Combatant]) -> f32 {
+pub fn ai_target_value_sum(
+    user: &Combatant,
+    combatants: &[Combatant],
+    ignore_confusion: bool,
+) -> f32 {
     combatants
         .iter()
-        .map(|target| ai_calculate_target_value(user, target))
+        .map(|target| ai_calculate_target_value(user, target, ignore_confusion))
         .sum()
 }
 
-fn ai_calculate_target_value(user: &Combatant, target: &Combatant) -> f32 {
+fn ai_calculate_target_value(user: &Combatant, target: &Combatant, ignore_confusion: bool) -> f32 {
     let mut priority = target.hp_percent();
     priority += -0.51 * target.broken_equip_count() as f32;
-    priority += ai_calculate_status_target_value_mod(target);
+    priority += ai_calculate_status_target_value_mod(target, ignore_confusion);
     priority += ai_calculate_caster_hate_mod(target);
     // TODO: Golem fear
 
@@ -42,7 +46,7 @@ fn ai_calculate_caster_hate_mod(target: &Combatant) -> f32 {
     }
 }
 
-fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
+fn ai_calculate_status_target_value_mod(target: &Combatant, ignore_confusion: bool) -> f32 {
     let mut total = 0.0;
 
     // # 0x0058: Current Statuses 1
@@ -87,7 +91,7 @@ fn ai_calculate_status_target_value_mod(target: &Combatant) -> f32 {
     }
 
     // # 		0x10 - Confusion				-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)
-    if target.confusion() {
+    if target.confusion() && !ignore_confusion {
         if target.slow()
             || target.stop()
             || target.sleep()

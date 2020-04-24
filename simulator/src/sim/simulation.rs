@@ -140,6 +140,13 @@ impl<'a> Simulation<'a> {
             .any(|combatant| combatant.healthy() && !combatant.blood_suck())
     }
 
+    pub fn enemy_team_only_confused(&self, user: &Combatant) -> bool {
+        self.combatants
+            .iter()
+            .filter(|target| user.foe(target) && target.healthy())
+            .all(|target| target.confusion())
+    }
+
     pub fn tick(&mut self) {
         self.phase_status_check();
         self.phase_slow_action_charging();
@@ -578,11 +585,12 @@ impl<'a> Simulation<'a> {
             &self.combatants
         };
 
+        let ignore_confusion = self.enemy_team_only_confused(user);
         let basis = {
             let mut actions = self.actions.borrow_mut();
             actions.clear();
             ai_consider_actions(&mut actions, self, user, targets);
-            ai_target_value_sum(user, &self.combatants)
+            ai_target_value_sum(user, &self.combatants, ignore_confusion)
         };
 
         let best_action = {
@@ -615,6 +623,7 @@ impl<'a> Simulation<'a> {
                     let new_value = ai_target_value_sum(
                         simulated_world.combatant(user_id),
                         &simulated_world.combatants,
+                        ignore_confusion,
                     );
                     if new_value <= basis {
                         return None;
