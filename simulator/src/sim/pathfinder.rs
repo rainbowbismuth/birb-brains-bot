@@ -264,6 +264,7 @@ pub mod tests {
             upper: vec![],
             width: 10,
             height: 10,
+            starting_locations: vec![],
         }
     }
 
@@ -319,6 +320,7 @@ pub mod tests {
             upper: vec![],
             width: 5,
             height: 1,
+            starting_locations: vec![],
         }
     }
 
@@ -356,6 +358,7 @@ pub mod tests {
             upper: vec![],
             width: 5,
             height: 1,
+            starting_locations: vec![],
         }
     }
 
