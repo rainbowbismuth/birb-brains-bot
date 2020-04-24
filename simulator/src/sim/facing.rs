@@ -1,6 +1,7 @@
 use crate::sim::Location;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
 pub enum Facing {
     North = 0,

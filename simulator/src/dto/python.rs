@@ -153,6 +153,7 @@ pub struct Arena {
     pub width: u8,
     pub height: u8,
     pub surface_types: Vec<String>,
+    pub starting_locations: Vec<StartingLocation>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -168,4 +169,13 @@ pub struct Tile {
     pub surface_type: Option<String>,
     pub surface_type_numeric: u8,
     pub slope_height: u8,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct StartingLocation {
+    pub x: u8,
+    pub y: u8,
+    pub facing: String,
+    pub team: String,
+    pub unit: u8,
 }

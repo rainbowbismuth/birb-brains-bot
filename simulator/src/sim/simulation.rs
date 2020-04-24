@@ -69,71 +69,16 @@ impl<'a> Simulation<'a> {
     }
 
     fn set_starting_locations(&mut self) {
-        let middle = Location::new(self.arena.width as i16 / 2, self.arena.height as i16 / 2);
-        let mut movement_info = MovementInfo {
-            movement: 4,
-            vertical_jump: 3,
-            horizontal_jump: 3 / 2,
-            fly_teleport: false,
-            water_ok: false,
-        };
-        let mut pathfinder = self.pathfinder.borrow_mut();
-
-        let largest = middle
-            .diamond(3)
-            .flat_map(|location| {
-                if !pathfinder.inside_map(location) {
-                    return None;
-                }
-                pathfinder.calculate_reachable(&movement_info, location);
-                Some((pathfinder.reachable_set().len(), location))
-            })
-            .max_by_key(|p| p.0)
-            .map(|p| p.1)
-            .unwrap();
-
-        movement_info.movement = 8;
-        pathfinder.calculate_reachable(&movement_info, largest);
-
-        let largest_north;
-        let largest_south;
-        if self.arena.height > self.arena.width {
-            largest_north = largest + Facing::North.offset() * 5;
-            largest_south = largest + Facing::South.offset() * 5;
-        } else {
-            largest_north = largest + Facing::East.offset() * 5;
-            largest_south = largest + Facing::West.offset() * 5;
-        }
-
-        let furthest_south = pathfinder
-            .reachable_set()
-            .iter()
-            .map(|location| (location.distance_squared(largest_north), location))
-            .max_by_key(|p| p.0)
-            .map(|p| *p.1)
-            .unwrap();
-
-        let furthest_north = pathfinder
-            .reachable_set()
-            .iter()
-            .map(|location| (location.distance_squared(largest_south), location))
-            .max_by_key(|p| p.0)
-            .map(|p| *p.1)
-            .unwrap();
-
-        movement_info.movement = 4;
-        pathfinder.calculate_reachable(&movement_info, furthest_south);
-        for i in 0..4 {
-            let combatant = &mut self.combatants[i];
-            combatant.location = pathfinder.reachable_set()[i];
-            combatant.facing = Facing::towards(combatant.location, middle);
-        }
-
-        pathfinder.calculate_reachable(&movement_info, furthest_north);
-        for i in 0..4 {
-            let combatant = &mut self.combatants[i + 4];
-            combatant.location = pathfinder.reachable_set()[i];
-            combatant.facing = Facing::towards(combatant.location, middle);
+        for starting_location in &self.arena.starting_locations {
+            let idx = if starting_location.left_team {
+                starting_location.unit
+            } else {
+                starting_location.unit + 4
+            };
+            let mut combatant = self.combatant_mut(CombatantId::new(idx));
+            combatant.location.x = starting_location.x as i16;
+            combatant.location.y = starting_location.y as i16;
+            combatant.facing = starting_location.facing;
         }
     }
 

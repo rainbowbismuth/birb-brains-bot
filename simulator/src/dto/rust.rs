@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::dto::python;
-use crate::sim::{Condition, ConditionFlags, Element, ElementFlags, WeaponType};
+use crate::sim::{Condition, ConditionFlags, Element, ElementFlags, Facing, WeaponType};
 use crate::sim::{Gender, Sign};
 
 #[derive(Serialize, Deserialize)]
@@ -435,11 +435,39 @@ impl BaseStats {
 }
 
 #[derive(Serialize, Deserialize, Clone)]
+pub struct StartingLocation {
+    pub x: u8,
+    pub y: u8,
+    pub facing: Facing,
+    pub left_team: bool,
+    pub unit: u8,
+}
+
+impl StartingLocation {
+    pub fn from_python(arena: python::StartingLocation) -> StartingLocation {
+        StartingLocation {
+            x: arena.x,
+            y: arena.y,
+            facing: match arena.facing.as_str() {
+                "North" => Facing::North,
+                "East" => Facing::East,
+                "South" => Facing::South,
+                "West" => Facing::West,
+                _ => panic!("unknown facing"),
+            },
+            left_team: arena.team == "Player 1",
+            unit: arena.unit,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Arena {
     pub lower: Vec<Tile>,
     pub upper: Vec<Tile>,
     pub width: u8,
     pub height: u8,
+    pub starting_locations: Vec<StartingLocation>,
 }
 
 impl Arena {
@@ -449,6 +477,11 @@ impl Arena {
             upper: vec![],
             width: arena.width,
             height: arena.height,
+            starting_locations: arena
+                .starting_locations
+                .into_iter()
+                .map(StartingLocation::from_python)
+                .collect(),
         };
         for y in 0..arena.height as usize {
             for x in 0..arena.width as usize {
