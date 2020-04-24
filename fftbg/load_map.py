@@ -97,6 +97,54 @@ def layer_to_dict(tiles: list, surface_types: set) -> list:
             row.append(tile_to_dict(tile, x, y))
     return out
 
+ENT_SLOT_BYTES = 40
+ENT_RECORD_BYTES = ENT_SLOT_BYTES * 16
+
+UNIT_OFFSETS = [
+    (0, 'Player 1', 0),
+    (1, 'Player 2', 0),
+    (2, 'Player 2', 1),
+    (3, 'Player 1', 1),
+    (5, 'Player 1', 2),
+    (6, 'Player 2', 2),
+    (7, 'Player 2', 3),
+    (8, 'Player 1', 3)
+]
+
+UNIT_DIRECTIONS = {
+    0: 'South',
+    1: 'East',
+    2: 'North',
+    3: 'West',
+}
+
+
+def load_starting_locations(map_num: int) -> list:
+    ent_record = 0x100 + map_num
+    if ent_record >= 0x180:
+        ent_offset = ent_record - 0x180
+        ent_data = Path('data/ENTD/ENTD4.ENT').read_bytes()
+    else:
+        ent_offset = ent_record - 0x100
+        ent_data = Path('data/ENTD/ENTD3.ENT').read_bytes()
+    ent_start = ent_offset * ENT_RECORD_BYTES
+    ent_end = ent_start + ENT_RECORD_BYTES
+    ent_record = ent_data[ent_start: ent_end]
+    units = []
+    for (unit_idx, team, unit_num) in UNIT_OFFSETS:
+        unit_offset = unit_idx * ENT_SLOT_BYTES
+        pos_x = ent_record[unit_offset + 0x19]
+        pos_y = ent_record[unit_offset + 0x1A]
+        direction = ent_record[unit_offset + 0x1B] & 0b11
+        units.append({
+            'x': pos_x,
+            'y': pos_y,
+            'facing': UNIT_DIRECTIONS[direction],
+            'team': team,
+            'unit': unit_num
+        })
+    return units
+
 
 def terrain_to_dict(terrain_data: Terrain, gns: str) -> dict:
     surface_types = set()
@@ -104,8 +152,10 @@ def terrain_to_dict(terrain_data: Terrain, gns: str) -> dict:
     upper_tiles = layer_to_dict(terrain_data.tiles[1], surface_types)
     width = len(lower_tiles[0])
     height = len(lower_tiles)
-    return {'gns': gns, 'lower': lower_tiles, 'upper': upper_tiles, 'width': width, 'height': height,
-            'surface_types': sorted(surface_types)}
+    map_num = int(gns[3:6])
+    starting_locations = load_starting_locations(map_num)
+    return {'gns': gns, 'num': map_num, 'lower': lower_tiles, 'upper': upper_tiles, 'width': width, 'height': height,
+            'surface_types': sorted(surface_types), 'starting_locations': starting_locations}
 
 
 def write_all_maps():
