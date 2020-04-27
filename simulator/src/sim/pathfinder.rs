@@ -1,4 +1,36 @@
 use crate::sim::{tile_height_from_direction, Arena, Combatant, Location, Panel, OFFSETS};
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
+use std::usize;
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct State {
+    cost: u8,
+    panel: Panel,
+}
+
+// The priority queue depends on `Ord`.
+// Explicitly implement the trait so the queue becomes a min-heap
+// instead of a max-heap.
+impl Ord for State {
+    fn cmp(&self, other: &State) -> Ordering {
+        // Notice that the we flip the ordering on costs.
+        // In case of a tie we compare positions - this step is necessary
+        // to make implementations of `PartialEq` and `Ord` consistent.
+        other
+            .cost
+            .cmp(&self.cost)
+            .then_with(|| self.panel.x().cmp(&other.panel.x()))
+            .then_with(|| self.panel.y().cmp(&other.panel.y()))
+    }
+}
+
+// `PartialOrd` needs to be implemented as well.
+impl PartialOrd for State {
+    fn partial_cmp(&self, other: &State) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 const MAX_DISTANCE: u8 = 250;
 const IN_OPEN_SET_FLAG: u8 = 1;
@@ -25,7 +57,7 @@ pub struct Pathfinder<'a> {
     arena: &'a Arena,
     lower: Vec<TileMarking>,
     upper: Vec<TileMarking>,
-    open_set: Vec<Panel>,
+    open_set: BinaryHeap<State>,
     reachable: Vec<Panel>,
 }
 
@@ -65,7 +97,7 @@ impl<'a> Pathfinder<'a> {
             arena,
             lower: Vec::with_capacity(area),
             upper: Vec::with_capacity(area),
-            open_set: Vec::with_capacity(255),
+            open_set: BinaryHeap::with_capacity(255),
             reachable: Vec::with_capacity(255),
         };
         pathfinder.lower.resize(area, TileMarking::default());
@@ -178,13 +210,13 @@ impl<'a> Pathfinder<'a> {
         assert!(self.inside_map(goal));
 
         let mut copied_info = info.clone();
-        copied_info.movement = 100;
+        copied_info.movement = MAX_DISTANCE - 1;
         self.calculate_reachable_no_reset(&copied_info, goal);
         // TODO: Implement an actual pathfinding algorithm
         let copied_lower = self.lower.clone();
         let copied_upper = self.upper.clone();
         self.reset();
-        self.calculate_reachable_no_reset(&info, start);
+        self.calculate_reachable_with_goal_no_reset(&info, start, Some(goal));
         self.reachable
             .iter()
             .map(|panel| {
@@ -202,13 +234,33 @@ impl<'a> Pathfinder<'a> {
     }
 
     pub fn calculate_reachable_no_reset(&mut self, info: &MovementInfo, start: Panel) {
+        self.calculate_reachable_with_goal_no_reset(info, start, None);
+    }
+
+    pub fn calculate_reachable_with_goal_no_reset(
+        &mut self,
+        info: &MovementInfo,
+        start: Panel,
+        goal: Option<Panel>,
+    ) {
         assert!(self.inside_map(start));
-        self.expand_open_set(start);
+        self.expand_open_set(start, 0);
         self.expand_reachable(start);
         self.set_distance(start, 0);
 
-        while let Some(start) = self.open_set.pop() {
+        while let Some(State { panel: start, cost }) = self.open_set.pop() {
             self.remove_from_open_set(start);
+
+            if let Some(goal_panel) = goal {
+                if goal_panel == start {
+                    return;
+                }
+            }
+
+            if cost > self.distance(start) {
+                continue;
+            }
+
             for direction in &OFFSETS {
                 let end_lower = start.plus(*direction).lower();
                 if !self.inside_map(end_lower) {
@@ -244,7 +296,7 @@ impl<'a> Pathfinder<'a> {
             if new_distance >= info.movement {
                 return false;
             }
-            self.expand_open_set(end);
+            self.expand_open_set(end, new_distance);
             if self.can_end_on(info, end) {
                 self.expand_reachable(end);
             }
@@ -296,14 +348,17 @@ impl<'a> Pathfinder<'a> {
             if new_distance >= info.movement {
                 continue;
             }
-            self.expand_open_set(end);
+            self.expand_open_set(end, new_distance);
             self.expand_reachable(end);
         }
     }
 
-    fn expand_open_set(&mut self, panel: Panel) {
+    fn expand_open_set(&mut self, panel: Panel, distance: u8) {
         if !self.in_open_set(panel) {
-            self.open_set.push(panel);
+            self.open_set.push(State {
+                panel,
+                cost: distance,
+            });
             self.tile_marking_mut(panel).flags |= IN_OPEN_SET_FLAG;
         }
     }
