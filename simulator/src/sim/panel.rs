@@ -49,6 +49,10 @@ impl Panel {
         self.y_var & 0x7F
     }
 
+    pub fn as_u16(self) -> u16 {
+        self.x_var as u16 | ((self.y_var as u16) << 8)
+    }
+
     pub fn layer(self) -> bool {
         self.y_var & 0x80 != 0
     }

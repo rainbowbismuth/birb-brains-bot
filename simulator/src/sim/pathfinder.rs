@@ -9,23 +9,15 @@ struct State {
     panel: Panel,
 }
 
-// The priority queue depends on `Ord`.
-// Explicitly implement the trait so the queue becomes a min-heap
-// instead of a max-heap.
 impl Ord for State {
     fn cmp(&self, other: &State) -> Ordering {
-        // Notice that the we flip the ordering on costs.
-        // In case of a tie we compare positions - this step is necessary
-        // to make implementations of `PartialEq` and `Ord` consistent.
         other
             .cost
             .cmp(&self.cost)
-            .then_with(|| self.panel.x().cmp(&other.panel.x()))
-            .then_with(|| self.panel.y().cmp(&other.panel.y()))
+            .then_with(|| self.panel.as_u16().cmp(&other.panel.as_u16()))
     }
 }
 
-// `PartialOrd` needs to be implemented as well.
 impl PartialOrd for State {
     fn partial_cmp(&self, other: &State) -> Option<Ordering> {
         Some(self.cmp(other))
@@ -59,6 +51,8 @@ pub struct Pathfinder<'a> {
     upper: Vec<TileMarking>,
     open_set: BinaryHeap<State>,
     reachable: Vec<Panel>,
+    lower_temp: Vec<TileMarking>,
+    upper_temp: Vec<TileMarking>,
 }
 
 #[derive(Clone)]
@@ -99,9 +93,13 @@ impl<'a> Pathfinder<'a> {
             upper: Vec::with_capacity(area),
             open_set: BinaryHeap::with_capacity(255),
             reachable: Vec::with_capacity(255),
+            lower_temp: Vec::with_capacity(area),
+            upper_temp: Vec::with_capacity(area),
         };
         pathfinder.lower.resize(area, TileMarking::default());
         pathfinder.upper.resize(area, TileMarking::default());
+        pathfinder.lower_temp.resize(area, TileMarking::default());
+        pathfinder.upper_temp.resize(area, TileMarking::default());
         pathfinder
     }
 
@@ -213,8 +211,10 @@ impl<'a> Pathfinder<'a> {
         copied_info.movement = MAX_DISTANCE - 1;
         self.calculate_reachable_with_goal_no_reset(&copied_info, goal, Some(start));
         // TODO: Implement an actual pathfinding algorithm
-        let copied_lower = self.lower.clone();
-        let copied_upper = self.upper.clone();
+
+        self.lower_temp.copy_from_slice(&self.lower);
+        self.upper_temp.copy_from_slice(&self.upper);
+
         self.reset();
         self.calculate_reachable_with_goal_no_reset(&info, start, Some(goal));
         self.reachable
@@ -222,9 +222,9 @@ impl<'a> Pathfinder<'a> {
             .map(|panel| {
                 let idx = self.arena.panel_to_index(*panel).unwrap();
                 let dist = if panel.layer() {
-                    copied_upper[idx].distance
+                    self.upper_temp[idx].distance
                 } else {
-                    copied_lower[idx].distance
+                    self.lower_temp[idx].distance
                 };
                 (dist, panel)
             })
