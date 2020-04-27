@@ -10,12 +10,12 @@ Monk Male's base stats: 210 HP, 53 MP, 3 Move, 4 Jump, 8 Speed, 12 PA, 7 MA, 22%
 Monk Female's base stats: 196 HP, 57 MP, 3 Move, 4 Jump, 8 Speed, 10 PA, 9 MA, 22% C-EV. Innates: Punch Art, Martial Arts. Equips: Hats, Clothing.
 Priest Male's base stats: 165 HP, 94 MP, 3 Move, 3 Jump, 9 Speed, 9 PA, 9 MA, 5% C-EV. Innates: White Magic. Equips: Staves, Flails, Hats, Clothing, Robes.
 Priest Female's base stats: 155 HP, 101 MP, 3 Move, 3 Jump, 9 Speed, 7 PA, 11 MA, 5% C-EV. Innates: White Magic. Equips: Staves, Flails, Hats, Clothing, Robes.
-Wizard Male's base stats: 138 HP, 109 MP, 3 Move, 3 Jump, 8 Speed, 6 PA, 11 MA, 7% C-EV. Innates: Black Magic. Equips: Knives, Rods, Hats, Clothing, Robes.
-Wizard Female's base stats: 130 HP, 117 MP, 3 Move, 3 Jump, 8 Speed, 4 PA, 14 MA, 7% C-EV. Innates: Black Magic. Equips: Knives, Rods, Hats, Clothing, Robes.
+Wizard Male's base stats: 137 HP, 109 MP, 3 Move, 3 Jump, 8 Speed, 6 PA, 11 MA, 7% C-EV. Innates: Black Magic. Equips: Knives, Rods, Hats, Clothing, Robes.
+Wizard Female's base stats: 128 HP, 117 MP, 3 Move, 3 Jump, 8 Speed, 4 PA, 14 MA, 7% C-EV. Innates: Black Magic. Equips: Knives, Rods, Hats, Clothing, Robes.
 TimeMage Male's base stats: 141 HP, 104 MP, 3 Move, 3 Jump, 9 Speed, 8 PA, 10 MA, 10% C-EV. Innates: Time Magic. Equips: Staves, Books, Hats, Clothing, Robes.
 TimeMage Female's base stats: 132 HP, 111 MP, 3 Move, 3 Jump, 9 Speed, 6 PA, 13 MA, 10% C-EV. Innates: Time Magic. Equips: Staves, Books, Hats, Clothing, Robes.
-Summoner Male's base stats: 126 HP, 116 MP, 3 Move, 3 Jump, 8 Speed, 4 PA, 9 MA, 3% C-EV. Innates: Summon Magic. Equips: Rods, Staves, Hats, Clothing, Robes.
-Summoner Female's base stats: 118 HP, 124 MP, 3 Move, 3 Jump, 8 Speed, 3 PA, 12 MA, 3% C-EV. Innates: Summon Magic. Equips: Rods, Staves, Hats, Clothing, Robes.
+Summoner Male's base stats: 125 HP, 116 MP, 3 Move, 3 Jump, 8 Speed, 4 PA, 9 MA, 3% C-EV. Innates: Summon Magic. Equips: Rods, Staves, Hats, Clothing, Robes.
+Summoner Female's base stats: 117 HP, 124 MP, 3 Move, 3 Jump, 8 Speed, 3 PA, 12 MA, 3% C-EV. Innates: Summon Magic. Equips: Rods, Staves, Hats, Clothing, Robes.
 Thief Male's base stats: 176 HP, 36 MP, 4 Move, 3 Jump, 10 Speed, 10 PA, 5 MA, 30% C-EV. Innates: Steal. Equips: Knives, Ninja Blades, Swords, Hats, Clothing.
 Thief Female's base stats: 165 HP, 39 MP, 4 Move, 3 Jump, 10 Speed, 8 PA, 7 MA, 30% C-EV. Innates: Steal. Equips: Knives, Ninja Blades, Swords, Hats, Clothing.
 Mediator Male's base stats: 159 HP, 46 MP, 3 Move, 3 Jump, 9 Speed, 8 PA, 8 MA, 5% C-EV. Innates: Talk Skill, Monster Talk. Equips: Knives, Guns, Books, Hats, Clothing, Robes.
@@ -26,14 +26,14 @@ Geomancer Male's base stats: 187 HP, 70 MP, 4 Move, 3 Jump, 8 Speed, 12 PA, 8 MA
 Geomancer Female's base stats: 175 HP, 74 MP, 4 Move, 3 Jump, 8 Speed, 9 PA, 10 MA, 10% C-EV. Innates: Elemental. Equips: Swords, Katanas, Axes, Shields, Hats, Clothing, Robes.
 Lancer Male's base stats: 194 HP, 32 MP, 3 Move, 4 Jump, 8 Speed, 13 PA, 4 MA, 15% C-EV. Innates: Jump. Equips: Spears, Poles, Shields, Helmets, Armor, Robes.
 Lancer Female's base stats: 181 HP, 34 MP, 3 Move, 4 Jump, 8 Speed, 10 PA, 5 MA, 15% C-EV. Innates: Jump. Equips: Spears, Poles, Shields, Helmets, Armor, Robes.
-Samurai Male's base stats: 144 HP, 56 MP, 3 Move, 3 Jump, 8 Speed, 14 PA, 7 MA, 20% C-EV. Innates: Draw Out. Equips: Katanas, Spears, Helmets, Armor, Robes.
-Samurai Female's base stats: 135 HP, 60 MP, 3 Move, 3 Jump, 8 Speed, 11 PA, 9 MA, 20% C-EV. Innates: Draw Out. Equips: Katanas, Spears, Helmets, Armor, Robes.
-Ninja Male's base stats: 121 HP, 33 MP, 4 Move, 4 Jump, 10 Speed, 11 PA, 5 MA, 25% C-EV. Innates: Throw, Dual Wield. Equips: Knives, Ninja Swords, Flails, Hats, Clothing.
-Ninja Female's base stats: 113 HP, 36 MP, 4 Move, 4 Jump, 10 Speed, 9 PA, 6 MA, 25% C-EV. Innates: Throw, Dual Wield. Equips: Knives, Ninja Swords, Flails, Hats, Clothing.
-Calculator Male's base stats: 116 HP, 63 MP, 3 Move, 3 Jump, 7 Speed, 7 PA, 6 MA, 3% C-EV. Innates: Math Skill. Equips: Rods, Books, Poles, Hats, Clothing, Robes, if Blue Mage [Helmets, Armor, uncommonly Shields].
-Calculator Female's base stats: 108 HP, 67 MP, 3 Move, 3 Jump, 7 Speed, 5 PA, 8 MA, 3% C-EV. Innates: Math Skill. Equips: Rods, Books, Poles, Hats, Clothing, Robes, if Blue Mage [Helmets, Armor, uncommonly Shields].
-Bard Male's base stats: 132 HP, 51 MP, 3 Move, 3 Jump, 9 Speed, 8 PA, 9 MA, 10% C-EV. Innates: Sing. Equips: Bows, Harps, Hats, Clothing, Armor.
-Dancer Female's base stats: 133 HP, 50 MP, 3 Move, 3 Jump, 9 Speed, 8 PA, 9 MA, 10% C-EV. Innates: Dance. Equips: Bags, Fabrics, Hats, Clothing, Robes, rarely Knives.
+Samurai Male's base stats: 144 HP, 57 MP, 3 Move, 3 Jump, 8 Speed, 14 PA, 7 MA, 20% C-EV. Innates: Draw Out. Equips: Katanas, Spears, Helmets, Armor, Robes.
+Samurai Female's base stats: 135 HP, 61 MP, 3 Move, 3 Jump, 8 Speed, 11 PA, 9 MA, 20% C-EV. Innates: Draw Out. Equips: Katanas, Spears, Helmets, Armor, Robes.
+Ninja Male's base stats: 119 HP, 33 MP, 4 Move, 4 Jump, 10 Speed, 11 PA, 5 MA, 25% C-EV. Innates: Throw, Dual Wield. Equips: Knives, Ninja Swords, Flails, Hats, Clothing.
+Ninja Female's base stats: 112 HP, 36 MP, 4 Move, 4 Jump, 10 Speed, 9 PA, 6 MA, 25% C-EV. Innates: Throw, Dual Wield. Equips: Knives, Ninja Swords, Flails, Hats, Clothing.
+Calculator Male's base stats: 132 HP, 63 MP, 3 Move, 3 Jump, 7 Speed, 7 PA, 6 MA, 3% C-EV. Innates: Math Skill. Equips: Rods, Books, Poles, Hats, Clothing, Robes, if Blue Mage [Helmets, Armor, uncommonly Shields].
+Calculator Female's base stats: 123 HP, 67 MP, 3 Move, 3 Jump, 7 Speed, 5 PA, 8 MA, 3% C-EV. Innates: Math Skill. Equips: Rods, Books, Poles, Hats, Clothing, Robes, if Blue Mage [Helmets, Armor, uncommonly Shields].
+Bard Male's base stats: 146 HP, 55 MP, 3 Move, 3 Jump, 9 Speed, 8 PA, 9 MA, 10% C-EV. Innates: Sing. Equips: Bows, Harps, Hats, Clothing, Armor.
+Dancer Female's base stats: 151 HP, 52 MP, 3 Move, 3 Jump, 9 Speed, 8 PA, 9 MA, 10% C-EV. Innates: Dance. Equips: Bags, Fabrics, Hats, Clothing, Robes, rarely Knives.
 Mime Male's base stats: 205 HP, 28 MP, 3 Move, 4 Jump, 10 Speed, 13 PA, 11 MA, 7% C-EV. Innates: Mimic, Concentrate, Beastmaster, Throw Item, No MP. Equips: Hats, Clothing, uncommonly [Shields, Helmets, Armor, Robes].
 Mime Female's base stats: 192 HP, 30 MP, 3 Move, 4 Jump, 10 Speed, 11 PA, 13 MA, 7% C-EV. Innates: Mimic, Concentrate, Beastmaster, Throw Item, No MP. Equips: Hats, Clothing, uncommonly [Shields, Helmets, Armor, Robes].
 Chocobo's base stats: 277 HP, 21 MP, 6 Move, 5 Jump, 9 Speed, 14 PA, 37 MA, 20% C-EV. Innates: Counter. Elements: Half-Lightning, Weak-Wind.
