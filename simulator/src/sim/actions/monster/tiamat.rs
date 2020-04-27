@@ -88,7 +88,7 @@ impl AbilityImpl for TripleElementalImpl {
         actions.push(Action::new(ability, self.range, self.ctr, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
-        let target_location = sim.combatant(target_id).location;
+        let target_location = sim.combatant(target_id).panel;
 
         for _i in 1..=3 {
             let panel_roll = sim.roll_inclusive(1, 5) as usize;

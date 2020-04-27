@@ -1,9 +1,9 @@
 use colored::Colorize;
 
-use crate::dto::rust::{Arena, Equipment};
+use crate::dto::rust::Equipment;
 use crate::sim::{
-    combatant_height, tile_height, Action, ActionTarget, CalcAlgorithm, CalcAttribute, Combatant,
-    CombatantId, Condition, Facing, Location, Phase, RelativeFacing, Team, MAX_COMBATANTS,
+    combatant_height, tile_height, Action, ActionTarget, Arena, CalcAlgorithm, CalcAttribute,
+    Combatant, CombatantId, Condition, Facing, Panel, Phase, RelativeFacing, Team, MAX_COMBATANTS,
 };
 
 #[derive(Clone)]
@@ -26,7 +26,7 @@ pub enum Event<'a> {
     Died(CombatantId, Source<'a>),
     BecameCrystal(CombatantId),
     Evaded(CombatantId, EvasionType, Source<'a>),
-    Moved(CombatantId, Location, Location),
+    Moved(CombatantId, Panel, Panel),
     UsingAbility(CombatantId, Action<'a>),
     AbilityMissed(CombatantId, CombatantId),
     StartedCharging(CombatantId, Action<'a>),
@@ -36,9 +36,9 @@ pub enum Event<'a> {
     PhysicalAttackBuff(CombatantId, i8, Source<'a>),
     MagicalAttackBuff(CombatantId, i8, Source<'a>),
     SpeedBuff(CombatantId, i8, Source<'a>),
-    Knockback(CombatantId, Location),
+    Knockback(CombatantId, Panel),
     CriticalQuick(CombatantId),
-    SpellReflected(CombatantId, Location),
+    SpellReflected(CombatantId, Panel),
     BraveBuff(CombatantId, i8, Source<'a>),
 }
 
@@ -87,34 +87,34 @@ pub fn describe_phase(phase: &Phase, combatants: &[Combatant]) -> String {
     }
 }
 
-pub fn describe_location(panel: Location, arena: &Arena) -> String {
-    if panel.x < 0
-        || panel.y < 0
-        || (panel.x >= arena.width as i16)
-        || (panel.y >= arena.height as i16)
+pub fn describe_location(panel: Panel, arena: &Arena) -> String {
+    let location = panel.location();
+    if location.x < 0
+        || location.y < 0
+        || (location.x >= arena.width as i16)
+        || (location.y >= arena.height as i16)
     {
-        return format!("({},{})", panel.x, panel.y);
+        return format!("({},{})", location.x, location.y);
     }
-    let panel_idx = arena.to_index(panel.x as usize, panel.y as usize);
-    let tile = arena.lower[panel_idx];
-    format!("({},{},{}h)", panel.x, panel.y, tile_height(&tile))
+    let tile = arena.tile(panel);
+    format!("({},{},{}h)", location.x, location.y, tile_height(&tile))
 }
 
 pub fn describe_location_combatant(combatant: &Combatant, arena: &Arena) -> String {
-    let panel = combatant.location;
-    if panel.x < 0
-        || panel.y < 0
-        || (panel.x >= arena.width as i16)
-        || (panel.y >= arena.height as i16)
+    let panel = combatant.panel;
+    let location = panel.location();
+    if location.x < 0
+        || location.y < 0
+        || (location.x >= arena.width as i16)
+        || (location.y >= arena.height as i16)
     {
-        return format!("({},{})", panel.x, panel.y);
+        return format!("({},{})", location.x, location.y);
     }
-    let panel_idx = arena.to_index(panel.x as usize, panel.y as usize);
-    let tile = arena.lower[panel_idx];
+    let tile = arena.tile(panel);
     format!(
         "({},{},{}h)",
-        panel.x,
-        panel.y,
+        panel.x(),
+        panel.y(),
         combatant_height(&tile, combatant)
     )
 }

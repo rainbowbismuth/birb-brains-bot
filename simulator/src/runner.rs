@@ -1,9 +1,9 @@
 use std::io;
 
 use crate::data;
-use crate::dto::rust::{Arena, MatchUp, Patch};
+use crate::dto::rust::{MatchUp, Patch};
 use crate::sim::{
-    describe_entry, unit_card, Combatant, CombatantId, CombatantInfo, Gender, Pathfinder,
+    describe_entry, unit_card, Arena, Combatant, CombatantId, CombatantInfo, Gender, Pathfinder,
     Simulation, Team,
 };
 use indicatif::{ProgressBar, ProgressStyle};
@@ -126,10 +126,11 @@ pub fn run_specific_match(match_id: u64, num_runs: i32) -> io::Result<()> {
         .unwrap();
     let combatant_infos = match_to_combatant_infos(&patch, &match_up);
     let combatants = match_to_combatants(&combatant_infos);
-    let pathfinder = RefCell::new(Pathfinder::new(&match_up.arena));
-    let (left_wins_percent, new_time_outs) = run_many_sims(num_runs, &combatants, &match_up.arena);
+    let arena = Arena::from_dto(match_up.arena.clone());
+    let pathfinder = RefCell::new(Pathfinder::new(&arena));
+    let (left_wins_percent, new_time_outs) = run_many_sims(num_runs, &combatants, &arena);
     let rng = SmallRng::from_entropy();
-    let mut sim = Simulation::new(combatants.clone(), &match_up.arena, &pathfinder, rng, true);
+    let mut sim = Simulation::new(combatants.clone(), &arena, &pathfinder, rng, true);
     sim.run();
 
     for combatant in &combatants {
@@ -137,7 +138,7 @@ pub fn run_specific_match(match_id: u64, num_runs: i32) -> io::Result<()> {
     }
     println!("Playing on {}", &match_up.arena_name);
     for entry in sim.log.entries() {
-        println!("{}", describe_entry(&entry, &match_up.arena));
+        println!("{}", describe_entry(&entry, &arena));
     }
     let clamped = clamp(left_wins_percent, 1e-15, 1.0 - 1e-15);
     let current_log_loss = if match_up.left_wins.unwrap() {
@@ -262,8 +263,8 @@ pub fn run_all_matches(
 
         let combatant_infos = match_to_combatant_infos(&patch, &match_up);
         let combatants = match_to_combatants(&combatant_infos);
-        let (left_wins_percent, new_time_outs) =
-            run_many_sims(num_runs, &combatants, &match_up.arena);
+        let arena = Arena::from_dto(match_up.arena.clone());
+        let (left_wins_percent, new_time_outs) = run_many_sims(num_runs, &combatants, &arena);
         time_outs += new_time_outs;
 
         // if new_time_outs > (num_runs as u64 / 2) {
@@ -294,9 +295,9 @@ pub fn run_all_matches(
             worst_loss = current_log_loss;
             replay_path = (*match_up_path).clone();
             let rng = SmallRng::from_entropy();
-            let pathfinder = RefCell::new(Pathfinder::new(&match_up.arena));
-            let mut sim =
-                Simulation::new(combatants.clone(), &match_up.arena, &pathfinder, rng, true);
+            let arena = Arena::from_dto(match_up.arena.clone());
+            let pathfinder = RefCell::new(Pathfinder::new(&arena));
+            let mut sim = Simulation::new(combatants.clone(), &arena, &pathfinder, rng, true);
             sim.run();
             replay_data.clear();
             replay_data.push(format!("log loss: {}\n", current_log_loss));
@@ -306,7 +307,7 @@ pub fn run_all_matches(
             }
             replay_data.push(format!("Playing on {}", &match_up.arena_name));
             for entry in sim.log.entries() {
-                replay_data.push(format!("{}", describe_entry(&entry, &match_up.arena)));
+                replay_data.push(format!("{}", describe_entry(&entry, &arena)));
             }
         }
     }

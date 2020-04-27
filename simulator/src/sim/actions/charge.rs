@@ -105,7 +105,7 @@ impl AbilityImpl for ChargeImpl {
             ability,
             user.main_hand().map_or(1, |eq| eq.range),
             Some(self.ct),
-            target.location,
+            target.panel,
         ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {

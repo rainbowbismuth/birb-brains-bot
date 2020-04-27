@@ -1,3 +1,4 @@
+use crate::sim::Facing;
 use std::ops::{Add, Mul, Sub};
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -44,6 +45,10 @@ impl Location {
             3 => Location::new(vector.y, -vector.x) + center,
             _ => unimplemented!("rotations -4..=3 supported"),
         }
+    }
+
+    pub fn facing_towards(self, other: Location) -> Facing {
+        Facing::towards(self, other)
     }
 
     pub fn diamond(self, size: u8) -> DiamondIterator {

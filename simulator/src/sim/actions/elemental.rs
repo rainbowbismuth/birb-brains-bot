@@ -197,7 +197,7 @@ impl AbilityImpl for ElementalImpl {
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        let tile = sim.get_tile(user.location);
+        let tile = sim.tile(user.panel);
         if !self.terrain.contains(&tile.surface_type) {
             return;
         }
@@ -207,7 +207,7 @@ impl AbilityImpl for ElementalImpl {
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
-        let tile = sim.get_tile(user.location);
+        let tile = sim.tile(user.panel);
         if !self.terrain.contains(&tile.surface_type) {
             return;
         }

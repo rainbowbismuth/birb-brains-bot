@@ -1,14 +1,14 @@
-use crate::dto::rust::Arena;
-use crate::sim::{tile_height_from_direction, Combatant, Facing, Location, OFFSETS};
+use crate::sim::{tile_height_from_direction, Arena, Combatant, Location, Panel, OFFSETS};
 
 const MAX_DISTANCE: u8 = 254;
 const OCCUPIED: u8 = 255;
 
 pub struct Pathfinder<'a> {
     arena: &'a Arena,
-    distance: Vec<u8>,
-    open_set: Vec<Location>,
-    reachable: Vec<Location>,
+    distance_lower: Vec<u8>,
+    distance_upper: Vec<u8>,
+    open_set: Vec<Panel>,
+    reachable: Vec<Panel>,
 }
 
 pub struct MovementInfo {
@@ -41,91 +41,109 @@ impl MovementInfo {
 
 impl<'a> Pathfinder<'a> {
     pub fn new(arena: &'a Arena) -> Pathfinder {
+        let area = arena.width as usize * arena.height as usize;
         let mut pathfinder = Pathfinder {
             arena,
-            distance: Vec::with_capacity(arena.width as usize * arena.height as usize),
+            distance_lower: Vec::with_capacity(area),
+            distance_upper: Vec::with_capacity(area),
             open_set: Vec::with_capacity(255),
             reachable: Vec::with_capacity(255),
         };
-        for _i in 0..pathfinder.distance.capacity() {
-            pathfinder.distance.push(MAX_DISTANCE);
-        }
+        pathfinder.distance_lower.resize(area, MAX_DISTANCE);
+        pathfinder.distance_upper.resize(area, MAX_DISTANCE);
         pathfinder
     }
 
     pub fn reset_all(&mut self) {
-        for i in 0..self.distance.len() {
-            self.distance[i] = MAX_DISTANCE;
+        for i in 0..self.distance_lower.len() {
+            self.distance_lower[i] = MAX_DISTANCE;
+            self.distance_upper[i] = MAX_DISTANCE;
         }
         self.open_set.clear();
         self.reachable.clear();
     }
 
     pub fn reset(&mut self) {
-        for i in 0..self.distance.len() {
-            if self.distance[i] != OCCUPIED {
-                self.distance[i] = MAX_DISTANCE;
+        for i in 0..self.distance_lower.len() {
+            if self.distance_lower[i] != OCCUPIED {
+                self.distance_lower[i] = MAX_DISTANCE;
+            }
+            if self.distance_upper[i] != OCCUPIED {
+                self.distance_upper[i] = MAX_DISTANCE;
             }
         }
         self.open_set.clear();
         self.reachable.clear();
     }
 
-    pub fn set_occupied(&mut self, panel: Location) {
+    pub fn set_distance(&mut self, panel: Panel, dist: u8) {
         let idx = self.to_index(panel);
-        self.distance[idx] = OCCUPIED;
+        if panel.layer() {
+            self.distance_upper[idx] = dist;
+        } else {
+            self.distance_lower[idx] = dist;
+        }
     }
 
-    fn to_index(&self, panel: Location) -> usize {
-        self.arena.width as usize * panel.y as usize + panel.x as usize
+    pub fn distance(&self, panel: Panel) -> u8 {
+        let idx = self.to_index(panel);
+        if panel.layer() {
+            self.distance_upper[idx]
+        } else {
+            self.distance_lower[idx]
+        }
     }
 
-    pub fn reachable_set(&self) -> &[Location] {
+    pub fn set_occupied(&mut self, panel: Panel) {
+        self.set_distance(panel, OCCUPIED);
+    }
+
+    fn to_index(&self, panel: Panel) -> usize {
+        self.arena
+            .panel_to_index(panel)
+            .expect("panel out of bounds")
+    }
+
+    pub fn reachable_set(&self) -> &[Panel] {
         &self.reachable
     }
 
-    pub fn is_reachable(&self, end: Location) -> bool {
-        if !self.inside_map(end) {
+    pub fn is_reachable(&self, panel: Panel) -> bool {
+        if !self.inside_map(panel) {
             return false;
         }
-        let end_idx = self.to_index(end);
-        self.distance[end_idx] < MAX_DISTANCE
+        self.distance(panel) < MAX_DISTANCE
     }
 
-    pub fn can_reach_and_end_turn_on(&self, info: &MovementInfo, end: Location) -> bool {
-        self.is_reachable(end) && self.can_end_on(info, end)
+    pub fn can_reach_and_end_turn_on(&self, info: &MovementInfo, panel: Panel) -> bool {
+        self.is_reachable(panel) && self.can_end_on(info, panel)
     }
 
-    pub fn calculate_reachable(&mut self, info: &MovementInfo, start: Location) {
+    pub fn calculate_reachable(&mut self, info: &MovementInfo, start: Panel) {
         self.reset();
         self.calculate_reachable_no_reset(info, start);
     }
 
-    pub fn calculate_reachable_no_reset(&mut self, info: &MovementInfo, start: Location) {
+    pub fn calculate_reachable_no_reset(&mut self, info: &MovementInfo, start: Panel) {
         assert!(self.inside_map(start));
         self.open_set.push(start);
         self.reachable.push(start);
-        let start_idx = self.to_index(start);
-        self.distance[start_idx] = 0;
+        self.set_distance(start, 0);
 
         while let Some(start) = self.open_set.pop() {
-            let start_idx = self.to_index(start);
-            let distance = self.distance[start_idx];
+            let distance = self.distance(start);
             for direction in &OFFSETS {
-                let end = start + *direction;
+                let end = start.plus(*direction);
                 if !self.inside_map(end) {
                     continue;
                 }
-                let end_idx = self.to_index(end);
                 let new_distance = distance + 1;
-                if new_distance > self.distance[end_idx] {
-                    continue;
-                }
-                if OCCUPIED == self.distance[end_idx] {
+                let old_distance = self.distance(end);
+                if new_distance >= old_distance || OCCUPIED == old_distance {
                     continue;
                 }
                 if self.can_transition(info, start, end) {
-                    self.distance[end_idx] = new_distance;
+                    self.set_distance(end, new_distance);
                     if new_distance >= info.movement {
                         continue;
                     }
@@ -142,23 +160,25 @@ impl<'a> Pathfinder<'a> {
     pub fn horizontal_jump_search(
         &mut self,
         info: &MovementInfo,
-        start: Location,
+        start: Panel,
         direction: Location,
     ) {
         if info.horizontal_jump == 0 {
             return;
         }
-        let end_point = start + direction * (info.horizontal_jump as i16 + 1);
-        let towards_direction = Facing::towards(start, end_point);
-        let start_idx = self.to_index(start);
-        let start_tile = self.arena.lower[start_idx];
-        let distance = self.distance[start_idx];
-        for (i, end) in start.line(end_point).enumerate().skip(1) {
-            if !self.inside_map(end) {
+
+        let start_point = start.location();
+        let end_point = start_point + direction * (info.horizontal_jump as i16 + 1);
+        let towards_direction = start_point.facing_towards(end_point);
+        let start_tile = self.arena.tile(start);
+        let distance = self.distance(start);
+
+        for (i, end_location) in start_point.line(end_point).enumerate().skip(1) {
+            if !self.inside_map_location(end_location) {
                 return;
             }
-            let end_idx = self.to_index(end);
-            let end_tile = self.arena.lower[end_idx];
+            let end = start.on_same_layer(end_location);
+            let end_tile = self.arena.tile(end);
             let end_tile_height = tile_height_from_direction(&end_tile, towards_direction);
             let highest_part = end_tile.height + end_tile.slope_height;
             let start_tile_height =
@@ -175,7 +195,7 @@ impl<'a> Pathfinder<'a> {
             }
 
             let new_distance = distance + i as u8;
-            self.distance[end_idx] = new_distance;
+            self.set_distance(end, new_distance);
             if new_distance >= info.movement {
                 continue;
             }
@@ -184,24 +204,21 @@ impl<'a> Pathfinder<'a> {
         }
     }
 
-    pub fn inside_map(&self, end: Location) -> bool {
-        if end.x < 0 || end.y < 0 {
-            return false;
-        }
-        if end.x >= (self.arena.width as i16) {
-            return false;
-        }
-        if end.y >= (self.arena.height as i16) {
-            return false;
-        }
-        true
+    pub fn inside_map(&self, panel: Panel) -> bool {
+        !(panel.x() >= self.arena.width || panel.y() >= self.arena.height)
     }
 
-    fn can_transition(&self, info: &MovementInfo, start: Location, end: Location) -> bool {
-        let start_idx = self.to_index(start);
-        let end_idx = self.to_index(end);
-        let start_tile = self.arena.lower[start_idx];
-        let end_tile = self.arena.lower[end_idx];
+    pub fn inside_map_location(&self, location: Location) -> bool {
+        !(location.x < 0
+            || location.y < 0
+            || location.x >= self.arena.width as i16
+            || location.y >= self.arena.height as i16)
+    }
+
+    fn can_transition(&self, info: &MovementInfo, start: Panel, end: Panel) -> bool {
+        let start_tile = self.arena.tile(start);
+        let end_tile = self.arena.tile(end);
+
         if info.fly_teleport {
             return true;
         }
@@ -210,7 +227,7 @@ impl<'a> Pathfinder<'a> {
         }
 
         // TODO: Still not entirely sure of this logic
-        let towards_direction = Facing::towards(start, end);
+        let towards_direction = start.facing_towards(end);
         let end_tile_height = tile_height_from_direction(&end_tile, towards_direction);
         let start_tile_height =
             tile_height_from_direction(&start_tile, towards_direction.opposite());
@@ -222,20 +239,16 @@ impl<'a> Pathfinder<'a> {
         true
     }
 
-    fn can_end_on(&self, info: &MovementInfo, end: Location) -> bool {
-        let end_idx = self.to_index(end);
-        let end_tile = self.arena.lower[end_idx];
-        if end_tile.no_walk {
+    fn can_end_on(&self, info: &MovementInfo, panel: Panel) -> bool {
+        let tile = self.arena.tile(panel);
+        if tile.no_walk {
             return false;
         }
         // TODO: ignoring lava for now.
-        if !info.water_ok && end_tile.depth > 0 {
+        if !info.water_ok && tile.depth > 0 {
             return false;
         }
-        if self.distance[end_idx] == OCCUPIED {
-            return false;
-        }
-        return true;
+        self.distance(panel) != OCCUPIED
     }
 }
 
@@ -272,7 +285,7 @@ pub mod tests {
     pub fn matches_diamond() {
         let arena = make_simple_map();
         let mut pathfinder = Pathfinder::new(&arena);
-        let center = Location::new(5, 5);
+        let center = Panel::coords(5, 5, false);
         for movement in 0..4 {
             let movement_info = MovementInfo {
                 movement,
@@ -366,9 +379,9 @@ pub mod tests {
     pub fn test_walk_up_and_jump_slope() {
         let arena = make_high_slope_map();
         let mut pathfinder = Pathfinder::new(&arena);
-        let start = Location::new(0, 0);
-        let middle = Location::new(2, 0);
-        let end = Location::new(4, 0);
+        let start = Panel::coords(0, 0, false);
+        let middle = Panel::coords(2, 0, false);
+        let end = Panel::coords(4, 0, false);
         let movement_info = MovementInfo {
             movement: 10,
             vertical_jump: 2,
@@ -393,9 +406,9 @@ pub mod tests {
     pub fn test_jump_over_no_walk() {
         let arena = make_impassible_map();
         let mut pathfinder = Pathfinder::new(&arena);
-        let start = Location::new(0, 0);
-        let middle = Location::new(2, 0);
-        let end = Location::new(4, 0);
+        let start = Panel::coords(0, 0, false);
+        let middle = Panel::coords(2, 0, false);
+        let end = Panel::coords(4, 0, false);
         let movement_info = MovementInfo {
             movement: 10,
             vertical_jump: 2,
@@ -420,9 +433,9 @@ pub mod tests {
     pub fn cant_cross_no_fly() {
         let arena = make_impassible_map();
         let mut pathfinder = Pathfinder::new(&arena);
-        let start = Location::new(0, 0);
-        let middle = Location::new(2, 0);
-        let end = Location::new(4, 0);
+        let start = Panel::coords(0, 0, false);
+        let middle = Panel::coords(2, 0, false);
+        let end = Panel::coords(4, 0, false);
         let movement_info = MovementInfo {
             movement: 10,
             horizontal_jump: 0,
@@ -431,7 +444,10 @@ pub mod tests {
             water_ok: false,
         };
         pathfinder.calculate_reachable(&movement_info, start);
-        assert_eq!(pathfinder.reachable_set(), &[start, Location::new(1, 0)]);
+        assert_eq!(
+            pathfinder.reachable_set(),
+            &[start, Panel::coords(1, 0, false)]
+        );
         assert_eq!(pathfinder.is_reachable(end), false);
         assert_eq!(pathfinder.is_reachable(middle), false);
         assert_eq!(
@@ -444,8 +460,8 @@ pub mod tests {
     pub fn cant_cross_occupied() {
         let arena = make_simple_map();
         let mut pathfinder = Pathfinder::new(&arena);
-        let start = Location::new(1, 1);
-        let outside = Location::new(3, 3);
+        let start = Panel::coords(1, 1, false);
+        let outside = Panel::coords(3, 3, false);
         let movement_info = MovementInfo {
             movement: 10,
             horizontal_jump: 0,
@@ -454,7 +470,7 @@ pub mod tests {
             water_ok: false,
         };
         for facing in &[Facing::North, Facing::East, Facing::South, Facing::West] {
-            pathfinder.set_occupied(start + facing.offset());
+            pathfinder.set_occupied(start.plus(facing.offset()));
         }
         pathfinder.calculate_reachable(&movement_info, start);
         assert_eq!(pathfinder.reachable_set(), &[start]);
@@ -469,9 +485,9 @@ pub mod tests {
     pub fn can_cross_fly_teleport() {
         let arena = make_impassible_map();
         let mut pathfinder = Pathfinder::new(&arena);
-        let start = Location::new(0, 0);
-        let middle = Location::new(2, 0);
-        let end = Location::new(4, 0);
+        let start = Panel::coords(0, 0, false);
+        let middle = Panel::coords(2, 0, false);
+        let end = Panel::coords(4, 0, false);
         let movement_info = MovementInfo {
             movement: 10,
             horizontal_jump: 0,

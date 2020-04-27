@@ -51,7 +51,7 @@ impl AbilityImpl for JumpImpl {
             ability,
             user.info.horizontal_jump as u8,
             Some(jump_ticks),
-            target.location,
+            target.panel,
         ));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {

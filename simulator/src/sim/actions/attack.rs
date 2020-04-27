@@ -94,7 +94,7 @@ fn real_target(
     let user_height = sim.combatant_height(user_id);
     let target = sim.combatant(target_id);
     let mut real_target = Some(target_id);
-    for location in user.location.line(target.location).skip(1) {
+    for location in user.panel.line(target.panel).skip(1) {
         // TODO: Not really sure what to do here...
         if sim.height(location) > user_height + 3.0 {
             real_target = None;

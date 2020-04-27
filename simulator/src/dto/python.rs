@@ -178,4 +178,5 @@ pub struct StartingLocation {
     pub facing: String,
     pub team: String,
     pub unit: u8,
+    pub layer: bool,
 }

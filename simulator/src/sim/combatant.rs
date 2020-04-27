@@ -23,8 +23,8 @@ use crate::sim::actions::white_magic::WHITE_MAGIC_ABILITIES;
 use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, CalcAlgorithm, CalcAttribute, Condition, ConditionBlock, ConditionFlags,
-    DiamondIterator, Distance, Element, Facing, Gender, Location, RelativeFacing, Sign, SkillBlock,
-    Team, ALL_CONDITIONS, DONT_MOVE_WHILE_CHARGING, SILENCEABLE,
+    Distance, Element, Facing, Gender, Location, Panel, RelativeFacing, Sign, SkillBlock, Team,
+    ALL_CONDITIONS, DONT_MOVE_WHILE_CHARGING, SILENCEABLE,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -287,7 +287,7 @@ pub struct Combatant<'a> {
     pub raw_mp: i16,
     pub facing: Facing,
     pub broken_equips: u8,
-    pub location: Location,
+    pub panel: Panel,
     pub on_active_turn: bool,
     pub moved_during_active_turn: bool,
     pub acted_during_active_turn: bool,
@@ -321,7 +321,7 @@ impl<'a> Combatant<'a> {
                 Facing::West
             },
             broken_equips: 0,
-            location: Location::zero(),
+            panel: Panel::new(Location::zero(), false),
             on_active_turn: false,
             moved_during_active_turn: false,
             acted_during_active_turn: false,
@@ -387,7 +387,9 @@ impl<'a> Combatant<'a> {
 
     pub fn relative_facing(&self, other: &Combatant) -> RelativeFacing {
         // TODO: This is a confusing API.
-        other.facing.relative(other.location, self.location)
+        other
+            .facing
+            .relative(other.panel.location(), self.panel.location())
     }
 
     pub fn base_stats(&self) -> &'a BaseStats {
@@ -395,11 +397,7 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn distance(&self, other: &Combatant) -> Distance {
-        self.location.distance(other.location)
-    }
-
-    pub fn movement_diamond(&self) -> DiamondIterator {
-        self.location.diamond(self.movement() as u8)
+        self.panel.distance(other.panel)
     }
 
     pub fn max_hp(&self) -> i16 {

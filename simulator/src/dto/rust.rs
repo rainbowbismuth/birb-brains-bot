@@ -441,6 +441,7 @@ pub struct StartingLocation {
     pub facing: Facing,
     pub left_team: bool,
     pub unit: u8,
+    pub layer: bool,
 }
 
 impl StartingLocation {
@@ -457,6 +458,7 @@ impl StartingLocation {
             },
             left_team: arena.team == "Player 1",
             unit: arena.unit,
+            layer: arena.layer,
         }
     }
 }
@@ -490,10 +492,6 @@ impl Arena {
             }
         }
         new_arena
-    }
-
-    pub fn to_index(&self, x: usize, y: usize) -> usize {
-        (self.width as usize) * (y as usize) + (x as usize)
     }
 }
 

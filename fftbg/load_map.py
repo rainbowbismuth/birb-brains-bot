@@ -136,12 +136,14 @@ def load_starting_locations(map_num: int) -> list:
         pos_x = ent_record[unit_offset + 0x19]
         pos_y = ent_record[unit_offset + 0x1A]
         direction = ent_record[unit_offset + 0x1B] & 0b11
+        upper_layer = (ent_record[unit_offset + 0x1B] & ~0b11) != 0
         units.append({
             'x': pos_x,
             'y': pos_y,
             'facing': UNIT_DIRECTIONS[direction],
             'team': team,
-            'unit': unit_num
+            'unit': unit_num,
+            'layer': upper_layer
         })
     return units
 

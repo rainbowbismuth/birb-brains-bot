@@ -1,5 +1,5 @@
 use crate::sim::{
-    Combatant, CombatantId, Condition, Event, Facing, Location, Simulation, Source, COMBATANT_IDS,
+    Combatant, CombatantId, Condition, Event, Panel, Simulation, Source, COMBATANT_IDS,
 };
 
 pub mod attack;
@@ -115,7 +115,7 @@ impl CalcAlgorithm {
 #[derive(Clone, Copy)]
 pub enum ActionTarget {
     Id(CombatantId),
-    Panel(Location),
+    Panel(Panel),
     Math(CalcAttribute, CalcAlgorithm),
 }
 
@@ -127,18 +127,18 @@ impl ActionTarget {
         }
     }
 
-    pub fn to_location(self, sim: &Simulation) -> Option<Location> {
+    pub fn to_panel(self, sim: &Simulation) -> Option<Panel> {
         match self {
-            ActionTarget::Id(target_id) => Some(sim.combatant(target_id).location),
-            ActionTarget::Panel(location) => Some(location),
+            ActionTarget::Id(target_id) => Some(sim.combatant(target_id).panel),
+            ActionTarget::Panel(panel) => Some(panel),
             ActionTarget::Math(_, _) => None,
         }
     }
 
-    pub fn to_location_combatant_slice(self, combatants: &[Combatant]) -> Option<Location> {
+    pub fn to_panel_combatant_slice(self, combatants: &[Combatant]) -> Option<Panel> {
         match self {
-            ActionTarget::Id(target_id) => Some(combatants[target_id.index()].location),
-            ActionTarget::Panel(location) => Some(location),
+            ActionTarget::Id(target_id) => Some(combatants[target_id.index()].panel),
+            ActionTarget::Panel(panel) => Some(panel),
             ActionTarget::Math(_, _) => None,
         }
     }
@@ -146,7 +146,7 @@ impl ActionTarget {
     pub fn to_target_id(self, sim: &Simulation) -> Option<CombatantId> {
         match self {
             ActionTarget::Id(target_id) => Some(target_id),
-            ActionTarget::Panel(location) => sim.combatant_on_panel(location),
+            ActionTarget::Panel(panel) => sim.combatant_on_panel(panel),
             ActionTarget::Math(_, _) => None,
         }
     }
@@ -154,7 +154,7 @@ impl ActionTarget {
     pub fn to_target_id_only(self) -> Option<CombatantId> {
         match self {
             ActionTarget::Id(target_id) => Some(target_id),
-            ActionTarget::Panel(_location) => None,
+            ActionTarget::Panel(_panel) => None,
             ActionTarget::Math(_, _) => None,
         }
     }
@@ -187,13 +187,13 @@ impl<'a> Action<'a> {
         ability: &'a Ability<'a>,
         range: u8,
         ctr: Option<u8>,
-        location: Location,
+        panel: Panel,
     ) -> Action<'a> {
         Action {
             ability,
             range,
             ctr,
-            target: ActionTarget::Panel(location),
+            target: ActionTarget::Panel(panel),
         }
     }
 }
@@ -309,10 +309,10 @@ pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action
             let target = sim.combatant(target_id);
             if target.reflect() {
                 let user = sim.combatant(user_id);
-                let direction = target.location - user.location;
-                let new_location = direction * 2;
-                action_target = ActionTarget::Panel(new_location);
-                sim.log_event(Event::SpellReflected(target_id, new_location));
+                let direction = target.panel.location() - user.panel.location();
+                let new_panel = target.panel.on_same_layer(direction * 2);
+                action_target = ActionTarget::Panel(new_panel);
+                sim.log_event(Event::SpellReflected(target_id, new_panel));
             }
         }
     }
@@ -410,7 +410,7 @@ fn handle_normal_ability(
         AoE::Diamond(size) => {
             for target_panel in action
                 .target
-                .to_location(sim)
+                .to_panel(sim)
                 .expect("should only be none if math")
                 .diamond(size)
             {
@@ -419,33 +419,34 @@ fn handle_normal_ability(
         }
         AoE::Line => {
             let user = sim.combatant(user_id);
-            let target_location = action_target
-                .to_location(sim)
+            let target_panel = action_target
+                .to_panel(sim)
                 .expect("should only be none if math");
-            let user_location = user.location;
-            let facing = Facing::towards(user.location, target_location);
+            let user_panel = user.panel;
+            let facing = user.panel.facing_towards(target_panel);
             for i in 1..=action.range {
-                let target_panel = user_location + facing.offset() * i as i16;
+                // TODO: This isn't right either I don't think!
+                let target_panel = user_panel.plus(facing.offset() * i as i16);
                 perform_aoe_on_panel(sim, user_id, ability, target_panel);
             }
         }
         AoE::TriLine => {
             let user = sim.combatant(user_id);
-            let target_location = action_target
-                .to_location(sim)
+            let target_panel = action_target
+                .to_panel(sim)
                 .expect("should only be none if math");
-            let facing = Facing::towards(user.location, target_location);
-            let user_location = user.location;
+            let facing = user.panel.facing_towards(target_panel);
+            let user_panel = user.panel;
             let left_facing = facing.rotate(3);
             let right_facing = facing.rotate(1);
             for i in 1..=action.range {
-                let target_panel = user_location + facing.offset() * i as i16;
+                let target_panel = user_panel.plus(facing.offset() * i as i16);
                 perform_aoe_on_panel(sim, user_id, ability, target_panel);
 
-                let target_panel = user_location + left_facing.offset() * i as i16;
+                let target_panel = user_panel.plus(left_facing.offset() * i as i16);
                 perform_aoe_on_panel(sim, user_id, ability, target_panel);
 
-                let target_panel = user_location + right_facing.offset() * i as i16;
+                let target_panel = user_panel.plus(right_facing.offset() * i as i16);
                 perform_aoe_on_panel(sim, user_id, ability, target_panel);
             }
         }
@@ -456,9 +457,9 @@ fn perform_aoe_on_panel(
     sim: &mut Simulation,
     user_id: CombatantId,
     ability: &Ability,
-    location: Location,
+    panel: Panel,
 ) {
-    if let Some(real_target_id) = sim.combatant_on_panel(location) {
+    if let Some(real_target_id) = sim.combatant_on_panel(panel) {
         let user = sim.combatant(user_id);
         let target = sim.combatant(real_target_id);
         if target.crystal() || target.jumping() {
