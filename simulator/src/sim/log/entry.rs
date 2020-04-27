@@ -111,11 +111,13 @@ pub fn describe_location_combatant(combatant: &Combatant, arena: &Arena) -> Stri
         return format!("({},{})", location.x, location.y);
     }
     let tile = arena.tile(panel);
+    let upper_lower = if panel.layer() { "U" } else { "L" };
     format!(
-        "({},{},{}h)",
+        "({},{},{}h,{})",
         panel.x(),
         panel.y(),
-        combatant_height(&tile, combatant)
+        combatant_height(&tile, combatant),
+        upper_lower
     )
 }
 

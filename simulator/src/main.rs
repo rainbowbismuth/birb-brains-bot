@@ -64,6 +64,10 @@ struct Test {
     /// Filter for any skill
     #[clap(long = "filter-skill")]
     filter_skill: Vec<String>,
+
+    /// Filter any map
+    #[clap(long = "filter-map")]
+    filter_map: Vec<String>,
 }
 
 #[derive(Clap)]
@@ -91,6 +95,7 @@ fn main() -> io::Result<()> {
             test.filter_ability,
             test.filter_skill,
             test.filter_no_monsters,
+            test.filter_map,
         ),
         SubCommand::Run(run) => runner::run_specific_match(run.match_id, run.num_runs),
         SubCommand::Feed(_feed) => data::convert_data_from_feed(),

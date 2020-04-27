@@ -1,16 +1,35 @@
 use crate::sim::{tile_height_from_direction, Arena, Combatant, Location, Panel, OFFSETS};
 
-const MAX_DISTANCE: u8 = 254;
-const OCCUPIED: u8 = 255;
+const MAX_DISTANCE: u8 = 250;
+const IN_OPEN_SET_FLAG: u8 = 1;
+const OCCUPIED_FLAG: u8 = 1 << 1;
+const IMPASSABLE_FLAG: u8 = 1 << 2;
+const REACHABLE_FLAG: u8 = 1 << 3;
+
+#[derive(Copy, Clone, Debug)]
+struct TileMarking {
+    distance: u8,
+    flags: u8,
+}
+
+impl TileMarking {
+    const fn default() -> TileMarking {
+        TileMarking {
+            distance: MAX_DISTANCE,
+            flags: 0,
+        }
+    }
+}
 
 pub struct Pathfinder<'a> {
     arena: &'a Arena,
-    distance_lower: Vec<u8>,
-    distance_upper: Vec<u8>,
+    lower: Vec<TileMarking>,
+    upper: Vec<TileMarking>,
     open_set: Vec<Panel>,
     reachable: Vec<Panel>,
 }
 
+#[derive(Clone)]
 pub struct MovementInfo {
     pub movement: u8,
     pub vertical_jump: u8,
@@ -44,64 +63,91 @@ impl<'a> Pathfinder<'a> {
         let area = arena.width as usize * arena.height as usize;
         let mut pathfinder = Pathfinder {
             arena,
-            distance_lower: Vec::with_capacity(area),
-            distance_upper: Vec::with_capacity(area),
+            lower: Vec::with_capacity(area),
+            upper: Vec::with_capacity(area),
             open_set: Vec::with_capacity(255),
             reachable: Vec::with_capacity(255),
         };
-        pathfinder.distance_lower.resize(area, MAX_DISTANCE);
-        pathfinder.distance_upper.resize(area, MAX_DISTANCE);
+        pathfinder.lower.resize(area, TileMarking::default());
+        pathfinder.upper.resize(area, TileMarking::default());
         pathfinder
     }
 
-    pub fn reset_all(&mut self) {
-        for i in 0..self.distance_lower.len() {
-            self.distance_lower[i] = MAX_DISTANCE;
-            self.distance_upper[i] = MAX_DISTANCE;
+    pub fn reset(&mut self) {
+        for i in 0..self.lower.len() {
+            self.lower[i].distance = MAX_DISTANCE;
+            self.lower[i].flags &= OCCUPIED_FLAG | IMPASSABLE_FLAG;
+            self.upper[i].distance = MAX_DISTANCE;
+            self.upper[i].flags &= OCCUPIED_FLAG | IMPASSABLE_FLAG;
         }
         self.open_set.clear();
         self.reachable.clear();
     }
 
-    pub fn reset(&mut self) {
-        for i in 0..self.distance_lower.len() {
-            if self.distance_lower[i] != OCCUPIED {
-                self.distance_lower[i] = MAX_DISTANCE;
-            }
-            if self.distance_upper[i] != OCCUPIED {
-                self.distance_upper[i] = MAX_DISTANCE;
-            }
+    pub fn reset_all(&mut self) {
+        for i in 0..self.lower.len() {
+            self.lower[i] = TileMarking::default();
+            self.upper[i] = TileMarking::default();
         }
         self.open_set.clear();
         self.reachable.clear();
+    }
+
+    fn tile_marking(&self, panel: Panel) -> &TileMarking {
+        let idx = self.to_index(panel);
+        if panel.layer() {
+            &self.upper[idx]
+        } else {
+            &self.lower[idx]
+        }
+    }
+
+    fn tile_marking_mut(&mut self, panel: Panel) -> &mut TileMarking {
+        let idx = self.to_index(panel);
+        if panel.layer() {
+            &mut self.upper[idx]
+        } else {
+            &mut self.lower[idx]
+        }
     }
 
     pub fn set_distance(&mut self, panel: Panel, dist: u8) {
-        let idx = self.to_index(panel);
-        if panel.layer() {
-            self.distance_upper[idx] = dist;
-        } else {
-            self.distance_lower[idx] = dist;
-        }
+        self.tile_marking_mut(panel).distance = dist;
     }
 
     pub fn distance(&self, panel: Panel) -> u8 {
-        let idx = self.to_index(panel);
-        if panel.layer() {
-            self.distance_upper[idx]
-        } else {
-            self.distance_lower[idx]
-        }
+        self.tile_marking(panel).distance
     }
 
     pub fn set_occupied(&mut self, panel: Panel) {
-        self.set_distance(panel, OCCUPIED);
+        self.tile_marking_mut(panel).flags |= OCCUPIED_FLAG;
+    }
+
+    pub fn set_impassable(&mut self, panel: Panel) {
+        self.tile_marking_mut(panel).flags |= IMPASSABLE_FLAG;
+    }
+
+    fn in_open_set(&self, panel: Panel) -> bool {
+        self.tile_marking(panel).flags & IN_OPEN_SET_FLAG != 0
+    }
+
+    fn remove_from_open_set(&mut self, panel: Panel) {
+        self.tile_marking_mut(panel).flags &= !IN_OPEN_SET_FLAG
+    }
+
+    pub fn is_occupied(&self, panel: Panel) -> bool {
+        self.tile_marking(panel).flags & OCCUPIED_FLAG != 0
+    }
+
+    pub fn is_impassable(&self, panel: Panel) -> bool {
+        self.tile_marking(panel).flags & IMPASSABLE_FLAG != 0
     }
 
     fn to_index(&self, panel: Panel) -> usize {
         self.arena
             .panel_to_index(panel)
-            .expect("panel out of bounds")
+            .unwrap_or_else(|| panic!("panel out of bounds: {:?}", panel.location()))
+        // .expect("panel out of bounds")
     }
 
     pub fn reachable_set(&self) -> &[Panel] {
@@ -112,11 +158,14 @@ impl<'a> Pathfinder<'a> {
         if !self.inside_map(panel) {
             return false;
         }
-        self.distance(panel) < MAX_DISTANCE
+        self.tile_marking(panel).distance < MAX_DISTANCE
     }
 
-    pub fn can_reach_and_end_turn_on(&self, info: &MovementInfo, panel: Panel) -> bool {
-        self.is_reachable(panel) && self.can_end_on(info, panel)
+    pub fn can_reach_and_end_turn_on(&self, panel: Panel) -> bool {
+        if !self.inside_map(panel) {
+            return false;
+        }
+        self.tile_marking(panel).flags & REACHABLE_FLAG != 0
     }
 
     pub fn calculate_reachable(&mut self, info: &MovementInfo, start: Panel) {
@@ -124,45 +173,88 @@ impl<'a> Pathfinder<'a> {
         self.calculate_reachable_no_reset(info, start);
     }
 
+    pub fn path_find_no_reset(&mut self, info: &MovementInfo, start: Panel, goal: Panel) -> Panel {
+        assert!(self.inside_map(start));
+        assert!(self.inside_map(goal));
+
+        let mut copied_info = info.clone();
+        copied_info.movement = 100;
+        self.calculate_reachable_no_reset(&copied_info, goal);
+        // TODO: Implement an actual pathfinding algorithm
+        let copied_lower = self.lower.clone();
+        let copied_upper = self.upper.clone();
+        self.reset();
+        self.calculate_reachable_no_reset(&info, start);
+        self.reachable
+            .iter()
+            .map(|panel| {
+                let idx = self.arena.panel_to_index(*panel).unwrap();
+                let dist = if panel.layer() {
+                    copied_upper[idx].distance
+                } else {
+                    copied_lower[idx].distance
+                };
+                (dist, panel)
+            })
+            .min_by_key(|p| p.0)
+            .map(|p| *p.1)
+            .unwrap()
+    }
+
     pub fn calculate_reachable_no_reset(&mut self, info: &MovementInfo, start: Panel) {
         assert!(self.inside_map(start));
-        self.open_set.push(start);
-        self.reachable.push(start);
+        self.expand_open_set(start);
+        self.expand_reachable(start);
         self.set_distance(start, 0);
 
         while let Some(start) = self.open_set.pop() {
-            let distance = self.distance(start);
+            self.remove_from_open_set(start);
             for direction in &OFFSETS {
-                let end = start.plus(*direction);
-                if !self.inside_map(end) {
+                let end_lower = start.plus(*direction).lower();
+                if !self.inside_map(end_lower) {
                     continue;
                 }
-                let new_distance = distance + 1;
-                let old_distance = self.distance(end);
-                if new_distance >= old_distance || OCCUPIED == old_distance {
+
+                let end_upper = end_lower.upper();
+                let end_lower_tile = self.arena.tile(end_lower);
+                let end_upper_tile = self.arena.tile(end_upper);
+
+                if self.try_move_to(info, start, end_lower) {
                     continue;
-                }
-                if self.can_transition(info, start, end) {
-                    self.set_distance(end, new_distance);
-                    if new_distance >= info.movement {
-                        continue;
-                    }
-                    self.open_set.push(end);
-                    if self.can_end_on(info, end) {
-                        self.reachable.push(end);
-                    }
+                } else if end_upper_tile.height > end_lower_tile.height
+                    && self.try_move_to(info, start, end_upper)
+                {
+                    continue;
                 } else {
                     self.horizontal_jump_search(info, start, *direction);
                 }
             }
         }
     }
-    pub fn horizontal_jump_search(
-        &mut self,
-        info: &MovementInfo,
-        start: Panel,
-        direction: Location,
-    ) {
+
+    fn try_move_to(&mut self, info: &MovementInfo, start: Panel, end: Panel) -> bool {
+        let distance = self.distance(start);
+        let new_distance = distance + 1;
+        let old_distance = self.distance(end);
+        if new_distance >= old_distance {
+            return false;
+        }
+        if self.can_transition(info, start, end) {
+            self.set_distance(end, new_distance);
+            if new_distance >= info.movement {
+                return false;
+            }
+            self.expand_open_set(end);
+            if self.can_end_on(info, end) {
+                self.expand_reachable(end);
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    fn horizontal_jump_search(&mut self, info: &MovementInfo, start: Panel, direction: Location) {
         if info.horizontal_jump == 0 {
             return;
         }
@@ -184,10 +276,12 @@ impl<'a> Pathfinder<'a> {
             let start_tile_height =
                 tile_height_from_direction(&start_tile, towards_direction.opposite());
 
+            // TODO: This really is a mess and makes so sense. Sit and think about it.
             if highest_part > start_tile_height {
                 return;
             }
-            if end_tile_height < start_tile_height {
+            let height_diff = (start_tile_height as i16 - end_tile_height as i16).abs() as u8;
+            if height_diff > info.vertical_jump {
                 continue;
             }
             if !self.can_end_on(info, end) {
@@ -195,12 +289,29 @@ impl<'a> Pathfinder<'a> {
             }
 
             let new_distance = distance + i as u8;
+            if new_distance >= self.distance(end) {
+                continue;
+            }
             self.set_distance(end, new_distance);
             if new_distance >= info.movement {
                 continue;
             }
-            self.open_set.push(end);
-            self.reachable.push(end);
+            self.expand_open_set(end);
+            self.expand_reachable(end);
+        }
+    }
+
+    fn expand_open_set(&mut self, panel: Panel) {
+        if !self.in_open_set(panel) {
+            self.open_set.push(panel);
+            self.tile_marking_mut(panel).flags |= IN_OPEN_SET_FLAG;
+        }
+    }
+
+    fn expand_reachable(&mut self, panel: Panel) {
+        if self.tile_marking(panel).flags & REACHABLE_FLAG == 0 {
+            self.reachable.push(panel);
+            self.tile_marking_mut(panel).flags |= REACHABLE_FLAG;
         }
     }
 
@@ -222,7 +333,7 @@ impl<'a> Pathfinder<'a> {
         if info.fly_teleport {
             return true;
         }
-        if end_tile.no_walk {
+        if end_tile.no_walk || self.is_impassable(end) {
             return false;
         }
 
@@ -248,7 +359,13 @@ impl<'a> Pathfinder<'a> {
         if !info.water_ok && tile.depth > 0 {
             return false;
         }
-        self.distance(panel) != OCCUPIED
+        if self.is_impassable(panel) {
+            return false;
+        }
+        if self.is_occupied(panel) {
+            return false;
+        }
+        true
     }
 }
 
@@ -257,6 +374,18 @@ pub mod tests {
     use super::*;
     use crate::dto::rust::Tile;
     use crate::sim::{Facing, SLOPE_FLAT_0, SLOPE_INCLINE_E, SLOPE_INCLINE_W};
+
+    fn tile_no_walk() -> Tile {
+        Tile {
+            height: 0,
+            depth: 0,
+            slope_type: 0,
+            surface_type: 0,
+            slope_height: 0,
+            no_cursor: true,
+            no_walk: true,
+        }
+    }
 
     fn make_simple_map() -> Arena {
         let tile = Tile {
@@ -272,9 +401,11 @@ pub mod tests {
         for _i in 0..100 {
             tiles.push(tile);
         }
+        let mut upper = vec![];
+        upper.resize(100, tile_no_walk());
         Arena {
             lower: tiles,
-            upper: vec![],
+            upper,
             width: 10,
             height: 10,
             starting_locations: vec![],
@@ -295,8 +426,8 @@ pub mod tests {
                 water_ok: false,
             };
             pathfinder.calculate_reachable(&movement_info, center);
-            for location in center.diamond(movement) {
-                assert_eq!(pathfinder.is_reachable(location), true);
+            for panel in center.diamond(movement) {
+                assert_eq!(pathfinder.is_reachable(panel), true);
             }
         }
     }
@@ -311,15 +442,7 @@ pub mod tests {
             no_cursor: false,
             no_walk: false,
         };
-        let no_walk = Tile {
-            height: 0,
-            depth: 0,
-            slope_type: 0,
-            surface_type: 0,
-            slope_height: 0,
-            no_cursor: false,
-            no_walk: true,
-        };
+        let no_walk = tile_no_walk();
         let mut tiles = vec![];
         for _i in 0..2 {
             tiles.push(walk);
@@ -328,9 +451,11 @@ pub mod tests {
         for _i in 0..2 {
             tiles.push(walk);
         }
+        let mut upper = vec![];
+        upper.resize(5, no_walk);
         Arena {
             lower: tiles,
-            upper: vec![],
+            upper,
             width: 5,
             height: 1,
             starting_locations: vec![],
@@ -366,13 +491,92 @@ pub mod tests {
             no_walk: false,
         };
         let tiles = vec![walk, up_east, walk, up_west, walk];
+        let mut upper = vec![];
+        upper.resize(5, tile_no_walk());
         Arena {
             lower: tiles,
-            upper: vec![],
+            upper,
             width: 5,
             height: 1,
             starting_locations: vec![],
         }
+    }
+
+    fn make_bridge_map() -> Arena {
+        let walk = Tile {
+            height: 0,
+            depth: 0,
+            slope_type: SLOPE_FLAT_0,
+            surface_type: 0,
+            slope_height: 0,
+            no_cursor: false,
+            no_walk: false,
+        };
+        let up_east = Tile {
+            height: 0,
+            depth: 0,
+            slope_type: SLOPE_INCLINE_E,
+            surface_type: 0,
+            slope_height: 8,
+            no_cursor: false,
+            no_walk: false,
+        };
+        let up_west = Tile {
+            height: 0,
+            depth: 0,
+            slope_type: SLOPE_INCLINE_W,
+            surface_type: 0,
+            slope_height: 8,
+            no_cursor: false,
+            no_walk: false,
+        };
+        let middle = Tile {
+            height: 8,
+            depth: 0,
+            slope_type: SLOPE_FLAT_0,
+            surface_type: 0,
+            slope_height: 0,
+            no_cursor: false,
+            no_walk: false,
+        };
+        let tiles = vec![walk, up_east, walk, walk, up_west, walk];
+        let mut upper = vec![];
+        upper.resize(6, tile_no_walk());
+        upper[2] = middle;
+        upper[3] = middle;
+        Arena {
+            lower: tiles,
+            upper,
+            width: 6,
+            height: 1,
+            starting_locations: vec![],
+        }
+    }
+
+    #[test]
+    pub fn test_walk_over_bridge() {
+        let arena = make_bridge_map();
+        let mut pathfinder = Pathfinder::new(&arena);
+        let start = Panel::coords(0, 0, false);
+        let up_path = Panel::coords(1, 0, false);
+        let middle_up = Panel::coords(2, 0, true);
+        let middle_down = Panel::coords(2, 0, false);
+        let end = Panel::coords(5, 0, false);
+        let movement_info = MovementInfo {
+            movement: 10,
+            vertical_jump: 2,
+            horizontal_jump: 1,
+            fly_teleport: false,
+            water_ok: false,
+        };
+        pathfinder.calculate_reachable(&movement_info, start);
+        assert_eq!(pathfinder.is_reachable(middle_up), true);
+        assert_eq!(pathfinder.is_reachable(middle_down), false);
+        assert_eq!(pathfinder.is_reachable(up_path), true);
+        assert_eq!(pathfinder.is_reachable(end), true);
+
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(middle_up), true);
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(end), true);
     }
 
     #[test]
@@ -392,14 +596,8 @@ pub mod tests {
         pathfinder.calculate_reachable(&movement_info, start);
         assert_eq!(pathfinder.is_reachable(end), true);
         assert_eq!(pathfinder.is_reachable(middle), false);
-        assert_eq!(
-            pathfinder.can_reach_and_end_turn_on(&movement_info, middle),
-            false
-        );
-        assert_eq!(
-            pathfinder.can_reach_and_end_turn_on(&movement_info, end),
-            true
-        );
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(middle), false);
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(end), true);
     }
 
     #[test]
@@ -417,16 +615,11 @@ pub mod tests {
             water_ok: false,
         };
         pathfinder.calculate_reachable(&movement_info, start);
+        dbg!(&pathfinder.lower);
         assert_eq!(pathfinder.is_reachable(end), true);
         assert_eq!(pathfinder.is_reachable(middle), false);
-        assert_eq!(
-            pathfinder.can_reach_and_end_turn_on(&movement_info, middle),
-            false
-        );
-        assert_eq!(
-            pathfinder.can_reach_and_end_turn_on(&movement_info, end),
-            true
-        );
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(middle), false);
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(end), true);
     }
 
     #[test]
@@ -450,14 +643,11 @@ pub mod tests {
         );
         assert_eq!(pathfinder.is_reachable(end), false);
         assert_eq!(pathfinder.is_reachable(middle), false);
-        assert_eq!(
-            pathfinder.can_reach_and_end_turn_on(&movement_info, middle),
-            false
-        );
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(middle), false);
     }
 
     #[test]
-    pub fn cant_cross_occupied() {
+    pub fn cant_cross_impassable() {
         let arena = make_simple_map();
         let mut pathfinder = Pathfinder::new(&arena);
         let start = Panel::coords(1, 1, false);
@@ -470,15 +660,12 @@ pub mod tests {
             water_ok: false,
         };
         for facing in &[Facing::North, Facing::East, Facing::South, Facing::West] {
-            pathfinder.set_occupied(start.plus(facing.offset()));
+            pathfinder.set_impassable(start.plus(facing.offset()));
         }
         pathfinder.calculate_reachable(&movement_info, start);
         assert_eq!(pathfinder.reachable_set(), &[start]);
         assert_eq!(pathfinder.is_reachable(outside), false);
-        assert_eq!(
-            pathfinder.can_reach_and_end_turn_on(&movement_info, outside),
-            false
-        );
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(outside), false);
     }
 
     #[test]
@@ -496,11 +683,10 @@ pub mod tests {
             water_ok: false,
         };
         pathfinder.calculate_reachable(&movement_info, start);
+
+        dbg!(&pathfinder.lower);
         assert_eq!(pathfinder.is_reachable(end), true);
         assert_eq!(pathfinder.is_reachable(middle), true);
-        assert_eq!(
-            pathfinder.can_reach_and_end_turn_on(&movement_info, middle),
-            false
-        );
+        assert_eq!(pathfinder.can_reach_and_end_turn_on(middle), false);
     }
 }

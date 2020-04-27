@@ -185,6 +185,7 @@ pub fn run_all_matches(
     filter_ability: Vec<String>,
     filter_skill: Vec<String>,
     filter_no_monsters: bool,
+    filter_map: Vec<String>,
 ) -> io::Result<()> {
     let mut results: HashMap<String, HashMap<String, f64>> = HashMap::new();
 
@@ -241,6 +242,11 @@ pub fn run_all_matches(
         }
         if filter_no_monsters && has_monster(&combatant_infos) {
             continue 'filter;
+        }
+        for map in &filter_map {
+            if !match_up.arena_name.contains(map) {
+                continue 'filter;
+            }
         }
 
         match_ups.push((match_up_path, patch, match_up));

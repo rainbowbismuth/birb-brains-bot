@@ -1093,7 +1093,7 @@ impl<'a> Simulation<'a> {
                     if action.ability.aoe.is_line() && !panel.lined_up(target_panel) {
                         return None;
                     }
-                    if !pathfinder.can_reach_and_end_turn_on(&movement_info, panel) {
+                    if !pathfinder.can_reach_and_end_turn_on(panel) {
                         return None;
                     }
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
@@ -1136,20 +1136,22 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    fn face_closest_enemy(&mut self, user_id: CombatantId) {
+    fn closest_healthy_enemy_panel(&self, user_id: CombatantId) -> Option<Panel> {
         let user = self.combatant(user_id);
-        let closest_enemy_panel = self
-            .combatants
+        self.combatants
             .iter()
             .flat_map(|target| {
-                if !user.foe(target) {
+                if !user.foe(target) || !target.healthy() {
                     return None;
                 }
                 Some((user.distance(target), target.panel))
             })
             .min_by_key(|p| p.0)
-            .map(|p| p.1);
+            .map(|p| p.1)
+    }
 
+    fn face_closest_enemy(&mut self, user_id: CombatantId) {
+        let closest_enemy_panel = self.closest_healthy_enemy_panel(user_id);
         if let Some(target_panel) = closest_enemy_panel {
             let mut user = self.combatant_mut(user_id);
             user.facing = user.panel.facing_towards(target_panel);
@@ -1161,12 +1163,15 @@ impl<'a> Simulation<'a> {
         if user.dont_move() {
             return;
         }
+        let closest_enemy_panel = self
+            .closest_healthy_enemy_panel(user_id)
+            .unwrap_or_else(|| Panel::coords(self.arena.width / 2, self.arena.height / 2, false));
+
         let best_panel = {
             self.mark_enemy_occupied_panels(user);
             let movement_info = MovementInfo::new(user);
             let mut pathfinder = self.pathfinder.borrow_mut();
             pathfinder.calculate_reachable_no_reset(&movement_info, user.panel);
-
             pathfinder
                 .reachable_set()
                 .iter()
@@ -1176,35 +1181,36 @@ impl<'a> Simulation<'a> {
                     (enemy_distance, *panel)
                 })
                 .min_by_key(|p| p.0)
+                .map(|p| p.1)
+                .unwrap()
         };
 
-        if let Some((_, panel)) = best_panel {
-            self.do_move_with_bounds(user_id, panel);
+        if user.panel != best_panel {
+            self.do_move_with_bounds(user_id, best_panel);
+        } else {
+            // we got stuck.
+            let next_panel = {
+                self.mark_enemy_occupied_panels(user);
+                let movement_info = MovementInfo::new(user);
+                let mut pathfinder = self.pathfinder.borrow_mut();
+                pathfinder.path_find_no_reset(&movement_info, user.panel, closest_enemy_panel)
+            };
+            self.do_move_with_bounds(user_id, next_panel);
         }
-    }
-
-    fn occupied_panel(&self, panel: Panel) -> bool {
-        // TODO: This doesn't belong in this function, but I'm not handling not being able to walk
-        //  through enemy units, I.E. path finding.
-        for combatant in &self.combatants {
-            if combatant.panel == panel {
-                return true;
-            }
-        }
-        false
     }
 
     fn mark_enemy_occupied_panels(&self, user: &Combatant) {
         let mut pathfinder = self.pathfinder.borrow_mut();
         pathfinder.reset_all();
         for combatant in &self.combatants {
-            if user.ally(combatant) {
-                continue;
-            }
-            if combatant.dead() || combatant.crystal() {
+            if combatant.crystal() {
                 continue;
             }
             pathfinder.set_occupied(combatant.panel);
+            if user.ally(combatant) || combatant.dead() {
+                continue;
+            }
+            pathfinder.set_impassable(combatant.panel);
         }
     }
 

@@ -11,7 +11,7 @@ impl Panel {
         if location.x < 0 || location.y < 0 || location.y >= 0x80 {
             return Self::out_of_bounds();
         }
-        let layer_bit = if layer { 0x80 } else { 0 };
+        let layer_bit = (layer as u8) << 7;
         Panel {
             x_var: location.x as u8,
             y_var: location.y as u8 | layer_bit,
@@ -22,7 +22,7 @@ impl Panel {
         if y >= 0x80 {
             return Self::out_of_bounds();
         }
-        let layer_bit = if layer { 0x80 } else { 0 };
+        let layer_bit = (layer as u8) << 7;
         Panel {
             x_var: x,
             y_var: y | layer_bit,
@@ -61,12 +61,33 @@ impl Panel {
         Panel::new(location, self.layer())
     }
 
+    pub fn other_layer(self) -> Panel {
+        Panel {
+            x_var: self.x_var,
+            y_var: self.y_var ^ 0x80,
+        }
+    }
+
+    pub fn lower(self) -> Panel {
+        Panel {
+            x_var: self.x_var,
+            y_var: self.y_var & 0x7F,
+        }
+    }
+
+    pub fn upper(self) -> Panel {
+        Panel {
+            x_var: self.x_var,
+            y_var: self.y_var | 0x80,
+        }
+    }
+
     pub fn facing_towards(self, other: Panel) -> Facing {
         Facing::towards(self.location(), other.location())
     }
 
     pub fn distance(self, other: Panel) -> Distance {
-        self.location().distance(other.location())
+        (self.x() as i16 - other.x() as i16).abs() + (self.y() as i16 - other.y() as i16).abs()
     }
 
     pub fn lined_up(self, other: Panel) -> bool {
