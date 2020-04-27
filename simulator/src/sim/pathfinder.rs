@@ -211,7 +211,7 @@ impl<'a> Pathfinder<'a> {
 
         let mut copied_info = info.clone();
         copied_info.movement = MAX_DISTANCE - 1;
-        self.calculate_reachable_no_reset(&copied_info, goal);
+        self.calculate_reachable_with_goal_no_reset(&copied_info, goal, Some(start));
         // TODO: Implement an actual pathfinding algorithm
         let copied_lower = self.lower.clone();
         let copied_upper = self.upper.clone();
@@ -289,12 +289,13 @@ impl<'a> Pathfinder<'a> {
         let new_distance = distance + 1;
         let old_distance = self.distance(end);
         if new_distance >= old_distance {
-            return false;
+            return true;
         }
+
         if self.can_transition(info, start, end) {
             self.set_distance(end, new_distance);
             if new_distance >= info.movement {
-                return false;
+                return true;
             }
             self.expand_open_set(end, new_distance);
             if self.can_end_on(info, end) {
