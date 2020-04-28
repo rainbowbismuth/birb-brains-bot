@@ -324,6 +324,7 @@ function create_map_scene(vnode) {
                 unit.set_render_position(render_x, y_coord, y);
                 unit.add_to_scene();
                 MapState.units.push(unit);
+                requestAnimationFrame(animate);
             });
         });
     }
@@ -338,7 +339,6 @@ function create_map_scene(vnode) {
     set_camera_pos(0);
 
     MapState.dispose_me.push(MapState.scene);
-    animate();
 }
 
 document.onkeydown = function (e) {
@@ -356,8 +356,6 @@ document.onkeydown = function (e) {
 
 function animate() {
     if (MapState.renderer !== null) {
-        requestAnimationFrame(animate);
-
         const canvas = MapState.renderer.domElement;
         const width = (canvas.clientWidth * window.devicePixelRatio) | 0;
         const height = (canvas.clientHeight * window.devicePixelRatio) | 0;
@@ -419,6 +417,7 @@ function set_camera_pos(n) {
     for (let unit of MapState.units) {
         unit.add_to_scene();
     }
+    requestAnimationFrame(animate);
 }
 
 const MapViewer = {
