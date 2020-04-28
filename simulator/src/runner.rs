@@ -194,6 +194,7 @@ pub fn run_all_matches(
     println!("{} patches\n", patches.len());
 
     let match_up_paths = data::find_all_match_ups()?;
+    let mut worst_involves = HashMap::new();
 
     let mut correct = 0;
 
@@ -298,6 +299,19 @@ pub fn run_all_matches(
         log_loss += current_log_loss;
 
         if print_worst && current_log_loss >= worst_loss {
+            for combatant in &match_up.left.combatants {
+                *worst_involves.entry(combatant.class.clone()).or_insert(0) += 1;
+                *worst_involves
+                    .entry(combatant.action_skill.clone())
+                    .or_insert(0) += 1;
+            }
+            for combatant in &match_up.right.combatants {
+                *worst_involves.entry(combatant.class.clone()).or_insert(0) += 1;
+                *worst_involves
+                    .entry(combatant.action_skill.clone())
+                    .or_insert(0) += 1;
+            }
+
             worst_loss = current_log_loss;
             replay_path = (*match_up_path).clone();
             let rng = SmallRng::from_entropy();
@@ -322,6 +336,13 @@ pub fn run_all_matches(
     println!("\nmatch {}:", replay_path.to_string_lossy());
     for line in replay_data {
         println!("{}", line);
+    }
+
+    println!("\nworst matches involve:");
+    let mut worst_involves_pairs: Vec<_> = worst_involves.iter().collect();
+    worst_involves_pairs.sort_by_key(|p| -p.1);
+    for entry in worst_involves_pairs {
+        println!("{:>20}: {:>5}", entry.0, entry.1);
     }
 
     let total_matches = match_ups.len();
