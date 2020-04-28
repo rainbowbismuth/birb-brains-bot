@@ -5,10 +5,10 @@ use std::io;
 
 use clap::Clap;
 
-mod data;
-mod dto;
-mod runner;
-mod sim;
+pub mod data;
+pub mod dto;
+pub mod runner;
+pub mod sim;
 
 /// This program is a rough re-implementation of Final Fantasy Tactics & the game's AI,
 /// for the purposes of predicting matches on the twitch channel, FFTBattleground.

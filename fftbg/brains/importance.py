@@ -1,13 +1,12 @@
 from copy import deepcopy
 from typing import List
 
-from fftbg.brains.baked_model import BakedModel
 from fftbg.tournament import MatchUp
 
 KEYS = ['ReactionSkill', 'SupportSkill', 'MoveSkill', 'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 
 
-def compute(model: BakedModel, match_up_root: MatchUp, patch_time) -> List[dict]:
+def compute(model, match_up_root: MatchUp, patch_time) -> List[dict]:
     match_ups = []
     base_line = model.predict_match_ups([match_up_root], patch_time)
     for i, combatant in enumerate(match_up_root.left.combatants):

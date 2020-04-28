@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
 
-fn run_many_sims<'a>(
+pub fn run_many_sims<'a>(
     num_runs: i32,
     combatants: &'a [Combatant<'a>; 8],
     arena: &'a Arena,
@@ -38,7 +38,7 @@ fn run_many_sims<'a>(
     (clamp(left_wins_percent, 0.01, 0.99), time_outs)
 }
 
-fn clamp(n: f64, min: f64, max: f64) -> f64 {
+pub fn clamp(n: f64, min: f64, max: f64) -> f64 {
     assert!(min <= max);
     let mut x = n;
     if x < min {
@@ -50,7 +50,10 @@ fn clamp(n: f64, min: f64, max: f64) -> f64 {
     x
 }
 
-fn match_to_combatant_infos<'a>(patch: &'a Patch, match_up: &'a MatchUp) -> [CombatantInfo<'a>; 8] {
+pub fn match_to_combatant_infos<'a>(
+    patch: &'a Patch,
+    match_up: &'a MatchUp,
+) -> [CombatantInfo<'a>; 8] {
     [
         CombatantInfo::new(
             CombatantId::new(0),
@@ -103,7 +106,7 @@ fn match_to_combatant_infos<'a>(patch: &'a Patch, match_up: &'a MatchUp) -> [Com
     ]
 }
 
-fn match_to_combatants<'a>(combatant_infos: &'a [CombatantInfo<'a>]) -> [Combatant<'a>; 8] {
+pub fn match_to_combatants<'a>(combatant_infos: &'a [CombatantInfo<'a>]) -> [Combatant<'a>; 8] {
     [
         Combatant::new(&combatant_infos[0]),
         Combatant::new(&combatant_infos[1]),

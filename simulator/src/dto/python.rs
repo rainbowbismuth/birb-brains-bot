@@ -145,7 +145,7 @@ pub struct BaseStats {
     pub cancels: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Arena {
     pub gns: String,
     pub lower: Vec<Vec<Tile>>,
@@ -156,7 +156,7 @@ pub struct Arena {
     pub starting_locations: Vec<StartingLocation>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Tile {
     pub x: u8,
     pub y: u8,
@@ -171,7 +171,7 @@ pub struct Tile {
     pub slope_height: u8,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct StartingLocation {
     pub x: u8,
     pub y: u8,

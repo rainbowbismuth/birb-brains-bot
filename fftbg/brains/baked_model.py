@@ -11,6 +11,38 @@ import fftbg.tournament as tournament
 from fftbg.brains.predictions import Predictions
 from fftbg.tournament import MatchUp, Tournament
 
+import fftbg.simulator
+from pathlib import Path
+
+class SimulatorModel:
+    def __init__(self):
+        pass
+
+    def predict_match_ups(self, match_ups: List[MatchUp], patch_date: datetime, n=20) -> np.ndarray:
+        patch_json = patch.get_patch(patch_date).to_json()
+        patch_obj = fftbg.simulator.Patch(patch_json)
+        results = []
+        for match_up in match_ups:
+            match_up_json = match_up.to_json()
+            arena_json = Path(f'data/arena/MAP{match_up.game_map_num:03d}.json').read_text()
+            arena_obj = fftbg.simulator.Arena(arena_json)
+
+            left_wins = fftbg.simulator.run_simulation(patch_obj, arena_obj, match_up_json, n)
+            results.append([1.0-left_wins, left_wins])
+        return np.array(results)
+
+    def predict(self, tourny: Tournament) -> Predictions:
+        predictions = self.predict_match_ups(tourny.match_ups, tourny.modified, n=100)
+
+        left_wins = {}
+        right_wins = {}
+        for i, (team_1, team_2, _) in enumerate(tournament.HYPOTHETICAL_MATCHES):
+            match = f'{team_1} {team_2}'
+            left_wins[match] = float(predictions[i, 1])
+            right_wins[match] = float(predictions[i, 0])
+
+        return Predictions(tourny.id, left_wins, right_wins)
+
 
 class BakedModel:
     def __init__(self):
