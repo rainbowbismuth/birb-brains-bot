@@ -347,10 +347,11 @@ document.onkeydown = function (e) {
     }
     if (e.key === "ArrowLeft") {
         set_camera_pos(-1);
+        e.preventDefault();
     } else if (e.key === "ArrowRight") {
         set_camera_pos(1);
+        e.preventDefault();
     }
-    e.preventDefault();
 };
 
 function animate() {
