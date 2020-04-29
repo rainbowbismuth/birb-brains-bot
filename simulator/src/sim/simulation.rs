@@ -490,9 +490,14 @@ impl<'a> Simulation<'a> {
         }
     }
 
+    fn combatant_submerged(&self, combatant: &Combatant) -> bool {
+        let tile = self.tile(combatant.panel);
+        combatant_submerged(&tile, combatant)
+    }
+
     // NOTE: I flipped this bool to be true when in prediction mode
     fn roll_brave_reaction(&self, combatant: &Combatant) -> bool {
-        if combatant.berserk() || combatant.confusion() {
+        if combatant.berserk() || combatant.confusion() || self.combatant_submerged(combatant) {
             false
         } else {
             self.roll_auto_fail() <= combatant.brave_percent()
@@ -606,6 +611,7 @@ impl<'a> Simulation<'a> {
                     self.pre_action_move(user_id, &action, target_panel);
                 }
             }
+
             if let Some(mut ctr) = action.ctr {
                 let user = self.combatant(user_id);
                 if user.short_charge() && action.ability.flags & NO_SHORT_CHARGE == 0 {
@@ -1171,6 +1177,10 @@ impl<'a> Simulation<'a> {
                     if !pathfinder.can_reach_and_end_turn_on(panel) {
                         return None;
                     }
+                    let tile = self.tile(panel);
+                    if combatant_submerged(&tile, user) {
+                        return None;
+                    }
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
                     Some((enemy_distance, panel))
                 })
@@ -1393,6 +1403,13 @@ pub fn combatant_height(tile: &Tile, combatant: &Combatant) -> f32 {
     tile_height + float_bonus
 }
 
+pub fn combatant_submerged(tile: &Tile, combatant: &Combatant) -> bool {
+    if tile.depth >= 2 {
+        return !combatant.float();
+    }
+    false
+}
+
 pub fn tile_height(tile: &Tile) -> f32 {
-    tile.height as f32 + tile.slope_height as f32 / 2.0
+    (tile.height as f32 + tile.slope_height as f32 / 2.0) - tile.depth as f32
 }
