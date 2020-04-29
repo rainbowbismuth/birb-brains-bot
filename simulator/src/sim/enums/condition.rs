@@ -172,19 +172,6 @@ pub const DEATH_CANCELS: [Condition; 22] = [
     Condition::Transparent,
 ];
 
-const HASTE_CANCELS: [Condition; 1] = [Condition::Slow];
-const SLOW_CANCELS: [Condition; 1] = [Condition::Haste];
-const POISON_CANCELS: [Condition; 1] = [Condition::Regen];
-const REGEN_CANCELS: [Condition; 1] = [Condition::Poison];
-const SLEEP_CANCELS: [Condition; 1] = [Condition::Charging];
-const PETRIFY_CANCELS: [Condition; 3] = [
-    Condition::Charging,
-    Condition::DeathSentence,
-    Condition::Transparent,
-];
-const FAITH_CANCELS: [Condition; 1] = [Condition::Innocent];
-const INNOCENT_CANCELS: [Condition; 1] = [Condition::Faith];
-
 impl Condition {
     pub fn parse(name: &str) -> Option<Condition> {
         match name {
@@ -266,14 +253,22 @@ impl Condition {
 
     pub fn cancels(self) -> &'static [Condition] {
         match self {
-            Condition::Haste => &HASTE_CANCELS,
-            Condition::Slow => &SLOW_CANCELS,
-            Condition::Poison => &POISON_CANCELS,
-            Condition::Regen => &REGEN_CANCELS,
-            Condition::Petrify => &PETRIFY_CANCELS,
-            Condition::Faith => &FAITH_CANCELS,
-            Condition::Innocent => &INNOCENT_CANCELS,
-            Condition::Sleep => &SLEEP_CANCELS,
+            Condition::Haste => &[Condition::Slow],
+            Condition::Slow => &[Condition::Haste],
+            Condition::Poison => &[Condition::Regen],
+            Condition::Regen => &[Condition::Poison],
+            Condition::Petrify => &[
+                Condition::Charging,
+                Condition::DeathSentence,
+                Condition::Transparent,
+            ],
+            Condition::Faith => &[Condition::Innocent],
+            Condition::Innocent => &[Condition::Faith],
+            Condition::Sleep => &[Condition::Charging],
+            Condition::Charm => &[Condition::Charging],
+            Condition::Frog => &[Condition::Charging],
+            Condition::Berserk => &[Condition::Charging],
+            Condition::Chicken => &[Condition::Charging],
             _ => &[],
         }
     }
