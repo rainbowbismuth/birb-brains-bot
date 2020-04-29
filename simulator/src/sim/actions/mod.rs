@@ -14,6 +14,7 @@ pub mod item;
 pub mod jump;
 pub mod math_skill;
 pub mod monster;
+pub mod perform;
 pub mod punch_art;
 pub mod steal;
 pub mod summon_magic;
@@ -57,6 +58,7 @@ pub const USE_ON_CRITICAL_ONLY: AbilityFlags = 1 << 16;
 pub const UNDER_50_PERCENT_HP_ONLY: AbilityFlags = 1 << 17;
 pub const TRIGGERS_HAMEDO: AbilityFlags = 1 << 18;
 pub const STATS_ABILITY: AbilityFlags = 1 << 19;
+pub const PERFORMANCE: AbilityFlags = 1 << 20;
 
 #[derive(Copy, Clone)]
 pub enum AoE {
@@ -64,6 +66,7 @@ pub enum AoE {
     Diamond(u8),
     Line,
     TriLine, // Like that Tiamat ability
+    Global,
 }
 
 impl AoE {
@@ -73,6 +76,7 @@ impl AoE {
             AoE::Diamond(_size) => false,
             AoE::Line => true,
             AoE::TriLine => true,
+            AoE::Global => false,
         }
     }
 }
@@ -467,6 +471,11 @@ fn handle_normal_ability(
                 perform_aoe_on_panel(sim, user_id, ability, target_panel);
             }
         }
+        AoE::Global => {
+            for target_id in &COMBATANT_IDS {
+                perform_on_target(sim, user_id, ability, *target_id);
+            }
+        }
     }
 }
 
@@ -476,25 +485,37 @@ fn perform_aoe_on_panel(
     ability: &Ability,
     panel: Panel,
 ) {
-    if let Some(real_target_id) = sim.combatant_on_panel(panel) {
-        let user = sim.combatant(user_id);
-        let target = sim.combatant(real_target_id);
-        if target.crystal() || target.jumping() {
-            return;
-        }
-        if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {
-            return;
-        }
-        if ability.flags & HITS_ALLIES_ONLY != 0 && !user.ally(target) {
-            return;
-        }
-        if ability.flags & NOT_ALIVE_OK == 0 && !target.alive() {
-            return;
-        }
-        if ability.flags & PETRIFY_OK == 0 && target.petrify() {
-            return;
-        }
-
-        ability.implementation.perform(sim, user_id, real_target_id);
+    if let Some(target_id) = sim.combatant_on_panel(panel) {
+        perform_on_target(sim, user_id, ability, target_id);
     }
+}
+
+fn perform_on_target(
+    sim: &mut Simulation,
+    user_id: CombatantId,
+    ability: &Ability,
+    target_id: CombatantId,
+) {
+    let user = sim.combatant(user_id);
+    let target = sim.combatant(target_id);
+    if target.crystal() || target.jumping() {
+        return;
+    }
+    if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {
+        return;
+    }
+    if ability.flags & HITS_ALLIES_ONLY != 0 && !user.ally(target) {
+        return;
+    }
+    if ability.flags & NOT_ALIVE_OK == 0 && !target.alive() {
+        return;
+    }
+    if ability.flags & PETRIFY_OK == 0 && target.petrify() {
+        return;
+    }
+    if ability.flags & PERFORMANCE != 0 && target.sleep() {
+        return;
+    }
+
+    ability.implementation.perform(sim, user_id, target_id);
 }

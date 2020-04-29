@@ -215,7 +215,13 @@ impl<'a> Simulation<'a> {
                 perform_action_slow(self, *c_id, slow_action.action);
 
                 let combatant = self.combatant_mut(*c_id);
-                combatant.ctr_action = None;
+
+                if combatant.performing() {
+                    let mut sa = combatant.ctr_action.as_mut().unwrap();
+                    sa.ctr = sa.starting_ctr;
+                } else {
+                    combatant.ctr_action = None;
+                }
 
                 if !self.combatant(*c_id).monster() && !self.combatant(*c_id).mimic() {
                     self.do_mime_cycle(*c_id, slow_action.action);
@@ -569,6 +575,22 @@ impl<'a> Simulation<'a> {
             .any(|target| !target.confusion() && !target.death_sentence())
     }
 
+    fn ai_cancel_charge_check(&mut self, user_id: CombatantId) -> bool {
+        let user = self.combatant(user_id);
+        if !user.ctr_action.is_some() {
+            return false;
+        }
+        if !user.performing() {
+            return true;
+        }
+        if self.roll_inclusive(0, 1) == 1 {
+            return true;
+        }
+        let mut user = self.combatant_mut(user_id);
+        user.ctr_action = None;
+        return false;
+    }
+
     fn ai_do_active_turn(&mut self, user_id: CombatantId) {
         let user = self.combatant(user_id);
         if user.dont_act() {
@@ -576,12 +598,13 @@ impl<'a> Simulation<'a> {
             return;
         }
 
-        if user.ctr_action.is_some() {
+        if self.ai_cancel_charge_check(user_id) {
             // TODO: The AI in reality reconsiders here, will have to learn more.
             self.post_action_move(user_id);
             return;
         }
 
+        let user = self.combatant(user_id);
         let acting_cowardly = user.critical() && self.ai_can_be_cowardly(user);
         let targets = if acting_cowardly {
             &self.combatants[user_id.index()..user_id.index() + 1]
@@ -618,11 +641,12 @@ impl<'a> Simulation<'a> {
                     ctr /= 2;
                 }
                 let mut user = self.combatant_mut(user_id);
-                user.ctr_action = Some(SlowAction { ctr, action });
+                user.ctr_action = Some(SlowAction {
+                    ctr,
+                    starting_ctr: ctr,
+                    action,
+                });
                 self.log_event(Event::StartedCharging(user_id, action));
-                if action.ability.flags & JUMPING != 0 {
-                    self.add_condition(user_id, Condition::Jumping, Source::Ability);
-                }
             } else {
                 if let Some(target_panel) = action.target.to_panel(self) {
                     let mut user = self.combatant_mut(user_id);

@@ -13,6 +13,7 @@ use crate::sim::actions::math_skill::MATH_SKILL_ABILITY;
 use crate::sim::actions::monster::{
     CHOCOBO_ABILITIES, DRAGON_ABILITIES, TIAMAT_ABILITIES, ULTIMA_DEMON_ABILITIES, WORK_ABILITIES,
 };
+use crate::sim::actions::perform::PERFORMANCE_ABILITIES;
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
 use crate::sim::actions::steal::STEAL_ABILITIES;
 use crate::sim::actions::summon_magic::SUMMON_MAGIC_ABILITES;
@@ -24,7 +25,7 @@ use crate::sim::actions::yin_yang_magic::YIN_YANG_MAGIC_ABILITIES;
 use crate::sim::{
     Ability, Action, CalcAlgorithm, CalcAttribute, Condition, ConditionBlock, ConditionFlags,
     Distance, Element, Facing, Gender, Location, Panel, RelativeFacing, Sign, SkillBlock, Team,
-    ALL_CONDITIONS, DONT_MOVE_WHILE_CHARGING, SILENCEABLE,
+    ALL_CONDITIONS, DONT_MOVE_WHILE_CHARGING, JUMPING, PERFORMANCE, SILENCEABLE,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -70,6 +71,7 @@ pub const COMBATANT_IDS_TURN_RESOLVE: [CombatantId; COMBATANT_IDS_LEN] = [
 #[derive(Copy, Clone)]
 pub struct SlowAction<'a> {
     pub ctr: u8,
+    pub starting_ctr: u8,
     pub action: Action<'a>,
 }
 
@@ -173,6 +175,7 @@ impl<'a> CombatantInfo<'a> {
             ELEMENTAL_ABILITIES,
             TALK_SKILL_ABILITIES,
             DRAGON_ABILITIES,
+            PERFORMANCE_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
@@ -550,7 +553,7 @@ impl<'a> Combatant<'a> {
 
     fn evasion_multiplier(&self, attacker_blind: bool) -> f32 {
         let mut mult = 1.0;
-        if self.charging() || self.sleep() {
+        if self.charging() || self.performing() || self.sleep() {
             mult *= 0.0;
         }
         if self.abandon() {
@@ -697,7 +700,18 @@ impl<'a> Combatant<'a> {
     pub fn has_condition(&self, condition: Condition) -> bool {
         match condition {
             Condition::Critical => !self.dead() && self.hp() <= self.max_hp() / 5,
-            Condition::Charging => self.ctr_action.is_some(),
+            Condition::Charging => self
+                .ctr_action
+                .map(|sa| sa.action.ability.flags & (JUMPING | PERFORMANCE) == 0)
+                .unwrap_or(false),
+            Condition::Jumping => self
+                .ctr_action
+                .map(|sa| sa.action.ability.flags & JUMPING != 0)
+                .unwrap_or(false),
+            Condition::Performing => self
+                .ctr_action
+                .map(|sa| sa.action.ability.flags & PERFORMANCE != 0)
+                .unwrap_or(false),
             Condition::Death => self.dead(),
             _ => self.conditions.has(condition),
         }
@@ -732,6 +746,10 @@ impl<'a> Combatant<'a> {
 
     pub fn jumping(&self) -> bool {
         self.has_condition(Condition::Jumping)
+    }
+
+    pub fn performing(&self) -> bool {
+        self.has_condition(Condition::Performing)
     }
 
     pub fn critical(&self) -> bool {
