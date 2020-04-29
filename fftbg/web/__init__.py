@@ -1,11 +1,11 @@
 import dataclasses
 import json
 import logging
+from pathlib import Path
 
 import numpy as np
 import pandas
 from flask import Flask, render_template
-from pathlib import Path
 
 import fftbg.brains.api
 from fftbg.bird.memory import Memory

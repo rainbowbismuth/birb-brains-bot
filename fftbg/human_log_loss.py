@@ -1,5 +1,6 @@
-from fftbg.bird.memory import Memory
 import numpy as np
+
+from fftbg.bird.memory import Memory
 
 LIMIT = 10000
 mem = Memory()

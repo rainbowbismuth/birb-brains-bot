@@ -1,6 +1,8 @@
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
+import fftbg.simulator
 import numpy as np
 import pandas
 
@@ -11,8 +13,6 @@ import fftbg.tournament as tournament
 from fftbg.brains.predictions import Predictions
 from fftbg.tournament import MatchUp, Tournament
 
-import fftbg.simulator
-from pathlib import Path
 
 class SimulatorModel:
     def __init__(self):
@@ -28,7 +28,7 @@ class SimulatorModel:
             arena_obj = fftbg.simulator.Arena(arena_json)
 
             left_wins = fftbg.simulator.run_simulation(patch_obj, arena_obj, match_up_json, n)
-            results.append([1.0-left_wins, left_wins])
+            results.append([1.0 - left_wins, left_wins])
         return np.array(results)
 
     def predict_sim_match(self, match_up: MatchUp, patch_date: datetime) -> List[str]:

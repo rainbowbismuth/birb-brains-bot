@@ -1,7 +1,8 @@
-from ganesha.fft.map.gns import GNS
-from ganesha.fft.map import Map, Tile, Terrain
-from pathlib import Path
 import json
+from pathlib import Path
+
+from ganesha.fft.map import Map, Tile, Terrain
+from ganesha.fft.map.gns import GNS
 
 SLOPE_TYPES = {
     0x00: 'Flat 0',
@@ -96,6 +97,7 @@ def layer_to_dict(tiles: list, surface_types: set) -> list:
             surface_types.add(SURFACE_TYPES[tile.surface_type])
             row.append(tile_to_dict(tile, x, y))
     return out
+
 
 ENT_SLOT_BYTES = 40
 ENT_RECORD_BYTES = ENT_SLOT_BYTES * 16

@@ -1,5 +1,5 @@
+from fftbg.betting import expected_payoff
 from fftbg.bird.memory import Memory
-from fftbg.betting import optimal_bet, expected_payoff
 
 LIMIT = 5000
 mem = Memory()
@@ -31,9 +31,8 @@ for entry in log:
     payout_bet_sum += payoff_on_bet
     payout_sum += payoff_on_final
 
+print(f'{count}/{LIMIT} = {count / LIMIT}')
+print(f'bet {payout_bet_sum}/{LIMIT} = {payout_bet_sum / LIMIT}')
+print(f'final {payout_sum}/{LIMIT} = {payout_sum / LIMIT}')
 
-print(f'{count}/{LIMIT} = {count/LIMIT}')
-print(f'bet {payout_bet_sum}/{LIMIT} = {payout_bet_sum/LIMIT}')
-print(f'final {payout_sum}/{LIMIT} = {payout_sum/LIMIT}')
-
-print(f'avg neg {neg_sum}/{count} = {neg_sum/count}')
+print(f'avg neg {neg_sum}/{count} = {neg_sum / count}')
