@@ -56,6 +56,7 @@ pub const CAN_BE_CALCULATED: AbilityFlags = 1 << 15;
 pub const USE_ON_CRITICAL_ONLY: AbilityFlags = 1 << 16;
 pub const UNDER_50_PERCENT_HP_ONLY: AbilityFlags = 1 << 17;
 pub const TRIGGERS_HAMEDO: AbilityFlags = 1 << 18;
+pub const STATS_ABILITY: AbilityFlags = 1 << 19;
 
 #[derive(Copy, Clone)]
 pub enum AoE {
@@ -250,6 +251,12 @@ pub fn ai_consider_actions<'a>(
         if !filter_ability_level(user, ability) {
             continue;
         }
+
+        // TODO: Not sure what the probability is supposed to be here.
+        if ability.flags & STATS_ABILITY != 0 && sim.roll_inclusive(0, 1) == 1 {
+            continue;
+        }
+
         for target in targets {
             if !filter_target_level(user, ability, target) {
                 continue;

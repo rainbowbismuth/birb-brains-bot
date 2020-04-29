@@ -2,7 +2,7 @@ use crate::sim::actions::common::{mod_2_formula_xa, EmpowerImpl};
 use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, EquipSlot, Event, Simulation, Source, WeaponType,
-    TARGET_SELF_ONLY,
+    STATS_ABILITY, TARGET_SELF_ONLY,
 };
 
 pub const BASIC_SKILL_ABILITIES: &[Ability] = &[
@@ -54,7 +54,7 @@ pub const BASIC_SKILL_ABILITIES: &[Ability] = &[
     // Wish: 1 range, 0 AoE. Effect: Heal (CasterMaxHP * 2 / 5); DamageCaster (CasterMaxHP / 5).
     // Scream: 0 range, 0 AoE, 2 CT. Effect: +3 Brave, +1 PA, +1 MA, +1 Speed.
     Ability {
-        flags: ALLY_OK | TARGET_SELF_ONLY,
+        flags: ALLY_OK | TARGET_SELF_ONLY | STATS_ABILITY,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &EmpowerImpl {
