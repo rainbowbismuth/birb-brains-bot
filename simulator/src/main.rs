@@ -49,6 +49,10 @@ struct Test {
     #[clap(long = "save")]
     save: bool,
 
+    /// Run most recent M matches
+    #[clap(short = "m")]
+    most_recent: Option<u64>,
+
     /// Filter out all matches with any monsters
     #[clap(long = "filter-no-monsters")]
     filter_no_monsters: bool,
@@ -96,6 +100,7 @@ fn main() -> io::Result<()> {
             test.filter_skill,
             test.filter_no_monsters,
             test.filter_map,
+            test.most_recent,
         ),
         SubCommand::Run(run) => runner::run_specific_match(run.match_id, run.num_runs),
         SubCommand::Feed(_feed) => data::convert_data_from_feed(),

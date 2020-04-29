@@ -189,6 +189,7 @@ pub fn run_all_matches(
     filter_skill: Vec<String>,
     filter_no_monsters: bool,
     filter_map: Vec<String>,
+    most_recent: Option<u64>,
 ) -> io::Result<()> {
     let mut results: HashMap<String, HashMap<String, f64>> = HashMap::new();
 
@@ -196,7 +197,14 @@ pub fn run_all_matches(
 
     println!("{} patches\n", patches.len());
 
-    let match_up_paths = data::find_all_match_ups()?;
+    let mut match_up_paths = data::find_all_match_ups()?;
+
+    if let Some(most_recent) = most_recent {
+        match_up_paths.sort();
+        match_up_paths.reverse();
+        match_up_paths.truncate(most_recent as usize);
+    }
+
     let mut worst_involves = HashMap::new();
 
     let mut correct = 0;
