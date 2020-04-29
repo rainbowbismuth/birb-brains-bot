@@ -1,7 +1,7 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, TARGET_NOT_SELF,
-    TARGET_SELF_ONLY,
+    TARGET_SELF_ONLY, TRIGGERS_HAMEDO,
 };
 
 pub const THROW_ABILITIES: &[Ability] = &[
@@ -10,7 +10,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
     // // Zorlin Shape: 12 WP, 1 range, 10% evade, Knife. Effect: Chance to Add Sleep.
     Ability {
         name: "Knife",
-        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ThrowImpl {
@@ -34,7 +34,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
     // // Materia Blade: 15 WP, 1 range, 10% evade, Sword. Effect: Strengthen Wind, Earth, Water.
     Ability {
         name: "Sword",
-        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ThrowImpl {
@@ -63,7 +63,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
     // // Koga Knife: 17 WP, 1 range, 5% evade, Ninja Blade.
     Ability {
         name: "Ninja Sword",
-        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ThrowImpl {
@@ -82,7 +82,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
     // // Gungnir: 18 WP, 2 range, 10% evade, Spear. Element: Wind.
     Ability {
         name: "Spear",
-        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ThrowImpl {
@@ -119,7 +119,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
     // // Yagyu Shuriken: 9 WP, Shuriken. Element: Dark.
     Ability {
         name: "Shuriken",
-        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ThrowImpl {
@@ -148,7 +148,7 @@ pub const THROW_ABILITIES: &[Ability] = &[
     // // Spark Bomb: 8 WP, Bomb. Element: Lightning.
     Ability {
         name: "Bomb",
-        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ThrowImpl {

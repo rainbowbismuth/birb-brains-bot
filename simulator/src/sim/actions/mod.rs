@@ -55,6 +55,7 @@ pub const CAN_BE_REFLECTED: AbilityFlags = 1 << 14;
 pub const CAN_BE_CALCULATED: AbilityFlags = 1 << 15;
 pub const USE_ON_CRITICAL_ONLY: AbilityFlags = 1 << 16;
 pub const UNDER_50_PERCENT_HP_ONLY: AbilityFlags = 1 << 17;
+pub const TRIGGERS_HAMEDO: AbilityFlags = 1 << 18;
 
 #[derive(Copy, Clone)]
 pub enum AoE {
@@ -290,6 +291,15 @@ pub fn perform_action_slow<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, a
 pub fn perform_action<'a>(sim: &mut Simulation<'a>, user_id: CombatantId, action: Action<'a>) {
     let ability = action.ability;
     let mut action_target = action.target;
+
+    if action.ability.flags & TRIGGERS_HAMEDO != 0 {
+        if let Some(target_id) = action_target.to_target_id(sim) {
+            if sim.try_hamedo(user_id, target_id) {
+                return;
+            }
+        }
+    }
+
     let user = sim.combatant_mut(user_id);
     if !action_target.is_math() && ability.mp_cost > 0 && !user.no_mp() {
         let mp_cost = if user.halve_mp() {

@@ -3,10 +3,12 @@ use crate::sim::actions::common::mod_5_formula_pass_ma;
 use crate::sim::actions::{
     Ability, AbilityImpl, Action, AoE, ALLY_OK, BERSERK_OK, FOE_OK, FROG_OK, TARGET_NOT_SELF,
 };
-use crate::sim::{Combatant, CombatantId, Simulation, Source, WeaponType, DAMAGE_CANCELS};
+use crate::sim::{
+    Combatant, CombatantId, Simulation, Source, WeaponType, DAMAGE_CANCELS, TRIGGERS_HAMEDO,
+};
 
 pub const ATTACK_ABILITY: Ability = Ability {
-    flags: BERSERK_OK | FROG_OK | ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+    flags: BERSERK_OK | FROG_OK | ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
     mp_cost: 0,
     aoe: AoE::None,
     implementation: &AttackImpl {},

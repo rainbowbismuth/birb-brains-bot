@@ -6,13 +6,19 @@ use crate::sim::actions::{
 };
 use crate::sim::{
     Combatant, CombatantId, Condition, EquipSlot, Event, Simulation, Source, WeaponType,
+    TRIGGERS_HAMEDO,
 };
 
 pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+1: weapon range, 0 AoE, 3 CT. Effect: Normal Attack with +1 Charge.
     Ability {
         name: "Charge+1",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 1, ct: 3 },
@@ -20,7 +26,12 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+2: weapon range, 0 AoE, 4 CT. Effect: Normal Attack with +2 Charge.
     Ability {
         name: "Charge+2",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 2, ct: 4 },
@@ -28,7 +39,12 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+3: weapon range, 0 AoE, 5 CT. Effect: Normal Attack with +3 Charge.
     Ability {
         name: "Charge+3",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 3, ct: 5 },
@@ -36,7 +52,12 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+4: weapon range, 0 AoE, 6 CT. Effect: Normal Attack with +4 Charge.
     Ability {
         name: "Charge+4",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 4, ct: 6 },
@@ -44,7 +65,12 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+5: weapon range, 0 AoE, 7 CT. Effect: Normal Attack with +5 Charge.
     Ability {
         name: "Charge+5",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 5, ct: 7 },
@@ -52,7 +78,12 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+7: weapon range, 0 AoE, 9 CT. Effect: Normal Attack with +7 Charge.
     Ability {
         name: "Charge+7",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 7, ct: 9 },
@@ -60,7 +91,12 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+10: weapon range, 0 AoE, 12 CT. Effect: Normal Attack with +10 Charge.
     Ability {
         name: "Charge+10",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 10, ct: 12 },
@@ -68,7 +104,12 @@ pub const CHARGE_ABILITIES: &[Ability] = &[
     // Charge+20: weapon range, 0 AoE, 20 CT. Effect: Normal Attack with +20 Charge.
     Ability {
         name: "Charge+20",
-        flags: TARGET_NOT_SELF | ALLY_OK | FOE_OK | NO_SHORT_CHARGE | DONT_MOVE_WHILE_CHARGING,
+        flags: TARGET_NOT_SELF
+            | ALLY_OK
+            | FOE_OK
+            | NO_SHORT_CHARGE
+            | DONT_MOVE_WHILE_CHARGING
+            | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ChargeImpl { k: 20, ct: 20 },

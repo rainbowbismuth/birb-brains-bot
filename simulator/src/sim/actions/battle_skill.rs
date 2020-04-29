@@ -6,13 +6,14 @@ use crate::sim::actions::{
 };
 use crate::sim::{
     Combatant, CombatantId, Condition, EquipSlot, Event, Simulation, Source, WeaponType,
+    TRIGGERS_HAMEDO,
 };
 
 pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Head Break: weapon range, 0 AoE. Hit: (PA + WP + 45)%. Effect: Break target's head equipment; If none, attack instead.
     Ability {
         name: "Head Break",
-        flags: FOE_OK,
+        flags: FOE_OK | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &BreakEquipImpl {
@@ -23,7 +24,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Armor Break: weapon range, 0 AoE. Hit: (PA + WP + 40)%. Effect: Break target's body equipment; If none, attack instead.
     Ability {
         name: "Armor Break",
-        flags: FOE_OK,
+        flags: FOE_OK | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &BreakEquipImpl {
@@ -34,7 +35,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Shield Break: weapon range, 0 AoE. Hit: (PA + WP + 55)%. Effect: Break target's shield; If none, attack instead.
     Ability {
         name: "Shield Break",
-        flags: FOE_OK,
+        flags: FOE_OK | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &BreakEquipImpl {
@@ -45,7 +46,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Weapon Break: weapon range, 0 AoE. Hit: (PA + WP + 30)%. Effect: Break target's weapon; If none, attack instead.
     Ability {
         name: "Weapon Break",
-        flags: FOE_OK,
+        flags: FOE_OK | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &BreakEquipImpl {
@@ -56,7 +57,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
     // Magic Break: weapon range, 0 AoE. Hit: (PA + 50)%. Effect: DamageMP (50)%.
     Ability {
         name: "Magic Break",
-        flags: FOE_OK,
+        flags: FOE_OK | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &MagicBreakImpl {

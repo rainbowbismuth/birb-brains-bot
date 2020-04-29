@@ -674,6 +674,10 @@ impl<'a> Combatant<'a> {
         self.info.skill_block.arrow_guard()
     }
 
+    pub fn hamedo(&self) -> bool {
+        self.info.skill_block.hamedo()
+    }
+
     pub fn gender(&self) -> Gender {
         self.info.gender
     }

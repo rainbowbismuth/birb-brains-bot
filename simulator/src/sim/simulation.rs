@@ -923,6 +923,25 @@ impl<'a> Simulation<'a> {
         }
     }
 
+    pub fn try_hamedo(&mut self, user_id: CombatantId, target_id: CombatantId) -> bool {
+        let target = self.combatant(target_id);
+        if target.hamedo() && self.roll_brave_reaction(target) {
+            let user = self.combatant(user_id);
+            let range = attack_range(self, target, user);
+
+            if !in_range(target, range, user) {
+                return false;
+            }
+
+            let action = Action::new(&ATTACK_ABILITY, range, None, user_id);
+            self.trigger_countergrasps = false;
+            perform_action(self, target_id, action);
+            self.trigger_countergrasps = true;
+            return true;
+        }
+        false
+    }
+
     pub fn try_countergrasp(&mut self, user_id: CombatantId, target_id: CombatantId) {
         if !self.trigger_countergrasps || self.prediction_mode {
             return;
