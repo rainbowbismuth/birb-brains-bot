@@ -54,6 +54,19 @@ pub const COMBATANT_IDS: [CombatantId; COMBATANT_IDS_LEN] = [
     CombatantId { id: 7 },
 ];
 
+// NOTE: These are shuffled in a certain order based on the ENTD files.
+//  This is because the order of the combatants breaks CT ties.
+pub const COMBATANT_IDS_TURN_RESOLVE: [CombatantId; COMBATANT_IDS_LEN] = [
+    CombatantId { id: 0 },
+    CombatantId { id: 4 },
+    CombatantId { id: 5 },
+    CombatantId { id: 1 },
+    CombatantId { id: 2 },
+    CombatantId { id: 6 },
+    CombatantId { id: 7 },
+    CombatantId { id: 3 },
+];
+
 #[derive(Copy, Clone)]
 pub struct SlowAction<'a> {
     pub ctr: u8,

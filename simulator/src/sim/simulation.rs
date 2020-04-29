@@ -12,8 +12,8 @@ use crate::sim::{
     ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
     ActionTarget, Arena, Combatant, CombatantId, Condition, EvasionType, Event, Location, Log,
     MovementInfo, Panel, Pathfinder, Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS,
-    COMBATANT_IDS, COMBATANT_IDS_LEN, DAMAGE_CANCELS, DEATH_CANCELS, JUMPING, NO_SHORT_CHARGE,
-    TIMED_CONDITIONS,
+    COMBATANT_IDS, COMBATANT_IDS_LEN, COMBATANT_IDS_TURN_RESOLVE, DAMAGE_CANCELS, DEATH_CANCELS,
+    JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 use std::borrow::Borrow;
 
@@ -200,7 +200,7 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn phase_slow_action_resolve(&mut self) {
-        for c_id in &COMBATANT_IDS {
+        for c_id in &COMBATANT_IDS_TURN_RESOLVE {
             let combatant = self.combatant_mut(*c_id);
             if combatant.stop() {
                 // FIXME: Does stop just remove the slow action? Sleep, etc...
@@ -344,7 +344,7 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn phase_active_turn_resolve(&mut self) {
-        for c_id in &COMBATANT_IDS {
+        for c_id in &COMBATANT_IDS_TURN_RESOLVE {
             let combatant = self.combatant(*c_id);
             if combatant.ct < 100 {
                 continue;
