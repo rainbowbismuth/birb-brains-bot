@@ -593,9 +593,14 @@ impl<'a> Simulation<'a> {
         };
 
         let best_action = self.ai_choose_best_action(user_id, basis, ignore_confusion);
-
+        let mut targeted_self = false;
         if let Some(action) = best_action {
             let user = self.combatant(user_id);
+
+            if let Some(target_id) = action.target.to_target_id(self) {
+                targeted_self = user_id == target_id;
+            }
+
             if let Some(target_panel) = action.target.to_panel(self) {
                 if !in_range_panel(user, &action, target_panel) {
                     self.pre_action_move(user_id, &action, target_panel);
@@ -632,7 +637,7 @@ impl<'a> Simulation<'a> {
             return;
         }
 
-        if !user.acted_during_active_turn {
+        if (targeted_self && !acting_cowardly) || !user.acted_during_active_turn {
             self.engage_enemy_blindly(user_id);
             return;
         }
