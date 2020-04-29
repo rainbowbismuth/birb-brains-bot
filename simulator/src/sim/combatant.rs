@@ -678,6 +678,10 @@ impl<'a> Combatant<'a> {
         self.info.skill_block.hamedo()
     }
 
+    pub fn counter_flood(&self) -> bool {
+        self.info.skill_block.counter_flood()
+    }
+
     pub fn gender(&self) -> Gender {
         self.info.gender
     }

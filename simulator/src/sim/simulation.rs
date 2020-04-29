@@ -934,6 +934,10 @@ impl<'a> Simulation<'a> {
     }
 
     pub fn try_hamedo(&mut self, user_id: CombatantId, target_id: CombatantId) -> bool {
+        if !self.trigger_countergrasps || self.prediction_mode {
+            return false;
+        }
+
         let target = self.combatant(target_id);
         if target.hamedo() && self.roll_brave_reaction(target) {
             let user = self.combatant(user_id);

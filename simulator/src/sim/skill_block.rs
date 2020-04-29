@@ -39,6 +39,7 @@ const TELEPORT: u64 = 1 << 37;
 const LANDLOCKED: u64 = 1 << 38;
 const ARROW_GUARD: u64 = 1 << 39;
 const HAMEDO: u64 = 1 << 40;
+const COUNTER_FLOOD: u64 = 1 << 41;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -90,6 +91,7 @@ impl SkillBlock {
                 "Landlocked" => block.flags |= LANDLOCKED,
                 "Arrow Guard" => block.flags |= ARROW_GUARD,
                 "Hamedo" => block.flags |= HAMEDO,
+                "Counter Flood" => block.flags |= COUNTER_FLOOD,
                 _ => {}
             }
         }
@@ -254,5 +256,9 @@ impl SkillBlock {
 
     pub fn hamedo(&self) -> bool {
         self.flags & HAMEDO != 0
+    }
+
+    pub fn counter_flood(&self) -> bool {
+        self.flags & COUNTER_FLOOD != 0
     }
 }
