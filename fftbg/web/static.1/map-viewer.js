@@ -100,6 +100,9 @@ function dispose_everything() {
         item.dispose();
     }
     MapState.dispose_me = [];
+    MapState.scene = null;
+    MapState.camera = null;
+    MapState.camera_pos = 0;
     MapState.units = [];
 }
 
@@ -360,44 +363,50 @@ document.onkeydown = function (e) {
 };
 
 function animate() {
-    if (MapState.renderer !== null) {
-        const canvas = MapState.renderer.domElement;
-        const width = (canvas.clientWidth * window.devicePixelRatio) | 0;
-        const height = (canvas.clientHeight * window.devicePixelRatio) | 0;
-        const needResize = canvas.width !== width || canvas.height !== height;
-        if (needResize) {
-            MapState.renderer.setSize(width, height, false);
-            MapState.camera.aspect = width / height;
-            MapState.camera.updateProjectionMatrix();
-        }
+    if (MapState.renderer == null) {
+        return;
+    }
+    const canvas = MapState.renderer.domElement;
+    const width = (canvas.clientWidth * window.devicePixelRatio) | 0;
+    const height = (canvas.clientHeight * window.devicePixelRatio) | 0;
+    const needResize = canvas.width !== width || canvas.height !== height;
+    if (needResize) {
+        MapState.renderer.setSize(width, height, false);
+        MapState.camera.aspect = width / height;
+        MapState.camera.updateProjectionMatrix();
+    }
 
-        MapState.raycaster.setFromCamera(MapState.mouse, MapState.camera);
-        const intersects = MapState.raycaster.intersectObjects(MapState.scene.children);
-        MapState.selected_tile = null;
-        for (const match of intersects) {
-            if (!match.object.fftbg_tile) {
-                continue;
+    MapState.renderer.render(MapState.scene, MapState.camera);
+}
+
+function ray_cast_for_surface_type() {
+    if (MapState.renderer == null) {
+        return;
+    }
+    MapState.raycaster.setFromCamera(MapState.mouse, MapState.camera);
+    const intersects = MapState.raycaster.intersectObjects(MapState.scene.children);
+    MapState.selected_tile = null;
+    for (const match of intersects) {
+        if (!match.object.fftbg_tile) {
+            continue;
+        }
+        MapState.selected_tile = match.object.fftbg_tile;
+        break;
+    }
+
+    const display = document.querySelector("#surface-type-display");
+    if (display != null) {
+        if (MapState.selected_tile != null) {
+            const tile = MapState.selected_tile;
+            const hex = (surface_type_color(tile.surface_type) | 0).toString(16);
+            display.style.color = '#' + '000000'.substr(0, 6 - hex.length) + hex;
+            display.textContent = `${tile.surface_type} (${tile.height + tile.slope_height / 2}h)`;
+            if (tile.no_walk) {
+                display.textContent += ' (No walk)';
             }
-            MapState.selected_tile = match.object.fftbg_tile;
-            break;
+        } else {
+            display.textContent = 'Mouse over a surface to display the surface\'s type here.';
         }
-
-        const display = document.querySelector("#surface-type-display");
-        if (display != null) {
-            if (MapState.selected_tile != null) {
-                const tile = MapState.selected_tile;
-                const hex = (surface_type_color(tile.surface_type) | 0).toString(16);
-                display.style.color = '#' + '000000'.substr(0, 6 - hex.length) + hex;
-                display.textContent = `${tile.surface_type} (${tile.height + tile.slope_height / 2}h)`;
-                if (tile.no_walk) {
-                    display.textContent += ' (No walk)';
-                }
-            } else {
-                display.textContent = 'Mouse over a surface to display the surface\'s type here.';
-            }
-        }
-
-        MapState.renderer.render(MapState.scene, MapState.camera);
     }
 }
 
@@ -439,6 +448,7 @@ const MapViewer = {
             const y = e.clientY - rect.top;
             MapState.mouse.x = (x / width) * 2 - 1;
             MapState.mouse.y = -(y / height) * 2 + 1;
+            ray_cast_for_surface_type();
             e.preventDefault();
         });
         load_map(vnode.attrs.map_num, vnode);
@@ -450,11 +460,7 @@ const MapViewer = {
         MapState.num = null;
         MapState.map = null;
         dispose_everything();
-        MapState.scene = null;
         MapState.renderer.dispose();
         MapState.renderer = null;
-        MapState.camera = null;
-        MapState.camera_pos = 0;
-        MapState.units = [];
     }
 };
