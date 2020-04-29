@@ -54,6 +54,18 @@ pub const DRAGON_ABILITIES: &[Ability] = &[
             range: 2,
         },
     },
+    // Holy Breath: 2 range, 2 AoE (line). Element: Holy. Effect: Damage (MA * 5).
+    Ability {
+        name: "Holy Breath",
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::Line,
+        implementation: &ElementalBreathImpl {
+            element: Element::Holy,
+            ma_factor: 5,
+            range: 2,
+        },
+    },
 ];
 
 struct ElementalBreathImpl {
