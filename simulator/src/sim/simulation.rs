@@ -592,50 +592,9 @@ impl<'a> Simulation<'a> {
             ai_target_value_sum(user, &self.combatants, ignore_confusion)
         };
 
-        let best_action = {
-            self.actions
-                .borrow()
-                .iter()
-                .flat_map(|action| {
-                    if self.ai_thirteen_rule() {
-                        return None;
-                    }
-                    // TODO: This isn't strictly correct..
-                    if let Some(target_id) = action.target.to_target_id(self) {
-                        if !can_move_into_range(user, action, self.combatant(target_id)) {
-                            return None;
-                        }
-                    }
+        let best_action = self.ai_choose_best_action(user_id, basis, ignore_confusion);
 
-                    let mut simulated_world = self.prediction_clone();
-                    let user = self.combatant(user_id);
-                    if let Some(target_panel) = action.target.to_panel(self) {
-                        if !in_range_panel(user, action, target_panel) {
-                            simulated_world.pre_action_move(user_id, action, target_panel);
-                        }
-                        let sim_user = simulated_world.combatant(user_id);
-                        if !in_range_panel(sim_user, action, target_panel) {
-                            return None;
-                        }
-                    }
-                    perform_action(&mut simulated_world, user_id, *action);
-                    let new_value = ai_target_value_sum(
-                        simulated_world.combatant(user_id),
-                        &simulated_world.combatants,
-                        ignore_confusion,
-                    );
-                    if new_value <= basis {
-                        return None;
-                    }
-
-                    // FIXME: A hack to get around the whole partial ord thing
-                    let ordered_val = (new_value * 1_000_000.0) as i64;
-                    Some((ordered_val, *action))
-                })
-                .max_by_key(|pair| pair.0)
-        };
-
-        if let Some((_, action)) = best_action {
+        if let Some(action) = best_action {
             let user = self.combatant(user_id);
             if let Some(target_panel) = action.target.to_panel(self) {
                 if !in_range_panel(user, &action, target_panel) {
@@ -679,6 +638,78 @@ impl<'a> Simulation<'a> {
         }
 
         self.post_action_move(user_id);
+    }
+
+    pub fn ai_choose_confused_action(&mut self, user_id: CombatantId) -> Option<Action<'a>> {
+        let user = self.combatant(user_id);
+        self.actions
+            .borrow()
+            .iter()
+            .flat_map(|action| {
+                let mut dist_penalty = 0;
+                if let Some(target_panel) = action.target.to_panel(self) {
+                    dist_penalty = user.panel.distance(target_panel) as i64;
+                }
+                let random_val = self.roll_inclusive(1, 10_000) as i64;
+                let ordered_val = (random_val + dist_penalty * 10_000) as i64;
+                Some((ordered_val, *action))
+            })
+            .min_by_key(|pair| pair.0)
+            .map(|pair| pair.1)
+    }
+
+    pub fn ai_choose_best_action(
+        &mut self,
+        user_id: CombatantId,
+        basis: f32,
+        ignore_confusion: bool,
+    ) -> Option<Action<'a>> {
+        let user = self.combatant(user_id);
+        if user.confusion() {
+            return self.ai_choose_confused_action(user_id);
+        }
+
+        self.actions
+            .borrow()
+            .iter()
+            .flat_map(|action| {
+                if self.ai_thirteen_rule() {
+                    return None;
+                }
+                // TODO: This isn't strictly correct..
+                if let Some(target_id) = action.target.to_target_id(self) {
+                    if !can_move_into_range(user, action, self.combatant(target_id)) {
+                        return None;
+                    }
+                }
+
+                let mut simulated_world = self.prediction_clone();
+                let user = self.combatant(user_id);
+                if let Some(target_panel) = action.target.to_panel(self) {
+                    if !in_range_panel(user, action, target_panel) {
+                        simulated_world.pre_action_move(user_id, action, target_panel);
+                    }
+                    let sim_user = simulated_world.combatant(user_id);
+                    if !in_range_panel(sim_user, action, target_panel) {
+                        return None;
+                    }
+                }
+                perform_action(&mut simulated_world, user_id, *action);
+                let new_value = ai_target_value_sum(
+                    simulated_world.combatant(user_id),
+                    &simulated_world.combatants,
+                    ignore_confusion,
+                );
+                if new_value <= basis {
+                    return None;
+                }
+
+                // FIXME: A hack to get around the whole partial ord thing
+                let ordered_val = (new_value * 1_000_000.0) as i64;
+                Some((ordered_val, *action))
+            })
+            .max_by_key(|pair| pair.0)
+            .map(|pair| pair.1)
     }
 
     pub fn do_mime_cycle(&mut self, user_id: CombatantId, action: Action<'a>) {

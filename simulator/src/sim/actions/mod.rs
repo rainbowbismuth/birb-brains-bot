@@ -221,9 +221,9 @@ fn filter_target_level(user: &Combatant, ability: &Ability, target: &Combatant) 
         false
     } else if flags & TARGET_SELF_ONLY != 0 && user.id() != target.id() {
         false
-    } else if flags & ALLY_OK == 0 && user.ally(target) {
+    } else if flags & ALLY_OK == 0 && user.ally(target) && !user.confusion() {
         false
-    } else if flags & FOE_OK == 0 && user.foe(target) {
+    } else if flags & FOE_OK == 0 && user.foe(target) && !user.confusion() {
         false
     } else if flags & NOT_ALIVE_OK == 0 && !target.alive() {
         false
