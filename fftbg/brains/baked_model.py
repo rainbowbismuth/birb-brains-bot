@@ -31,6 +31,14 @@ class SimulatorModel:
             results.append([1.0-left_wins, left_wins])
         return np.array(results)
 
+    def predict_sim_match(self, match_up: MatchUp, patch_date: datetime) -> List[str]:
+        patch_json = patch.get_patch(patch_date).to_json()
+        patch_obj = fftbg.simulator.Patch(patch_json)
+        match_up_json = match_up.to_json()
+        arena_json = Path(f'data/arena/MAP{match_up.game_map_num:03d}.json').read_text()
+        arena_obj = fftbg.simulator.Arena(arena_json)
+        return fftbg.simulator.run_logged_simulation(patch_obj, arena_obj, match_up_json)
+
     def predict(self, tourny: Tournament) -> Predictions:
         predictions = self.predict_match_ups(tourny.match_ups, tourny.modified, n=100)
 

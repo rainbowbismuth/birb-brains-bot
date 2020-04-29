@@ -88,6 +88,15 @@ def get_team_summary():
     return json.dumps(data)
 
 
+@app.route('/sim-log')
+def get_sim_log():
+    db = get_redis()
+    tournament_id = fftbg.brains.api.get_current_tournament_id(db)
+    left_team, right_team = fftbg.brains.api.get_current_match(db)
+    log = fftbg.brains.api.get_sim_log(db, tournament_id, left_team, right_team)
+    return json.dumps(log)
+
+
 @app.route('/map/<int:map_id>')
 def get_map(map_id: int):
     return Path(f'data/arena/MAP{map_id:03d}.json').read_text()

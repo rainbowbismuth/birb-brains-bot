@@ -4,6 +4,7 @@ const State = {
     balance_log: [],
     placed_bet: null,
     team_summary: null,
+    sim_log: [],
 };
 
 function load_balance_log() {
@@ -38,10 +39,20 @@ function load_team_summary() {
     });
 }
 
+function load_sim_log() {
+        m.request({
+        method: 'GET',
+        url: '/sim-log'
+    }).then(function (result) {
+        State.sim_log = result;
+    });
+}
+
 function load_summary_info() {
     load_balance_log();
     load_placed_bet();
     load_team_summary();
+    load_sim_log();
 }
 
 function display_gain_loss(x) {
@@ -461,7 +472,14 @@ const TeamSummary = {
                 m('h6.text-center', {id: 'surface-type-display'}, 'Mouse over a surface to display the surface\'s type here.'),
                 m(MapViewer, {map_num}),
             ])),
+            m('.row', m('.col-md', m('h4.text-center', 'Simulation Log'))),
+            m('.row',
+                m('.col-md.sim-log',
+                    State.sim_log.map(s =>  [s, m('br')])),
+            ),
+            m('.row', m('.col-md', m('h4.text-center', 'Team Summary'))),
             m('.row', [
+                
                 m('.col-md', m(IndividualTeam, {
                     'left': true,
                     'color': State.team_summary.left_team,
@@ -571,6 +589,7 @@ function installInterval() {
             || State.placed_bet.left_team !== State.team_summary.left_team
             || State.placed_bet.right_team !== State.team_summary.right_team) {
             load_team_summary();
+            load_sim_log();
         }
     }, 5000);
 }

@@ -50,3 +50,15 @@ def get_map_key(tournament_id, left_team, right_team):
 def get_map(db: Database, tournament_id, left_team, right_team) -> str:
     key = get_map_key(tournament_id, left_team, right_team)
     return db.get(key)
+
+
+def get_sim_log_key(tournament_id, left_team, right_team):
+    return f'brains.sim-log:{tournament_id}-{left_team}-{right_team}'
+
+
+def get_sim_log(db: Database, tournament_id, left_team, right_team) -> List[str]:
+    key = get_sim_log_key(tournament_id, left_team, right_team)
+    data = db.get(key)
+    if data is not None:
+        data = json.loads(data)
+    return data

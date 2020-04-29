@@ -7,6 +7,12 @@ body {
     background-size: 15%;
 }
 
+.sim-log {
+    height: 400px;
+    overflow: scroll;
+    font-family: monospace;
+}
+
 .map-renderer {
     width: 100%;
     height: 100%;

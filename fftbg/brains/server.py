@@ -12,7 +12,7 @@ import fftbg.server
 import fftbg.tournament
 import fftbg.twitch.msg_types as msg_types
 from fftbg.brains.api import CURRENT_TOURNAMENT_KEY, CURRENT_MATCH_KEY, get_current_tournament_id, get_prediction_key, \
-    get_prediction, get_importance_key, get_map_key
+    get_prediction, get_importance_key, get_map_key, get_sim_log_key
 from fftbg.brains.baked_model import BakedModel, SimulatorModel
 from fftbg.brains.msg_types import NEW_PREDICTIONS
 from fftbg.brains.predictions import Predictions
@@ -75,6 +75,11 @@ def set_importance(db: Database, tournament_id, match_up: MatchUp, importance: L
     db.set(key, json.dumps(importance))
 
 
+def set_sim_log(db: Database, tournament_id, match_up: MatchUp, log: List[str]):
+    key = get_sim_log_key(tournament_id, match_up.left.color, match_up.right.color)
+    db.set(key, json.dumps(log))
+
+
 def set_map(db: Database, tournament_id, match_up: MatchUp):
     key = get_map_key(tournament_id, match_up.left.color, match_up.right.color)
     db.set(key, match_up.game_map)
@@ -85,6 +90,13 @@ def post_importance(db: Database, model, tournament_id, match_up: MatchUp, patch
     importance = fftbg.brains.importance.compute(model, match_up, patch_time)
     set_importance(db, tournament_id, match_up, importance)
     LOG.info(f'Posted importance for {tournament_id}, {match_up.left.color} vs {match_up.right.color}')
+
+
+def post_sim_log(db: Database, model: SimulatorModel, tournament_id, match_up: MatchUp, patch_time):
+    LOG.info(f'Computing simulation log for {tournament_id}, {match_up.left.color} vs {match_up.right.color}')
+    log = model.predict_sim_match(match_up, patch_time)
+    set_sim_log(db, tournament_id, match_up, log)
+    LOG.info(f'Posted simulation log for {tournament_id}, {match_up.left.color} vs {match_up.right.color}')
 
 
 def run_server():
@@ -116,6 +128,7 @@ def run_server():
                 match_up = tournament.match_ups[idx]
 
                 set_map(db, tournament.id, match_up)
+                post_sim_log(db, model, tournament.id, match_up, tournament.modified)
                 post_importance(db, importance_model, tournament.id, match_up, tournament.modified)
                 set_current_match(db, left_team, right_team)
 

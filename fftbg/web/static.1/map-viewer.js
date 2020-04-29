@@ -316,7 +316,12 @@ function create_map_scene(vnode) {
                 let y = start.y;
                 let x = start.x;
                 let render_x = MapState.map.width - (x + 1);
-                const tile = MapState.map.lower[y][x];
+                let tile;
+                if (start.layer) {
+                    tile = MapState.map.upper[y][x];
+                } else {
+                    tile = MapState.map.lower[y][x];
+                }
                 const big_height = (tile.height + tile.slope_height / 2) + height;
                 const y_coord = (big_height / 2) + height * 2.75;
                 let unit = new Unit(start.x, start.y, color,
