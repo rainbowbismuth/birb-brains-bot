@@ -147,7 +147,7 @@ pub fn run_specific_match(match_id: u64, num_runs: i32) -> io::Result<()> {
     let current_log_loss = if match_up.left_wins.unwrap() {
         -clamped.ln()
     } else {
-        -clamped.ln_1p()
+        -((1.0 - clamped).ln())
     };
     println!("log loss: {:.6}", current_log_loss as f64);
     println!("time outs: {}", new_time_outs);
@@ -305,7 +305,7 @@ pub fn run_all_matches(
         let current_log_loss = if match_up.left_wins.unwrap() {
             -clamped.ln()
         } else {
-            -clamped.ln_1p()
+            -((1.0 - clamped).ln())
         };
         log_loss += current_log_loss;
 

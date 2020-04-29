@@ -16,7 +16,7 @@ for entry in log:
     if entry.left_wins:
         loss += -np.log(left_wins_percent)
     else:
-        loss += -np.log1p(left_wins_percent)
+        loss += -np.log(1.0 - left_wins_percent)
 
     if left_wins_percent > 0.5 and entry.left_wins:
         correct += 1
