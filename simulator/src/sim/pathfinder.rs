@@ -325,14 +325,9 @@ impl<'a> Pathfinder<'a> {
             let end = start.on_same_layer(end_location);
             let end_tile = self.arena.tile(end);
             let end_tile_height = tile_height_from_direction(&end_tile, towards_direction);
-            let highest_part = end_tile.height + end_tile.slope_height;
             let start_tile_height =
                 tile_height_from_direction(&start_tile, towards_direction.opposite());
 
-            // TODO: This really is a mess and makes so sense. Sit and think about it.
-            if highest_part > start_tile_height {
-                return;
-            }
             let height_diff = (start_tile_height as i16 - end_tile_height as i16).abs() as u8;
             if height_diff > info.vertical_jump {
                 continue;
