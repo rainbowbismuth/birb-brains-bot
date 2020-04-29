@@ -657,6 +657,10 @@ impl<'a> Combatant<'a> {
         self.info.skill_block.landlocked()
     }
 
+    pub fn arrow_guard(&self) -> bool {
+        self.info.skill_block.arrow_guard()
+    }
+
     pub fn gender(&self) -> Gender {
         self.info.gender
     }
@@ -1098,12 +1102,3 @@ const ZODIAC_CHART: &[u8; 13 * 13] = b"OOO-+O?O+-OOO\
     O-+O?O+-OOOOO\
     OO-+O?O+-OOOO\
     OOOOOOOOOOOOO";
-
-//     @property
-//     def arrow_guard(self) -> bool:
-//         return 'Arrow Guard' in self.skills
-//
-//     @property
-//     def has_offhand_weapon(self) -> bool:
-//         return self.offhand.weapon_type is not None
-//

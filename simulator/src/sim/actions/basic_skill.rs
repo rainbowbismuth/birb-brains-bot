@@ -103,7 +103,7 @@ impl AbilityImpl for DashImpl {
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
-        if sim.do_physical_evade(user, target, Source::Ability) {
+        if sim.do_physical_evade(user, target, None, Source::Ability) {
             return;
         }
         let xa = mod_2_formula_xa(

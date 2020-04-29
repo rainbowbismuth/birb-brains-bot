@@ -137,7 +137,7 @@ impl AbilityImpl for StealImpl {
 
         let chance = mod_4_formula(user, target, self.base_chance as f32 / 100.0);
 
-        if sim.do_physical_evade(user, target, Source::Ability) {
+        if sim.do_physical_evade(user, target, None, Source::Ability) {
             sim.log_event(Event::AbilityMissed(user_id, target_id));
         } else if sim.roll_auto_succeed() < chance {
             let target = sim.combatant_mut(target_id);

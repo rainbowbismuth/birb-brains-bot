@@ -753,16 +753,27 @@ impl<'a> Simulation<'a> {
         }
     }
 
-    pub fn do_physical_evade(&self, user: &Combatant, target: &Combatant, src: Source<'a>) -> bool {
+    pub fn do_physical_evade(
+        &self,
+        user: &Combatant,
+        target: &Combatant,
+        weapon_type: Option<WeaponType>,
+        src: Source<'a>,
+    ) -> bool {
         if target.blade_grasp() && self.roll_brave_reaction(target) {
             self.log_event(Event::Evaded(target.id(), EvasionType::BladeGrasp, src));
             return true;
         }
 
-        //         if target.arrow_guard and not target.berserk and weapon.weapon_type in (
-        //                 'Longbow', 'Bow', 'Gun', 'Crossbow') and self.roll_brave_reaction(target):
-        //             self.unit_report(target, f'arror guarded {user.name}\'s attack')
-        //             return True
+        if target.arrow_guard() && self.roll_brave_reaction(target) {
+            if weapon_type == Some(WeaponType::Bow)
+                || weapon_type == Some(WeaponType::Gun)
+                || weapon_type == Some(WeaponType::Crossbow)
+            {
+                self.log_event(Event::Evaded(target.id(), EvasionType::ArrowGuard, src));
+                return true;
+            }
+        }
 
         if user.transparent() || user.concentrate() {
             return false;

@@ -120,7 +120,7 @@ impl AbilityImpl for DamagePunchArt {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
 
-        if sim.do_physical_evade(user, target, Source::Ability) {
+        if sim.do_physical_evade(user, target, None, Source::Ability) {
             return;
         }
 

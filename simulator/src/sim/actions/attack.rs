@@ -183,7 +183,8 @@ pub fn do_single_weapon_attack<'a, 'b>(
     let target = sim.combatant(target_id);
     let src = Source::Weapon(user_id, weapon);
 
-    if !is_gun && sim.do_physical_evade(user, target, src) {
+    let weapon_type = weapon.and_then(|eq| eq.weapon_type);
+    if !is_gun && sim.do_physical_evade(user, target, weapon_type, src) {
         return (0, false);
     }
 

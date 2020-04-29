@@ -37,6 +37,7 @@ const IGNORE_HEIGHT: u64 = 1 << 35;
 const FLY: u64 = 1 << 36;
 const TELEPORT: u64 = 1 << 37;
 const LANDLOCKED: u64 = 1 << 38;
+const ARROW_GUARD: u64 = 1 << 39;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -86,6 +87,7 @@ impl SkillBlock {
                 "Fly" => block.flags |= FLY,
                 "Teleport" => block.flags |= TELEPORT,
                 "Landlocked" => block.flags |= LANDLOCKED,
+                "Arrow Guard" => block.flags |= ARROW_GUARD,
                 _ => {}
             }
         }
@@ -242,5 +244,9 @@ impl SkillBlock {
 
     pub fn landlocked(&self) -> bool {
         self.flags & LANDLOCKED != 0
+    }
+
+    pub fn arrow_guard(&self) -> bool {
+        self.flags & ARROW_GUARD != 0
     }
 }

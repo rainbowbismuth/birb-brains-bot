@@ -327,7 +327,8 @@ fn try_break_equip<'a>(
     let mut chance = mod_pa as f32 + mod_wp as f32 + base_chance as f32 / 100.0;
     chance *= user.zodiac_compatibility(target);
 
-    if sim.do_physical_evade(user, target, Source::Ability) {
+    let weapon_type = equip.and_then(|eq| eq.weapon_type);
+    if sim.do_physical_evade(user, target, weapon_type, Source::Ability) {
         sim.log_event(Event::AbilityMissed(user_id, target_id));
     } else if sim.roll_auto_succeed() < chance {
         let target = sim.combatant_mut(target_id);
@@ -360,6 +361,7 @@ impl AbilityImpl for MagicBreakImpl {
             target.id(),
         ));
     }
+
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
@@ -367,7 +369,8 @@ impl AbilityImpl for MagicBreakImpl {
         let xa = mod_3_formula_xa(user.pa() as i16, user, target, false, false);
         let mut chance = (xa as f32 + self.base_chance as f32) / 100.0;
         chance *= user.zodiac_compatibility(target);
-        if sim.do_physical_evade(user, target, Source::Ability) {
+        let weapon_type = user.main_hand().and_then(|eq| eq.weapon_type);
+        if sim.do_physical_evade(user, target, weapon_type, Source::Ability) {
             sim.log_event(Event::AbilityMissed(user_id, target_id));
         } else if sim.roll_auto_succeed() < chance {
             let mp_damage = (target.max_mp() as f32 * self.mp_percent) as i16;
