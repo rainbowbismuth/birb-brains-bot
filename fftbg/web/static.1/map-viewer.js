@@ -61,6 +61,8 @@ const cyrb53 = function (str, seed = 0) {
 
 const D = 8;
 
+const Y_SCALE = 2.0 / 3.0;
+
 function surface_type_color(surface_type) {
     return 0xFFFFFF - (cyrb53(surface_type) & 0x5F8F5F);
 }
@@ -69,16 +71,16 @@ function add_layer_tile(tile, geometry, height, x, big_height, y) {
     if (tile.slope_type != null) {
         if (tile.slope_type.startsWith('Incline')) {
             const [offset1, offset2] = OFFSETS_INCLINE[tile.slope_type[tile.slope_type.length - 1]];
-            geometry.vertices[offset1].y += (height * tile.slope_height * 2);
-            geometry.vertices[offset2].y += (height * tile.slope_height * 2);
+            geometry.vertices[offset1].y += (height * tile.slope_height * 2) * Y_SCALE;
+            geometry.vertices[offset2].y += (height * tile.slope_height * 2) * Y_SCALE;
         } else if (tile.slope_type.startsWith('Convex')) {
             const offset = OFFSET_CONVEX[tile.slope_type.slice(tile.slope_type.length - 2)];
-            geometry.vertices[offset].y += (height * tile.slope_height * 2);
+            geometry.vertices[offset].y += (height * tile.slope_height * 2) * Y_SCALE;
         } else if (tile.slope_type.startsWith('Concave')) {
             const [offset1, offset2, offset3] = OFFSETS_CONCAVE[tile.slope_type.slice(tile.slope_type.length - 2)];
-            geometry.vertices[offset1].y += (height * tile.slope_height * 2);
-            geometry.vertices[offset2].y += (height * tile.slope_height * 2);
-            geometry.vertices[offset3].y += (height * tile.slope_height * 2);
+            geometry.vertices[offset1].y += (height * tile.slope_height * 2) * Y_SCALE;
+            geometry.vertices[offset2].y += (height * tile.slope_height * 2) * Y_SCALE;
+            geometry.vertices[offset3].y += (height * tile.slope_height * 2) * Y_SCALE;
         }
     }
     geometry.verticesNeedUpdate = true;
@@ -243,7 +245,7 @@ function create_map_scene(vnode) {
             if (tile.no_walk) {
                 continue;
             }
-            const big_height = (tile.height + tile.depth) + height;
+            const big_height = ((tile.height + tile.depth) * Y_SCALE) + height;
             const big_geo = new THREE.BoxGeometry(1, big_height / 2, 1);
             let big_color = 0x888888;
             if (tile.no_walk) {
@@ -271,7 +273,7 @@ function create_map_scene(vnode) {
         for (let x = 0; x < MapState.map.width; x++) {
             const tile = MapState.map.upper[y][MapState.map.width - (x + 1)];
             const lower_tile = MapState.map.lower[y][MapState.map.width - (x + 1)];
-            const big_height = (tile.height + tile.depth) + height;
+            const big_height = ((tile.height + tile.depth) * Y_SCALE) + height;
             const lower_height = (lower_tile.height + lower_tile.depth) + height;
             if (tile.height === 0 || tile.no_walk || lower_height >= big_height) {
                 continue;
@@ -325,7 +327,7 @@ function create_map_scene(vnode) {
                 } else {
                     tile = MapState.map.lower[y][x];
                 }
-                const big_height = (tile.height + tile.slope_height / 2) + height;
+                const big_height = ((tile.height + tile.slope_height / 2) * Y_SCALE) + height;
                 const y_coord = (big_height / 2) + height * 2.75;
                 let unit = new Unit(start.x, start.y, color,
                     start.facing, nw_texture, sw_texture);
