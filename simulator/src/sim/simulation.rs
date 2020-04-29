@@ -932,7 +932,7 @@ impl<'a> Simulation<'a> {
 
         if target.counter() && self.roll_brave_reaction(target) {
             let user = self.combatant(user_id);
-            let range = attack_range(target);
+            let range = attack_range(self, target, user);
 
             if !in_range(target, range, user) {
                 return;

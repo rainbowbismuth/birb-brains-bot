@@ -20,7 +20,7 @@ impl AbilityImpl for AttackImpl {
         &self,
         actions: &mut Vec<Action<'a>>,
         ability: &'a Ability<'a>,
-        _sim: &Simulation<'a>,
+        sim: &Simulation<'a>,
         user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
@@ -31,9 +31,19 @@ impl AbilityImpl for AttackImpl {
             return;
         }
         if user.frog() || user.berserk() && user.monster() {
-            actions.push(Action::new(ability, attack_range(user), None, target.id()));
+            actions.push(Action::new(
+                ability,
+                attack_range(sim, user, target),
+                None,
+                target.id(),
+            ));
         } else {
-            actions.push(Action::new(ability, attack_range(user), None, target.id()));
+            actions.push(Action::new(
+                ability,
+                attack_range(sim, user, target),
+                None,
+                target.id(),
+            ));
         }
     }
 
@@ -47,11 +57,22 @@ impl AbilityImpl for AttackImpl {
     }
 }
 
-pub fn attack_range(user: &Combatant) -> u8 {
+pub fn attack_range(sim: &Simulation, user: &Combatant, target: &Combatant) -> u8 {
     if user.frog() || user.berserk() && user.monster() {
         1
     } else {
-        user.main_hand().map_or(1, |eq| eq.range as u8)
+        user.main_hand().map_or(1, |eq| {
+            let wp_range = eq.range as u8;
+            if eq.weapon_type == Some(WeaponType::Bow) {
+                // TODO: This doesn't really make sense to put here, but I'm going to try it anyways
+                let user_height = sim.combatant_height(user.id());
+                let target_height = sim.combatant_height(target.id());
+                let bonus = (user_height - target_height) / 2.0;
+                ((wp_range as i8) + (bonus as i8).min(0)) as u8
+            } else {
+                wp_range
+            }
+        })
     }
 }
 
@@ -122,7 +143,7 @@ fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Combata
     if sim.combatant(user_id).dual_wield()
         && weapon2.is_some()
         // FIXME: This condition is a little bit of a cheat :)
-        && (!knockback || attack_range(sim.combatant(user_id)) > 1)
+        && (!knockback || attack_range(sim, sim.combatant(user_id), sim.combatant(target_id)) > 1)
     {
         let pair = do_single_weapon_attack(sim, user_id, weapon2, target_id, 0);
         damage = pair.0;
