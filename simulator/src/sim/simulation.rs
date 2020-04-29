@@ -618,6 +618,11 @@ impl<'a> Simulation<'a> {
                     self.add_condition(user_id, Condition::Jumping, Source::Ability);
                 }
             } else {
+                if let Some(target_panel) = action.target.to_panel(self) {
+                    let mut user = self.combatant_mut(user_id);
+                    user.facing = user.panel.facing_towards(target_panel);
+                }
+
                 self.log_event(Event::UsingAbility(user_id, action));
                 perform_action(self, user_id, action);
 
