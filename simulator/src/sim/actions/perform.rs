@@ -4,14 +4,19 @@ use crate::sim::actions::{
 };
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, EquipSlot, Event, Simulation, Source, WeaponType,
-    HITS_ALLIES_ONLY, HITS_FOES_ONLY, NO_SHORT_CHARGE, PERFORMANCE, STATS_ABILITY,
+    HITS_ALLIES_ONLY, HITS_FOES_ONLY, MISS_SLEEPING, NO_SHORT_CHARGE, PERFORMANCE, STATS_ABILITY,
     TARGET_SELF_ONLY,
 };
 
 pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     // Angel Song: 0 range, 255 AoE, 5 CT. Effect: HealMP (20 + MA).
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_ALLIES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_ALLIES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Angel Song",
@@ -23,7 +28,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Life Song: 0 range, 255 AoE, 5 CT. Effect: Heal (20 + MA).
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_ALLIES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_ALLIES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Life Song",
@@ -35,7 +45,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Cheer Song: 0 range, 255 AoE, 6 CT. Hit: 50% per target. Effect: +1 Speed.
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_ALLIES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_ALLIES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Cheer Song",
@@ -49,7 +64,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Battle Song: 0 range, 255 AoE, 7 CT. Hit: 50% per target. Effect: +1 PA.
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_ALLIES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_ALLIES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Battle Song",
@@ -63,7 +83,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Magic Song: 0 range, 255 AoE, 7 CT. Hit: 50% per target. Effect: +1 MA.
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_ALLIES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_ALLIES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Magic Song",
@@ -77,7 +102,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Nameless Song: 0 range, 255 AoE, 9 CT, 5 MP. Hit: 50% per target. Effect: Add Reraise, Regen, Protect, Shell, Haste (Random).
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_ALLIES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_ALLIES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Nameless Song",
@@ -96,7 +126,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     // TODO: Last Song: 0 range, 255 AoE, 8 CT. Hit: 25% per target. Effect: Set CT to Max.
     // Witch Hunt: 0 range, 255 AoE, 5 CT. Effect: DamageMP (PA + (PA * Brave) / 100).
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_FOES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_FOES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Witch Hunt",
@@ -107,7 +142,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Wiznaibus: 0 range, 255 AoE, 5 CT. Effect: Damage (PA + (PA * Brave) / 100).
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_FOES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_FOES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Wiznaibus",
@@ -118,7 +158,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Slow Dance: 0 range, 255 AoE, 6 CT. Hit: 50% per target. Effect: -1 Speed.
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_FOES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_FOES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Slow Dance",
@@ -132,7 +177,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Polka Polka: 0 range, 255 AoE, 7 CT. Hit: 50% per target. Effect: -1 PA.
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_FOES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_FOES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Polka Polka",
@@ -146,7 +196,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Disillusion: 0 range, 255 AoE, 7 CT. Hit: 50% per target. Effect: -1 MA.
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_FOES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_FOES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Disillusion",
@@ -160,7 +215,12 @@ pub const PERFORMANCE_ABILITIES: &[Ability] = &[
     },
     // Nameless Dance: 0 range, 255 AoE, 10 CT, 5 MP. Hit: 50% per target. Effect: Add Darkness, Confusion, Silence, Frog, Poison, Slow, Stop, Sleep (Random).
     Ability {
-        flags: TARGET_SELF_ONLY | ALLY_OK | HITS_FOES_ONLY | NO_SHORT_CHARGE | PERFORMANCE,
+        flags: TARGET_SELF_ONLY
+            | ALLY_OK
+            | HITS_FOES_ONLY
+            | NO_SHORT_CHARGE
+            | PERFORMANCE
+            | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::Global,
         name: "Nameless Dance",

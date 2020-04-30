@@ -59,6 +59,7 @@ pub const UNDER_50_PERCENT_HP_ONLY: AbilityFlags = 1 << 17;
 pub const TRIGGERS_HAMEDO: AbilityFlags = 1 << 18;
 pub const STATS_ABILITY: AbilityFlags = 1 << 19;
 pub const PERFORMANCE: AbilityFlags = 1 << 20;
+pub const MISS_SLEEPING: AbilityFlags = 1 << 21;
 
 #[derive(Copy, Clone)]
 pub enum AoE {
@@ -513,7 +514,7 @@ fn perform_on_target(
     if ability.flags & PETRIFY_OK == 0 && target.petrify() {
         return;
     }
-    if ability.flags & PERFORMANCE != 0 && target.sleep() {
+    if ability.flags & MISS_SLEEPING != 0 && target.sleep() {
         return;
     }
 

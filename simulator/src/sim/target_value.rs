@@ -85,9 +85,9 @@ fn ai_calculate_status_target_value_mod(target: &Combatant, ignore_confusion: bo
     // # NOTE: Skipping Invite because it doesn't exist in FFTBG
 
     // # 		0x20 - Darkness					-50% [-40(ffc0) * Evadable abilities] + 3 / 4
-    // # TODO: Add darkness
+    // # TODO: Add darkness, physically evadable abilities count
     if target.darkness() {
-        total -= 0.50;
+        total -= 0.25;
     }
 
     // # 		0x10 - Confusion				-50% -40(ffc0) (+1 / 4 if slow/stop/sleep/don't move/act/)

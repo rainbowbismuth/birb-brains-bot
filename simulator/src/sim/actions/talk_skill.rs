@@ -2,7 +2,7 @@ use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, FOE_OK};
 
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Event, Simulation, Source, CAN_BE_CALCULATED,
-    CAN_BE_REFLECTED, SILENCEABLE,
+    CAN_BE_REFLECTED, MISS_SLEEPING, SILENCEABLE,
 };
 
 pub const TALK_SKILL_ABILITIES: &[Ability] = &[
@@ -10,7 +10,7 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
     // Invitation: 4 range, 0 AoE. Hit: (MA + 35)%. Effect: Add Confusion, Charm (Random).
     Ability {
         name: "Invitation",
-        flags: FOE_OK,
+        flags: FOE_OK | SILENCEABLE | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ConditionTalkSkillImpl {
@@ -27,7 +27,7 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
     // Death Sentence: 4 range, 0 AoE. Hit: (MA + 32)%. Effect: Add Death Sentence.
     Ability {
         name: "Death Sentence",
-        flags: FOE_OK,
+        flags: FOE_OK | SILENCEABLE | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ConditionTalkSkillImpl {
@@ -40,7 +40,7 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
     // Insult: 4 range, 0 AoE. Hit: (MA + 40)%. Effect: Add Berserk.
     Ability {
         name: "Insult",
-        flags: FOE_OK,
+        flags: FOE_OK | SILENCEABLE | MISS_SLEEPING,
         mp_cost: 0,
         aoe: AoE::None,
         implementation: &ConditionTalkSkillImpl {
@@ -52,7 +52,7 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
     // Mimic Daravon: 3 range, 1 AoE. Hit: (MA + 40)%. Effect: Add Sleep.
     Ability {
         name: "Mimic Daravon",
-        flags: FOE_OK,
+        flags: FOE_OK | SILENCEABLE,
         mp_cost: 0,
         aoe: AoE::Diamond(1),
         implementation: &ConditionTalkSkillImpl {
