@@ -35,6 +35,14 @@ def get_balance_log():
     return json.dumps(log_entries, sort_keys=True)
 
 
+@app.route('/balance-log-no-limit')
+def get_balance_log_no_limit():
+    memory = Memory()
+    log = memory.get_balance_log(1000000)
+    log_entries = [dataclasses.asdict(entry) for entry in log]
+    return json.dumps(log_entries, sort_keys=True)
+
+
 @app.route('/placed-bet')
 def get_placed_bet():
     memory = Memory()
