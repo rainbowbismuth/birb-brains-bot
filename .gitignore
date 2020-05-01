@@ -5,6 +5,9 @@ __pycache__
 .pytest_cache
 .ipynb_checkpoints
 *.ipynb
+*.pyc
+*.so
+fftbg/web/static.1/sprites
 data/tournaments
 data/*.feather
 data/*.h5
