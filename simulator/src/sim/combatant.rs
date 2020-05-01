@@ -551,6 +551,7 @@ impl<'a> Combatant<'a> {
         }
     }
 
+    // TODO: Add configuration for if charging() removes evasion.
     fn evasion_multiplier(&self, attacker_blind: bool) -> f32 {
         let mut mult = 1.0;
         if self.charging() || self.performing() || self.sleep() {
