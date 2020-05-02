@@ -10,7 +10,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use rand::rngs::SmallRng;
 use rand::{thread_rng, SeedableRng};
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -180,6 +180,31 @@ pub fn has_monster(combatants: &[CombatantInfo]) -> bool {
     combatants.iter().any(|info| info.gender == Gender::Monster)
 }
 
+fn record_unit_kinds(involves: &mut HashMap<String, i32>, match_up: &MatchUp) {
+    let mut worst_set = HashSet::new();
+    for combatant in &match_up.left.combatants {
+        worst_set.insert("C ".to_owned() + &combatant.class);
+        // if !combatant.action_skill.is_empty() {
+        //     worst_set.insert("Skill   ".to_owned() + &combatant.action_skill);
+        // }
+        for ability in &combatant.all_abilities {
+            worst_set.insert("A ".to_owned() + ability);
+        }
+    }
+    for combatant in &match_up.right.combatants {
+        worst_set.insert("C ".to_owned() + &combatant.class);
+        // if !combatant.action_skill.is_empty() {
+        //     worst_set.insert("Skill   ".to_owned() + &combatant.action_skill);
+        // }
+        for ability in &combatant.all_abilities {
+            worst_set.insert("A ".to_owned() + ability);
+        }
+    }
+    for key in worst_set.into_iter() {
+        *involves.entry(key).or_insert(0) += 1;
+    }
+}
+
 pub fn run_all_matches(
     num_runs: i32,
     print_worst: bool,
@@ -205,6 +230,8 @@ pub fn run_all_matches(
         match_up_paths.truncate(most_recent as usize);
     }
 
+    let mut worst_count = 0;
+    let mut overall_involves = HashMap::new();
     let mut worst_involves = HashMap::new();
 
     let mut correct = 0;
@@ -309,20 +336,13 @@ pub fn run_all_matches(
         };
         log_loss += current_log_loss;
 
-        if print_worst && current_log_loss >= worst_loss {
-            for combatant in &match_up.left.combatants {
-                *worst_involves.entry(combatant.class.clone()).or_insert(0) += 1;
-                *worst_involves
-                    .entry(combatant.action_skill.clone())
-                    .or_insert(0) += 1;
-            }
-            for combatant in &match_up.right.combatants {
-                *worst_involves.entry(combatant.class.clone()).or_insert(0) += 1;
-                *worst_involves
-                    .entry(combatant.action_skill.clone())
-                    .or_insert(0) += 1;
-            }
+        record_unit_kinds(&mut overall_involves, &match_up);
+        if print_worst && current_log_loss >= 2.8 {
+            worst_count += 1;
+            record_unit_kinds(&mut worst_involves, &match_up);
+        }
 
+        if print_worst && current_log_loss >= worst_loss {
             worst_loss = current_log_loss;
             replay_path = (*match_up_path).clone();
             let rng = SmallRng::from_entropy();
@@ -349,11 +369,20 @@ pub fn run_all_matches(
         println!("{}", line);
     }
 
-    println!("\nworst matches involve:");
-    let mut worst_involves_pairs: Vec<_> = worst_involves.iter().collect();
-    worst_involves_pairs.sort_by_key(|p| -p.1);
-    for entry in worst_involves_pairs {
-        println!("{:>20}: {:>5}", entry.0, entry.1);
+    println!("\nworst matches involve (out of {}):", worst_count);
+    let mut worst_involves_pairs = vec![];
+    for key in worst_involves.keys() {
+        let overall_amount =
+            *overall_involves.get(key).unwrap_or(&0) as f32 / match_ups.len() as f32;
+        let worst_amount = *worst_involves.get(key).unwrap_or(&0) as f32 / worst_count as f32;
+        worst_involves_pairs.push((key, worst_amount - overall_amount));
+    }
+    worst_involves_pairs.sort_by_key(|p| (-p.1 * 1_000_000.0) as i32);
+    for entry in &worst_involves_pairs {
+        if entry.1 < 0.01 {
+            continue;
+        }
+        println!("{:>25}: {:.4}", entry.0, entry.1);
     }
 
     let total_matches = match_ups.len();

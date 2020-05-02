@@ -194,7 +194,7 @@ pub fn mod_2_formula_xa(
 ) -> i16 {
     //    1. If this is a critical hit, then XA1 = XA0 + (1..XA0) - 1.
     if crit {
-        xa += sim.roll_inclusive(1, xa) - 1;
+        xa += sim.roll_inclusive(1, xa.max(2)) - 1;
     }
 
     //    2. If the attack is endowed with an Element, and the caster has
