@@ -64,8 +64,8 @@ pub const MISS_SLEEPING: AbilityFlags = 1 << 21;
 #[derive(Copy, Clone)]
 pub enum AoE {
     None,
-    Diamond(u8),
-    Line,
+    Diamond(u8, Option<u8>),
+    Line(Option<u8>),
     TriLine, // Like that Tiamat ability
     Global,
 }
@@ -74,8 +74,8 @@ impl AoE {
     pub fn is_line(self) -> bool {
         match self {
             AoE::None => false,
-            AoE::Diamond(_size) => false,
-            AoE::Line => true,
+            AoE::Diamond(_size, _tolerance) => false,
+            AoE::Line(_tolerance) => true,
             AoE::TriLine => true,
             AoE::Global => false,
         }
@@ -429,17 +429,25 @@ fn handle_normal_ability(
                 // TODO: Something about the ability missing.
             }
         }
-        AoE::Diamond(size) => {
-            for target_panel in action
+        AoE::Diamond(size, tolerance) => {
+            let main_panel = action
                 .target
                 .to_panel(sim)
-                .expect("should only be none if math")
-                .diamond(size)
-            {
+                .expect("should only be none if math");
+            for target_panel in main_panel.diamond(size) {
+                if !sim.in_map(target_panel) || !sim.in_map(main_panel) {
+                    continue;
+                }
+                if let Some(tolerance) = tolerance {
+                    let diff = sim.height(main_panel) - sim.height(target_panel);
+                    if diff.abs() > tolerance as f32 {
+                        continue;
+                    }
+                }
                 perform_aoe_on_panel(sim, user_id, ability, target_panel)
             }
         }
-        AoE::Line => {
+        AoE::Line(tolerance) => {
             let user = sim.combatant(user_id);
             let target_panel = action_target
                 .to_panel(sim)
@@ -449,6 +457,15 @@ fn handle_normal_ability(
             for i in 1..=action.range {
                 // TODO: This isn't right either I don't think!
                 let target_panel = user_panel.plus(facing.offset() * i as i16);
+                if !sim.in_map(target_panel) || !sim.in_map(user_panel) {
+                    continue;
+                }
+                if let Some(tolerance) = tolerance {
+                    let diff = sim.height(user_panel) - sim.height(target_panel);
+                    if diff.abs() > tolerance as f32 {
+                        continue;
+                    }
+                }
                 perform_aoe_on_panel(sim, user_id, ability, target_panel);
             }
         }

@@ -11,7 +11,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Blind",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 4,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Darkness,
             can_be_evaded: true,
@@ -99,7 +99,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Silence Song",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 16,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Silence,
             can_be_evaded: true,
@@ -169,7 +169,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Paralyze",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 10,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
             condition: Condition::DontAct,
             can_be_evaded: true,
@@ -184,7 +184,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         name: "Sleep",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Sleep,
             can_be_evaded: true,

@@ -74,7 +74,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Stasis Sword",
         flags: FOE_OK | HITS_FOES_ONLY,
         mp_cost: 20,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ChanceToAddSwordImpl {
             wp_plus: 1,
             chance_to_add: Condition::Stop,
@@ -100,7 +100,7 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         name: "Surging Sword",
         flags: FOE_OK | HITS_FOES_ONLY,
         mp_cost: 24,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(1)),
         implementation: &ChanceToAddSwordImpl {
             wp_plus: 2,
             chance_to_add: Condition::Silence,

@@ -13,7 +13,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Pitfall",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Dark,
@@ -26,7 +26,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Water Ball",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Water,
@@ -39,7 +39,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Hell Ivy",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Earth,
@@ -52,7 +52,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Hallowed Ground",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Holy,
@@ -65,7 +65,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Local Quake",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Earth,
@@ -79,7 +79,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Static Shock",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Lightning,
@@ -100,7 +100,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Will-O-Wisp",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Fire,
@@ -119,7 +119,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Quicksand",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Water,
@@ -132,7 +132,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Sand Storm",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Wind,
@@ -145,7 +145,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Blizzard",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Ice,
@@ -158,7 +158,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Gusty Wind",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Wind,
@@ -171,7 +171,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
         name: "Lava Ball",
         flags: ALLY_OK | FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
             range: 5,
             element: Element::Fire,

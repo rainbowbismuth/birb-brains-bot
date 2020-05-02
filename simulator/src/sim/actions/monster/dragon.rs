@@ -23,7 +23,7 @@ pub const DRAGON_ABILITIES: &[Ability] = &[
         name: "Ice Breath",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: AoE::Line,
+        aoe: AoE::Line(Some(2)),
         implementation: &ElementalBreathImpl {
             element: Element::Ice,
             ma_factor: 5,
@@ -35,7 +35,7 @@ pub const DRAGON_ABILITIES: &[Ability] = &[
         name: "Fire Breath",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: AoE::Line,
+        aoe: AoE::Line(Some(2)),
         implementation: &ElementalBreathImpl {
             element: Element::Fire,
             ma_factor: 5,
@@ -47,7 +47,7 @@ pub const DRAGON_ABILITIES: &[Ability] = &[
         name: "Thunder Breath",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: AoE::Line,
+        aoe: AoE::Line(Some(2)),
         implementation: &ElementalBreathImpl {
             element: Element::Lightning,
             ma_factor: 5,
@@ -59,7 +59,7 @@ pub const DRAGON_ABILITIES: &[Ability] = &[
         name: "Holy Breath",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: AoE::Line,
+        aoe: AoE::Line(Some(2)),
         implementation: &ElementalBreathImpl {
             element: Element::Holy,
             ma_factor: 5,

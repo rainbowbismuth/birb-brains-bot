@@ -54,7 +54,7 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
         name: "Mimic Daravon",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(2)),
         implementation: &ConditionTalkSkillImpl {
             range: 3,
             base_chance: 40,

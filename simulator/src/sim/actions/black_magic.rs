@@ -14,7 +14,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Fire",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(1)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 16,
@@ -27,7 +27,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Fire 2",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(2)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 20,
@@ -40,7 +40,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Fire 3",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(3)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 28,
@@ -53,7 +53,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Fire 4",
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 48,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Fire,
             q: 36,
@@ -70,7 +70,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Bolt",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(1)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 16,
@@ -83,7 +83,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Bolt 2",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(2)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 20,
@@ -96,7 +96,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Bolt 3",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(3)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 28,
@@ -109,7 +109,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Bolt 4",
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 48,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Lightning,
             q: 36,
@@ -126,7 +126,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Ice",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(1)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 16,
@@ -139,7 +139,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Ice 2",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 12,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(2)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 20,
@@ -152,7 +152,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Ice 3",
         flags: ALLY_OK | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 24,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(3)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 28,
@@ -165,7 +165,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Ice 4",
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 48,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Ice,
             q: 36,
@@ -179,7 +179,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         name: "Poison",
         flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED | CAN_BE_CALCULATED,
         mp_cost: 6,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
             condition: Condition::Poison,
             can_be_evaded: true,

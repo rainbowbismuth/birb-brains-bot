@@ -12,7 +12,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         // TODO: Pretty sure this could hit allies, need to add 'DOESNT HIT SELF'
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &DamagePunchArt {
             element: Element::None,
             pa_plus: 1,
@@ -37,7 +37,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         name: "Earth Slash",
         flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: AoE::Line,
+        aoe: AoE::Line(Some(2)),
         implementation: &DamagePunchArt {
             element: Element::Earth,
             pa_plus: 0,
@@ -57,7 +57,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         name: "Purification",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &PurificationImpl {
             base_chance: 80,
             cancels: &[
@@ -80,7 +80,7 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         name: "Chakra",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(0)),
         implementation: &ChakraImpl {
             hp_multiplier: 5,
             mp_multiplier: 5,

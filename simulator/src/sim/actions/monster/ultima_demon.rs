@@ -11,7 +11,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Nanoflare",
         flags: FOE_OK | SILENCEABLE,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(1)),
         implementation: &NanoflareImpl {
             ma_plus: 5,
             ctr: 5,
@@ -37,7 +37,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Ultima",
         flags: ALLY_OK | FOE_OK | SILENCEABLE,
         mp_cost: 10,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(3)),
         implementation: &ElementalDamageSpellImpl {
             element: Element::Holy,
             q: 25,
@@ -51,7 +51,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Hurricane",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(2)),
         implementation: &HuricaneImpl {
             element: Element::Wind,
             base_chance: 50,
@@ -63,7 +63,7 @@ pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
         name: "Ulmaguest",
         flags: FOE_OK,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(1)),
         implementation: &UlmaguestImpl { range: 4 },
     },
     // Empower: 4 range, 0 AoE, 8 CT, 13 MP. Effect: +2 PA, +2 MA, +2 Speed.

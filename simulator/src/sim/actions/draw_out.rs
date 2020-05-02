@@ -10,7 +10,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Asura",
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: 8,
             range: 0,
@@ -38,7 +38,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Koutetsu",
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: 10,
             range: 0,
@@ -52,7 +52,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Bizen Boat",
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: 5,
             range: 0,
@@ -66,7 +66,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Murasame",
         flags: HITS_ALLIES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: -9,
             range: 0,
@@ -80,7 +80,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Heaven's Cloud",
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: 11,
             range: 0,
@@ -94,7 +94,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Kiyomori",
         flags: HITS_ALLIES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutBuffImpl {
             add_random: &[Condition::Protect, Condition::Shell],
         },
@@ -104,7 +104,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Muramasa",
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: 14,
             range: 0,
@@ -118,7 +118,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Kikuichimoji",
         flags: FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
-        aoe: AoE::Line,
+        aoe: AoE::Line(Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: 12,
             range: 6,
@@ -132,7 +132,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Masamune",
         flags: HITS_ALLIES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutBuffImpl {
             add_random: &[Condition::Regen, Condition::Haste],
         },
@@ -142,7 +142,7 @@ pub const DRAW_OUT_ABILITIES: &[Ability] = &[
         name: "Chirijiraden",
         flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(2),
+        aoe: AoE::Diamond(2, Some(3)),
         implementation: &DrawOutDamageImpl {
             ma_factor: 18,
             range: 0,

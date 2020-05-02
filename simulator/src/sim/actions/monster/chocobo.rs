@@ -42,7 +42,7 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
         name: "Choco Esuna",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(2)),
         implementation: &ChocoEsunaImpl {
             cures: &[
                 Condition::Petrify,
@@ -60,7 +60,7 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
         name: "Choco Cure",
         flags: ALLY_OK | TARGET_SELF_ONLY,
         mp_cost: 0,
-        aoe: AoE::Diamond(1),
+        aoe: AoE::Diamond(1, Some(2)),
         implementation: &ChocoCureImpl { ma_factor: 3 },
     },
 ];

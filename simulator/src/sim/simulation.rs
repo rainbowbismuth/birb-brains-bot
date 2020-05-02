@@ -456,6 +456,10 @@ impl<'a> Simulation<'a> {
         }
     }
 
+    pub fn in_map(&self, panel: Panel) -> bool {
+        self.arena.panel_to_index(panel).is_some()
+    }
+
     pub fn tile(&self, panel: Panel) -> Tile {
         self.arena.tile(panel)
     }
