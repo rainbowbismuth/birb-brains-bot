@@ -9,7 +9,7 @@ use crate::sim::{Pathfinder, Simulation};
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 use rand::rngs::SmallRng;
-use rand::{thread_rng, SeedableRng};
+use rand::SeedableRng;
 use serde_json;
 use std::cell::RefCell;
 

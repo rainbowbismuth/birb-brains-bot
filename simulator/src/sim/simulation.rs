@@ -13,7 +13,7 @@ use crate::sim::{
     ActionTarget, Arena, Combatant, CombatantId, Condition, EvasionType, Event, Location, Log,
     MovementInfo, Panel, Pathfinder, Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS,
     COMBATANT_IDS, COMBATANT_IDS_LEN, COMBATANT_IDS_TURN_RESOLVE, DAMAGE_CANCELS, DEATH_CANCELS,
-    JUMPING, NO_SHORT_CHARGE, TIMED_CONDITIONS,
+    NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 use std::borrow::Borrow;
 
