@@ -375,11 +375,12 @@ pub fn run_all_matches(
         let overall_amount =
             *overall_involves.get(key).unwrap_or(&0) as f32 / match_ups.len() as f32;
         let worst_amount = *worst_involves.get(key).unwrap_or(&0) as f32 / worst_count as f32;
-        worst_involves_pairs.push((key, worst_amount - overall_amount));
+        let more = worst_amount / overall_amount.max(0.01);
+        worst_involves_pairs.push((key, more));
     }
     worst_involves_pairs.sort_by_key(|p| (-p.1 * 1_000_000.0) as i32);
     for entry in &worst_involves_pairs {
-        if entry.1 < 0.01 {
+        if entry.1 < 1.0 {
             continue;
         }
         println!("{:>25}: {:.4}", entry.0, entry.1);
