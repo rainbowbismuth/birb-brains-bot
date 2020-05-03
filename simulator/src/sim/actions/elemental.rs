@@ -4,14 +4,14 @@ use crate::sim::constants::*;
 
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, ALLY_OK,
-    CAN_BE_CALCULATED, CAN_BE_REFLECTED, FOE_OK, NOT_ALIVE_OK, SILENCEABLE,
+    CAN_BE_CALCULATED, CAN_BE_REFLECTED, CASTER_IMMUNE, FOE_OK, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Pitfall: 5 range, 1 AoE. Terrain: Soil, Wasteland, Road. Element: Dark. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Don't Move.
     Ability {
         name: "Pitfall",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -24,7 +24,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Water Ball: 5 range, 1 AoE. Terrain: Canal, River, Lake, Ocean, Waterfall. Element: Water. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Frog.
     Ability {
         name: "Water Ball",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -37,7 +37,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Hell Ivy: 5 range, 1 AoE. Terrain: Grassland, Underbrush, Vines. Element: Earth. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Stop.
     Ability {
         name: "Hell Ivy",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -50,7 +50,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Hallowed Ground: 5 range, 1 AoE. Terrain: Gravel, Flagstone, Wall, Gravestone. Element: Holy. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Petrify, Oil (Random).
     Ability {
         name: "Hallowed Ground",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -63,7 +63,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Local Quake: 5 range, 1 AoE. Terrain: Stone, Basalt. Element: Earth. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Confusion.
     Ability {
         name: "Local Quake",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -77,7 +77,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Static Shock: 5 range, 1 AoE. Terrain: Book, Tree, Bridge, Furnishing, Iron, Moss, Coffin. Element: Lightning. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Don't Act.
     Ability {
         name: "Static Shock",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -98,7 +98,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Will-O-Wisp: 5 range, 1 AoE. Terrain: Wood Floor, Carpet, Coffer, Stairs, Deck. Element: Fire. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Sleep.
     Ability {
         name: "Will-O-Wisp",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -117,7 +117,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Quicksand: 5 range, 1 AoE. Terrain: Marsh, Swamp, Poisonous Fen. Element: Water. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Death Sentence.
     Ability {
         name: "Quicksand",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -130,7 +130,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Sand Storm: 5 range, 1 AoE. Terrain: Sand, Stalactite, Salt. Element: Wind. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Darkness.
     Ability {
         name: "Sand Storm",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -143,7 +143,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Blizzard: 5 range, 1 AoE. Terrain: Snow, Ice. Element: Ice. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Silence.
     Ability {
         name: "Blizzard",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -156,7 +156,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Gusty Wind: 5 range, 1 AoE. Terrain: Roof, Chimney. Element: Wind. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Slow.
     Ability {
         name: "Gusty Wind",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {
@@ -169,7 +169,7 @@ pub const ELEMENTAL_ABILITIES: &[Ability] = &[
     // Lava Ball: 5 range, 1 AoE. Terrain: Lava, Machinery. Element: Fire. Effect: Damage ((PA + 2) / 2 * MA); Chance to Add Death.
     Ability {
         name: "Lava Ball",
-        flags: ALLY_OK | FOE_OK,
+        flags: ALLY_OK | FOE_OK | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &ElementalImpl {

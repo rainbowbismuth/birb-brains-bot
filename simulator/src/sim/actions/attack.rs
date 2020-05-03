@@ -4,18 +4,21 @@ use crate::sim::actions::{
     Ability, AbilityImpl, Action, AoE, ALLY_OK, BERSERK_OK, FOE_OK, FROG_OK, TARGET_NOT_SELF,
 };
 use crate::sim::{
-    Combatant, CombatantId, Simulation, Source, WeaponType, DAMAGE_CANCELS, TRIGGERS_HAMEDO,
+    Combatant, CombatantId, Condition, Simulation, Source, WeaponType, DAMAGE_CANCELS,
+    TRIGGERS_HAMEDO,
 };
 
 pub const ATTACK_ABILITY: Ability = Ability {
     flags: BERSERK_OK | FROG_OK | ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
     mp_cost: 0,
     aoe: AoE::None,
-    implementation: &AttackImpl {},
+    implementation: &AttackImpl { condition: None },
     name: "Attack",
 };
 
-pub struct AttackImpl {}
+pub struct AttackImpl {
+    pub condition: Option<Condition>,
+}
 
 impl AbilityImpl for AttackImpl {
     fn consider<'a>(
@@ -54,7 +57,7 @@ impl AbilityImpl for AttackImpl {
         if user.frog() || user.berserk() && user.monster() {
             perform_frog_attack(sim, user_id, target_id);
         } else {
-            perform_attack(sim, user_id, target_id);
+            perform_attack(self, sim, user_id, target_id);
         }
     }
 }
@@ -131,7 +134,12 @@ fn real_target(
     real_target
 }
 
-fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: CombatantId) {
+fn perform_attack(
+    attack_impl: &AttackImpl,
+    sim: &mut Simulation,
+    user_id: CombatantId,
+    target_id: CombatantId,
+) {
     let weapon1 = sim.combatant(user_id).main_hand();
     let weapon2 = sim.combatant(user_id).off_hand();
     let (mut damage, mut crit) = do_single_weapon_attack(sim, user_id, weapon1, target_id, 0);
@@ -140,6 +148,13 @@ fn perform_attack(sim: &mut Simulation, user_id: CombatantId, target_id: Combata
     if crit && sim.roll_auto_fail() < 0.50 {
         sim.do_knockback(user_id, target_id);
         knockback = true;
+    }
+
+    // TODO: This is for monster attacks like Tendrils, probably want to redo how this works..
+    if let Some(condition) = attack_impl.condition {
+        if sim.roll_auto_succeed() < 0.20 {
+            sim.add_condition(target_id, condition, Source::Ability);
+        }
     }
 
     if sim.combatant(user_id).dual_wield()
@@ -196,6 +211,7 @@ pub fn do_single_weapon_attack<'a, 'b>(
     if weapon.map_or(false, |eq| eq.absorbs_hp) {
         sim.change_target_hp(user_id, -damage, src);
     }
+
     (damage, crit)
 }
 

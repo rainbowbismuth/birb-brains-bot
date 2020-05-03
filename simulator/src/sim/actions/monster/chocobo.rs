@@ -3,17 +3,17 @@ use crate::sim::attack::AttackImpl;
 use crate::sim::common::{do_hp_heal, mod_2_formula_xa, mod_5_formula_xa};
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, TARGET_NOT_SELF,
-    TARGET_SELF_ONLY,
+    TARGET_SELF_ONLY, TRIGGERS_HAMEDO,
 };
 
 pub const CHOCOBO_ABILITIES: &[Ability] = &[
     // Choco Attack: 1 range, 0 AoE. Effect: Normal Attack.
     Ability {
         name: "Choco Attack",
-        flags: FOE_OK | TARGET_NOT_SELF,
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF | TRIGGERS_HAMEDO,
         mp_cost: 0,
         aoe: AoE::None,
-        implementation: &AttackImpl {},
+        implementation: &AttackImpl { condition: None },
     },
     // Choco Ball: 4 range, 0 AoE. Element: Water. Effect: Damage (PA / 2 * PA).
     Ability {

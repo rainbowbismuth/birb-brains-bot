@@ -1,16 +1,15 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, ALLY_OK, FOE_OK, TARGET_NOT_SELF};
 use crate::sim::common::{mod_2_formula_xa, mod_3_formula_xa};
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Simulation, Source, HITS_ALLIES_ONLY,
-    HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,
+    Combatant, CombatantId, Condition, Element, Simulation, Source, CASTER_IMMUNE,
+    HITS_ALLIES_ONLY, HITS_FOES_ONLY, NOT_ALIVE_OK, SILENCEABLE, TARGET_SELF_ONLY,
 };
 
 pub const PUNCH_ART_ABILITIES: &[Ability] = &[
     // Spin Fist: 0 range, 1 AoE. Effect: Damage ((PA + 1) / 2 * PA).
     Ability {
         name: "Spin Fist",
-        // TODO: Pretty sure this could hit allies, need to add 'DOESNT HIT SELF'
-        flags: HITS_FOES_ONLY | ALLY_OK | TARGET_SELF_ONLY,
+        flags: ALLY_OK | TARGET_SELF_ONLY | CASTER_IMMUNE,
         mp_cost: 0,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &DamagePunchArt {

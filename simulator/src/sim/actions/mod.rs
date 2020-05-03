@@ -60,6 +60,7 @@ pub const TRIGGERS_HAMEDO: AbilityFlags = 1 << 18;
 pub const STATS_ABILITY: AbilityFlags = 1 << 19;
 pub const PERFORMANCE: AbilityFlags = 1 << 20;
 pub const MISS_SLEEPING: AbilityFlags = 1 << 21;
+pub const CASTER_IMMUNE: AbilityFlags = 1 << 22;
 
 #[derive(Copy, Clone)]
 pub enum AoE {
@@ -517,6 +518,9 @@ fn perform_on_target(
     let user = sim.combatant(user_id);
     let target = sim.combatant(target_id);
     if target.crystal() || target.jumping() {
+        return;
+    }
+    if ability.flags & CASTER_IMMUNE != 0 && user_id == target_id {
         return;
     }
     if ability.flags & HITS_FOES_ONLY != 0 && !user.foe(target) {

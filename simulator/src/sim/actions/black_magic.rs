@@ -2,7 +2,7 @@ use crate::sim::actions::{Ability, AoE, ALLY_OK, FOE_OK};
 use crate::sim::common::{AddConditionSpellImpl, ElementalDamageSpellImpl};
 use crate::sim::{
     Combatant, CombatantId, Condition, Element, Simulation, Source, CAN_BE_CALCULATED,
-    CAN_BE_REFLECTED, NOT_ALIVE_OK, SILENCEABLE,
+    CAN_BE_REFLECTED, CASTER_IMMUNE, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
@@ -51,7 +51,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Fire 4",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CASTER_IMMUNE,
         mp_cost: 48,
         aoe: AoE::Diamond(2, Some(3)),
         implementation: &ElementalDamageSpellImpl {
@@ -107,7 +107,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Bolt 4",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CASTER_IMMUNE,
         mp_cost: 48,
         aoe: AoE::Diamond(2, Some(3)),
         implementation: &ElementalDamageSpellImpl {
@@ -163,7 +163,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
     },
     Ability {
         name: "Ice 4",
-        flags: ALLY_OK | FOE_OK | SILENCEABLE,
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | CASTER_IMMUNE,
         mp_cost: 48,
         aoe: AoE::Diamond(2, Some(3)),
         implementation: &ElementalDamageSpellImpl {

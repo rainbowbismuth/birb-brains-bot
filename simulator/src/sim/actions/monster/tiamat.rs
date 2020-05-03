@@ -15,7 +15,7 @@ pub const TIAMAT_ABILITIES: &[Ability] = &[
         flags: FOE_OK | TARGET_NOT_SELF,
         mp_cost: 0,
         aoe: AoE::TriLine,
-        implementation: &AttackImpl {},
+        implementation: &AttackImpl { condition: None },
     },
     // Triple Breath: 2 range, 2 AoE (x3 line). Hit: (MA + 90)%. Effect: Damage (45)%.
     Ability {
