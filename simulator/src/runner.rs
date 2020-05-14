@@ -9,10 +9,12 @@ use crate::sim::{
 use indicatif::{ProgressBar, ProgressStyle};
 use rand::rngs::SmallRng;
 use rand::{thread_rng, SeedableRng};
+use rayon::prelude::*;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 pub fn run_many_sims<'a>(
     num_runs: i32,
@@ -205,6 +207,19 @@ fn record_unit_kinds(involves: &mut HashMap<String, i32>, match_up: &MatchUp) {
     }
 }
 
+struct ResultsData {
+    results: HashMap<String, HashMap<String, f64>>,
+    worst_count: u64,
+    overall_involves: HashMap<String, i32>,
+    worst_involves: HashMap<String, i32>,
+    correct: u64,
+    time_outs: u64,
+    log_loss: f64,
+    worst_loss: f64,
+    replay_path: PathBuf,
+    replay_data: Vec<String>,
+}
+
 pub fn run_all_matches(
     num_runs: i32,
     print_worst: bool,
@@ -216,8 +231,6 @@ pub fn run_all_matches(
     filter_map: Vec<String>,
     most_recent: Option<u64>,
 ) -> io::Result<()> {
-    let mut results: HashMap<String, HashMap<String, f64>> = HashMap::new();
-
     let patches = data::read_all_patches()?;
 
     println!("{} patches\n", patches.len());
@@ -230,21 +243,18 @@ pub fn run_all_matches(
         match_up_paths.truncate(most_recent as usize);
     }
 
-    let mut worst_count = 0;
-    let mut overall_involves = HashMap::new();
-    let mut worst_involves = HashMap::new();
-
-    let mut correct = 0;
-
-    let mut time_outs = 0;
-    let mut log_loss: f64 = 0.0;
-
-    let mut worst_loss = 0.0;
-    let mut replay_path = PathBuf::new();
-    let mut replay_data = vec![];
-
-    let mut buffer = vec![];
-    let mut match_ups = vec![];
+    let mut data = Mutex::new(ResultsData {
+        results: HashMap::new(),
+        worst_count: 0,
+        overall_involves: HashMap::new(),
+        worst_involves: HashMap::new(),
+        correct: 0,
+        time_outs: 0,
+        log_loss: 0.0,
+        worst_loss: 0.0,
+        replay_path: PathBuf::new(),
+        replay_data: vec![],
+    });
 
     let bar1 = ProgressBar::new(match_up_paths.len() as u64);
     bar1.set_style(
@@ -255,41 +265,46 @@ pub fn run_all_matches(
             .progress_chars("##-"),
     );
 
-    'filter: for match_up_path in match_up_paths.iter() {
-        bar1.inc(1);
-        let (patch_num, match_up) = data::read_match_at_path(&match_up_path, &mut buffer)?;
-        let patch = patches
-            .iter()
-            .find(|p| p.time as usize == patch_num)
-            .unwrap();
-        let combatant_infos = match_to_combatant_infos(&patch, &match_up);
+    let match_ups: Vec<_> = match_up_paths
+        .par_iter()
+        .flat_map(|match_up_path| {
+            bar1.inc(1);
+            let mut buffer = Vec::with_capacity(1024 * 1024);
+            let (patch_num, match_up) =
+                data::read_match_at_path(&match_up_path, &mut buffer).unwrap();
+            let patch = patches
+                .iter()
+                .find(|p| p.time as usize == patch_num)
+                .unwrap();
+            let combatant_infos = match_to_combatant_infos(&patch, &match_up);
 
-        for equip in &filter_equip {
-            if !has_equip(&combatant_infos, equip) {
-                continue 'filter;
+            for equip in &filter_equip {
+                if !has_equip(&combatant_infos, equip) {
+                    return None;
+                }
             }
-        }
-        for ability in &filter_ability {
-            if !has_ability(&combatant_infos, ability) {
-                continue 'filter;
+            for ability in &filter_ability {
+                if !has_ability(&combatant_infos, ability) {
+                    return None;
+                }
             }
-        }
-        for skill in &filter_skill {
-            if !has_skill(&combatant_infos, skill) {
-                continue 'filter;
+            for skill in &filter_skill {
+                if !has_skill(&combatant_infos, skill) {
+                    return None;
+                }
             }
-        }
-        if filter_no_monsters && has_monster(&combatant_infos) {
-            continue 'filter;
-        }
-        for map in &filter_map {
-            if !match_up.arena_name.contains(map) {
-                continue 'filter;
+            if filter_no_monsters && has_monster(&combatant_infos) {
+                return None;
             }
-        }
+            for map in &filter_map {
+                if !match_up.arena_name.contains(map) {
+                    return None;
+                }
+            }
 
-        match_ups.push((match_up_path, patch, match_up));
-    }
+            Some((match_up_path, patch, match_up))
+        })
+        .collect();
     bar1.finish();
 
     let total = match_ups.len() as u64 * num_runs as u64;
@@ -303,78 +318,90 @@ pub fn run_all_matches(
             .progress_chars("##-"),
     );
 
-    for (match_up_path, patch, match_up) in match_ups.iter() {
-        bar.inc(num_runs as u64);
+    match_ups
+        .par_iter()
+        .for_each(|(match_up_path, patch, match_up)| {
+            bar.inc(num_runs as u64);
 
-        let combatant_infos = match_to_combatant_infos(&patch, &match_up);
-        let combatants = match_to_combatants(&combatant_infos);
-        let arena = Arena::from_dto(match_up.arena.clone());
-        let (left_wins_percent, new_time_outs) = run_many_sims(num_runs, &combatants, &arena);
-        time_outs += new_time_outs;
-
-        // if new_time_outs > (num_runs as u64 / 2) {
-        //     println!("time out heavy match: {}", replay_path.to_string_lossy());
-        // }
-
-        let tournament_map = results
-            .entry(match_up.tournament_id.to_string())
-            .or_insert(HashMap::new());
-        let key = format!("{},{}", match_up.left.color, match_up.right.color);
-        tournament_map.insert(key, left_wins_percent);
-
-        if match_up.left_wins.unwrap() && left_wins_percent > 0.5 {
-            correct += 1;
-        } else if !match_up.left_wins.unwrap() && left_wins_percent <= 0.5 {
-            correct += 1;
-        }
-
-        let clamped = clamp(left_wins_percent, 1e-15, 1.0 - 1e-15);
-        let current_log_loss = if match_up.left_wins.unwrap() {
-            -clamped.ln()
-        } else {
-            -((1.0 - clamped).ln())
-        };
-        log_loss += current_log_loss;
-
-        record_unit_kinds(&mut overall_involves, &match_up);
-        if print_worst && current_log_loss >= 2.8 {
-            worst_count += 1;
-            record_unit_kinds(&mut worst_involves, &match_up);
-        }
-
-        if print_worst && current_log_loss >= worst_loss {
-            worst_loss = current_log_loss;
-            replay_path = (*match_up_path).clone();
-            let rng = SmallRng::from_entropy();
+            let combatant_infos = match_to_combatant_infos(&patch, &match_up);
+            let combatants = match_to_combatants(&combatant_infos);
             let arena = Arena::from_dto(match_up.arena.clone());
-            let pathfinder = RefCell::new(Pathfinder::new(&arena));
-            let mut sim = Simulation::new(combatants.clone(), &arena, &pathfinder, rng, true);
-            sim.run();
-            replay_data.clear();
-            replay_data.push(format!("log loss: {}\n", current_log_loss));
+            let (left_wins_percent, new_time_outs) = run_many_sims(num_runs, &combatants, &arena);
 
-            for combatant in &combatants {
-                replay_data.push(unit_card(combatant));
+            let mut data = data.lock().unwrap();
+
+            data.time_outs += new_time_outs;
+
+            // if new_time_outs > (num_runs as u64 / 2) {
+            //     println!("time out heavy match: {}", replay_path.to_string_lossy());
+            // }
+
+            let tournament_map = data
+                .results
+                .entry(match_up.tournament_id.to_string())
+                .or_insert(HashMap::new());
+            let key = format!("{},{}", match_up.left.color, match_up.right.color);
+            tournament_map.insert(key, left_wins_percent);
+
+            if match_up.left_wins.unwrap() && left_wins_percent > 0.5 {
+                data.correct += 1;
+            } else if !match_up.left_wins.unwrap() && left_wins_percent <= 0.5 {
+                data.correct += 1;
             }
-            replay_data.push(format!("Playing on {}", &match_up.arena_name));
-            for entry in sim.log.entries() {
-                replay_data.push(format!("{}", describe_entry(&entry, &arena)));
+
+            let clamped = clamp(left_wins_percent, 1e-15, 1.0 - 1e-15);
+            let current_log_loss = if match_up.left_wins.unwrap() {
+                -clamped.ln()
+            } else {
+                -((1.0 - clamped).ln())
+            };
+            data.log_loss += current_log_loss;
+
+            record_unit_kinds(&mut data.overall_involves, &match_up);
+            if print_worst && current_log_loss >= 2.8 {
+                data.worst_count += 1;
+                record_unit_kinds(&mut data.worst_involves, &match_up);
             }
-        }
-    }
+
+            if print_worst && current_log_loss >= data.worst_loss {
+                data.worst_loss = current_log_loss;
+                data.replay_path = (*match_up_path).clone();
+                let rng = SmallRng::from_entropy();
+                let arena = Arena::from_dto(match_up.arena.clone());
+                let pathfinder = RefCell::new(Pathfinder::new(&arena));
+                let mut sim = Simulation::new(combatants.clone(), &arena, &pathfinder, rng, true);
+                sim.run();
+                data.replay_data.clear();
+                data.replay_data
+                    .push(format!("log loss: {}\n", current_log_loss));
+
+                for combatant in &combatants {
+                    data.replay_data.push(unit_card(combatant));
+                }
+                data.replay_data
+                    .push(format!("Playing on {}", &match_up.arena_name));
+                for entry in sim.log.entries() {
+                    data.replay_data
+                        .push(format!("{}", describe_entry(&entry, &arena)));
+                }
+            }
+        });
     bar.finish();
 
-    println!("\nmatch {}:", replay_path.to_string_lossy());
-    for line in replay_data {
+    let mut data = data.lock().unwrap();
+
+    println!("\nmatch {}:", data.replay_path.to_string_lossy());
+    for line in &data.replay_data {
         println!("{}", line);
     }
 
-    println!("\nworst matches involve (out of {}):", worst_count);
+    println!("\nworst matches involve (out of {}):", data.worst_count);
     let mut worst_involves_pairs = vec![];
-    for key in worst_involves.keys() {
+    for key in data.worst_involves.keys() {
         let overall_amount =
-            *overall_involves.get(key).unwrap_or(&0) as f32 / match_ups.len() as f32;
-        let worst_amount = *worst_involves.get(key).unwrap_or(&0) as f32 / worst_count as f32;
+            *data.overall_involves.get(key).unwrap_or(&0) as f32 / match_ups.len() as f32;
+        let worst_amount =
+            *data.worst_involves.get(key).unwrap_or(&0) as f32 / data.worst_count as f32;
         let more = worst_amount / overall_amount.max(0.01);
         worst_involves_pairs.push((key, more));
     }
@@ -387,18 +414,18 @@ pub fn run_all_matches(
     }
 
     let total_matches = match_ups.len();
-    let correct_percent = correct as f32 / total_matches as f32;
+    let correct_percent = data.correct as f32 / total_matches as f32;
     println!("\ntotal: {}", total_matches);
     println!("correct: {:.1}%", correct_percent * 100.0);
     println!(
         "time_outs: {:.1}%",
-        ((time_outs as f32 / num_runs as f32) / total_matches as f32) * 100.0
+        ((data.time_outs as f32 / num_runs as f32) / total_matches as f32) * 100.0
     );
     println!("improvement: {:.1}%", (correct_percent - 0.5) * 200.0);
-    println!("log loss: {:.6}", log_loss / total_matches as f64);
+    println!("log loss: {:.6}", data.log_loss / total_matches as f64);
 
     if save {
-        let bin = serde_json::to_vec_pretty(&results).unwrap();
+        let bin = serde_json::to_vec_pretty(&data.results).unwrap();
         let mut file = std::fs::File::create("data/sim.json")?;
         file.write_all(&bin)?;
     }
