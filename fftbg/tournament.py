@@ -108,6 +108,8 @@ class MatchUp:
             'Map': self.game_map,
             'Map-Area': arena.area,
         }
+        for key in SURFACE_TYPES:
+            arena_map[key] = 0.0
         for surface_type in arena.surface_types:
             arena_map['Map-Surface-'+surface_type] = 1.0
 
