@@ -53,7 +53,7 @@ impl Location {
 
     pub fn diamond(self, size: u8) -> DiamondIterator {
         DiamondIterator {
-            iter: DIAMOND_PRECOMPUTED[size as usize].iter(),
+            iter: DIAMOND_PRECOMPUTED[(size as usize).min(DIAMOND_PRECOMPUTED.len() - 1)].iter(),
             constant: self,
         }
     }
