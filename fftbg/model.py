@@ -201,7 +201,7 @@ def model_three(combatant_size,
                 momentum=0.99,
                 activation='elu',
                 l1_rate=0.000,
-                l2_rate=0.01,
+                l2_rate=0.008,
                 learning_rate=0.001):
     def make_dense(output_size):
         dense = keras.layers.Dense(
@@ -216,16 +216,16 @@ def model_three(combatant_size,
         # return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
-    first_layer = make_dense(combatant_size // 10)
+    first_layer = make_dense(combatant_size // 5)
     first_nodes = [first_layer(input_node) for input_node in inputs]
 
     nodes = [first_nodes]
     for _ in range(extra_layers):
-        new_layer = make_dense(combatant_size // 15)
+        new_layer = make_dense(combatant_size // 10)
         nodes.append([new_layer(node) for node in nodes[-1]])
         # nodes.append([new_layer(keras.layers.concatenate(list(a))) for a in zip(inputs, nodes[-1])])
 
-    final_layer = make_dense(combatant_size // 25)
+    final_layer = make_dense(combatant_size // 15)
     final_node = final_layer(keras.layers.concatenate(nodes[-1]))
 
     predictions = keras.layers.Dense(2, activation='softmax')(final_node)

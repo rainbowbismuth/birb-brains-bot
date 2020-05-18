@@ -17,6 +17,7 @@ from fftbg.combatant import CATEGORICAL, combatant_to_dict, can_heal, \
 from fftbg.config import TOURNAMENTS_ROOT
 from fftbg.patch import Patch
 from fftbg.progress import progress_bar
+import fftbg.load_map
 
 LOG = logging.getLogger(__name__)
 
@@ -24,6 +25,10 @@ COLORS = ['red', 'blue', 'green', 'yellow', 'white', 'black', 'purple', 'brown',
 CAN_HEAL_TEAM = [f'Can-Heal-Team-{i}' for i in range(4)]
 CAN_HURT_ENEMY = [f'Can-Hurt-Enemy-{i}' for i in range(4)]
 CAN_LETHAL_ENEMY = [f'Can-Lethal-Enemy-{i}' for i in range(4)]
+DISTANCE_ALLY = [f'Distance-Ally-{i}' for i in range(4)]
+HEIGHT_DIFF_ALLY = [f'Height-Diff-Ally-{i}' for i in range(4)]
+DISTANCE_ENEMY = [f'Distance-Enemy-{i}' for i in range(4)]
+HEIGHT_DIFF_ENEMY = [f'Height-Diff-Enemy-{i}' for i in range(4)]
 ZODIAC_TEAM = [f'Zodiac-Team-{i}' for i in range(4)]
 ZODIAC_ENEMY = [f'Zodiac-Enemy-{i}' for i in range(4)]
 OFFENSIVE_STATUSES = [
@@ -34,10 +39,13 @@ OFFENSIVE_STATUSES = [
 CAUSE_STATUS = [f'Can-{status}-Enemy-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
 CANCEL_STATUS = [f'Can-Cancel-{status}-Team-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
 # TODO: Not ready to include this 'Sim-Win-Percent'
-NUMERIC = ['Map-Area', 'Map-Team-Split', 'Map-Height-Diff', 'Map-Choke-Point', 'Map-Team-Distance',
-           'Map-Min-Dimension', 'Map-Max-Dimension', 'Map-Archer-Boon', 'Map-Meat-Grinder'] \
+SURFACE_TYPES = ['Map-Surface-' + surface
+                 for surface in fftbg.load_map.SURFACE_TYPES.values()
+                 if surface not in ('(blank)', 'Ice')]
+NUMERIC = ['Map-Area'] + SURFACE_TYPES \
           + CAN_HEAL_TEAM + CAN_HURT_ENEMY + CAN_LETHAL_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
-          + CAUSE_STATUS + CANCEL_STATUS
+          + CAUSE_STATUS + CANCEL_STATUS + DISTANCE_ALLY + DISTANCE_ENEMY + HEIGHT_DIFF_ALLY + HEIGHT_DIFF_ENEMY
+
 
 SKIP_ID_RANGES = [
     (1585741145317, 1585787081769)  # April fools, 2020.
@@ -99,15 +107,10 @@ class MatchUp:
         arena_map = {
             'Map': self.game_map,
             'Map-Area': arena.area,
-            'Map-Team-Split': arena.team_split,
-            'Map-Height-Diff': arena.height_diff,
-            'Map-Choke-Point': arena.choke_point,
-            'Map-Team-Distance': arena.team_distance,
-            'Map-Min-Dimension': arena.min_dimension,
-            'Map-Max-Dimension': arena.max_dimension,
-            'Map-Archer-Boon': arena.archer_boon,
-            'Map-Meat-Grinder': arena.meat_grinder
         }
+        for surface_type in arena.surface_types:
+            arena_map['Map-Surface-'+surface_type] = 1.0
+
         left = {
             'Side': 'Left',
             'Side-N': 0,
@@ -137,12 +140,20 @@ class MatchUp:
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status, patch)
 
+                (dist, height) = arena.distance(i, j)
+                combatant[f'Distance-Ally-{j}'] = dist
+                combatant[f'Height-Diff-Ally-{j}'] = height
+
             for j, victim in enumerate(right_combatants):
                 combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim, patch)
                 combatant[f'Can-Lethal-Enemy-{j}'] = lethality(combatant, victim, patch)
                 combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
+
+                (dist, height) = arena.distance(i, j+4)
+                combatant[f'Distance-Enemy-{j}'] = dist
+                combatant[f'Height-Diff-Enemy-{j}'] = height
 
             out.append(combatant)
 
@@ -156,12 +167,20 @@ class MatchUp:
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status, patch)
 
+                (dist, height) = arena.distance(i+4, j+4)
+                combatant[f'Distance-Ally-{j}'] = dist
+                combatant[f'Height-Diff-Ally-{j}'] = height
+
             for j, victim in enumerate(left_combatants):
                 combatant[f'Can-Hurt-Enemy-{j}'] = can_hurt(combatant, victim, patch)
                 combatant[f'Can-Lethal-Enemy-{j}'] = lethality(combatant, victim, patch)
                 combatant[f'Zodiac-Enemy-{j}'] = zodiac_compat(combatant, victim)
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
+
+                (dist, height) = arena.distance(i+4, j)
+                combatant[f'Distance-Enemy-{j}'] = dist
+                combatant[f'Height-Diff-Enemy-{j}'] = height
 
             out.append(combatant)
 
