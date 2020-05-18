@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
-from fftbg.simulation.status import ALL_CONDITIONS_SET
+from status import ALL_CONDITIONS_SET
 
 WEAPON_RE = re.compile(r'(.+?): (\d+) WP(.+)?, (\d+) range, (\d+)% evade, (.+?)\.(.*)')
 ARMOR_RE = re.compile(r'(.+?): \+(\d+) HP.*(\d+) MP,.(.*)')
