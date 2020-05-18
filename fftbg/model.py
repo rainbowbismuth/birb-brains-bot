@@ -200,20 +200,20 @@ def model_three(combatant_size,
                 extra_layers=2,
                 momentum=0.99,
                 activation='elu',
-                l1_rate=0.000,
-                l2_rate=0.008,
+                l1_rate=0.01,
+                l2_rate=0.01,
                 learning_rate=0.001):
     def make_dense(output_size):
         dense = keras.layers.Dense(
             output_size,
             kernel_initializer='he_normal',
-            kernel_regularizer=keras.regularizers.l2(l2_rate),
-            activation=activation,
-            use_bias=True)
-        # batch = keras.layers.BatchNormalization(momentum=momentum)
-        # act = keras.layers.Activation(activation=activation)
-        return dense
-        # return lambda x: act(batch(dense(x)))
+            kernel_regularizer=keras.regularizers.l1_l2(l1_rate, l2_rate),
+            # activation=activation,
+            use_bias=False)
+        batch = keras.layers.BatchNormalization()
+        act = keras.layers.Activation(activation=activation)
+        # return dense
+        return lambda x: act(batch(dense(x)))
 
     inputs = [keras.layers.Input(shape=(combatant_size,)) for _ in range(8)]
     first_layer = make_dense(combatant_size // 5)
