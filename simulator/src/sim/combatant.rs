@@ -532,7 +532,7 @@ impl<'a> Combatant<'a> {
 
     pub fn speed(&self) -> u8 {
         (self.base_stats().speed
-            + self.speed_mod
+            + self.speed_mod.min(10)
             + self.main_hand().map_or(0, |e| e.speed_bonus)
             + self.off_hand().map_or(0, |e| e.speed_bonus)
             + self.headgear().map_or(0, |e| e.speed_bonus)

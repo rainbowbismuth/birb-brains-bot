@@ -134,7 +134,7 @@ impl AbilityImpl for ChargeImpl {
         let speed = if target.haste() {
             // TODO: Real AI doesn't account for this, but, since I haven't implemented
             //  tile targeting, I'm going to only target those that will certainly hit
-            (target.speed() * 3) / 2
+            (target.speed().saturating_mul(3)) / 2
         } else {
             target.speed()
         };

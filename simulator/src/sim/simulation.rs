@@ -237,14 +237,15 @@ impl<'a> Simulation<'a> {
                 continue;
             }
 
-            let mut speed = combatant.speed();
+            // TODO: I'm not sure what is making these overflow :/
+            let mut speed: u8 = combatant.speed();
             if combatant.haste() {
-                speed = (speed * 3) / 2;
+                speed = speed.saturating_mul(3) / 2;
             }
             if combatant.slow() {
-                speed = (speed * 2) / 3;
+                speed = speed.saturating_mul(2) / 3;
             }
-            combatant.ct += speed as u8;
+            combatant.ct = combatant.ct.saturating_add(speed);
             if combatant.ct >= 100 {
                 self.active_turns = true;
             }
@@ -1115,7 +1116,7 @@ impl<'a> Simulation<'a> {
             return;
         }
         let target = self.combatant_mut(target_id);
-        target.pa_mod = (target.pa_mod + amount).min(75);
+        target.pa_mod = (target.pa_mod + amount).min(10).max(-10);
         self.log_event(Event::PhysicalAttackBuff(target_id, amount, src));
     }
 
@@ -1124,7 +1125,7 @@ impl<'a> Simulation<'a> {
             return;
         }
         let target = self.combatant_mut(target_id);
-        target.ma_mod = (target.ma_mod + amount).min(75);
+        target.ma_mod = (target.ma_mod + amount).min(10).max(-10);
         self.log_event(Event::MagicalAttackBuff(target_id, amount, src));
     }
 
@@ -1133,7 +1134,7 @@ impl<'a> Simulation<'a> {
             return;
         }
         let target = self.combatant_mut(target_id);
-        target.speed_mod = (target.speed_mod + amount).min(50);
+        target.speed_mod = (target.speed_mod + amount).min(10).max(-10);
         self.log_event(Event::SpeedBuff(target_id, amount, src));
     }
 
