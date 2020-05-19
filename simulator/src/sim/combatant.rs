@@ -654,11 +654,11 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn jump(&self) -> u8 {
-        self.base_stats().jump as u8
+        (self.base_stats().jump as u8
             + self.info.bonus_jump
             + self.headgear().map_or(0, |e| e.jump_bonus as u8)
             + self.armor().map_or(0, |e| e.jump_bonus as u8)
-            + self.accessory().map_or(0, |e| e.jump_bonus as u8)
+            + self.accessory().map_or(0, |e| e.jump_bonus as u8).min(7))
     }
 
     pub fn ignore_height(&self) -> bool {
