@@ -15,8 +15,8 @@ from fftbg.event_stream import EventStream
 LOG = logging.getLogger(__name__)
 
 REMINDER_MIN = 90
-MIN_BET = 150000
-MAX_BET = 200000
+MIN_BET = 150_000
+MAX_BET = 200_000
 
 
 class Server:
@@ -67,10 +67,10 @@ class Server:
         while True:
             cur_bal = self.bird.balance
             if cur_bal == 0 or cur_bal < MIN_BET or self.go_all_in:
-                return
+                continue
             number = int(MAX_BET - cur_bal)
             if number <= 0:
-                return
+                continue
             self.say_message(
                 f'Kweh-kweh!! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in! kwehWink )')
             await asyncio.sleep(60 * REMINDER_MIN)
