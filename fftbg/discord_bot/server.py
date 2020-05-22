@@ -1,30 +1,20 @@
 import logging
 import os
+import traceback
+
+from discord.ext import commands
 
 import fftbg.event_stream
 import fftbg.server
-import discord
+import fftbg.twitch.msg_types as msg_types
+
+import asyncio
 
 LOG = logging.getLogger(__name__)
 
-
-class MyClient(discord.Client):
-    dev_channel: discord.TextChannel
-
-    async def on_ready(self):
-        print('Logged on as', self.user)
-        for channel in self.get_all_channels():
-            if channel.guild.name == "FFTBattleground" and channel.name == "development":
-                self.dev_channel = channel
-        # await self.dev_channel.send('Kweh!! (Thank\'s Nacho!!)')
-
-    async def on_message(self, message):
-        # don't respond to ourselves
-        if message.author == self.user:
-            return
-
-        if message.content == 'ping':
-            await message.channel.send('pong')
+DIV_BY_ZERO_EMOTE = '<:fftbgDivideByZero:701439212246794291>'
+SAD_BIRD_EMOTE = '<:fftbgSadBirb:669566649434767360>'
+MAGIC_BOTTLE = 668345361420517377
 
 
 def run_server():
@@ -32,11 +22,52 @@ def run_server():
     fftbg.server.configure_logging(env_var='DISCORD_LOG_LEVEL')
 
     token = os.environ['DISCORD_TOKEN']
-    client = MyClient()
-    client.run(token)
+    redis = fftbg.server.get_redis()
+    event_stream = fftbg.event_stream.EventStream(redis)
+    loop = fftbg.server.get_loop()
+    bot = commands.Bot(command_prefix='!bird-', loop=loop)
 
-    #redis = fftbg.server.get_redis()
-    # event_stream = fftbg.event_stream.EventStream(redis)
+    async def listen_loop():
+        while True:
+            await asyncio.sleep(1)
+            for (_, msg) in event_stream.read():
+                if msg.get('type') == msg_types.RECV_NEW_TOURNAMENT and msg.get('skill_drop'):
+                    await bot.dev_channel.send(f'Kweh! (The new skill drop is {msg["skill_drop"]}!)')
+
+    loop.create_task(listen_loop())
+
+    @bot.command()
+    async def badday(ctx, num: int):
+        assert num == 5
+
+    @bot.event
+    async def on_command_error(ctx, error):
+        if hasattr(error, 'original'):
+            ex = error.original
+            exc_str = ''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))
+            user = bot.get_user(MAGIC_BOTTLE)
+            await user.send(f'{DIV_BY_ZERO_EMOTE} Wark! Someone is having an issue with me! '
+                            f'\n```\n{ctx.author}: {ctx.message.content}\n\n{exc_str}\n```')
+            await ctx.send(f'{DIV_BY_ZERO_EMOTE} Wark! (Something bad happened while running your command! I messaged '
+                           f'MagicBottle about it don\'t worry.)')
+        else:
+            await ctx.send(f'{SAD_BIRD_EMOTE} Kweh.. ({str(error)})')
+
+    @bot.event
+    async def on_ready():
+        print('Logged on as', bot.user)
+        for channel in bot.get_all_channels():
+            if channel.guild.name == "FFTBattleground" and channel.name == "development":
+                bot.dev_channel = channel
+
+    async def run_bot():
+        try:
+            await bot.start(token)
+        finally:
+            await bot.close()
+
+    loop.create_task(run_bot())
+    loop.run_forever()
 
 
 def main():

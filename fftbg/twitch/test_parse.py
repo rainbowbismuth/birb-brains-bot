@@ -21,6 +21,7 @@ def test_regular_expressions():
 
     assert parse.BOTS_CANNOT_BET_RE.findall('BirbBrainsBot, bots cannot bet in the final 20 seconds!')
     assert parse.TEAM_VICTORY.findall('The blue team was victorious!')
+    assert parse.NEW_TOURNAMENT_SKILL_DROP.findall('This tournament\'s Skill Drop is: PreferredArms.')
 
 
 def test_bet_regular_expressions():

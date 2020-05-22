@@ -145,6 +145,9 @@ class IRCBot(commands.Bot):
 
         if parse.NEW_TOURNAMENT in message.content:
             msg = {'type': msg_types.RECV_NEW_TOURNAMENT}
+            skill_drop = parse.NEW_TOURNAMENT_SKILL_DROP.findall(message.content)
+            if skill_drop:
+                msg['skill_drop'] = skill_drop[0]
             self.event_stream.publish(msg)
 
         balance_match = parse.BALANCE_RE.findall(message.content)
