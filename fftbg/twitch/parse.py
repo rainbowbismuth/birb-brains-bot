@@ -1,7 +1,7 @@
 import re
 
 NEW_TOURNAMENT = 'You may now !fight to enter the tournament!'
-NEW_TOURNAMENT_SKILL_DROP = re.compile(r'This tournament\'s Skill Drop is: (\w+)\.')
+NEW_TOURNAMENT_SKILL_DROP = re.compile(r'This tournament\'s Skill Drop is: ([\w\d\-+]+)\.')
 
 BET_RE = re.compile(r'!bet (\w+) ([\d%]+)')
 BET2_RE = re.compile(r'!bet ([\d%]+) (\w+)')
