@@ -40,6 +40,21 @@ CREATE TABLE IF NOT EXISTS 'placed_bet' (
 )
 """
 
+SCHEMA_NOTIFY_SKILL_DROP = """
+CREATE TABLE IF NOT EXISTS 'notify_skill_drop' (
+    'id' INTEGER PRIMARY KEY AUTOINCREMENT,
+    'time' TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    'user_id' INTEGER,
+    'user_name' TEXT,
+    'skill_drop' TEXT
+)
+"""
+
+SCHEMA_NOTIFY_SKILL_DROP_INDEX = """
+CREATE UNIQUE INDEX IF NOT EXISTS 'notify_skill_drop_index' on 'notify_skill_drop' (
+    'user_id', 'skill_drop' )
+"""
+
 INSERT_BALANCE_LOG = """
 INSERT INTO 'balance_log'(
     tournament_id, old_balance, new_balance, bet_on, wager,
@@ -64,6 +79,34 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
 GET_PLACED_BETS = """
 SELECT * FROM 'placed_bet' 
 ORDER BY id DESC
+"""
+
+INSERT_NOTIFY_SKILL_DROP_REQUEST = """
+INSERT OR IGNORE INTO 'notify_skill_drop'(
+    user_id, user_name, skill_drop)
+VALUES (?, ?, ?)
+"""
+
+DELETE_NOTIFY_SKILL_DROP_REQUEST = """
+DELETE FROM 'notify_skill_drop'
+WHERE user_id = ? AND skill_drop = ?
+"""
+
+CLEAR_ALL_NOTIFY_SKILL_DROP_REQUESTS = """
+DELETE FROM 'notify_skill_drop'
+WHERE user_id = ?
+"""
+
+GET_SKILL_DROP_NOTIFICATION_REQUESTS = """
+SELECT skill_drop
+FROM 'notify_skill_drop'
+WHERE user_id = ?
+"""
+
+GET_USERS_TO_SKILL_DROP_NOTIFY = """
+SELECT user_id, user_name
+FROM 'notify_skill_drop'
+WHERE skill_drop = ?
 """
 
 
@@ -108,6 +151,8 @@ class Memory:
         with self.connection:
             self.connection.execute(SCHEMA_BALANCE_LOG)
             self.connection.execute(SCHEMA_PLACED_BET)
+            self.connection.execute(SCHEMA_NOTIFY_SKILL_DROP)
+            self.connection.execute(SCHEMA_NOTIFY_SKILL_DROP_INDEX)
 
     def __del__(self):
         if self.connection is not None:
@@ -143,3 +188,35 @@ class Memory:
     def get_placed_bet(self):
         with self.connection:
             return PlacedBetDTO(*self.connection.execute(GET_PLACED_BETS).fetchone())
+
+    def add_notify_skill_drop_requests(self, user_id, user_name, skill_drop_list):
+        with self.connection:
+            for skill_drop in skill_drop_list:
+                self.connection.execute(
+                    INSERT_NOTIFY_SKILL_DROP_REQUEST,
+                    (int(user_id), user_name, skill_drop))
+
+    def get_skill_drop_notify_requests(self, user_id, limit: int = 300):
+        with self.connection:
+            tuples = self.connection.execute(
+                GET_SKILL_DROP_NOTIFICATION_REQUESTS, (int(user_id),)).fetchmany(limit)
+            return [str(item[0]) for item in tuples]
+
+    def remove_notify_skill_drop_requests(self, user_id, skill_drop_list):
+        with self.connection:
+            for skill_drop in skill_drop_list:
+                self.connection.execute(
+                    DELETE_NOTIFY_SKILL_DROP_REQUEST,
+                    (int(user_id), skill_drop))
+
+    def clear_notify_skill_drop_requests(self, user_id):
+        with self.connection:
+            self.connection.execute(
+                CLEAR_ALL_NOTIFY_SKILL_DROP_REQUESTS,
+                (int(user_id),))
+
+    def get_users_to_skill_drop_notify(self, skill_drop):
+        with self.connection:
+            return self.connection.execute(
+                GET_USERS_TO_SKILL_DROP_NOTIFY,
+                (skill_drop,)).fetchall()

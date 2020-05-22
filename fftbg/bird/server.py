@@ -63,8 +63,8 @@ class Server:
         LOG.info(f'Sending message: {text}')
 
     async def all_in_ready(self):
-        await asyncio.sleep(60 * 10)
         while True:
+            await asyncio.sleep(60 * REMINDER_MIN)
             cur_bal = self.bird.balance
             if cur_bal == 0 or cur_bal < MIN_BET or self.go_all_in:
                 continue
@@ -73,7 +73,6 @@ class Server:
                 continue
             self.say_message(
                 f'Kweh-kweh!! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in! kwehWink )')
-            await asyncio.sleep(60 * REMINDER_MIN)
 
     def update_balance(self, new_balance):
         if new_balance < MIN_BET and self.go_all_in:
