@@ -40,9 +40,14 @@ def run_server():
         skill_drop_case[skill.lower()] = skill
 
     async def skill_drop_notify(skill):
-        for (user_id, user_name) in memory.get_users_to_skill_drop_notify(skill):
-            user = bot.get_user(user_id)
-            await user.send(f'Hiii, {user_name}, *{skill}* is the new skill drop on FFTBG! Wark!!')
+        tuples = memory.get_users_to_skill_drop_notify(skill)
+        LOG.info(f'Sending notifications for {skill}, {len(tuples)} recipients')
+        for (user_id, user_name) in tuples:
+            try:
+                user = bot.get_user(user_id)
+                await user.send(f'Hiii, {user_name}, *{skill}* is the new skill drop on FFTBG! Wark!!')
+            except Exception as exc:
+                LOG.error(f'Error sending skill drop notification to {user_name} ({user_id})', exc_info=exc)
 
     async def listen_loop():
         while True:
@@ -143,12 +148,13 @@ def run_server():
     async def on_command_error(ctx, error):
         if hasattr(error, 'original'):
             ex = error.original
+            LOG.error(exc_info=ex)
             exc_str = ''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))
             user = bot.get_user(MAGIC_BOTTLE)
             await user.send(f'{DIV_BY_ZERO_EMOTE} Wark! Someone is having an issue with me! '
                             f'\n```\n{ctx.author}: {ctx.message.content}\n\n{exc_str}\n```')
             await ctx.send(f'{DIV_BY_ZERO_EMOTE} Wark! (Something bad happened while running your command! I messaged '
-                           f'MagicBottle about it don\'t worry.)')
+                           f'MagicBottle about it, don\'t worry.)')
         else:
             await ctx.send(f'{SAD_BIRD_EMOTE} Kweh.. ({str(error)})')
 
