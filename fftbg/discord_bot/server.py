@@ -25,6 +25,7 @@ def run_server():
 
     token = os.environ['DISCORD_TOKEN']
     command_prefix = os.environ.get('DISCORD_COMMAND_PREFIX', '!bird-dev ')
+    # mute = bool(int(os.environ['DISCORD_MUTE']))
     redis = fftbg.server.get_redis()
     event_stream = fftbg.event_stream.EventStream(redis)
     memory = fftbg.bird.memory.Memory()
@@ -75,7 +76,7 @@ def run_server():
             await ctx.send(f'{ctx.author.display_name}, you don\'t have any notifications set up!')
             return
         requests.sort()
-        msg = f'{ctx.author.display_name}, I\'ll notify you of these skill drops: {", ".join(requests)}'
+        msg = f'{ctx.author.display_name}, I\'ll notify you when these skills drop: {", ".join(requests)}'
         if len(msg) > 500:
             msg = msg[:500] + '*... (that\'s too many skills to say!)*'
         await ctx.send(msg)
@@ -107,7 +108,7 @@ def run_server():
 
         memory.add_notify_skill_drop_requests(user_id, display_name, good_skills)
         count = len(memory.get_skill_drop_notify_requests(user_id))
-        await ctx.send(f'{display_name}, you got it! You\'re subscribed to {count} skill drops now.')
+        await ctx.send(f'{display_name}, you got it! You are subscribed to {count} skill drops now.')
 
     @skills.command()
     async def remove(ctx, *skills):
