@@ -150,6 +150,15 @@ class IRCBot(commands.Bot):
                 msg['skill_drop'] = skill_drop[0]
             self.event_stream.publish(msg)
 
+        skill_purchases = parse.SKILL_PURCHASE.findall(message.content)
+        if skill_purchases:
+            for (user, skill) in skill_purchases:
+                msg = {'type': msg_types.RECV_SKILL_PURCHASE,
+                       'user': user,
+                       'skill': skill}
+                LOG.info(f'{msg}')
+                self.event_stream.publish(msg)
+
         balance_match = parse.BALANCE_RE.findall(message.content)
         if balance_match:
             for (user, balance) in balance_match:
