@@ -16,6 +16,7 @@ LOG = logging.getLogger(__name__)
 
 DIV_BY_ZERO_EMOTE = '<:fftbgDivideByZero:701439212246794291>'
 SAD_BIRD_EMOTE = '<:fftbgSadBirb:669566649434767360>'
+BEHE_CHAMP_EMOTE = '<:fftbgBeheChamp:680376858705133622>'
 MAGIC_BOTTLE = 668345361420517377
 
 
@@ -45,9 +46,20 @@ def run_server():
         for (user_id, user_name) in tuples:
             try:
                 user = bot.get_user(user_id)
-                await user.send(f'Hiii, {user_name}, *{skill}* is the new skill drop on FFTBG! Wark!!')
+                await user.send(f'Hiii, {user.display_name}, *{skill}* is the new skill drop on FFTBG! Wark!!')
             except Exception as exc:
                 LOG.error(f'Error sending skill drop notification to {user_name} ({user_id})', exc_info=exc)
+
+    async def notify_skill_obtained(twitch_user_name, skill):
+        user_id = memory.find_discord_id_from_twitch(twitch_user_name)
+        if not user_id:
+            return
+        skills = memory.get_skill_drop_notify_requests(user_id)
+        if skill not in skills:
+            return
+        memory.remove_notify_skill_drop_requests(user_id, [skill])
+        user = bot.get_user(user_id)
+        await user.send(f'{BEHE_CHAMP_EMOTE} Looks like you just obtained {skill}, sweet! I removed it from your list.')
 
     async def listen_loop():
         while True:
@@ -55,24 +67,53 @@ def run_server():
             for (_, msg) in event_stream.read(block=1):
                 if msg.get('type') == msg_types.RECV_NEW_TOURNAMENT and msg.get('skill_drop'):
                     await skill_drop_notify(msg["skill_drop"])
+                elif msg.get('type') == msg_types.RECV_SKILL_PURCHASE:
+                    await notify_skill_obtained(msg['user'], msg['skill'])
 
     loop.create_task(listen_loop())
 
     @bot.command()
     async def help(ctx):
-        await ctx.send(f"""```
-{command_prefix}skills 
-    - List all skill drop notification requests
+        await ctx.send(f"""
+> {command_prefix}twitch
+>    - Display your currently linked twitch username
 
-{command_prefix}skills add skill_1 ... skill_n
-    - Add skill drops to your notification list
+> {command_prefix}twitch link __username__
+>    - Link your twitch username, so I can remove purchased skills for you
 
-{command_prefix}skills remove skill_1 ... skill_n
-    - Remove skill drops from your notification list
+> {command_prefix}twitch unlink
+>    - Unlink your twitch username
 
-{command_prefix}skills clear
-    - Remove all skill drops from your notification list
-        ```""")
+> {command_prefix}skills 
+>    - List all skill drop notification requests
+
+> {command_prefix}skills add __skill 1__ ... __skill n__
+>    - Add skill drops to your notification list
+
+> {command_prefix}skills remove __skill 1__ ... __skill n__
+>    - Remove skill drops from your notification list
+
+> {command_prefix}skills clear
+>    - Remove all skill drops from your notification list
+        """)
+
+    @bot.group(invoke_without_command=True)
+    async def twitch(ctx):
+        user_name = memory.find_twitch_user_name(ctx.author.id)
+        if not user_name:
+            await ctx.send(f'{ctx.author.display_name}, you don\'t have a twitch account linked!')
+            return
+        await ctx.send(f'{ctx.author.display_name}, I have your username down as {user_name}')
+
+    @twitch.command()
+    async def link(ctx, username: str):
+        memory.set_discord_twitch_link(ctx.author.id, username)
+        await ctx.send(f'{ctx.author.display_name}, done! I have your twitch username down as {username}')
+
+    @twitch.command()
+    async def unlink(ctx):
+        memory.unlink_twitch_account(ctx.author.id)
+        await ctx.send(f'{ctx.author.display_name}, done!')
 
     @bot.group(invoke_without_command=True)
     async def skills(ctx):
@@ -138,17 +179,23 @@ def run_server():
         memory.clear_notify_skill_drop_requests(ctx.author.id)
         await ctx.send(f'{ctx.author.display_name}, cleared em!')
 
-    @skills.command()
+    @bot.command()
     async def test_skill_drop(ctx, skill: str):
         if ctx.author.id != MAGIC_BOTTLE:
             return
         await skill_drop_notify(skill)
 
+    @bot.command()
+    async def test_skill_buy(ctx, username: str, skill: str):
+        if ctx.author.id != MAGIC_BOTTLE:
+            return
+        await notify_skill_obtained(username, skill)
+
     @bot.event
     async def on_command_error(ctx, error):
         if hasattr(error, 'original'):
             ex = error.original
-            LOG.error(exc_info=ex)
+            LOG.error(msg='Command exception', exc_info=ex)
             exc_str = ''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__))
             user = bot.get_user(MAGIC_BOTTLE)
             await user.send(f'{DIV_BY_ZERO_EMOTE} Wark! Someone is having an issue with me! '

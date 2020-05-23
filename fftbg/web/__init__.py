@@ -22,6 +22,10 @@ WINDOW = 20
 LIMIT = 100
 
 
+def get_memory():
+    return Memory(schema_check=False)
+
+
 @app.route('/')
 def get_index():
     return render_template('/index.html')
@@ -29,7 +33,7 @@ def get_index():
 
 @app.route('/balance-log')
 def get_balance_log():
-    memory = Memory()
+    memory = get_memory()
     log = memory.get_balance_log(LIMIT)
     log_entries = [dataclasses.asdict(entry) for entry in log]
     return json.dumps(log_entries, sort_keys=True)
@@ -37,7 +41,7 @@ def get_balance_log():
 
 @app.route('/balance-log-no-limit')
 def get_balance_log_no_limit():
-    memory = Memory()
+    memory = get_memory()
     log = memory.get_balance_log(1000000)
     log_entries = [dataclasses.asdict(entry) for entry in log]
     return json.dumps(log_entries, sort_keys=True)
@@ -45,14 +49,14 @@ def get_balance_log_no_limit():
 
 @app.route('/placed-bet')
 def get_placed_bet():
-    memory = Memory()
+    memory = get_memory()
     bet = memory.get_placed_bet()
     return json.dumps(dataclasses.asdict(bet), sort_keys=True)
 
 
 @app.route('/balance-log-stats')
 def get_balance_log_stats():
-    memory = Memory()
+    memory = get_memory()
     log = memory.get_balance_log(LIMIT + WINDOW)
     log_entries = [dataclasses.asdict(entry) for entry in log]
 
