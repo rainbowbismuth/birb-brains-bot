@@ -136,7 +136,7 @@ WHERE user_id = ?
 FIND_DISCORD_FROM_TWITCH = """
 SELECT user_id
 FROM 'twitch_link'
-WHERE twitch_user_name = ?
+WHERE twitch_user_name = ? COLLATE NOCASE
 """
 
 
