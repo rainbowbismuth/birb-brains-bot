@@ -2,6 +2,7 @@ import logging
 import os
 import traceback
 
+import discord
 from discord.ext import commands
 
 import fftbg.event_stream
@@ -39,6 +40,13 @@ def run_server():
     skill_drop_case = {}
     for skill in all_skill_drops:
         skill_drop_case[skill.lower()] = skill
+
+    async def send(ctx, msg):
+        channel = getattr(ctx, 'channel')
+        if channel and isinstance(channel, discord.TextChannel):
+            await bot.bot_spam_channel.send(msg)
+        else:
+            await ctx.send(msg)
 
     async def skill_drop_notify(skill):
         tuples = memory.get_users_to_skill_drop_notify(skill)
@@ -101,31 +109,31 @@ def run_server():
     async def twitch(ctx):
         user_name = memory.find_twitch_user_name(ctx.author.id)
         if not user_name:
-            await ctx.send(f'{ctx.author.display_name}, you don\'t have a twitch account linked!')
+            await send(ctx, f'{ctx.author.display_name}, you don\'t have a twitch account linked!')
             return
-        await ctx.send(f'{ctx.author.display_name}, I have your username down as {user_name}')
+        await send(ctx, f'{ctx.author.display_name}, I have your username down as {user_name}')
 
     @twitch.command()
     async def link(ctx, username: str):
         memory.set_discord_twitch_link(ctx.author.id, username)
-        await ctx.send(f'{ctx.author.display_name}, done! I have your twitch username down as {username}')
+        await send(ctx, f'{ctx.author.display_name}, done! I have your twitch username down as {username}')
 
     @twitch.command()
     async def unlink(ctx):
         memory.unlink_twitch_account(ctx.author.id)
-        await ctx.send(f'{ctx.author.display_name}, done!')
+        await send(ctx, f'{ctx.author.display_name}, done!')
 
     @bot.group(invoke_without_command=True)
     async def skills(ctx):
         requests = memory.get_skill_drop_notify_requests(ctx.author.id)
         if not requests:
-            await ctx.send(f'{ctx.author.display_name}, you don\'t have any notifications set up!')
+            await send(ctx, f'{ctx.author.display_name}, you don\'t have any notifications set up!')
             return
         requests.sort()
         msg = f'{ctx.author.display_name}, I\'ll notify you when these skills drop: {", ".join(requests)}'
         if len(msg) > 500:
             msg = msg[:500] + '*... (that\'s too many skills to say!)*'
-        await ctx.send(msg)
+        await send(ctx, msg)
 
     def massage_skills(skills):
         bad_skills = []
@@ -145,16 +153,16 @@ def run_server():
 
         (bad_skills, good_skills) = massage_skills(skills)
         if not (bad_skills or good_skills):
-            await ctx.send(f'{display_name}, you need to list some skill drops with this command!')
+            await send(ctx, f'{display_name}, you need to list some skill drops with this command!')
             return
 
         if bad_skills:
-            await ctx.send(f'{display_name}, these aren\'t skill drops: {", ".join(bad_skills)}')
+            await send(ctx, f'{display_name}, these aren\'t skill drops: {", ".join(bad_skills)}')
             return
 
         memory.add_notify_skill_drop_requests(user_id, display_name, good_skills)
         count = len(memory.get_skill_drop_notify_requests(user_id))
-        await ctx.send(f'{display_name}, you got it! You are subscribed to {count} skill drops now.')
+        await send(ctx, f'{display_name}, you got it! You are subscribed to {count} skill drops now.')
 
     @skills.command()
     async def remove(ctx, *skills):
@@ -163,21 +171,21 @@ def run_server():
 
         (bad_skills, good_skills) = massage_skills(skills)
         if not (bad_skills or good_skills):
-            await ctx.send(f'{display_name}, you need to list some skill drops with this command!')
+            await send(ctx, f'{display_name}, you need to list some skill drops with this command!')
             return
 
         if bad_skills:
-            await ctx.send(f'{display_name}, these aren\'t skill drops: {", ".join(bad_skills)}')
+            await send(ctx, f'{display_name}, these aren\'t skill drops: {", ".join(bad_skills)}')
             return
 
         memory.remove_notify_skill_drop_requests(user_id, good_skills)
         count = len(memory.get_skill_drop_notify_requests(user_id))
-        await ctx.send(f'{display_name}, you got it! You\'re subscribed to {count} skill drops now.')
+        await send(ctx, f'{display_name}, you got it! You\'re subscribed to {count} skill drops now.')
 
     @skills.command()
     async def clear(ctx):
         memory.clear_notify_skill_drop_requests(ctx.author.id)
-        await ctx.send(f'{ctx.author.display_name}, cleared em!')
+        await send(ctx, f'{ctx.author.display_name}, cleared em!')
 
     @bot.command()
     async def test_skill_drop(ctx, skill: str):
@@ -200,10 +208,10 @@ def run_server():
             user = bot.get_user(MAGIC_BOTTLE)
             await user.send(f'{DIV_BY_ZERO_EMOTE} Wark! Someone is having an issue with me! '
                             f'\n```\n{ctx.author}: {ctx.message.content}\n\n{exc_str}\n```')
-            await ctx.send(f'{DIV_BY_ZERO_EMOTE} Wark! (Something bad happened while running your command! I messaged '
-                           f'MagicBottle about it, don\'t worry.)')
+            await send(ctx, f'{DIV_BY_ZERO_EMOTE} Wark! (Something bad happened while running your command! I messaged '
+                            f'MagicBottle about it, don\'t worry.)')
         else:
-            await ctx.send(f'{SAD_BIRD_EMOTE} Kweh.. ({str(error)})')
+            await send(ctx, f'{SAD_BIRD_EMOTE} Kweh.. ({str(error)})')
 
     @bot.event
     async def on_ready():
@@ -211,6 +219,8 @@ def run_server():
         for channel in bot.get_all_channels():
             if channel.guild.name == "FFTBattleground" and channel.name == "development":
                 bot.dev_channel = channel
+            if channel.guild.name == "FFTBattleground" and channel.name == "bot-spam":
+                bot.bot_spam_channel = channel
 
     async def run_bot():
         try:
