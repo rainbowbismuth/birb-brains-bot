@@ -18,6 +18,8 @@ LOG = logging.getLogger(__name__)
 DIV_BY_ZERO_EMOTE = '<:fftbgDivideByZero:701439212246794291>'
 SAD_BIRD_EMOTE = '<:fftbgSadBirb:669566649434767360>'
 BEHE_CHAMP_EMOTE = '<:fftbgBeheChamp:680376858705133622>'
+CHARM_EMOTE = '<:fftbgCharm:693187279308456007>'
+SONG_OF_MY_PEOPLE_EMOTE = '<:fftbgSongOfMyPeople:670788872363311104>'
 MAGIC_BOTTLE = 668345361420517377
 
 
@@ -58,7 +60,7 @@ def run_server():
             except Exception as exc:
                 LOG.error(f'Error sending skill drop notification to {user_name} ({user_id})', exc_info=exc)
 
-    async def notify_skill_obtained(twitch_user_name, skill):
+    async def notify_skill_obtained(twitch_user_name, skill, verb: str, gifter=None):
         user_id = memory.find_discord_id_from_twitch(twitch_user_name)
         if not user_id:
             return
@@ -67,7 +69,13 @@ def run_server():
             return
         memory.remove_notify_skill_drop_requests(user_id, [skill])
         user = bot.get_user(user_id)
-        await user.send(f'{BEHE_CHAMP_EMOTE} Looks like you just obtained {skill}, sweet! I removed it from your list.')
+        if verb == 'bought':
+            emote = BEHE_CHAMP_EMOTE
+        else:
+            emote = SONG_OF_MY_PEOPLE_EMOTE
+        await user.send(f'{emote} Looks like you just {verb} {skill}, sweet! I removed it from your list.')
+        if gifter:
+            await user.send(f'Oh, and don\'t forget to thank {gifter} for the gift! {CHARM_EMOTE}')
 
     async def listen_loop():
         while True:
@@ -76,7 +84,12 @@ def run_server():
                 if msg.get('type') == msg_types.RECV_NEW_TOURNAMENT and msg.get('skill_drop'):
                     await skill_drop_notify(msg["skill_drop"])
                 elif msg.get('type') == msg_types.RECV_SKILL_PURCHASE:
-                    await notify_skill_obtained(msg['user'], msg['skill'])
+                    await notify_skill_obtained(msg['user'], msg['skill'], verb='bought')
+                elif msg.get('type') == msg_types.RECV_SKILL_LEARN:
+                    await notify_skill_obtained(msg['user'], msg['skill'], verb='learned')
+                elif msg.get('type') == msg_types.RECV_SKILL_GIFT:
+                    await notify_skill_obtained(msg['user'], msg['skill'], verb='received', gifter=msg['gifter'])
+
 
     loop.create_task(listen_loop())
 
@@ -194,10 +207,16 @@ def run_server():
         await skill_drop_notify(skill)
 
     @bot.command()
-    async def test_skill_buy(ctx, username: str, skill: str):
+    async def test_skill_buy(ctx, username: str, skill: str, gifter=None):
         if ctx.author.id != MAGIC_BOTTLE:
             return
-        await notify_skill_obtained(username, skill)
+        await notify_skill_obtained(username, skill, verb='stole', gifter=gifter)
+
+    @bot.command()
+    async def test_echo(ctx, msg: str):
+        if ctx.author.id != MAGIC_BOTTLE:
+            return
+        await send(ctx, msg)
 
     @bot.event
     async def on_command_error(ctx, error):

@@ -24,6 +24,10 @@ def test_regular_expressions():
     assert parse.NEW_TOURNAMENT_SKILL_DROP.findall('This tournament\'s Skill Drop is: PreferredArms.')
     assert parse.NEW_TOURNAMENT_SKILL_DROP.findall('This tournament\'s Skill Drop is: Jump+3.')
     assert parse.NEW_TOURNAMENT_SKILL_DROP.findall('This tournament\'s Skill Drop is: Move-HPUp.')
+    assert parse.SKILL_LEARN.findall('MagicBottle, you advanced to Level 7! Your gil floor has increased to 228! You '
+                                     'learned the skill: DrawOut!')
+    assert parse.SKILL_GIFT.findall('Due to a generous donation from Lydian_C, porotact has been bestowed the Bomb '
+                                    'skill free of charge!')
 
 
 def test_bet_regular_expressions():

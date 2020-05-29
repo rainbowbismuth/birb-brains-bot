@@ -17,6 +17,9 @@ BETTING_CLOSED_RE = re.compile(r'(\w+), betting has closed, sorry!')
 TEAM_VICTORY = re.compile(r'The (\w+) team was victorious!')
 
 SKILL_PURCHASE = re.compile(r'([\w\d_]+), you bought the ([\w\d\-+]+) skill')
+SKILL_LEARN = re.compile(r'([\w\d_]+),.*?You learned the skill: ([\w\d\-+]+)!')
+SKILL_GIFT = re.compile(r'Due to a generous donation from ([\w\d_]+), ([\w\d_]+) has been bestowed the ([\w\d\-+]+) '
+                        r'skill')
 
 
 def parse_comma_int(s):

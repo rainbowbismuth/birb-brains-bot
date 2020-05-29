@@ -159,6 +159,25 @@ class IRCBot(commands.Bot):
                 LOG.info(f'{msg}')
                 self.event_stream.publish(msg)
 
+        skill_learns = parse.SKILL_LEARN.findall(message.content)
+        if skill_learns:
+            for (user, skill) in skill_learns:
+                msg = {'type': msg_types.RECV_SKILL_LEARN,
+                       'user': user,
+                       'skill': skill}
+                LOG.info(f'{msg}')
+                self.event_stream.publish(msg)
+
+        skill_gifts = parse.SKILL_GIFT.findall(message.content)
+        if skill_gifts:
+            for (gifter, user, skill) in skill_gifts:
+                msg = {'type': msg_types.RECV_SKILL_GIFT,
+                       'gifter': gifter,
+                       'user': user,
+                       'skill': skill}
+                LOG.info(f'{msg}')
+                self.event_stream.publish(msg)
+
         balance_match = parse.BALANCE_RE.findall(message.content)
         if balance_match:
             for (user, balance) in balance_match:
