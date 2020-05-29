@@ -63,6 +63,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS 'notify_skill_drop_index' on 'notify_skill_dro
     'user_id', 'skill_drop' )
 """
 
+SCHEMA_NOTIFY_EVENT = """
+CREATE TABLE IF NOT EXISTS 'notify_events' (
+    'user_id' INTEGER,
+    'event' TEXT,
+    'start_time' TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    'end_time' TIMESTAMP,
+    'user_name' TEXT,
+    PRIMARY KEY ('event','user_id')
+)
+"""
+
 INSERT_BALANCE_LOG = """
 INSERT INTO 'balance_log'(
     tournament_id, old_balance, new_balance, bet_on, wager,
@@ -139,6 +150,29 @@ FROM 'twitch_link'
 WHERE twitch_user_name = ? COLLATE NOCASE
 """
 
+FIND_TRIGGERED_EVENT_NOTIFICATIONS = """
+SELECT user_id, (julianday(end_time) - julianday(CURRENT_TIMESTAMP)) * 24 * 60
+FROM 'notify_events'
+WHERE event = ? AND CURRENT_TIMESTAMP < end_time
+"""
+
+FIND_USERS_EVENT_NOTIFICATIONS = """
+SELECT event, (julianday(end_time) - julianday(CURRENT_TIMESTAMP)) * 24 * 60
+FROM 'notify_events'
+WHERE user_id = ? AND CURRENT_TIMESTAMP < end_time
+"""
+
+TURN_OFF_EVENT_NOTIFICATIONS = """
+UPDATE 'notify_events'
+SET end_time = CURRENT_TIMESTAMP
+WHERE user_id = ?
+"""
+
+REFRESH_EVENT_NOTIFICATION = """
+REPLACE INTO 'notify_events'(user_id, user_name, event, end_time)
+VALUES (?, ?, ?, datetime(CURRENT_TIMESTAMP,?))
+"""
+
 
 @dataclass
 class BalanceLogDTO:
@@ -185,6 +219,7 @@ class Memory:
                 self.connection.execute(SCHEMA_NOTIFY_SKILL_DROP)
                 self.connection.execute(SCHEMA_NOTIFY_SKILL_DROP_INDEX)
                 self.connection.execute(SCHEMA_DISCORD_TWITCH_LINK)
+                self.connection.execute(SCHEMA_NOTIFY_EVENT)
 
     def __del__(self):
         if self.connection is not None:
@@ -274,3 +309,20 @@ class Memory:
     def unlink_twitch_account(self, user_id):
         with self.connection:
             self.connection.execute(UNLINK_TWITCH, (int(user_id),))
+
+    def find_triggered_event_notifications(self, event):
+        with self.connection:
+            return self.connection.execute(FIND_TRIGGERED_EVENT_NOTIFICATIONS, (event,)).fetchall()
+
+    def find_users_event_notifications(self, user_id):
+        with self.connection:
+            return self.connection.execute(FIND_USERS_EVENT_NOTIFICATIONS, (int(user_id),)).fetchall()
+
+    def turn_off_event_notifications(self, user_id):
+        with self.connection:
+            self.connection.execute(TURN_OFF_EVENT_NOTIFICATIONS, (int(user_id),))
+
+    def refresh_event_notification(self, user_id, user_name, event, hours:int):
+        with self.connection:
+            hours_str = f'+{hours} hours'
+            self.connection.execute(REFRESH_EVENT_NOTIFICATION, (int(user_id), user_name, event, hours_str))

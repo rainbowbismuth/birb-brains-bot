@@ -20,6 +20,7 @@ SAD_BIRD_EMOTE = '<:fftbgSadBirb:669566649434767360>'
 BEHE_CHAMP_EMOTE = '<:fftbgBeheChamp:680376858705133622>'
 CHARM_EMOTE = '<:fftbgCharm:693187279308456007>'
 SONG_OF_MY_PEOPLE_EMOTE = '<:fftbgSongOfMyPeople:670788872363311104>'
+CHIP_EMOTE = '<:fftbgChip:693187102350770216>'
 MAGIC_BOTTLE = 668345361420517377
 
 
@@ -34,6 +35,13 @@ def run_server():
     event_stream = fftbg.event_stream.EventStream(redis)
     memory = fftbg.bird.memory.Memory()
     loop = fftbg.server.get_loop()
+
+    cmd_prefix_help = command_prefix
+    if command_prefix == '!bird ':
+        command_prefix = ('!bird ', '!birb ')
+    if command_prefix == '!bird-dev ':
+        command_prefix = ('!bird-dev ', '!birb-dev ')
+
     bot = commands.Bot(command_prefix=command_prefix, loop=loop)
     bot.help_command = None
 
@@ -77,10 +85,36 @@ def run_server():
         if gifter:
             await user.send(f'Oh, and don\'t forget to thank {gifter} for the gift! {CHARM_EMOTE}')
 
+    async def notify_new_tournament():
+        notifications = memory.find_triggered_event_notifications('tournament')
+        LOG.info(f'Sending out {len(notifications)} new tournament notifications')
+        for (user_id, minutes_left) in notifications:
+            user = bot.get_user(user_id)
+            await user.send(f'{CHIP_EMOTE} A new tournament has started!'
+                            f' ({int(minutes_left)} minutes left on this alert)')
+
+    async def notify_new_match(left_team, right_team):
+        notifications = memory.find_triggered_event_notifications('new_match')
+        LOG.info(f'Sending out {len(notifications)} new match notifications')
+        for (user_id, minutes_left) in notifications:
+            user = bot.get_user(user_id)
+            await user.send(f'{CHIP_EMOTE} The {left_team} vs {right_team} match is about to begin!'
+                            f' ({int(minutes_left)} minutes left on this alert)')
+
+    async def notify_match_ended(victory_team):
+        notifications = memory.find_triggered_event_notifications('match_ended')
+        LOG.info(f'Sending out {len(notifications)} match ended notifications')
+        for (user_id, minutes_left) in notifications:
+            user = bot.get_user(user_id)
+            await user.send(f'{CHIP_EMOTE} The {victory_team} team is victorious!'
+                            f' ({int(minutes_left)} minutes left on this alert)')
+
     async def listen_loop():
         while True:
             await asyncio.sleep(1)
             for (_, msg) in event_stream.read(block=1):
+                if msg.get('type') == msg_types.RECV_NEW_TOURNAMENT:
+                    await notify_new_tournament()
                 if msg.get('type') == msg_types.RECV_NEW_TOURNAMENT and msg.get('skill_drop'):
                     await skill_drop_notify(msg["skill_drop"])
                 elif msg.get('type') == msg_types.RECV_SKILL_PURCHASE:
@@ -89,34 +123,85 @@ def run_server():
                     await notify_skill_obtained(msg['user'], msg['skill'], verb='learned')
                 elif msg.get('type') == msg_types.RECV_SKILL_GIFT:
                     await notify_skill_obtained(msg['user'], msg['skill'], verb='received', gifter=msg['gifter'])
-
+                elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
+                    await notify_new_match(msg['left_team'], msg['right_team'])
+                elif msg.get('type') == msg_types.RECV_TEAM_VICTORY:
+                    await notify_match_ended(msg['team'])
 
     loop.create_task(listen_loop())
 
     @bot.command()
     async def help(ctx):
-        await ctx.send(f"""
-> {command_prefix}twitch
+        await send(ctx, f"""
+> {cmd_prefix_help}twitch
 >    - Display your currently linked twitch username
 
-> {command_prefix}twitch link __username__
+> {cmd_prefix_help}twitch link __username__
 >    - Link your twitch username, so I can remove purchased skills for you
 
-> {command_prefix}twitch unlink
+> {cmd_prefix_help}twitch unlink
 >    - Unlink your twitch username
 
-> {command_prefix}skills 
+> {cmd_prefix_help}skills 
 >    - List all skill drop notification requests
 
-> {command_prefix}skills add __skill 1__ ... __skill n__
+> {cmd_prefix_help}skills add __skill 1__ ... __skill n__
 >    - Add skill drops to your notification list
 
-> {command_prefix}skills remove __skill 1__ ... __skill n__
+> {cmd_prefix_help}skills remove __skill 1__ ... __skill n__
 >    - Remove skill drops from your notification list
 
-> {command_prefix}skills clear
+> {cmd_prefix_help}skills clear
 >    - Remove all skill drops from your notification list
+
+> {cmd_prefix_help}alert tournament __hours__
+>    - Alert me when a new tournament starts. If __hours__ equals zero, disable alert
+
+> {cmd_prefix_help}alert match __hours__
+>    - Alert me when betting for a match opens
+
+> {cmd_prefix_help}alert victory __hours__
+>    - Alert me when a match ends
+
+> {cmd_prefix_help}alert off
+>    - Turn off any tournament or match alerts you had turned on
         """)
+
+    @bot.group(invoke_without_command=True)
+    async def alert(ctx):
+        alerts = memory.find_users_event_notifications(ctx.author.id)
+        alerts.sort()
+        if not alerts:
+            await send(ctx, f'{ctx.author.display_name}, you don\'t have any tournament or match alerts enabled.')
+            return
+        msg = [f'{alert_name}, {int(minutes)} minutes remaining.' for (alert_name, minutes) in alerts]
+        await send(ctx, f'{ctx.author.display_name}, you have the following alerts enabled:')
+        await send(ctx, '\n'.join(msg))
+
+    async def refresh_event(ctx, user_id, user_name, event, hours, msg):
+        hours = max(0, hours)
+        memory.refresh_event_notification(user_id, user_name, event, hours)
+        if hours == 0:
+            await send(ctx, f'{user_name}, I\'ve disabled that alert for you.')
+        else:
+            await send(ctx, f'{user_name}, I\'ll notify you when {msg} for the next {hours} hours.')
+
+    @alert.command()
+    async def tournament(ctx, hours: int):
+        await refresh_event(ctx, ctx.author.id, ctx.author.display_name, 'tournament', hours, 'a new tournament')
+
+    @alert.command()
+    async def match(ctx, hours: int):
+        await refresh_event(ctx, ctx.author.id, ctx.author.display_name, 'new_match', hours, 'a new match starts')
+
+    @alert.command()
+    async def victory(ctx, hours: int):
+        await refresh_event(ctx, ctx.author.id, ctx.author.display_name, 'match_ended', hours, 'a match ends')
+
+    @alert.command()
+    async def off(ctx):
+        memory.turn_off_event_notifications(ctx.author.id)
+        await send(ctx, f'{ctx.author.display_name}, I turned off your tournament & match notifications.')
 
     @bot.group(invoke_without_command=True)
     async def twitch(ctx):
@@ -211,6 +296,17 @@ def run_server():
         if ctx.author.id != MAGIC_BOTTLE:
             return
         await notify_skill_obtained(username, skill, verb='stole', gifter=gifter)
+
+    @bot.command()
+    async def test_event(ctx, event: str):
+        if ctx.author.id != MAGIC_BOTTLE:
+            return
+        if event == 'tournament':
+            await notify_new_tournament()
+        elif event == 'new_match':
+            await notify_new_match('red', 'blue')
+        elif event == 'match_ended':
+            await notify_match_ended('red')
 
     @bot.command()
     async def test_echo(ctx, msg: str):

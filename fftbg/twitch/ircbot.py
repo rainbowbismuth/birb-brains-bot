@@ -201,6 +201,7 @@ class IRCBot(commands.Bot):
             team = team_victory_match[0]
             msg = {'type': msg_types.RECV_TEAM_VICTORY,
                    'team': team}
+            LOG.info(f'{msg}')
             self.event_stream.publish(msg)
 
         betting_open = parse.BETTING_OPEN_RE.findall(message.content)
@@ -209,6 +210,7 @@ class IRCBot(commands.Bot):
             msg = {'type': msg_types.RECV_BETTING_OPEN,
                    'left_team': left,
                    'right_team': right}
+            LOG.info(f'{msg}')
             self.event_stream.publish(msg)
 
         betting_closed = parse.BETTING_CLOSED_RE.findall(message.content)
