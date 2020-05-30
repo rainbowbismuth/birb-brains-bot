@@ -188,7 +188,7 @@ def run_server():
 
     @alert.command()
     async def tournament(ctx, hours: int):
-        await refresh_event(ctx, ctx.author.id, ctx.author.display_name, 'tournament', hours, 'a new tournament')
+        await refresh_event(ctx, ctx.author.id, ctx.author.display_name, 'tournament', hours, 'a new tournament starts')
 
     @alert.command()
     async def match(ctx, hours: int):
