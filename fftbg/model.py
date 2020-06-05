@@ -136,7 +136,7 @@ def main():
     # tuner.search(train_X, train_y, epochs=100, verbose=1, validation_data=(valid_X, valid_y))
     model.fit(train_X,
               train_y,
-              epochs=300,
+              epochs=3000,
               verbose=1,
               batch_size=1024,
               validation_data=(valid_X, valid_y),
@@ -239,7 +239,7 @@ def model_three(combatant_size,
     )
 
     early_stopping_cb = keras.callbacks.EarlyStopping(
-        patience=15, monitor='val_loss', restore_best_weights=True)
+        patience=100, monitor='val_loss', restore_best_weights=True)
 
     return early_stopping_cb, model
 
