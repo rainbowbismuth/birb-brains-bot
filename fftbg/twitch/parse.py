@@ -10,7 +10,7 @@ BOTS_CANNOT_BET_RE = re.compile(r'(\w+), bots cannot bet in the final (\d+) seco
 BALANCE_RE = re.compile(r'(\w+), your balance is: ([\d,]+)G')
 BALANCE2_RE = re.compile(r'(\w+), your bettable balance is: ([\d,]+)G')
 BETTING_OPEN_RE = re.compile(r'Betting is open for (\w+) vs (\w+).')
-BETTING_CLOSE_RE = re.compile(r'Betting is closed: Final Bets: (\w+) - (\d+) bets for ([\d,]+)G(?:.*?); (\w+) - (\d+) '
+BETTING_CLOSE_RE = re.compile(r'Betting is closed. Final Bets: (\w+) - (\d+) bets for ([\d,]+)G(?:.*?); (\w+) - (\d+) '
                               r'bets for ([\d,]+)G')
 ODDS_RE = re.compile(r'(\w+) - (\d+) bets for ([\d,]+)G(?:.*?); (\w+) - (\d+) bets for ([\d,]+)G')
 BETTING_CLOSED_RE = re.compile(r'(\w+), betting has closed, sorry!')

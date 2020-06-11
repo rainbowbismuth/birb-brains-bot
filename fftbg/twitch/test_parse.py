@@ -13,7 +13,7 @@ def test_regular_expressions():
     assert parse.BETTING_OPEN_RE.findall('Betting is open for black vs brown.')
 
     assert parse.BETTING_CLOSE_RE.findall(
-        'Betting is closed: Final Bets: purple - 55 bets for 38,304G; brown - 42 bets '
+        'Betting is closed. Final Bets: purple - 55 bets for 38,304G; brown - 42 bets '
         'for 31,592G... Good luck!')
 
     assert parse.ODDS_RE.findall(
