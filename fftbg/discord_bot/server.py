@@ -228,7 +228,7 @@ def run_server():
             await send(ctx, f'{ctx.author.display_name}, you don\'t have any notifications set up!')
             return
         requests.sort()
-        msg = f'{ctx.author.display_name}, I\'ll notify you when these skills drop: {", ".join(requests)}'
+        msg = f'{ctx.author.display_name}, I\'ll notify you when these skills drop: {", ".join(requests)}.'
         if len(msg) > 500:
             msg = msg[:500] + '*... (that\'s too many skills to say!)*'
         await send(ctx, msg)
