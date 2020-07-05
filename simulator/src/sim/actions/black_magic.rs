@@ -181,7 +181,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Poison,
+            condition: &[Condition::Poison],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 190,
@@ -196,7 +196,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 12,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Frog,
+            condition: &[Condition::Frog],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 120,
@@ -212,7 +212,7 @@ pub const BLACK_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 24,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Death,
+            condition: &[Condition::Death],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 110,

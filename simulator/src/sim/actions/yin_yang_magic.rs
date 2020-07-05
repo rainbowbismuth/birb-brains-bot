@@ -13,7 +13,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 4,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Darkness,
+            condition: &[Condition::Darkness],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 200,
@@ -56,7 +56,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Faith,
+            condition: &[Condition::Faith],
             can_be_evaded: false,
             ignore_magic_def: false,
             base_chance: 150,
@@ -71,7 +71,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Innocent,
+            condition: &[Condition::Innocent],
             can_be_evaded: false,
             ignore_magic_def: false,
             base_chance: 150,
@@ -86,7 +86,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 20,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Undead,
+            condition: &[Condition::Undead],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 115,
@@ -101,7 +101,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 16,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Silence,
+            condition: &[Condition::Silence],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 180,
@@ -116,7 +116,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 16,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Berserk,
+            condition: &[Condition::Berserk],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 130,
@@ -132,7 +132,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 20,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Confusion,
+            condition: &[Condition::Confusion],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 135,
@@ -171,7 +171,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 10,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::DontAct,
+            condition: &[Condition::DontAct],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 185,
@@ -186,7 +186,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 24,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Sleep,
+            condition: &[Condition::Sleep],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 175,
@@ -201,7 +201,7 @@ pub const YIN_YANG_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 16,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Petrify,
+            condition: &[Condition::Petrify],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 125,

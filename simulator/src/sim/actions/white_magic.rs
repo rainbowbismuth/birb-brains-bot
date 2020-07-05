@@ -94,7 +94,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 16,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Reraise,
+            condition: &[Condition::Reraise],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 140,
@@ -113,7 +113,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 8,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Regen,
+            condition: &[Condition::Regen],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 170,
@@ -132,7 +132,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Protect,
+            condition: &[Condition::Protect],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 200,
@@ -147,7 +147,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 18,
         aoe: AoE::Diamond(1, Some(3)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Protect,
+            condition: &[Condition::Protect],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 240,
@@ -166,7 +166,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 6,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Shell,
+            condition: &[Condition::Shell],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 200,
@@ -181,7 +181,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 18,
         aoe: AoE::Diamond(1, Some(3)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Shell,
+            condition: &[Condition::Shell],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 240,
@@ -190,6 +190,20 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         },
     },
     // Wall: 4 range, 1 AoE, 4 CT, 24 MP. Hit: Faith(MA + 140)%. Effect: Add Protect, Shell (All).
+    Ability {
+        name: "Wall",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 24,
+        aoe: AoE::Diamond(1, Some(3)),
+        implementation: &AddConditionSpellImpl {
+            condition: &[Condition::Protect, Condition::Shell],
+            can_be_evaded: false,
+            ignore_magic_def: true,
+            base_chance: 140,
+            ctr: 4,
+            range: 4,
+        },
+    },
     // Esuna: 5 range, 1 AoE, 3 CT, 16 MP. Hit: Faith(MA + 195)%. Effect: Cancel Petrify, Darkness,
     //  Confusion, Silence, Blood Suck, Berserk, Frog, Poison, Sleep, Don't Move, Don't Act.
     Ability {
@@ -229,6 +243,27 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
             ctr: Some(6),
             range: 5,
             evadable: true,
+        },
+    },
+    // Magic Barrier: 3 range, 11 CT, 35 MP. Hit: Faith(MA + 200)%. Effect: Add Reraise, Regen, Protect, Shell, Haste (All).
+    Ability {
+        name: "Magic Barrier",
+        flags: ALLY_OK | SILENCEABLE,
+        mp_cost: 35,
+        aoe: AoE::Diamond(1, Some(3)),
+        implementation: &AddConditionSpellImpl {
+            condition: &[
+                Condition::Reraise,
+                Condition::Regen,
+                Condition::Protect,
+                Condition::Shell,
+                Condition::Haste,
+            ],
+            can_be_evaded: false,
+            ignore_magic_def: true,
+            base_chance: 200,
+            ctr: 11,
+            range: 3,
         },
     },
 ];

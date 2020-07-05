@@ -40,7 +40,7 @@ pub fn do_hp_heal(
 }
 
 pub struct AddConditionSpellImpl {
-    pub condition: Condition,
+    pub condition: &'static [Condition],
     pub can_be_evaded: bool,
     pub ignore_magic_def: bool,
     pub base_chance: i16,
@@ -58,7 +58,11 @@ impl AbilityImpl for AddConditionSpellImpl {
         target: &Combatant<'a>,
     ) {
         // TODO: Probably not actually true, but *shrug*
-        if target.has_condition(self.condition) {
+        if self
+            .condition
+            .iter()
+            .all(|cond| target.has_condition(*cond))
+        {
             return;
         }
         actions.push(Action::new(
@@ -85,7 +89,9 @@ impl AbilityImpl for AddConditionSpellImpl {
             sim.log_event(Event::AbilityMissed(user_id, target_id));
             return;
         }
-        sim.add_condition(target_id, self.condition, Source::Ability);
+        for condition in self.condition {
+            sim.add_condition(target_id, *condition, Source::Ability);
+        }
     }
 }
 

@@ -60,7 +60,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
         mp_cost: 16,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Frog,
+            condition: &[Condition::Frog],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 110,
@@ -75,7 +75,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
         mp_cost: 16,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Slow,
+            condition: &[Condition::Slow],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 110,
@@ -90,7 +90,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
         mp_cost: 12,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Silence,
+            condition: &[Condition::Silence],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 120,
@@ -105,7 +105,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
         mp_cost: 12,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Petrify,
+            condition: &[Condition::Petrify],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 110,

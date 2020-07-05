@@ -13,7 +13,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 8,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Haste,
+            condition: &[Condition::Haste],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 180,
@@ -28,7 +28,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 20,
         aoe: AoE::Diamond(1, Some(3)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Haste,
+            condition: &[Condition::Haste],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 240,
@@ -43,7 +43,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 8,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Slow,
+            condition: &[Condition::Slow],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 180,
@@ -58,7 +58,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 20,
         aoe: AoE::Diamond(1, Some(3)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Slow,
+            condition: &[Condition::Slow],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 240,
@@ -73,7 +73,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 14,
         aoe: AoE::Diamond(1, Some(0)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Stop,
+            condition: &[Condition::Stop],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 130,
@@ -88,7 +88,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 10,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::DontMove,
+            condition: &[Condition::DontMove],
             can_be_evaded: true,
             ignore_magic_def: false,
             base_chance: 190,
@@ -103,7 +103,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 8,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Float,
+            condition: &[Condition::Float],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 170,
@@ -118,7 +118,7 @@ pub const TIME_MAGIC_ABILITIES: &[Ability] = &[
         mp_cost: 12,
         aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
-            condition: Condition::Reflect,
+            condition: &[Condition::Reflect],
             can_be_evaded: false,
             ignore_magic_def: true,
             base_chance: 180,
