@@ -132,9 +132,9 @@ impl AbilityImpl for ChocoBallImpl {
     }
 }
 
-struct ChocoMeteorImpl {
-    ma_factor: i16,
-    range: u8,
+pub(crate) struct ChocoMeteorImpl {
+    pub(crate) ma_factor: i16,
+    pub(crate) range: u8,
 }
 
 impl AbilityImpl for ChocoMeteorImpl {

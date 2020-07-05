@@ -155,10 +155,10 @@ impl AbilityImpl for Pummel {
     }
 }
 
-struct DamagePunchArt {
-    element: Element,
-    pa_plus: i16,
-    range: u8,
+pub struct DamagePunchArt {
+    pub element: Element,
+    pub pa_plus: i16,
+    pub range: u8,
 }
 
 impl AbilityImpl for DamagePunchArt {

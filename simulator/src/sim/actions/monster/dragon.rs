@@ -68,10 +68,10 @@ pub const DRAGON_ABILITIES: &[Ability] = &[
     },
 ];
 
-struct ElementalBreathImpl {
-    element: Element,
-    ma_factor: i16,
-    range: i8,
+pub(crate) struct ElementalBreathImpl {
+    pub(crate) element: Element,
+    pub(crate) ma_factor: i16,
+    pub(crate) range: i8,
 }
 
 impl AbilityImpl for ElementalBreathImpl {
