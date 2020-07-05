@@ -5,6 +5,7 @@ pub use dragon::*;
 pub use molboro::*;
 pub use pisco::*;
 pub use tiamat::*;
+pub use trent::*;
 pub use ultima_demon::*;
 pub use work::*;
 
@@ -15,5 +16,6 @@ pub mod dragon;
 pub mod molboro;
 pub mod pisco;
 pub mod tiamat;
+pub mod trent;
 pub mod ultima_demon;
 pub mod work;

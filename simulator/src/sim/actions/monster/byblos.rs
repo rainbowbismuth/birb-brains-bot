@@ -6,14 +6,14 @@ use crate::sim::attack::AttackImpl;
 use crate::sim::common::{do_hp_heal, mod_2_formula_xa, mod_5_formula_xa};
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, CAN_BE_REFLECTED,
-    SILENCEABLE, TARGET_NOT_SELF, TARGET_SELF_ONLY, TRIGGERS_HAMEDO,
+    CASTER_IMMUNE, SILENCEABLE, TARGET_NOT_SELF, TARGET_SELF_ONLY, TRIGGERS_HAMEDO,
 };
 
 pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Tenebris: 4 range, 1 AoE, 3 CT, 8 MP. Element: Wind. Effect: Damage Faith(MA * 12); Chance to Add Darkness.
     Ability {
         name: "Bio Tenebris",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 8,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &ByblosElemental {
@@ -27,7 +27,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Venenum: 4 range, 1 AoE, 3 CT, 8 MP. Element: Water. Effect: Damage Faith(MA * 12); Chance to Add Poison.
     Ability {
         name: "Bio Venenum",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 8,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &ByblosElemental {
@@ -41,7 +41,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Oleum: 4 range, 1 AoE, 3 CT, 8 MP. Element: Earth. Effect: Damage Faith(MA * 12); Chance to Add Oil.
     Ability {
         name: "Bio Oleum",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 8,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &ByblosElemental {
@@ -55,7 +55,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Ranae: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 110)% Effect: Add Frog.
     Ability {
         name: "Bio Ranae",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 16,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
@@ -70,7 +70,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Sanctus: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 110)% Effect: Add Slow.
     Ability {
         name: "Bio Sanctus",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 16,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
@@ -85,7 +85,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Silentium: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 120)% Effect: Add Silence.
     Ability {
         name: "Bio Silentium",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 12,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
@@ -100,7 +100,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Lapis: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 110)% Effect: Add Petrify.
     Ability {
         name: "Bio Lapis",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 12,
         aoe: AoE::Diamond(1, Some(1)),
         implementation: &AddConditionSpellImpl {
@@ -115,7 +115,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Immortuos: 4 range, 2 AoE, 6 CT, 24 MP. Effect: Damage Faith(MA * 24); Chance to Add Undead.
     Ability {
         name: "Bio Immortuos",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 24,
         aoe: AoE::Diamond(2, Some(1)),
         implementation: &ByblosElemental {
@@ -129,7 +129,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Mortem: 4 range, 2 AoE, 6 CT, 24 MP. Effect: Damage Faith(MA * 24); Chance to Add Death.
     Ability {
         name: "Bio Mortem",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 24,
         aoe: AoE::Diamond(2, Some(1)),
         implementation: &ByblosElemental {
@@ -143,7 +143,7 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
     // Bio Insanis: 4 range, 2 AoE, 6 CT, 24 MP. Effect: Damage Faith(MA * 24); Chance to Add Confusion.
     Ability {
         name: "Bio Insanis",
-        flags: FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
+        flags: CASTER_IMMUNE | FOE_OK | SILENCEABLE | CAN_BE_REFLECTED,
         mp_cost: 24,
         aoe: AoE::Diamond(2, Some(1)),
         implementation: &ByblosElemental {
