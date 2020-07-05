@@ -12,7 +12,8 @@ use crate::sim::actions::jump::JUMP_ABILITIES;
 use crate::sim::actions::math_skill::MATH_SKILL_ABILITY;
 use crate::sim::actions::monster::{
     BYBLOS_ABILITIES, CHOCOBO_ABILITIES, COEURL_ABILITIES, DRAGON_ABILITIES, MOLBORO_ABILITIES,
-    PISCO_ABILITIES, SEKHRET_ABILITIES, TIAMAT_ABILITIES, ULTIMA_DEMON_ABILITIES, WORK_ABILITIES,
+    PISCO_ABILITIES, SEKHRET_ABILITIES, TIAMAT_ABILITIES, TRENT_ABILITIES, ULTIMA_DEMON_ABILITIES,
+    WORK_ABILITIES,
 };
 use crate::sim::actions::perform::PERFORMANCE_ABILITIES;
 use crate::sim::actions::punch_art::PUNCH_ART_ABILITIES;
@@ -182,6 +183,7 @@ impl<'a> CombatantInfo<'a> {
             COEURL_ABILITIES,
             BYBLOS_ABILITIES,
             SEKHRET_ABILITIES,
+            TRENT_ABILITIES,
         ] {
             for ability in ability_set.iter() {
                 if all_abilities.iter().any(|n| n.as_str() == ability.name) {
