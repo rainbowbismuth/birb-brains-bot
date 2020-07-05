@@ -63,10 +63,10 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
     },
 ];
 
-struct ConditionTalkSkillImpl {
-    range: u8,
-    base_chance: i16,
-    add_conditions: &'static [Condition],
+pub struct ConditionTalkSkillImpl {
+    pub range: u8,
+    pub base_chance: i16,
+    pub add_conditions: &'static [Condition],
 }
 
 impl AbilityImpl for ConditionTalkSkillImpl {

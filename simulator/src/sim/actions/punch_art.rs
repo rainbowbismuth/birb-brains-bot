@@ -18,7 +18,18 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
             range: 0,
         },
     },
-    // TODO: Pummel: 1 range, 0 AoE. Effect: Damage (Random(1-9) * PA * 3 / 2).
+    // Pummel: 1 range, 0 AoE. Effect: Damage (Random(1-9) * PA * 3 / 2).
+    Ability {
+        name: "Pummel",
+        flags: ALLY_OK | FOE_OK | TARGET_NOT_SELF,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &Pummel {
+            max: 9,
+            pa_mult: 1.5,
+            knockback_chance: false,
+        },
+    },
     // Wave Fist: 3 range, 0 AoE. Element: Wind. Effect: Damage ((PA + 2) / 2 * PA).
     Ability {
         name: "Wave Fist",
@@ -97,6 +108,52 @@ pub const PUNCH_ART_ABILITIES: &[Ability] = &[
         },
     },
 ];
+
+pub struct Pummel {
+    pub(crate) max: i16,
+    pub(crate) pa_mult: f32,
+    pub(crate) knockback_chance: bool,
+}
+
+impl AbilityImpl for Pummel {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        actions.push(Action::new(ability, 1, None, target.id()));
+    }
+
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+
+        if sim.do_physical_evade(user, target, None, Source::Ability) {
+            return;
+        }
+
+        let rand = sim.roll_inclusive(1, self.max);
+        let xa = mod_2_formula_xa(
+            sim,
+            user.pa() as i16,
+            user,
+            target,
+            Element::None,
+            false,
+            false,
+            false,
+        );
+        let xa = (xa as f32 * self.pa_mult) as i16;
+        let damage = xa * rand;
+        sim.change_target_hp(target_id, damage, Source::Ability);
+        if self.knockback_chance && sim.roll_inclusive(0, 1) == 0 {
+            sim.do_knockback(user_id, target_id);
+        }
+    }
+}
 
 struct DamagePunchArt {
     element: Element,
