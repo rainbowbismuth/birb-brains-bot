@@ -358,7 +358,7 @@ pub fn run_all_matches(
             data.log_loss += current_log_loss;
 
             record_unit_kinds(&mut data.overall_involves, &match_up);
-            if print_worst && current_log_loss >= 2.8 {
+            if print_worst && current_log_loss >= 2.0 {
                 data.worst_count += 1;
                 record_unit_kinds(&mut data.worst_involves, &match_up);
             }
@@ -406,7 +406,7 @@ pub fn run_all_matches(
         worst_involves_pairs.push((key, more));
     }
     worst_involves_pairs.sort_by_key(|p| (-p.1 * 1_000_000.0) as i32);
-    for entry in &worst_involves_pairs {
+    for entry in worst_involves_pairs.iter().take(20) {
         if entry.1 < 1.0 {
             continue;
         }
