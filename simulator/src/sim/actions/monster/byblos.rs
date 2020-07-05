@@ -1,4 +1,5 @@
 use crate::sim::actions::common::{mod_5_formula, AddConditionSpellImpl};
+use crate::sim::actions::monster::{BadBreathImpl, UlmaguestImpl};
 use crate::sim::actions::punch_art::Pummel;
 use crate::sim::actions::talk_skill::ConditionTalkSkillImpl;
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
@@ -152,6 +153,36 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
             range: 4,
             ctr: Some(6),
             condition: Some(Condition::Confusion),
+        },
+    },
+    // Vengeance: 5 range, 0 AoE. Effect: Damage (CasterMaxHP - CasterCurrentHP).
+    Ability {
+        name: "Vengeance",
+        flags: FOE_OK,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &UlmaguestImpl { range: 5 },
+    },
+    // TODO: Manaburn: 5 range, 0 AoE. Effect: Damage (TargetCurrentMP).
+    // TODO: Energize: 4 range, 0 AoE. Effect: Heal (CasterMaxHP * 2 / 5); DamageCaster (CasterMaxHP / 5).
+    // Parasite: 4 range, 0 AoE. Effect: Add Petrify, Darkness, Confusion, Silence, Oil, Frog, Poison, Sleep (Separate).
+    Ability {
+        name: "Parasite",
+        flags: FOE_OK,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &BadBreathImpl {
+            conditions: &[
+                Condition::Petrify,
+                Condition::Darkness,
+                Condition::Confusion,
+                Condition::Silence,
+                Condition::Oil,
+                Condition::Frog,
+                Condition::Poison,
+                Condition::Sleep,
+            ],
+            range: 4,
         },
     },
 ];

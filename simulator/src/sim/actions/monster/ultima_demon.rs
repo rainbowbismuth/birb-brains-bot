@@ -114,8 +114,8 @@ impl AbilityImpl for NanoflareImpl {
     }
 }
 
-struct UlmaguestImpl {
-    range: u8,
+pub(crate) struct UlmaguestImpl {
+    pub(crate) range: u8,
 }
 
 impl AbilityImpl for UlmaguestImpl {

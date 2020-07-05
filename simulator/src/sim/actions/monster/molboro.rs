@@ -47,6 +47,7 @@ pub const MOLBORO_ABILITIES: &[Ability] = &[
                 Condition::Poison,
                 Condition::Sleep,
             ],
+            range: 0,
         },
     },
     // TODO: Moldball Virus: 1 range, 0 AoE. Hit: (MA + 6)%. Effect: Transform Human into a Malboro.
@@ -81,8 +82,9 @@ impl AbilityImpl for GooImpl {
     }
 }
 
-struct BadBreathImpl {
-    conditions: &'static [Condition],
+pub(crate) struct BadBreathImpl {
+    pub(crate) conditions: &'static [Condition],
+    pub(crate) range: u8,
 }
 
 impl AbilityImpl for BadBreathImpl {
@@ -94,7 +96,7 @@ impl AbilityImpl for BadBreathImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action::new(ability, 0, None, target.id()));
+        actions.push(Action::new(ability, self.range, None, target.id()));
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         for condition in self.conditions {
