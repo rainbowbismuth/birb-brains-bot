@@ -163,7 +163,14 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
         aoe: AoE::None,
         implementation: &UlmaguestImpl { range: 5 },
     },
-    // TODO: Manaburn: 5 range, 0 AoE. Effect: Damage (TargetCurrentMP).
+    // Manaburn: 5 range, 0 AoE. Effect: Damage (TargetCurrentMP).
+    Ability {
+        name: "Manaburn",
+        flags: FOE_OK,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &Manaburn { range: 5 },
+    },
     // Energize: 4 range, 0 AoE. Effect: Heal (CasterMaxHP * 2 / 5); DamageCaster (CasterMaxHP / 5).
     Ability {
         name: "Energize",
@@ -193,6 +200,27 @@ pub const BYBLOS_ABILITIES: &[Ability] = &[
         },
     },
 ];
+
+struct Manaburn {
+    range: u8,
+}
+
+impl AbilityImpl for Manaburn {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        actions.push(Action::new(ability, self.range, None, target.id()));
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let target = sim.combatant(target_id);
+        sim.change_target_hp(target_id, target.mp(), Source::Ability);
+    }
+}
 
 struct ByblosElemental {
     element: Element,

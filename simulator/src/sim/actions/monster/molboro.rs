@@ -98,7 +98,7 @@ impl AbilityImpl for BadBreathImpl {
     ) {
         actions.push(Action::new(ability, self.range, None, target.id()));
     }
-    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
         for condition in self.conditions {
             // TODO: Not sure what the proc rate is.
             if sim.roll_auto_succeed() < 0.25 {
