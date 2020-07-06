@@ -192,9 +192,9 @@ impl AbilityImpl for GilTakingImpl {
     }
 }
 
-struct StealHeartImpl {
-    base_chance: i16,
-    range: u8,
+pub struct StealHeartImpl {
+    pub base_chance: i16,
+    pub range: u8,
 }
 
 impl AbilityImpl for StealHeartImpl {
