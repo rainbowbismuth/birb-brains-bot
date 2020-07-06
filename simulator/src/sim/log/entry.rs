@@ -40,6 +40,7 @@ pub enum Event<'a> {
     CriticalQuick(CombatantId),
     SpellReflected(CombatantId, Panel),
     BraveBuff(CombatantId, i8, Source<'a>),
+    FaithBuff(CombatantId, i8, Source<'a>),
 }
 
 #[derive(Copy, Clone)]
@@ -312,6 +313,13 @@ pub fn describe_event(event: &Event, combatants: &[Combatant], arena: &Arena) ->
 
         Event::BraveBuff(target_id, amount, src) => format!(
             "{}\'s brave increased by {} because of {}",
+            describe_combatant(*target_id, combatants, arena),
+            amount,
+            describe_source(*src, combatants)
+        ),
+
+        Event::FaithBuff(target_id, amount, src) => format!(
+            "{}\'s faith increased by {} because of {}",
             describe_combatant(*target_id, combatants, arena),
             amount,
             describe_source(*src, combatants)

@@ -1159,8 +1159,17 @@ impl<'a> Simulation<'a> {
             return;
         }
         let target = self.combatant_mut(target_id);
-        target.raw_brave = (target.raw_brave + amount).min(100);
+        target.raw_brave = (target.raw_brave + amount).min(100).max(1);
         self.log_event(Event::BraveBuff(target_id, amount, src));
+    }
+
+    pub fn change_unit_faith(&mut self, target_id: CombatantId, amount: i8, src: Source<'a>) {
+        if amount == 0 {
+            return;
+        }
+        let target = self.combatant_mut(target_id);
+        target.raw_faith = (target.raw_faith + amount).min(100).max(1);
+        self.log_event(Event::FaithBuff(target_id, amount, src));
     }
 
     pub fn calculate_weapon_xa(
