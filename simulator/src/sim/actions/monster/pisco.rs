@@ -1,4 +1,5 @@
 use crate::sim::actions::common::AddConditionSpellImpl;
+use crate::sim::actions::monster::ChocoEsunaImpl;
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, SILENCEABLE};
 use crate::sim::common::{mod_5_formula_xa, mod_6_formula, ElementalDamageSpellImpl, EmpowerImpl};
 use crate::sim::{
@@ -10,6 +11,27 @@ pub const PISCO_ABILITIES: &[Ability] = &[
     // Tentacle: 1 range, 0 AoE. Effect: Normal Attack.
     // Black Ink: 2 range, 2 AoE (line). Hit: (MA + 50)%. Effect: Add Darkness, Oil (All).
     // Odd Soundwave: 0 range, 2 AoE. Effect: Cancel Charging, Performing, Float, Reraise, Transparent, Regen, Protect, Shell, Haste, Faith, Reflect.
+    Ability {
+        name: "Odd Soundwave",
+        flags: TARGET_SELF_ONLY | ALLY_OK | CASTER_IMMUNE,
+        mp_cost: 0,
+        aoe: AoE::Diamond(2, Some(1)),
+        implementation: &ChocoEsunaImpl {
+            cures: &[
+                Condition::Charging,
+                Condition::Performing,
+                Condition::Float,
+                Condition::Reraise,
+                Condition::Transparent,
+                Condition::Regen,
+                Condition::Protect,
+                Condition::Shell,
+                Condition::Haste,
+                Condition::Faith,
+                Condition::Reflect,
+            ],
+        },
+    },
     // Mind Blast: 3 range, 1 AoE. Hit: (MA + 40)%. Effect: Add Confusion, Berserk (Random).
     Ability {
         name: "Mind Blast",

@@ -65,8 +65,8 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
     },
 ];
 
-struct ChocoEsunaImpl {
-    cures: &'static [Condition],
+pub struct ChocoEsunaImpl {
+    pub cures: &'static [Condition],
 }
 
 impl AbilityImpl for ChocoEsunaImpl {
