@@ -10,8 +10,7 @@ import fftbg.data as data
 import fftbg.model as model
 import fftbg.patch as patch
 import fftbg.tournament as tournament
-from fftbg.brains.predictions import Predictions
-from fftbg.tournament import MatchUp, Tournament
+from fftbg.tournament import MatchUp
 import logging
 
 LOG = logging.getLogger(__name__)

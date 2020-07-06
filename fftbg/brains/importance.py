@@ -2,7 +2,7 @@ from copy import deepcopy
 from datetime import datetime
 from typing import List
 
-from brains.model import Model, BakedModel
+from fftbg.brains.model import Model, BakedModel
 from fftbg.tournament import MatchUp
 
 KEYS = ['ReactionSkill', 'SupportSkill', 'MoveSkill', 'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
