@@ -250,7 +250,7 @@ pub const WHITE_MAGIC_ABILITIES: &[Ability] = &[
         name: "Magic Barrier",
         flags: ALLY_OK | SILENCEABLE,
         mp_cost: 35,
-        aoe: AoE::Diamond(1, Some(3)),
+        aoe: AoE::None,
         implementation: &AddConditionSpellImpl {
             condition: &[
                 Condition::Reraise,
