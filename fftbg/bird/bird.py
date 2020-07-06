@@ -1,12 +1,10 @@
 import logging
-from typing import Optional
 
 from walrus import Database
 
 import fftbg.betting as betting
 from fftbg.bird.memory import Memory
 from fftbg.brains.api import get_current_tournament_id, get_prediction
-from fftbg.brains.predictions import Predictions
 from fftbg.event_stream import EventStream
 
 LOG = logging.getLogger(__name__)
@@ -17,7 +15,6 @@ class Bird:
         self.db = db
         self.event_stream = event_stream
         self.current_tournament_id = None
-        self.predictions: Optional[Predictions] = None
         self.memory = Memory()
         self.balance = 0
 
@@ -39,11 +36,6 @@ class Bird:
         self.right_prediction = None
         self.right_total_on_bet = None
         self.right_total_final = None
-
-    def load_current_tournament(self):
-        self.current_tournament_id = get_current_tournament_id(self.db)
-        self.predictions = get_prediction(self.db, self.current_tournament_id)
-        LOG.info(f'Loaded predictions for {self.current_tournament_id}')
 
     def update_balance(self, balance):
         old_balance = self.balance
@@ -98,10 +90,13 @@ class Bird:
         self.moving_increase = max(1, self.moving_increase)
         LOG.info(f'Moving increase changed from {old_increase:.4} to {self.moving_increase:.4}')
 
+    def load_current_tournament(self):
+        self.current_tournament_id = get_current_tournament_id(self.db)
+        LOG.info(f'Set current tournament to {self.current_tournament_id}')
+
     def log_prediction(self, left, right):
-        pred_key = f'{left} {right}'
-        left_wins = self.predictions.left_wins[pred_key]
-        right_wins = self.predictions.right_wins[pred_key]
+        left_wins = get_prediction(self.db, self.current_tournament_id, left, right)
+        right_wins = 1 - left_wins
         prediction = [right_wins, left_wins]
         LOG.info(f'Prediction is {left} {prediction[1]:.1%} vs {right} {prediction[0]:.1%}')
         self.left_team = left
@@ -109,8 +104,6 @@ class Bird:
         self.prediction = prediction
 
     def make_bet(self, left_total, right_total, all_in=False):
-        pool_total_est = (left_total + right_total) * self.moving_increase
-
         left_wins_percent = self.prediction[1]
         right_wins_percent = self.prediction[0]
 

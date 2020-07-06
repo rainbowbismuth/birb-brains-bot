@@ -11,9 +11,9 @@ import fftbg.event_stream
 import fftbg.server
 import fftbg.tournament
 import fftbg.twitch.msg_types as msg_types
-from fftbg.brains.api import CURRENT_TOURNAMENT_KEY, CURRENT_MATCH_KEY, get_current_tournament_id, get_prediction_key, \
-    get_prediction, get_importance_key, get_map_key, get_sim_log_key
-from fftbg.brains.baked_model import BakedModel, SimulatorModel
+from fftbg.brains.api import CURRENT_TOURNAMENT_KEY, CURRENT_MATCH_KEY, get_current_tournament_id, get_predictions_key, \
+    get_predictions, get_importance_key, get_map_key, get_sim_log_key, get_prediction_key, get_prediction
+from fftbg.brains.model import BakedModel, SimulatorModel, Model
 from fftbg.brains.msg_types import NEW_PREDICTIONS
 from fftbg.brains.predictions import Predictions
 from fftbg.event_stream import EventStream
@@ -32,9 +32,8 @@ def set_current_match(db: Database, left_team, right_team):
     db.set(CURRENT_MATCH_KEY, f'{left_team} {right_team}')
 
 
-def set_prediction(db: Database, prediction: Predictions):
-    data = prediction.to_json()
-    db.set(get_prediction_key(prediction.tournament_id), data)
+def set_prediction(db: Database, tournament_id, left_team, right_team, left_wins: float):
+    db.set(get_prediction_key(tournament_id, left_team, right_team), str(left_wins))
 
 
 def try_load_new(db: Database, retry_until_new=True) -> Tournament:
@@ -56,18 +55,19 @@ def try_load_new(db: Database, retry_until_new=True) -> Tournament:
     return tournament
 
 
-def post_prediction(db: Database, event_stream: EventStream, model, tournament: Tournament):
-    prediction = get_prediction(db, tournament.id)
+def post_prediction(db: Database, event_stream: EventStream, model: Model, tournament: Tournament, left_team: str, right_team: str):
+    prediction = get_prediction(db, tournament.id, left_team, right_team)
     if prediction is not None:
-        LOG.info(f'Prediction already exists for {tournament.id}')
+        LOG.info(f'Prediction already exists for {tournament.id}-{left_team}-{right_team}')
         return
-    LOG.info(f'Computing prediction for {tournament.id}')
-    prediction = model.predict(tournament)
-    set_prediction(db, prediction)
+    LOG.info(f'Computing prediction for {tournament.id}-{left_team}-{right_team}')
+    match_up = tournament.find_match_up(left_team, right_team)
+    left_wins = model.predict_match_up(match_up, tournament.modified)
+    set_prediction(db, tournament.id, left_team, right_team, left_wins)
     msg = {'type': NEW_PREDICTIONS,
-           'key': get_prediction_key(prediction.tournament_id)}
+           'key': get_prediction_key(tournament.id, left_team, right_team)}
     event_stream.publish(msg)
-    LOG.info(f'Posted prediction for {tournament.id}')
+    LOG.info(f'Posted prediction for {tournament.id}-{left_team}-{right_team}')
 
 
 def set_importance(db: Database, tournament_id, match_up: MatchUp, importance: List[dict]):
@@ -105,17 +105,16 @@ def run_server():
     db = fftbg.server.get_redis()
     event_stream = fftbg.event_stream.EventStream(db)
 
-    model = SimulatorModel()
-    importance_model = BakedModel()
+    baked_model = BakedModel()
+    sim_model = SimulatorModel(baked_model)
+
     tournament = try_load_new(db, retry_until_new=False)
     LOG.info(f'Loaded initial tournament {tournament.id}')
-    post_prediction(db, event_stream, model, tournament)
 
     while True:
         for (_, msg) in event_stream.read():
             if msg.get('type') == msg_types.CONNECTED_TO_TWITCH:
                 tournament = try_load_new(db, retry_until_new=False)
-                post_prediction(db, event_stream, model, tournament)
 
             elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
                 left_team = msg['left_team']
@@ -123,13 +122,15 @@ def run_server():
 
                 if left_team == 'red' and right_team == 'blue':
                     tournament = try_load_new(db, retry_until_new=True)
-                    post_prediction(db, event_stream, model, tournament)
+
+                post_prediction(db, event_stream, sim_model, tournament, left_team, right_team)
+
                 idx = fftbg.tournament.look_up_prediction_index(left_team, right_team)
                 match_up = tournament.match_ups[idx]
 
                 set_map(db, tournament.id, match_up)
-                post_sim_log(db, model, tournament.id, match_up, tournament.modified)
-                post_importance(db, importance_model, tournament.id, match_up, tournament.modified)
+                # post_sim_log(db, model, tournament.id, match_up, tournament.modified)
+                post_importance(db, baked_model, tournament.id, match_up, tournament.modified)
                 set_current_match(db, left_team, right_team)
 
 

@@ -1,14 +1,17 @@
 from copy import deepcopy
+from datetime import datetime
 from typing import List
 
+from brains.model import Model, BakedModel
 from fftbg.tournament import MatchUp
 
 KEYS = ['ReactionSkill', 'SupportSkill', 'MoveSkill', 'Mainhand', 'Offhand', 'Head', 'Armor', 'Accessory']
 
 
-def compute(model, match_up_root: MatchUp, patch_time) -> List[dict]:
+def compute(model: BakedModel, match_up_root: MatchUp, patch_time: datetime) -> List[dict]:
     match_ups = []
-    base_line = model.predict_match_ups([match_up_root], patch_time)
+    base_line = model.predict_match_up(match_up_root, patch_time)
+    base_line = [[1-base_line, base_line]]
     for i, combatant in enumerate(match_up_root.left.combatants):
         for k in KEYS:
             if match_up_root.left.combatants[i][k] == '':
@@ -39,6 +42,7 @@ def compute(model, match_up_root: MatchUp, patch_time) -> List[dict]:
             copied = deepcopy(match_up_root)
             copied.right.combatants[i]['ExtraSkills'].remove(k)
             match_ups.append((i + 4, k, copied))
+
     predictions = model.predict_match_ups([x[2] for x in match_ups], patch_time)
 
     diffs = []

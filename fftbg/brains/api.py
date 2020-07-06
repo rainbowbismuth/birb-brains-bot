@@ -20,14 +20,25 @@ def get_current_match(db: Database):
     return data
 
 
-def get_prediction_key(tournament_id):
+def get_predictions_key(tournament_id):
     return f'brains.predictions:{tournament_id}'
 
 
-def get_prediction(db: Database, tournament_id) -> Optional[Predictions]:
-    data = db.get(get_prediction_key(tournament_id))
+def get_predictions(db: Database, tournament_id) -> Optional[Predictions]:
+    data = db.get(get_predictions_key(tournament_id))
     if data is not None:
         data = Predictions.from_json(data)
+    return data
+
+
+def get_prediction_key(tournament_id, left_team, right_team):
+    return f'brains.prediction:{tournament_id}-{left_team}-{right_team}'
+
+
+def get_prediction(db: Database, tournament_id, left_team, right_team) -> float:
+    data = db.get(get_prediction_key(tournament_id, left_team, right_team))
+    if data is not None:
+        data = float(data)
     return data
 
 

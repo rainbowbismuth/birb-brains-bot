@@ -38,11 +38,12 @@ OFFENSIVE_STATUSES = [
 ]
 CAUSE_STATUS = [f'Can-{status}-Enemy-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
 CANCEL_STATUS = [f'Can-Cancel-{status}-Team-{j}' for status in OFFENSIVE_STATUSES for j in range(4)]
-# TODO: Not ready to include this 'Sim-Win-Percent'
+
 SURFACE_TYPES = ['Map-Surface-' + surface
                  for surface in fftbg.load_map.SURFACE_TYPES.values()
                  if surface not in ('(blank)', 'Ice')]
-NUMERIC = ['Map-Area'] + SURFACE_TYPES \
+# TODO: Not ready to include this 'Sim-Win-Percent'
+NUMERIC = ['Map-Area', 'Sim-Win-Percent', 'Sim-Win-Percent-Op'] + SURFACE_TYPES \
           + CAN_HEAL_TEAM + CAN_HURT_ENEMY + CAN_LETHAL_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
           + CAUSE_STATUS + CANCEL_STATUS + DISTANCE_ALLY + DISTANCE_ENEMY + HEIGHT_DIFF_ALLY + HEIGHT_DIFF_ENEMY
 
@@ -215,11 +216,18 @@ class Tournament:
 
                 if j < 4:
                     combatant['Sim-Win-Percent'] = match_sim_data
+                    combatant['Sim-Win-Percent-Op'] = 1 - match_sim_data
                 else:
                     combatant['Sim-Win-Percent'] = 1 - match_sim_data
+                    combatant['Sim-Win-Percent-Op'] = match_sim_data
 
                 out.append(combatant)
         return out
+
+    def find_match_up(self, left_team: str, right_team: str) -> MatchUp:
+        for match_up in self.match_ups:
+            if match_up.left.color == left_team and match_up.right.color == right_team:
+                return match_up
 
 
 def parse_hypothetical_tournament(tournament: dict) -> Tournament:
@@ -348,7 +356,26 @@ def match_ups_to_combatants(match_ups: List[MatchUp], patch: Patch) -> pandas.Da
     data = []
     for match_up in match_ups:
         data.extend(match_up.to_combatants(patch))
+
+    for combatant in data:
+        combatant['Sim-Win-Percent'] = 0.5
+        combatant['Sim-Win-Percent-Op'] = 0.5
+
     return _to_dataframe(data)
+
+
+def match_up_to_combatants(match_up: MatchUp, patch: Patch, sim_left_wins: float) -> pandas.DataFrame:
+    combatants = match_up.to_combatants(patch)
+
+    for j, combatant in enumerate(combatants):
+        if j < 4:
+            combatant['Sim-Win-Percent'] = sim_left_wins
+            combatant['Sim-Win-Percent-Op'] = 1 - sim_left_wins
+        else:
+            combatant['Sim-Win-Percent'] = 1 - sim_left_wins
+            combatant['Sim-Win-Percent-Op'] = sim_left_wins
+
+    return _to_dataframe(combatants)
 
 
 def _add_composite_id(data, name, f):
