@@ -9,11 +9,11 @@ use crate::sim::actions::attack::{attack_range, ATTACK_ABILITY};
 use crate::sim::actions::basic_skill::DASH_ABILITY;
 
 use crate::sim::{
-    ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, Action,
-    ActionTarget, Arena, Combatant, CombatantId, Condition, EvasionType, Event, Location, Log,
-    MovementInfo, Panel, Pathfinder, Phase, SlowAction, Source, Team, WeaponType, ALL_CONDITIONS,
-    COMBATANT_IDS, COMBATANT_IDS_LEN, COMBATANT_IDS_TURN_RESOLVE, DAMAGE_CANCELS, DEATH_CANCELS,
-    NO_SHORT_CHARGE, TIMED_CONDITIONS,
+    ai_consider_actions, ai_target_value_sum, perform_action, perform_action_slow, AbilityFlags,
+    Action, ActionTarget, Arena, Combatant, CombatantId, Condition, EvasionType, Event, Location,
+    Log, MovementInfo, Panel, Pathfinder, Phase, SlowAction, Source, Team, WeaponType, ALLY_OK,
+    ALL_CONDITIONS, COMBATANT_IDS, COMBATANT_IDS_LEN, COMBATANT_IDS_TURN_RESOLVE, DAMAGE_CANCELS,
+    DEATH_CANCELS, FOE_OK, NO_SHORT_CHARGE, TIMED_CONDITIONS,
 };
 use std::borrow::Borrow;
 
@@ -1228,7 +1228,8 @@ impl<'a> Simulation<'a> {
                     }
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
                     let crystal = self.crystal_metric(panel);
-                    Some((enemy_distance + crystal, panel))
+                    let avoid_aoe = -self.avoid_aoe_metric(panel);
+                    Some((enemy_distance + crystal + avoid_aoe, panel))
                 })
                 .max_by_key(|p| p.0)
                 .map(|p| p.1)
@@ -1256,8 +1257,9 @@ impl<'a> Simulation<'a> {
                 .map(|panel| {
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
                     let crystal = self.crystal_metric(*panel);
+                    let avoid_aoe = -self.avoid_aoe_metric(*panel);
                     // TODO: Add metric based on currently charging slow actions.
-                    (enemy_distance + crystal, *panel)
+                    (enemy_distance + crystal + avoid_aoe, *panel)
                 })
                 .max_by_key(|p| p.0)
                 .map(|p| p.1)
@@ -1310,8 +1312,9 @@ impl<'a> Simulation<'a> {
                 .map(|panel| {
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
                     let crystal = -self.crystal_metric(*panel);
+                    let avoid_aoe = self.avoid_aoe_metric(*panel);
                     // TODO: Add metric based on currently charging slow actions.
-                    (enemy_distance + crystal, *panel)
+                    (enemy_distance + crystal + avoid_aoe, *panel)
                 })
                 .min_by_key(|p| p.0)
                 .map(|p| p.1)
@@ -1370,6 +1373,20 @@ impl<'a> Simulation<'a> {
             }
         }
         return 0;
+    }
+
+    fn avoid_aoe_metric(&self, panel: Panel) -> i16 {
+        let mut metric = 0;
+        for combatant in &self.combatants {
+            if let Some(slow_action) = combatant.ctr_action {
+                if let Some(target_panel) = slow_action.action.target.to_panel(self) {
+                    if slow_action.action.ability.aoe.inside(target_panel, panel) {
+                        metric += 5;
+                    }
+                }
+            }
+        }
+        metric
     }
 
     pub fn combatant_on_panel(&self, panel: Panel) -> Option<CombatantId> {

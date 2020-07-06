@@ -81,6 +81,15 @@ impl AoE {
             AoE::Global => false,
         }
     }
+
+    // TODO: Tolerance
+    pub fn inside(self, from_loc: Panel, panel: Panel) -> bool {
+        match self {
+            AoE::Diamond(size, _) => from_loc.distance(panel) <= size as i16,
+            AoE::Global => true,
+            _ => false,
+        }
+    }
 }
 
 pub struct Ability<'a> {
