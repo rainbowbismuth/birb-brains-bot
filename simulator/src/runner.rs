@@ -37,7 +37,7 @@ pub fn run_many_sims<'a>(
         }
     }
     let left_wins_percent = left_wins as f64 / num_runs as f64;
-    (clamp(left_wins_percent, 0.01, 0.99), time_outs)
+    (clamp(left_wins_percent, 0.05, 0.95), time_outs)
 }
 
 pub fn clamp(n: f64, min: f64, max: f64) -> f64 {
