@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 
 from fftbg.status import ALL_CONDITIONS_SET
 
@@ -72,7 +72,7 @@ EMPTY = Equipment(name='')
 
 @dataclass
 class EquipmentData:
-    by_name: {str: Equipment}
+    by_name: Dict[str, Equipment]
 
     def get_equipment(self, name: str) -> Equipment:
         return self.by_name.get(name, EMPTY)

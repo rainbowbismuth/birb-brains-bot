@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 
 from dataclasses_json import dataclass_json
 from pytz import timezone
@@ -42,7 +42,7 @@ class Patch:
         return self.base_stats.get_base_stats(job, gender)
 
 
-PATCH_MAP: {str: Patch} = {}
+PATCH_MAP: Dict[str, Patch] = {}
 EASTERN_TZ = timezone('US/Eastern')
 
 

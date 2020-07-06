@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Dict
 
 HUMAN_RE = re.compile(r"^(\w+) (\w+)'s base stats")
 MONSTER_RE = re.compile(r"^(.+)'s base stats")
@@ -44,7 +44,7 @@ class BaseStats:
 
 @dataclass
 class BaseStatsData:
-    by_job_gender: {str: BaseStats}
+    by_job_gender: Dict[str, BaseStats]
 
     def get_base_stats(self, job: str, gender: str) -> BaseStats:
         job = job.replace(' ', '')

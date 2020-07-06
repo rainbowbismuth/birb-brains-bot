@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict
 
 MULT_BRAVE = 'BRAVE'
 MULT_PA = 'PA'
@@ -92,9 +92,9 @@ DEFAULT_ABILITY = Ability('', name_with_tag=SKILL_TAG)
 
 @dataclass
 class AbilityData:
-    by_name: {str: Ability}
-    by_adds: {str: List[Ability]}
-    by_cancels: {str: List[Ability]}
+    by_name: Dict[str, Ability]
+    by_adds: Dict[str, List[Ability]]
+    by_cancels: Dict[str, List[Ability]]
 
     def get_ability(self, name: str) -> Ability:
         if name.startswith(SKILL_TAG):

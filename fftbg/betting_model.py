@@ -14,6 +14,6 @@ def main():
 
     df = pandas.DataFrame(balance_log)
 
-    
+
 if __name__ == '__main__':
     main()
