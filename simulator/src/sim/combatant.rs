@@ -310,6 +310,7 @@ pub struct Combatant<'a> {
     pub ctr_action: Option<SlowAction<'a>>,
     pub raw_hp: i16,
     pub crystal_counter: i8,
+    pub crystal_taken: bool,
     pub raw_mp: i16,
     pub facing: Facing,
     pub broken_equips: u8,
@@ -358,6 +359,7 @@ impl<'a> Combatant<'a> {
             pa_mod: 0,
             ma_mod: 0,
             crystal_counter: 4,
+            crystal_taken: false,
             death_sentence_counter: 4,
         };
         out.raw_hp = out.max_hp();
@@ -795,7 +797,11 @@ impl<'a> Combatant<'a> {
     }
 
     pub fn crystal(&self) -> bool {
-        self.crystal_counter == 0
+        !self.crystal_taken && self.crystal_counter == 0
+    }
+
+    pub fn take_crystal(&mut self) {
+        self.crystal_taken = true;
     }
 
     pub fn defending(&self) -> bool {

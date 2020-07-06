@@ -534,6 +534,22 @@ impl<'a> Simulation<'a> {
         any_healthy && !all_critical
     }
 
+    fn check_crystal_pickup(&mut self, user_id: CombatantId, new_panel: Panel) {
+        let mut found_crystal = None;
+        for combatant in &self.combatants {
+            if combatant.panel == new_panel && combatant.crystal() {
+                found_crystal = Some(combatant.id());
+                break;
+            }
+        }
+        if let Some(crystal_id) = found_crystal {
+            let crystal = self.combatant_mut(crystal_id);
+            crystal.take_crystal();
+            self.change_target_hp(user_id, -999, Source::Constant("picked up crystal"));
+            self.change_target_mp(user_id, -999, Source::Constant("picked up crystal"));
+        }
+    }
+
     fn do_move_with_bounds(&mut self, user_id: CombatantId, desired_panel: Panel) {
         {
             let pathfinder = self.pathfinder.borrow();
@@ -549,7 +565,7 @@ impl<'a> Simulation<'a> {
         user.panel = desired_panel;
         user.moved_during_active_turn = true;
         self.log_event(Event::Moved(user_id, old_location, desired_panel));
-
+        self.check_crystal_pickup(user_id, desired_panel);
         let combatant = self.combatant(user_id);
         if combatant.moved_during_active_turn && combatant.move_hp_up() && !combatant.confusion() {
             self.change_target_hp(
@@ -1211,7 +1227,8 @@ impl<'a> Simulation<'a> {
                         return None;
                     }
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
-                    Some((enemy_distance, panel))
+                    let crystal = self.crystal_metric(panel);
+                    Some((enemy_distance + crystal, panel))
                 })
                 .max_by_key(|p| p.0)
                 .map(|p| p.1)
@@ -1238,8 +1255,9 @@ impl<'a> Simulation<'a> {
                 .iter()
                 .map(|panel| {
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
+                    let crystal = self.crystal_metric(*panel);
                     // TODO: Add metric based on currently charging slow actions.
-                    (enemy_distance, *panel)
+                    (enemy_distance + crystal, *panel)
                 })
                 .max_by_key(|p| p.0)
                 .map(|p| p.1)
@@ -1291,8 +1309,9 @@ impl<'a> Simulation<'a> {
                 .iter()
                 .map(|panel| {
                     let enemy_distance = self.enemy_distance_metric(user, panel.location());
+                    let crystal = -self.crystal_metric(*panel);
                     // TODO: Add metric based on currently charging slow actions.
-                    (enemy_distance, *panel)
+                    (enemy_distance + crystal, *panel)
                 })
                 .min_by_key(|p| p.0)
                 .map(|p| p.1)
@@ -1340,7 +1359,17 @@ impl<'a> Simulation<'a> {
 
             metric += combatant.panel.location().distance(location);
         }
+
         metric
+    }
+
+    fn crystal_metric(&self, panel: Panel) -> i16 {
+        for combatant in &self.combatants {
+            if combatant.crystal() && combatant.panel == panel {
+                return 200;
+            }
+        }
+        return 0;
     }
 
     pub fn combatant_on_panel(&self, panel: Panel) -> Option<CombatantId> {
