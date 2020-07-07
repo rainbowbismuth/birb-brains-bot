@@ -70,10 +70,11 @@ impl AbilityImpl for WorkDamageImpl {
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
-        let _target = sim.combatant(target_id);
+        let target = sim.combatant(target_id);
         let pa = user.pa() as i16;
-        let damage = pa * self.pa_factor;
+        let mut damage = pa * self.pa_factor;
         let self_damage = damage / self.hurt_div;
+        damage = (damage as f32 * user.zodiac_compatibility(target)) as i16;
         sim.change_target_hp(target_id, damage, Source::Ability);
         sim.change_target_hp(user_id, self_damage, Source::Ability);
     }
