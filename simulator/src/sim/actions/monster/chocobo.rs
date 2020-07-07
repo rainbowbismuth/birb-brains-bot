@@ -35,6 +35,7 @@ pub const CHOCOBO_ABILITIES: &[Ability] = &[
         implementation: &ChocoMeteorImpl {
             ma_factor: 4,
             range: 5,
+            element: Element::None,
         },
     },
     // Choco Esuna: 0 range, 1 AoE. Effect: Cancel Petrify, Darkness, Silence, Poison, Stop, Don't Move, Don't Act.
@@ -135,6 +136,7 @@ impl AbilityImpl for ChocoBallImpl {
 pub(crate) struct ChocoMeteorImpl {
     pub(crate) ma_factor: i16,
     pub(crate) range: u8,
+    pub(crate) element: Element,
 }
 
 impl AbilityImpl for ChocoMeteorImpl {
@@ -151,7 +153,7 @@ impl AbilityImpl for ChocoMeteorImpl {
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
-        let xa = mod_5_formula_xa(user.ma() as i16, user, target, Element::None, false);
+        let xa = mod_5_formula_xa(user.ma() as i16, user, target, self.element, false);
         sim.change_target_hp(target_id, xa * self.ma_factor, Source::Ability);
     }
 }

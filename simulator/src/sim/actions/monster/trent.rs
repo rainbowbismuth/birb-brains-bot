@@ -17,6 +17,7 @@ pub const TRENT_ABILITIES: &[Ability] = &[
         implementation: &ChocoMeteorImpl {
             ma_factor: 5,
             range: 0,
+            element: Element::None,
         },
     },
     // Protect Spirit: 0 range, 2 AoE. Hit: (MA + 60)%. Effect: Add Defending, Protect (All).
@@ -52,6 +53,7 @@ pub const TRENT_ABILITIES: &[Ability] = &[
         implementation: &ChocoMeteorImpl {
             ma_factor: -4,
             range: 0,
+            element: Element::None,
         },
     },
     // Spirit of Life: 0 range, 2 AoE. Effect: Heal (MA * 4).
@@ -63,6 +65,7 @@ pub const TRENT_ABILITIES: &[Ability] = &[
         implementation: &ChocoMeteorImpl {
             ma_factor: -4,
             range: 0,
+            element: Element::None,
         },
     },
     // TODO: Magic Spirit: 0 range, 2 AoE. Effect: HealMP (MA * 2).

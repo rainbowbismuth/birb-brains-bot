@@ -42,6 +42,7 @@ pub const SEKHRET_ABILITIES: &[Ability] = &[
         implementation: &ChocoMeteorImpl {
             ma_factor: 3,
             range: 0,
+            element: Element::Earth,
         },
     },
     // Gather Power: 0 range, 0 AoE. Effect: +2 PA.

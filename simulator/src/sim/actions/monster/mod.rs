@@ -1,3 +1,4 @@
+pub use bomb::*;
 pub use byblos::*;
 pub use chocobo::*;
 pub use coeurl::*;
@@ -15,6 +16,7 @@ pub use trent::*;
 pub use ultima_demon::*;
 pub use work::*;
 
+pub mod bomb;
 pub mod byblos;
 pub mod chocobo;
 pub mod coeurl;
