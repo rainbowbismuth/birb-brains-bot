@@ -190,16 +190,10 @@ impl AbilityImpl for MightySkillImpl {
         actions: &mut Vec<Action<'a>>,
         ability: &'a Ability<'a>,
         _sim: &Simulation<'a>,
-        user: &Combatant<'a>,
+        _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
         if target.monster() {
-            return;
-        }
-        if user.main_hand().map_or(true, |eq| {
-            eq.weapon_type != Some(WeaponType::Sword)
-                && eq.weapon_type != Some(WeaponType::KnightSword)
-        }) {
             return;
         }
         if target.get_equip(self.equip_slot).is_none() {
@@ -210,10 +204,11 @@ impl AbilityImpl for MightySkillImpl {
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let target = sim.combatant(target_id);
         if target.get_equip(self.equip_slot).is_some() {
-            let target = sim.combatant_mut(target_id);
-            target.break_equip(self.equip_slot);
+            let target = sim.combatant(target_id);
             let old_equip = target.get_equip(self.equip_slot).unwrap();
             sim.log_event(Event::Broke(target_id, old_equip));
+            let target = sim.combatant_mut(target_id);
+            target.break_equip(self.equip_slot);
             let user = sim.combatant(user_id);
             let target = sim.combatant(target_id);
 
@@ -221,7 +216,11 @@ impl AbilityImpl for MightySkillImpl {
             if sim.roll_auto_fail() < 0.05 {
                 xa += sim.roll_inclusive(1, xa.max(1)) - 1;
             }
-            let damage = xa * (user.main_hand().unwrap().wp as i16);
+            let damage = if let Some(main_hand) = user.main_hand() {
+                xa * main_hand.wp as i16
+            } else {
+                xa * user.pa_bang()
+            };
             sim.change_target_hp(target_id, damage, Source::Ability);
         }
     }
@@ -239,16 +238,9 @@ impl AbilityImpl for AbsorbSwordImpl {
         actions: &mut Vec<Action<'a>>,
         ability: &'a Ability<'a>,
         _sim: &Simulation<'a>,
-        user: &Combatant<'a>,
+        _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        if user.main_hand().map_or(true, |eq| {
-            eq.weapon_type != Some(WeaponType::Sword)
-                && eq.weapon_type != Some(WeaponType::KnightSword)
-        }) {
-            return;
-        }
-
         actions.push(Action::new(
             ability,
             self.range,
@@ -260,20 +252,16 @@ impl AbilityImpl for AbsorbSwordImpl {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
 
-        if user.main_hand().map_or(true, |eq| {
-            eq.weapon_type != Some(WeaponType::Sword)
-                && eq.weapon_type != Some(WeaponType::KnightSword)
-        }) {
-            return;
-        }
-
         // TODO: This is a weapon elemental attack sooo...
         let mut xa = mod_3_formula_xa(user.pa() as i16, user, target, false, false);
         if sim.roll_auto_fail() < 0.05 {
             xa += sim.roll_inclusive(1, xa.max(1)) - 1;
         }
-        let damage = xa * user.main_hand().unwrap().wp as i16;
-
+        let damage = if let Some(main_hand) = user.main_hand() {
+            xa * main_hand.wp as i16
+        } else {
+            xa * user.pa_bang()
+        };
         if self.hp_not_mp {
             do_hp_damage(sim, target_id, damage, true);
             do_hp_heal(sim, user_id, damage, true);
@@ -297,16 +285,9 @@ impl AbilityImpl for ChanceToAddSwordImpl {
         actions: &mut Vec<Action<'a>>,
         ability: &'a Ability<'a>,
         _sim: &Simulation<'a>,
-        user: &Combatant<'a>,
+        _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        if user.main_hand().map_or(true, |eq| {
-            eq.weapon_type != Some(WeaponType::Sword)
-                && eq.weapon_type != Some(WeaponType::KnightSword)
-        }) {
-            return;
-        }
-
         actions.push(Action::new(
             ability,
             self.range,
@@ -318,19 +299,16 @@ impl AbilityImpl for ChanceToAddSwordImpl {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
 
-        if user.main_hand().map_or(true, |eq| {
-            eq.weapon_type != Some(WeaponType::Sword)
-                && eq.weapon_type != Some(WeaponType::KnightSword)
-        }) {
-            return;
-        }
-
         // TODO: This is a weapon elemental attack sooo...
         let mut xa = mod_3_formula_xa(user.pa() as i16, user, target, false, false);
         if sim.roll_auto_fail() < 0.05 {
             xa += sim.roll_inclusive(1, xa.max(1)) - 1;
         }
-        let damage = xa * (user.main_hand().unwrap().wp as i16 + self.wp_plus);
+        let damage = if let Some(main_hand) = user.main_hand() {
+            xa * (main_hand.wp as i16 + self.wp_plus)
+        } else {
+            xa * user.pa_bang()
+        };
         sim.change_target_hp(target_id, damage, Source::Ability);
         if sim.roll_auto_succeed() < 0.25 {
             sim.add_condition(target_id, self.chance_to_add, Source::Ability);
