@@ -1,6 +1,4 @@
-use crate::sim::{
-    combatant_submerged, tile_height_from_direction, Arena, Combatant, Location, Panel, OFFSETS,
-};
+use crate::sim::{tile_height_from_direction, Arena, Combatant, Location, Panel, OFFSETS};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::usize;

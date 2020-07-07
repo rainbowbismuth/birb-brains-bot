@@ -3,7 +3,7 @@ use crate::sim::actions::{Ability, AbilityImpl, Action, FOE_OK};
 use crate::sim::actions::attack::AttackImpl;
 use crate::sim::actions::common::ElementalDamageSpellImpl;
 use crate::sim::actions::monster::ChocoMeteorImpl;
-use crate::sim::common::mod_5_formula_xa;
+
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, ALLY_OK, TARGET_NOT_SELF,
     TARGET_SELF_ONLY, TRIGGERS_HAMEDO,

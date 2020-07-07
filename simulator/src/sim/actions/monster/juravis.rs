@@ -4,7 +4,6 @@ use crate::sim::common::mod_5_formula_xa;
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, TARGET_NOT_SELF,
 };
-use serde::private::ser::constrain;
 
 pub const JURAVIS_ABILITIES: &[Ability] = &[
     // Beak: 1 range, 0 AoE. Hit: (MA + 37)%. Effect: Add Petrify.
