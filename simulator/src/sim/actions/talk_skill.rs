@@ -1,8 +1,8 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, FOE_OK};
 
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Event, Simulation, Source, ALLY_OK, ALL_CONDITIONS,
-    CAN_BE_CALCULATED, CAN_BE_REFLECTED, MISS_SLEEPING, SILENCEABLE,
+    instant_aoe_consider, Combatant, CombatantId, Condition, Element, Event, Simulation, Source,
+    ALLY_OK, ALL_CONDITIONS, CAN_BE_CALCULATED, CAN_BE_REFLECTED, MISS_SLEEPING, SILENCEABLE,
 };
 use std::borrow::Borrow;
 
@@ -160,7 +160,7 @@ impl AbilityImpl for ConditionTalkSkillImpl {
         if target.earplug() {
             return;
         }
-        actions.push(Action::new(ability, self.range, None, target.id()));
+        instant_aoe_consider(self.range, actions, ability, target)
     }
 
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {

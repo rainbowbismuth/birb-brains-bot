@@ -3,8 +3,8 @@ use crate::sim::actions::{Ability, AbilityImpl, Action};
 use crate::sim::constants::*;
 
 use crate::sim::{
-    AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, ALLY_OK,
-    CAN_BE_CALCULATED, CAN_BE_REFLECTED, CASTER_IMMUNE, FOE_OK, NOT_ALIVE_OK, SILENCEABLE,
+    instant_aoe_consider, AoE, Combatant, CombatantId, Condition, Element, Simulation, Source,
+    ALLY_OK, CAN_BE_CALCULATED, CAN_BE_REFLECTED, CASTER_IMMUNE, FOE_OK, NOT_ALIVE_OK, SILENCEABLE,
 };
 
 pub const ELEMENTAL_ABILITIES: &[Ability] = &[
@@ -201,7 +201,7 @@ impl AbilityImpl for ElementalImpl {
         if !self.terrain.contains(&tile.surface_type) {
             return;
         }
-        actions.push(Action::new(ability, self.range, None, target.id()));
+        instant_aoe_consider(self.range, actions, ability, target)
     }
 
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {

@@ -1,8 +1,8 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, SILENCEABLE};
 use crate::sim::common::{mod_5_formula_xa, mod_6_formula, ElementalDamageSpellImpl, EmpowerImpl};
 use crate::sim::{
-    AoE, Combatant, CombatantId, Condition, Element, Event, Simulation, Source, STATS_ABILITY,
-    TARGET_NOT_SELF, TARGET_SELF_ONLY,
+    instant_aoe_consider, AoE, Combatant, CombatantId, Condition, Element, Event, Simulation,
+    Source, STATS_ABILITY, TARGET_NOT_SELF, TARGET_SELF_ONLY,
 };
 
 pub const ULTIMA_DEMON_ABILITIES: &[Ability] = &[
@@ -127,7 +127,7 @@ impl AbilityImpl for UlmaguestImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action::new(ability, self.range, None, target.id()));
+        instant_aoe_consider(self.range, actions, ability, target)
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);
@@ -151,7 +151,7 @@ impl AbilityImpl for HuricaneImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
-        actions.push(Action::new(ability, self.range, None, target.id()));
+        instant_aoe_consider(self.range, actions, ability, target)
     }
     fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
         let user = sim.combatant(user_id);

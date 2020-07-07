@@ -550,3 +550,21 @@ fn perform_on_target(
 
     ability.implementation.perform(sim, user_id, target_id);
 }
+
+pub fn instant_aoe_consider<'a>(
+    range: u8,
+    actions: &mut Vec<Action<'a>>,
+    ability: &'a Ability<'a>,
+    target: &Combatant<'a>,
+) {
+    match ability.aoe {
+        AoE::Diamond(size, _) => {
+            for target_panel in target.panel.diamond(size) {
+                actions.push(Action::target_panel(ability, range, None, target_panel));
+            }
+        }
+        _ => {
+            actions.push(Action::new(ability, range, None, target.id()));
+        }
+    }
+}
