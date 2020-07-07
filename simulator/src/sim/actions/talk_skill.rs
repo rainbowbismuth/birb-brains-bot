@@ -1,12 +1,23 @@
 use crate::sim::actions::{Ability, AbilityImpl, Action, AoE, FOE_OK};
 
 use crate::sim::{
-    Combatant, CombatantId, Condition, Element, Event, Simulation, Source, ALLY_OK,
+    Combatant, CombatantId, Condition, Element, Event, Simulation, Source, ALLY_OK, ALL_CONDITIONS,
     CAN_BE_CALCULATED, CAN_BE_REFLECTED, MISS_SLEEPING, SILENCEABLE,
 };
+use std::borrow::Borrow;
 
 pub const TALK_SKILL_ABILITIES: &[Ability] = &[
-    // TODO: Rehabilitate: 4 range, 0 AoE. Effect: HealMP (MA * 3).
+    //  Rehabilitate: 4 range, 0 AoE. Effect: HealMP (MA * 3).
+    Ability {
+        name: "Rehabilitate",
+        flags: ALLY_OK | SILENCEABLE | MISS_SLEEPING,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &RehabilitateTalkSkillImpl {
+            range: 4,
+            ma_factor: 3,
+        },
+    },
     // Invitation: 4 range, 0 AoE. Hit: (MA + 35)%. Effect: Add Confusion, Charm (Random).
     Ability {
         name: "Invitation",
@@ -19,7 +30,17 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
             add_conditions: &[Condition::Confusion, Condition::Charm],
         },
     },
-    // TODO: Persuade: 4 range, 0 AoE. Hit: (MA + 32)%. Effect: Set CT to 0.
+    // Persuade: 4 range, 0 AoE. Hit: (MA + 32)%. Effect: Set CT to 0.
+    Ability {
+        name: "Persuade",
+        flags: ALLY_OK | FOE_OK | SILENCEABLE | MISS_SLEEPING,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &PersuadeTalkSkillImpl {
+            range: 4,
+            base_chance: 32,
+        },
+    },
     // Praise: 4 range, 0 AoE. Hit: (MA + 80)%. Effect: +5 Brave.
     Ability {
         name: "Praise",
@@ -84,7 +105,17 @@ pub const TALK_SKILL_ABILITIES: &[Ability] = &[
             add_conditions: &[Condition::DeathSentence],
         },
     },
-    // TODO: Steal Status: 2 range, 0 AoE. Hit: Faith(MA + 163)%. Effect: Cancel statuses on target and Add them to self.
+    // Steal Status: 2 range, 0 AoE. Hit: Faith(MA + 163)%. Effect: Cancel statuses on target and Add them to self.
+    Ability {
+        name: "Steal Status",
+        flags: FOE_OK | SILENCEABLE,
+        mp_cost: 0,
+        aoe: AoE::None,
+        implementation: &StealStatusImpl {
+            range: 2,
+            base_chance: 163,
+        },
+    },
     // Insult: 4 range, 0 AoE. Hit: (MA + 40)%. Effect: Add Berserk.
     Ability {
         name: "Insult",
@@ -126,6 +157,9 @@ impl AbilityImpl for ConditionTalkSkillImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
+        if target.earplug() {
+            return;
+        }
         actions.push(Action::new(ability, self.range, None, target.id()));
     }
 
@@ -141,6 +175,66 @@ impl AbilityImpl for ConditionTalkSkillImpl {
             let condition = self.add_conditions[index as usize];
             sim.add_condition(target_id, condition, Source::Ability);
         }
+    }
+}
+
+pub struct PersuadeTalkSkillImpl {
+    pub range: u8,
+    pub base_chance: i16,
+}
+
+impl AbilityImpl for PersuadeTalkSkillImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        if target.earplug() {
+            return;
+        }
+        actions.push(Action::new(ability, self.range, None, target.id()));
+    }
+
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let mut chance = (user.ma() + self.base_chance) as f32 / 100.0;
+        let target = sim.combatant(target_id);
+        chance *= user.zodiac_compatibility(target);
+
+        if sim.roll_auto_succeed() < chance {
+            let target = sim.combatant_mut(target_id);
+            target.ct = 0;
+        }
+    }
+}
+
+pub struct RehabilitateTalkSkillImpl {
+    pub range: u8,
+    pub ma_factor: i16,
+}
+
+impl AbilityImpl for RehabilitateTalkSkillImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        if target.earplug() {
+            return;
+        }
+        actions.push(Action::new(ability, self.range, None, target.id()));
+    }
+
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let amount = user.ma() * self.ma_factor;
+        sim.change_target_mp(target_id, -amount, Source::Ability);
     }
 }
 
@@ -160,6 +254,10 @@ impl AbilityImpl for BraveFaithTalkSkillImpl {
         _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
+        if target.earplug() {
+            return;
+        }
+
         actions.push(Action::new(ability, self.range, None, target.id()));
     }
 
@@ -173,6 +271,45 @@ impl AbilityImpl for BraveFaithTalkSkillImpl {
         if sim.roll_auto_succeed() < chance {
             sim.change_unit_brave(target_id, self.brave_mod, Source::Ability);
             sim.change_unit_faith(target_id, self.faith_mod, Source::Ability);
+        }
+    }
+}
+
+pub struct StealStatusImpl {
+    pub range: u8,
+    pub base_chance: i16,
+}
+
+impl AbilityImpl for StealStatusImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        _user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        actions.push(Action::new(ability, self.range, None, target.id()));
+    }
+
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let user = sim.combatant(user_id);
+        let target = sim.combatant(target_id);
+
+        let mut chance = (user.ma() + self.base_chance) as f32 / 100.0;
+        chance *= user.faith_percent();
+        chance *= target.faith_percent();
+        chance *= user.zodiac_compatibility(target);
+
+        if sim.roll_auto_succeed() < chance {
+            for condition in ALL_CONDITIONS.borrow().iter() {
+                let target = sim.combatant(target_id);
+                if !target.has_condition(*condition) {
+                    continue;
+                }
+                sim.cancel_condition(target_id, *condition, Source::Ability);
+                sim.add_condition(user_id, *condition, Source::Ability);
+            }
         }
     }
 }

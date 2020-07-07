@@ -40,6 +40,7 @@ const LANDLOCKED: u64 = 1 << 38;
 const ARROW_GUARD: u64 = 1 << 39;
 const HAMEDO: u64 = 1 << 40;
 const COUNTER_FLOOD: u64 = 1 << 41;
+const EARPLUG: u64 = 1 << 42;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -92,6 +93,7 @@ impl SkillBlock {
                 "Arrow Guard" => block.flags |= ARROW_GUARD,
                 "Hamedo" => block.flags |= HAMEDO,
                 "Counter Flood" => block.flags |= COUNTER_FLOOD,
+                "Earplug" => block.flags |= EARPLUG,
                 _ => {}
             }
         }
@@ -260,5 +262,9 @@ impl SkillBlock {
 
     pub fn counter_flood(&self) -> bool {
         self.flags & COUNTER_FLOOD != 0
+    }
+
+    pub fn earplug(&self) -> bool {
+        self.flags & EARPLUG != 0
     }
 }

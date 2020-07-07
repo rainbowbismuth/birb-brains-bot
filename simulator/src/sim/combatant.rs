@@ -1121,6 +1121,10 @@ impl<'a> Combatant<'a> {
         self.info.skill_block.counter_tackle()
     }
 
+    pub fn earplug(&self) -> bool {
+        self.info.skill_block.earplug()
+    }
+
     pub fn abilities(&self) -> &[&'a Ability<'a>] {
         self.info.abilities.as_slice()
     }

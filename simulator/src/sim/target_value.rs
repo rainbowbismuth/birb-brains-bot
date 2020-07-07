@@ -36,6 +36,7 @@ fn ai_calculate_stat_buff_mod(target: &Combatant) -> f32 {
         + target.speed_mod as f32 * 1e-5
         + target.raw_brave as f32 * 1e-5
         + target.raw_faith as f32 * 1e-5
+        + target.ct as f32 * 1e-5
 }
 
 fn ai_calculate_caster_hate_mod(target: &Combatant) -> f32 {
