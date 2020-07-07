@@ -72,6 +72,8 @@ impl AbilityImpl for GoblinPunchImpl {
             let hp_diff = user.max_hp() - user.hp();
             sim.change_target_hp(target_id, hp_diff, Source::Ability);
         }
+
+        sim.try_countergrasp(user_id, target_id)
     }
 }
 
@@ -101,6 +103,8 @@ impl AbilityImpl for EyeGougeImpl {
         if sim.roll_auto_succeed() < chance {
             sim.add_condition(target_id, Condition::Darkness, Source::Ability);
             sim.add_condition(target_id, Condition::Confusion, Source::Ability);
+        } else {
+            sim.try_countergrasp(user_id, target_id)
         }
     }
 }

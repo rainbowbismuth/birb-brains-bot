@@ -78,6 +78,7 @@ impl AbilityImpl for SnakeCarrierImpl {
                 sim.add_condition(target_id, *condition, Source::Ability);
             }
         }
+        sim.try_countergrasp(user_id, target_id);
     }
 }
 

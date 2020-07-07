@@ -132,5 +132,6 @@ impl AbilityImpl for TailSwingImpl {
         if sim.roll_auto_fail() < 0.5 {
             sim.do_knockback(user_id, target_id);
         }
+        sim.try_countergrasp(user_id, target_id)
     }
 }
