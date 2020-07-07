@@ -83,7 +83,7 @@ impl AbilityImpl for SoulAbility {
         if sim.do_magical_evade(user, target, Source::Ability) {
             return;
         }
-        let xa = mod_5_formula_xa(user.ma() as i16, user, target, self.element, true);
+        let xa = mod_5_formula_xa(user.ma() as i16, user, target, self.element, false);
         sim.change_target_hp(target_id, xa * self.ma_factor, Source::Ability);
     }
 }
