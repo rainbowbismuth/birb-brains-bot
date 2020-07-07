@@ -51,6 +51,7 @@ NUMERIC = ['Map-Area', 'Sim-Win-Percent', 'Sim-Win-Percent-Op'] + SURFACE_TYPES 
 SKIP_ID_RANGES = [
     (1585741145317, 1585787081769)  # April fools, 2020.
 ]
+BAD_TOURNAMENTS = {1594125397508}
 
 
 def _calculate_hypothetical_match_ups():
@@ -266,7 +267,8 @@ def parse_tournament(path: Path) -> Tournament:
             match_n += 1
             left = teams[bracket[i * 2]]
             right = teams[bracket[i * 2 + 1]]
-            assert winner == left.color or winner == right.color
+            if tid not in BAD_TOURNAMENTS:
+                assert winner == left.color or winner == right.color
             left_wins = winner == left.color
             map_num = int(re.match(r'(\d+)', game_map)[0])
             match_up = MatchUp(tid, modified, left, right, left_wins, game_map, map_num)
@@ -302,6 +304,8 @@ def parse_tournaments() -> List[Tournament]:
     out = []
     for p in TOURNAMENTS_ROOT.glob('*.json'):
         tournament = parse_tournament(p)
+        if tournament.id in BAD_TOURNAMENTS:
+            continue
         skip = False
         for (start, end) in SKIP_ID_RANGES:
             if start <= tournament.id <= end:
