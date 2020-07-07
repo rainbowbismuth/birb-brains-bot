@@ -308,7 +308,9 @@ def parse_tournaments() -> List[Tournament]:
             continue
         skip = False
         for (start, end) in SKIP_ID_RANGES:
-            if start <= tournament.id <= end:
+            # FIXME: Hack to cut out everthing before April 1st
+            if tournament.id <= end:
+            # if start <= tournament.id <= end:
                 skip = True
                 break
         if skip:
