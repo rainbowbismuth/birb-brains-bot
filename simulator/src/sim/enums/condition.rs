@@ -219,7 +219,7 @@ impl Condition {
         CONDITION_NAMES[self.index()]
     }
 
-    pub fn condition_duration(self) -> Option<i8> {
+    pub fn condition_duration(self) -> Option<i32> {
         match self {
             Condition::Charm => Some(32),
             Condition::DontAct => Some(24),

@@ -1,4 +1,6 @@
-use crate::sim::{tile_height_from_direction, Arena, Combatant, Location, Panel, OFFSETS};
+use crate::sim::{
+    combatant_submerged, tile_height_from_direction, Arena, Combatant, Location, Panel, OFFSETS,
+};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::usize;
@@ -68,6 +70,8 @@ impl MovementInfo {
     pub fn new(combatant: &Combatant) -> MovementInfo {
         let movement = if combatant.dont_move() {
             0
+        } else if combatant.teleport_2() {
+            128
         } else {
             combatant.movement()
         };
@@ -78,7 +82,7 @@ impl MovementInfo {
             movement,
             vertical_jump,
             horizontal_jump,
-            fly_teleport: combatant.fly() || combatant.teleport(),
+            fly_teleport: combatant.fly() || combatant.teleport() || combatant.teleport_2(),
             water_ok: !combatant.landlocked(),
         }
     }

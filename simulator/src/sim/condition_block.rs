@@ -29,12 +29,14 @@ impl ConditionBlock {
         self.innate_flags &= !innate_flags;
     }
 
-    pub fn add(&mut self, condition: Condition) {
-        if let Some(duration) = condition.condition_duration() {
+    pub fn add(&mut self, condition: Condition, duration_mod: i32) {
+        if let Some(mut duration) = condition.condition_duration() {
             if self.innate_flags & condition.flag() != 0 {
                 return;
             }
-            self.timed_conditions[condition.index()] = duration;
+            duration *= duration_mod;
+            duration /= 4;
+            self.timed_conditions[condition.index()] = duration as i8;
         }
         self.status_flags |= condition.flag();
     }
@@ -87,7 +89,7 @@ mod test {
         let mut block = ConditionBlock::new();
         for condition in &TIMED_CONDITIONS {
             assert!(!block.has(*condition));
-            block.add(*condition);
+            block.add(*condition, 4);
             assert!(block.has(*condition));
             block.remove(*condition);
             assert!(!block.has(*condition));
@@ -98,7 +100,7 @@ mod test {
     pub fn tick_condition_status_until_removal() {
         for condition in &TIMED_CONDITIONS {
             let mut block = ConditionBlock::new();
-            block.add(*condition);
+            block.add(*condition, 4);
             for _ in 0..condition.condition_duration().unwrap() - 1 {
                 assert_eq!(block.tick(*condition), Some(false));
                 assert!(block.has(*condition));

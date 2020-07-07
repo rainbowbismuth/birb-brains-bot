@@ -41,6 +41,10 @@ const ARROW_GUARD: u64 = 1 << 39;
 const HAMEDO: u64 = 1 << 40;
 const COUNTER_FLOOD: u64 = 1 << 41;
 const EARPLUG: u64 = 1 << 42;
+const MEATBONE_SLASH: u64 = 1 << 43;
+const SHORT_STATUS: u64 = 1 << 44;
+const LONG_STATUS: u64 = 1 << 45;
+const TELEPORT_2: u64 = 1 << 46;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SkillBlock {
@@ -94,6 +98,10 @@ impl SkillBlock {
                 "Hamedo" => block.flags |= HAMEDO,
                 "Counter Flood" => block.flags |= COUNTER_FLOOD,
                 "Earplug" => block.flags |= EARPLUG,
+                "Meatbone Slash" => block.flags |= MEATBONE_SLASH,
+                "Short Status" => block.flags |= SHORT_STATUS,
+                "Long Status" => block.flags |= LONG_STATUS,
+                "Teleport 2" => block.flags |= TELEPORT_2,
                 _ => {}
             }
         }
@@ -266,5 +274,21 @@ impl SkillBlock {
 
     pub fn earplug(&self) -> bool {
         self.flags & EARPLUG != 0
+    }
+
+    pub fn meatbone_slash(&self) -> bool {
+        self.flags & MEATBONE_SLASH != 0
+    }
+
+    pub fn short_status(&self) -> bool {
+        self.flags & SHORT_STATUS != 0
+    }
+
+    pub fn long_status(&self) -> bool {
+        self.flags & LONG_STATUS != 0
+    }
+
+    pub fn teleport_2(&self) -> bool {
+        self.flags & TELEPORT_2 != 0
     }
 }

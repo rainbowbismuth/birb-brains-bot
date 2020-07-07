@@ -1025,6 +1025,19 @@ impl<'a> Simulation<'a> {
             return;
         }
 
+        if target.meatbone_slash() && target.critical() && self.roll_brave_reaction(target) {
+            let user = self.combatant(user_id);
+            let range = attack_range(self, target, user);
+
+            if !in_range(target, range, user) {
+                return;
+            }
+
+            let amount = target.max_hp();
+            self.change_target_hp(user_id, amount, Source::Ability);
+            return;
+        }
+
         if target.counter() && self.roll_brave_reaction(target) {
             let user = self.combatant(user_id);
             let range = attack_range(self, target, user);

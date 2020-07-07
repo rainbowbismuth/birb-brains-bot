@@ -748,7 +748,13 @@ impl<'a> Combatant<'a> {
         if condition == Condition::DeathSentence {
             self.reset_death_sentence_counter()
         }
-        self.conditions.add(condition);
+        let mut duration_mod = 4;
+        if self.long_status() {
+            duration_mod = 6;
+        } else if self.short_status() {
+            duration_mod = 2;
+        }
+        self.conditions.add(condition, duration_mod);
     }
 
     pub fn dead(&self) -> bool {
@@ -791,7 +797,11 @@ impl<'a> Combatant<'a> {
     }
 
     fn reset_death_sentence_counter(&mut self) {
-        self.death_sentence_counter = 4;
+        if self.short_status() {
+            self.death_sentence_counter = 1;
+        } else {
+            self.death_sentence_counter = 4;
+        }
     }
 
     pub fn tick_death_sentence_counter(&mut self) -> bool {
@@ -1128,6 +1138,22 @@ impl<'a> Combatant<'a> {
 
     pub fn earplug(&self) -> bool {
         self.info.skill_block.earplug()
+    }
+
+    pub fn meatbone_slash(&self) -> bool {
+        self.info.skill_block.meatbone_slash()
+    }
+
+    pub fn short_status(&self) -> bool {
+        self.info.skill_block.short_status()
+    }
+
+    pub fn long_status(&self) -> bool {
+        self.info.skill_block.long_status()
+    }
+
+    pub fn teleport_2(&self) -> bool {
+        self.info.skill_block.teleport_2()
     }
 
     pub fn abilities(&self) -> &[&'a Ability<'a>] {
