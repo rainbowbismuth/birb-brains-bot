@@ -109,7 +109,6 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
         },
     },
     // Explosion Sword: 4 range, 4 AoE (line), 2 CT, 26 MP. Effect: Damage (PA * (WP + 3)); Chance to Add Confusion.
-    // Shellburst Stab: 2 range, 0 AoE, 15 MP. Effect: Break target's body equipment; If successful Damage (PA * WP).
     // Dark Sword: 2 range, 0 AoE, 2 CT, 18 MP. Effect: AbsorbMP (PA * WP).
     Ability {
         name: "Dark Sword",
@@ -134,7 +133,99 @@ pub const BATTLE_SKILL_ABILITIES: &[Ability] = &[
             ctr: 3,
         },
     },
+    // Shellburst Stab: 4 range, 0 AoE, 15 MP. Effect: Break target's body equipment; If successful Damage (PA * WP).
+    Ability {
+        name: "Shellburst Stab",
+        flags: FOE_OK,
+        mp_cost: 15,
+        aoe: AoE::None,
+        implementation: &MightySkillImpl {
+            range: 4,
+            equip_slot: EquipSlot::Body,
+        },
+    },
+    // Blastar Punch: 4 range, 0 AoE, 15 MP. Effect: Break target's head equipment; If successful Damage (PA * WP).
+    Ability {
+        name: "Blastar Punch",
+        flags: FOE_OK,
+        mp_cost: 15,
+        aoe: AoE::None,
+        implementation: &MightySkillImpl {
+            range: 4,
+            equip_slot: EquipSlot::Head,
+        },
+    },
+    // Hellcry Punch: 4 range, 0 AoE, 15 MP. Effect: Break target's weapon; If successful Damage (PA * WP).
+    Ability {
+        name: "Hellcry Punch",
+        flags: FOE_OK,
+        mp_cost: 15,
+        aoe: AoE::None,
+        implementation: &MightySkillImpl {
+            range: 4,
+            equip_slot: EquipSlot::Weapon,
+        },
+    },
+    // Icewolf Bite: 4 range, 0 AoE, 15 MP. Effect: Break target's accessory; If successful Damage (PA * WP).
+    Ability {
+        name: "Icewolf Bite",
+        flags: FOE_OK,
+        mp_cost: 15,
+        aoe: AoE::None,
+        implementation: &MightySkillImpl {
+            range: 4,
+            equip_slot: EquipSlot::Accessory,
+        },
+    },
 ];
+
+struct MightySkillImpl {
+    equip_slot: EquipSlot,
+    range: u8,
+}
+
+impl AbilityImpl for MightySkillImpl {
+    fn consider<'a>(
+        &self,
+        actions: &mut Vec<Action<'a>>,
+        ability: &'a Ability<'a>,
+        _sim: &Simulation<'a>,
+        user: &Combatant<'a>,
+        target: &Combatant<'a>,
+    ) {
+        if target.monster() {
+            return;
+        }
+        if user.main_hand().map_or(true, |eq| {
+            eq.weapon_type != Some(WeaponType::Sword)
+                && eq.weapon_type != Some(WeaponType::KnightSword)
+        }) {
+            return;
+        }
+        if target.get_equip(self.equip_slot).is_none() {
+            return;
+        }
+        actions.push(Action::new(ability, self.range, None, target.id()));
+    }
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+        let target = sim.combatant(target_id);
+        if target.get_equip(self.equip_slot).is_some() {
+            let target = sim.combatant_mut(target_id);
+            target.break_equip(self.equip_slot);
+            let old_equip = target.get_equip(self.equip_slot).unwrap();
+            sim.log_event(Event::Broke(target_id, old_equip));
+            let user = sim.combatant(user_id);
+            let target = sim.combatant(target_id);
+
+            let mut xa = mod_3_formula_xa(user.pa() as i16, user, target, false, false);
+            if sim.roll_auto_fail() < 0.05 {
+                xa += sim.roll_inclusive(1, xa.max(1)) - 1;
+            }
+            let damage = xa * (user.main_hand().unwrap().wp as i16);
+            sim.change_target_hp(target_id, damage, Source::Ability);
+        }
+    }
+}
 
 struct AbsorbSwordImpl {
     hp_not_mp: bool,
