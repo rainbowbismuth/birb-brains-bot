@@ -73,11 +73,9 @@ impl AbilityImpl for SnakeCarrierImpl {
         let amount = target.hp() / 4;
         sim.change_target_hp(target_id, amount, Source::Ability);
         sim.change_target_hp(user_id, -amount, Source::Ability);
-        for condition in self.conditions {
-            if sim.roll_auto_succeed() < 0.25 {
-                sim.add_condition(target_id, *condition, Source::Ability);
-            }
-        }
+        let idx = sim.roll_inclusive(0, (self.conditions.len() - 1) as i16);
+        let cond = self.conditions[idx as usize];
+        sim.add_condition(target_id, cond, Source::Ability);
         sim.try_countergrasp(user_id, target_id);
     }
 }
