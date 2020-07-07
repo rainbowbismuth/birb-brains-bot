@@ -1,13 +1,11 @@
 use crate::sim::actions::common::{mod_5_formula, AddConditionSpellImpl};
 use crate::sim::actions::monster::{BadBreathImpl, Energize, UlmaguestImpl};
-use crate::sim::actions::punch_art::Pummel;
-use crate::sim::actions::talk_skill::ConditionTalkSkillImpl;
+
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-use crate::sim::attack::AttackImpl;
-use crate::sim::common::{do_hp_heal, mod_2_formula_xa, mod_5_formula_xa};
+
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, CAN_BE_REFLECTED,
-    CASTER_IMMUNE, SILENCEABLE, TARGET_NOT_SELF, TARGET_SELF_ONLY, TRIGGERS_HAMEDO,
+    CASTER_IMMUNE, SILENCEABLE,
 };
 
 pub const BYBLOS_ABILITIES: &[Ability] = &[
@@ -211,12 +209,12 @@ impl AbilityImpl for Manaburn {
         actions: &mut Vec<Action<'a>>,
         ability: &'a Ability<'a>,
         _sim: &Simulation<'a>,
-        user: &Combatant<'a>,
+        _user: &Combatant<'a>,
         target: &Combatant<'a>,
     ) {
         actions.push(Action::new(ability, self.range, None, target.id()));
     }
-    fn perform<'a>(&self, sim: &mut Simulation<'a>, user_id: CombatantId, target_id: CombatantId) {
+    fn perform<'a>(&self, sim: &mut Simulation<'a>, _user_id: CombatantId, target_id: CombatantId) {
         let target = sim.combatant(target_id);
         sim.change_target_hp(target_id, target.mp(), Source::Ability);
     }

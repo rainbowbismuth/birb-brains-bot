@@ -1,10 +1,9 @@
-use crate::sim::actions::common::AddConditionSpellImpl;
 use crate::sim::actions::monster::ChocoEsunaImpl;
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK, SILENCEABLE};
+use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
 use crate::sim::common::{mod_5_formula_xa, mod_6_formula, ElementalDamageSpellImpl, EmpowerImpl};
 use crate::sim::{
     instant_aoe_consider, AoE, Combatant, CombatantId, Condition, Element, Event, Simulation,
-    Source, CASTER_IMMUNE, STATS_ABILITY, TARGET_NOT_SELF, TARGET_SELF_ONLY,
+    Source, CASTER_IMMUNE, STATS_ABILITY, TARGET_SELF_ONLY,
 };
 
 pub const PISCO_ABILITIES: &[Ability] = &[

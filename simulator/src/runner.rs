@@ -243,7 +243,7 @@ pub fn run_all_matches(
         match_up_paths.truncate(most_recent as usize);
     }
 
-    let mut data = Mutex::new(ResultsData {
+    let data = Mutex::new(ResultsData {
         results: HashMap::new(),
         worst_count: 0,
         overall_involves: HashMap::new(),
@@ -388,7 +388,7 @@ pub fn run_all_matches(
         });
     bar.finish();
 
-    let mut data = data.lock().unwrap();
+    let data = data.lock().unwrap();
 
     println!("\nmatch {}:", data.replay_path.to_string_lossy());
     for line in &data.replay_data {

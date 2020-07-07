@@ -1,12 +1,7 @@
-use crate::sim::actions::monster::ChocoMeteorImpl;
-use crate::sim::actions::punch_art::DamagePunchArt;
-use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-use crate::sim::attack::AttackImpl;
-use crate::sim::common::{do_hp_heal, mod_2_formula_xa, mod_5_formula_xa};
-use crate::sim::{
-    AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, CASTER_IMMUNE,
-    TARGET_NOT_SELF, TARGET_SELF_ONLY, TRIGGERS_HAMEDO,
-};
+use crate::sim::actions::{Ability, AbilityImpl, Action, FOE_OK};
+
+use crate::sim::common::mod_5_formula_xa;
+use crate::sim::{AoE, Combatant, CombatantId, Condition, Element, Simulation, Source};
 
 pub const SERPENTARIUS_ABILITIES: &[Ability] = &[
     // Snake Carrier: 1 range, 0 AoE. Effect: AbsorbHP (25)%; Add Undead, Darkness, Confusion, Blood Suck, Oil, Frog, Poison, Charm, Sleep, Death Sentence (Random).

@@ -1,7 +1,6 @@
 use crate::sim::actions::punch_art::DamagePunchArt;
 use crate::sim::actions::{Ability, AbilityImpl, Action, ALLY_OK, FOE_OK};
-use crate::sim::attack::AttackImpl;
-use crate::sim::common::{do_hp_heal, mod_2_formula_xa, mod_5_formula_xa};
+
 use crate::sim::{
     AoE, Combatant, CombatantId, Condition, Element, Simulation, Source, CASTER_IMMUNE,
     TARGET_NOT_SELF, TARGET_SELF_ONLY, TRIGGERS_HAMEDO,
