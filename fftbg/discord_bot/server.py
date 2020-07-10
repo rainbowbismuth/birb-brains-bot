@@ -155,6 +155,17 @@ def run_server():
 
     loop.create_task(listen_loop())
 
+    async def thanks_listener(message: discord.Message):
+        if message.author == bot.user:
+            return
+        if not isinstance(message.channel, discord.DMChannel):
+            return
+        split = message.content.lower().split()
+        if 'thank' in split or 'thanks' in split or 'ty' in split:
+            await message.author.send(f"You're welcome :relaxed:")
+
+    bot.add_listener(thanks_listener, 'on_message')
+
     @bot.command()
     async def help(ctx):
         await send(ctx, f"""
