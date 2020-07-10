@@ -13,6 +13,8 @@ from pathlib import Path
 
 import asyncio
 
+from fftbg.bird.msg_types import BIRD_GOING_ALL_IN
+
 LOG = logging.getLogger(__name__)
 
 DIV_BY_ZERO_EMOTE = ''
@@ -128,6 +130,13 @@ def run_server():
             await user.send(f'{CHIP_EMOTE} The {victory_team} team is victorious!'
                             f' ({int(minutes_left)} minutes left on this alert)')
 
+    async def notify_bird_all_in(new_balance):
+        notifications = memory.find_triggered_event_notifications('all_in')
+        LOG.info(f'Sending out {len(notifications)} bird all-in notifications')
+        for (user_id, minutes_left) in notifications:
+            user = bot.get_user(user_id)
+            await user.send(f'{EMPOWERED_EMOTE} I\'m going all-in right now at {new_balance:,d} G!!!')
+
     async def listen_loop():
         while True:
             await asyncio.sleep(1)
@@ -152,6 +161,8 @@ def run_server():
                     await notify_new_match(msg['left_team'], msg['right_team'])
                 elif msg.get('type') == msg_types.RECV_TEAM_VICTORY:
                     await notify_match_ended(msg['team'])
+                elif msg.get('type') == BIRD_GOING_ALL_IN:
+                    await notify_bird_all_in(int(msg['balance']))
 
     loop.create_task(listen_loop())
 
@@ -205,6 +216,9 @@ def run_server():
 > {cmd_prefix_help}alert victory __hours__
 >    - Alert me when a match ends
 
+> {cmd_prefix_help}alert allin __days__
+>    - Alert me when bird is about to go all-in!
+
 > {cmd_prefix_help}alert off
 >    - Turn off any tournament or match alerts you had turned on
         """)
@@ -244,6 +258,12 @@ def run_server():
     async def champion(ctx, hours: int):
         await refresh_event(
             ctx, ctx.author.id, ctx.author.display_name, 'champion_match', hours, 'a championship match starts')
+
+    @alert.command()
+    async def allin(ctx, days: int):
+        hours = 24 * days
+        await refresh_event(
+            ctx, ctx.author.id, ctx.author.display_name, 'all_in', hours, 'bird goes all-in')
 
     @alert.command()
     async def off(ctx):

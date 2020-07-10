@@ -8,6 +8,7 @@ import fftbg.event_stream
 import fftbg.server
 import fftbg.tournament
 import fftbg.twitch.msg_types as msg_types
+from fftbg.bird.msg_types import BIRD_GOING_ALL_IN
 from fftbg.bird.bird import Bird
 from fftbg.brains.msg_types import NEW_PREDICTIONS
 from fftbg.event_stream import EventStream
@@ -91,6 +92,12 @@ class Server:
         if not self.go_all_in and new_balance >= MAX_BET:
             self.go_all_in = True
             self.say_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!! kwehSpook )')
+            msg = {
+                'type': BIRD_GOING_ALL_IN,
+                'balance': new_balance
+            }
+            LOG.info(f'{msg}')
+            self.event_stream.publish(msg)
 
     async def prepare_to_bet(self, betting_delay, left_team, right_team):
         await asyncio.sleep(betting_delay)

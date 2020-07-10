@@ -15,6 +15,9 @@ class EventStream:
         self.stream: Stream = db.Stream(EVENT_STREAM)
         self.sender_tag: str = fftbg.server.get_name()
         self.last_id = '$'
+        messages = self.stream.revrange('+', '-', 1)
+        if messages:
+            self.last_id = messages[-1][0]
 
     def publish(self, msg: dict):
         msg = copy.copy(msg)
