@@ -20,7 +20,10 @@ SKILL_PURCHASE = re.compile(r'([\w\d_]+), you bought the ([\w\d\-+]+) skill')
 SKILL_LEARN = re.compile(r'([\w\d_]+),.*?You learned the skill: ([\w\d\-+]+)!')
 SKILL_GIFT = re.compile(r'Due to a generous donation from ([\w\d_]+), ([\w\d_]+) has been bestowed the ([\w\d\-+]+) '
                         r'skill')
-
+SKILL_BESTOW_1 = re.compile(r'([\w\d_]+)! You have been bestowed the ([\w\d\-+]+) skill free of charge!')
+SKILL_BESTOW_2 = re.compile(r'([\w\d\-+]+) skill free of charge! Additionally, ([\w\d_]+)')
+SKILL_RANDOM = re.compile(r'([\w\d_]+), you rolled the dice and bought the ([\w\d\-+]+)')
+SKILL_REMEMBERED = re.compile(r'([\w\d_]+), you advanced to Level ([\d,]+)! Your gil floor has increased to ([\d,]+)! You remembered the skill: ([\w\d\-+]+)!')
 
 def parse_comma_int(s):
     return int(s.replace(',', ''))

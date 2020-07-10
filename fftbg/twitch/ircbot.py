@@ -178,6 +178,42 @@ class IRCBot(commands.Bot):
                 LOG.info(f'{msg}')
                 self.event_stream.publish(msg)
 
+        skill_bestow_1 = parse.SKILL_BESTOW_1.findall(message.content)
+        if skill_bestow_1:
+            for (user, skill) in skill_bestow_1:
+                msg = {'type': msg_types.RECV_SKILL_BESTOW,
+                       'user': user,
+                       'skill': skill}
+                LOG.info(f'{msg}')
+                self.event_stream.publish(msg)
+
+        skill_bestow_2 = parse.SKILL_BESTOW_2.findall(message.content)
+        if skill_bestow_2:
+            for (skill, user) in skill_bestow_2:
+                msg = {'type': msg_types.RECV_SKILL_BESTOW,
+                       'user': user,
+                       'skill': skill}
+                LOG.info(f'{msg}')
+                self.event_stream.publish(msg)
+
+        skill_random = parse.SKILL_RANDOM.findall(message.content)
+        if skill_random:
+            for (user, skill) in skill_random:
+                msg = {'type': msg_types.RECV_SKILL_RANDOM,
+                       'user': user,
+                       'skill': skill}
+                LOG.info(f'{msg}')
+                self.event_stream.publish(msg)
+
+        skill_remembered = parse.SKILL_REMEMBERED.findall(message.content)
+        if skill_remembered:
+            for (user, _, _, skill) in skill_remembered:
+                msg = {'type': msg_types.RECV_SKILL_REMEMBERED,
+                       'user': user,
+                       'skill': skill}
+                LOG.info(f'{msg}')
+                self.event_stream.publish(msg)
+
         balance_match = parse.BALANCE_RE.findall(message.content)
         if balance_match:
             for (user, balance) in balance_match:

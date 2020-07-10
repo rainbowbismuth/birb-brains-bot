@@ -28,6 +28,12 @@ def test_regular_expressions():
                                      'learned the skill: DrawOut!')
     assert parse.SKILL_GIFT.findall('Due to a generous donation from Lydian_C, porotact has been bestowed the Bomb '
                                     'skill free of charge!')
+    msg = ("Congratulations, laserjesus1337! You have been bestowed the Explosive skill free of charge!"
+           " Additionally, magicbottle has also received it from the subscriber-only pool!")
+    assert parse.SKILL_BESTOW_1.findall(msg)
+    assert parse.SKILL_BESTOW_2.findall(msg)
+    assert parse.SKILL_RANDOM.findall('gooseyourself, you rolled the dice and bought the FeatherMantle skill for 19,900G.')
+    assert parse.SKILL_REMEMBERED.findall('E_Ballard, you advanced to Level 8! Your gil floor has increased to 332! You remembered the skill: BladeGrasp!')
 
 
 def test_bet_regular_expressions():

@@ -15,12 +15,13 @@ import asyncio
 
 LOG = logging.getLogger(__name__)
 
-DIV_BY_ZERO_EMOTE = '<:fftbgDivideByZero:701439212246794291>'
-SAD_BIRD_EMOTE = '<:fftbgSadBirb:669566649434767360>'
-BEHE_CHAMP_EMOTE = '<:fftbgBeheChamp:680376858705133622>'
-CHARM_EMOTE = '<:fftbgCharm:693187279308456007>'
-SONG_OF_MY_PEOPLE_EMOTE = '<:fftbgSongOfMyPeople:670788872363311104>'
-CHIP_EMOTE = '<:fftbgChip:693187102350770216>'
+DIV_BY_ZERO_EMOTE = ''
+SAD_BIRD_EMOTE = ''
+BEHE_CHAMP_EMOTE = ''
+CHARM_EMOTE = ''
+SONG_OF_MY_PEOPLE_EMOTE = ''
+CHIP_EMOTE = ''
+EMPOWERED_EMOTE = ''
 MAGIC_BOTTLE = 668345361420517377
 
 
@@ -85,6 +86,13 @@ def run_server():
         if gifter:
             await user.send(f'Oh, and don\'t forget to thank {gifter} for the gift! {CHARM_EMOTE}')
 
+    async def notify_skill_remembered(twitch_user_name, skill):
+        user_id = memory.find_discord_id_from_twitch(twitch_user_name)
+        if not user_id:
+            return
+        user = bot.get_user(user_id)
+        await user.send(f'{EMPOWERED_EMOTE} You remembered {skill}, heck yeah!')
+
     async def notify_new_tournament():
         notifications = memory.find_triggered_event_notifications('tournament')
         LOG.info(f'Sending out {len(notifications)} new tournament notifications')
@@ -96,10 +104,21 @@ def run_server():
     async def notify_new_match(left_team, right_team):
         notifications = memory.find_triggered_event_notifications('new_match')
         LOG.info(f'Sending out {len(notifications)} new match notifications')
+        notified = set()
         for (user_id, minutes_left) in notifications:
+            notified.add(user_id)
             user = bot.get_user(user_id)
             await user.send(f'{CHIP_EMOTE} The {left_team} vs {right_team} match is about to begin!'
                             f' ({int(minutes_left)} minutes left on this alert)')
+
+        if right_team == 'champion':
+            notifications = memory.find_triggered_event_notifications('champion_match')
+            for (user_id, minutes_left) in notifications:
+                if user_id in notified:
+                    continue
+                user = bot.get_user(user_id)
+                await user.send(f'{CHIP_EMOTE} The {left_team} vs {right_team} match is about to begin!'
+                                f' ({int(minutes_left)} minutes left on this alert)')
 
     async def notify_match_ended(victory_team):
         notifications = memory.find_triggered_event_notifications('match_ended')
@@ -121,8 +140,14 @@ def run_server():
                     await notify_skill_obtained(msg['user'], msg['skill'], verb='bought')
                 elif msg.get('type') == msg_types.RECV_SKILL_LEARN:
                     await notify_skill_obtained(msg['user'], msg['skill'], verb='learned')
+                elif msg.get('type') == msg_types.RECV_SKILL_BESTOW:
+                    await notify_skill_obtained(msg['user'], msg['skill'], verb='received')
+                elif msg.get('type') == msg_types.RECV_SKILL_RANDOM:
+                    await notify_skill_obtained(msg['user'], msg['skill'], verb='bought')
                 elif msg.get('type') == msg_types.RECV_SKILL_GIFT:
                     await notify_skill_obtained(msg['user'], msg['skill'], verb='received', gifter=msg['gifter'])
+                elif msg.get('type') == msg_types.RECV_SKILL_REMEMBERED:
+                    await notify_skill_remembered(msg['user'], msg['skill'])
                 elif msg.get('type') == msg_types.RECV_BETTING_OPEN:
                     await notify_new_match(msg['left_team'], msg['right_team'])
                 elif msg.get('type') == msg_types.RECV_TEAM_VICTORY:
@@ -148,6 +173,9 @@ def run_server():
 > {cmd_prefix_help}skills add __skill 1__ ... __skill n__
 >    - Add skill drops to your notification list
 
+> {cmd_prefix_help}skills allbut __skill 1__ ... __skill n__
+>    - Add every skill drop to your list except the ones you list here
+
 > {cmd_prefix_help}skills remove __skill 1__ ... __skill n__
 >    - Remove skill drops from your notification list
 
@@ -159,6 +187,9 @@ def run_server():
 
 > {cmd_prefix_help}alert match __hours__
 >    - Alert me when betting for a match opens
+
+> {cmd_prefix_help}alert champion __hours__
+>    - Alert me when betting for a championship match opens
 
 > {cmd_prefix_help}alert victory __hours__
 >    - Alert me when a match ends
@@ -197,6 +228,11 @@ def run_server():
     @alert.command()
     async def victory(ctx, hours: int):
         await refresh_event(ctx, ctx.author.id, ctx.author.display_name, 'match_ended', hours, 'a match ends')
+
+    @alert.command()
+    async def champion(ctx, hours: int):
+        await refresh_event(
+            ctx, ctx.author.id, ctx.author.display_name, 'champion_match', hours, 'a championship match starts')
 
     @alert.command()
     async def off(ctx):
@@ -263,6 +299,25 @@ def run_server():
         await send(ctx, f'{display_name}, you got it! You are subscribed to {count} skill drops now.')
 
     @skills.command()
+    async def allbut(ctx, *skills):
+        user_id = ctx.author.id
+        display_name = ctx.author.display_name
+
+        (bad_skills, good_skills) = massage_skills(skills)
+        if not (bad_skills or good_skills):
+            await send(ctx, f'{display_name}, you need to list some skill drops with this command!')
+            return
+
+        if bad_skills:
+            await send(ctx, f'{display_name}, these aren\'t skill drops: {", ".join(bad_skills)}')
+            return
+
+        diff = all_skill_drops - set(good_skills)
+        memory.add_notify_skill_drop_requests(user_id, display_name, list(diff))
+        count = len(memory.get_skill_drop_notify_requests(user_id))
+        await send(ctx, f'{display_name}, you got it! You are subscribed to {count} skill drops now.')
+
+    @skills.command()
     async def remove(ctx, *skills):
         user_id = ctx.author.id
         display_name = ctx.author.display_name
@@ -296,6 +351,12 @@ def run_server():
         if ctx.author.id != MAGIC_BOTTLE:
             return
         await notify_skill_obtained(username, skill, verb='stole', gifter=gifter)
+
+    @bot.command()
+    async def test_skill_remember(ctx, username: str, skill: str):
+        if ctx.author.id != MAGIC_BOTTLE:
+            return
+        await notify_skill_remembered(username, skill)
 
     @bot.command()
     async def test_event(ctx, event: str):
