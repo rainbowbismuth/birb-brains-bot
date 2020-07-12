@@ -1547,5 +1547,5 @@ pub fn combatant_submerged(tile: &Tile, combatant: &Combatant) -> bool {
 }
 
 pub fn tile_height(tile: &Tile) -> f32 {
-    (tile.height as f32 + tile.slope_height as f32 / 2.0) - tile.depth as f32
+    tile.height as f32 + tile.slope_height as f32 / 2.0
 }
