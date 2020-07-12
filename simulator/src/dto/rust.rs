@@ -319,7 +319,7 @@ impl Equipment {
         equipment
             .permanent
             .iter()
-            .for_each(|cond| new_equipment.initial |= Condition::parse(cond).unwrap().flag());
+            .for_each(|cond| new_equipment.permanent |= Condition::parse(cond).unwrap().flag());
         equipment
             .cancels
             .iter()

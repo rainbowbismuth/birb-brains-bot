@@ -17,6 +17,7 @@ def test_parse_equipment():
     assert patch.get_equipment('Gold Shield').magic_ev != 0
     assert patch.get_equipment('Cursed Ring').speed_bonus == 1
     assert 'Undead' in patch.get_equipment('Cursed Ring').permanent
+    assert 'Haste' in patch.get_equipment('Setiemson').permanent
     assert 'Ice' in patch.get_equipment('Ice Rod').strengthens
     assert 'Holy' in patch.get_equipment('108 Gems').strengthens
     assert 'Earth' in patch.get_equipment('Defense Armlet').halves
