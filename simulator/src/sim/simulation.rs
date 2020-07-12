@@ -153,11 +153,32 @@ impl<'a> Simulation<'a> {
         self.phase_status_check();
         self.phase_slow_action_charging();
         if self.slow_actions {
-            self.phase_slow_action_resolve();
+            self.phase_slow_action_resolve(false);
         }
         self.phase_ct_charging();
         if self.active_turns {
             self.phase_active_turn_resolve();
+        }
+    }
+
+    pub fn slow_actions_remaining(&self) -> bool {
+        for combatant in &self.combatants {
+            if combatant.stop() {
+                continue;
+            }
+            if combatant.ctr_action.is_some() {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn run_slow_actions(&mut self) {
+        while self.slow_actions_remaining() {
+            self.phase_slow_action_charging();
+            if self.slow_actions {
+                self.phase_slow_action_resolve(true);
+            }
         }
     }
 
@@ -199,7 +220,7 @@ impl<'a> Simulation<'a> {
         self.slow_actions = slow_action_ready;
     }
 
-    pub fn phase_slow_action_resolve(&mut self) {
+    pub fn phase_slow_action_resolve(&mut self, slow_action_only_mode: bool) {
         for c_id in &COMBATANT_IDS_TURN_RESOLVE {
             let combatant = self.combatant_mut(*c_id);
             if combatant.stop() {
@@ -215,6 +236,11 @@ impl<'a> Simulation<'a> {
                 perform_action_slow(self, *c_id, slow_action.action);
 
                 let combatant = self.combatant_mut(*c_id);
+
+                if slow_action_only_mode {
+                    combatant.ctr_action = None;
+                    continue;
+                }
 
                 if combatant.performing() {
                     let mut sa = combatant.ctr_action.as_mut().unwrap();
@@ -635,11 +661,16 @@ impl<'a> Simulation<'a> {
 
         let ignore_confusion = self.enemy_team_only_confused(user);
         let basis = {
+            let mut cloned = self.prediction_clone();
+            cloned.run_slow_actions();
+            ai_target_value_sum(user, &cloned.combatants, ignore_confusion)
+        };
+
+        {
             let mut actions = self.actions.borrow_mut();
             actions.clear();
             ai_consider_actions(&mut actions, self, user, targets);
-            ai_target_value_sum(user, &self.combatants, ignore_confusion)
-        };
+        }
 
         let best_action = self.ai_choose_best_action(user_id, basis, ignore_confusion);
         let mut targeted_self = false;
@@ -756,6 +787,7 @@ impl<'a> Simulation<'a> {
                     }
                 }
                 perform_action(&mut simulated_world, user_id, *action);
+                simulated_world.run_slow_actions();
                 let new_value = ai_target_value_sum(
                     simulated_world.combatant(user_id),
                     &simulated_world.combatants,
@@ -792,6 +824,13 @@ impl<'a> Simulation<'a> {
                 {
                     continue;
                 }
+
+                for combatant in &mut self.combatants {
+                    combatant.damage_took_during_active_turn = None;
+                }
+                let user = self.combatant(user_id);
+                let possible_mime = self.combatant(*c_id);
+
                 if let Some(original_target_panel) = action.target.to_panel(self) {
                     let original_vec = user.panel.location() - original_target_panel.location();
                     let original_facing = user.panel.facing_towards(original_target_panel);
