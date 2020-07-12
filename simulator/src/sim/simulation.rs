@@ -543,7 +543,7 @@ impl<'a> Simulation<'a> {
 
     fn ai_thirteen_rule(&self) -> bool {
         let roll: f32 = self.rng.borrow_mut().gen();
-        roll <= (0.137 * 3.0)
+        roll <= (0.137 * 5.0)
     }
 
     fn ai_can_be_cowardly(&self, user: &Combatant) -> bool {
