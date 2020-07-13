@@ -51,7 +51,7 @@ NUMERIC = ['Map-Area', 'Sim-Win-Percent', 'Sim-Win-Percent-Op'] + SURFACE_TYPES 
 SKIP_ID_RANGES = [
     (1585741145317, 1585787081769)  # April fools, 2020.
 ]
-BAD_TOURNAMENTS = {1594125397508}
+BAD_TOURNAMENTS = {1594125397508, 1594172557423}
 
 
 def _calculate_hypothetical_match_ups():
