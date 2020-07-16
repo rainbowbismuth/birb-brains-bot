@@ -1,0 +1,152 @@
+diff --git a/../2020-07-03/infoability.txt b/infoability.txt
+index 0de2d3e..a67bec4 100644
+--- a/../2020-07-03/infoability.txt
++++ b/infoability.txt
+@@ -149,7 +149,7 @@ Yell: 3 range, 0 AoE. Effect: +1 Speed.
+ Cheer Up: 3 range, 0 AoE. Hit: (MA + 85)%. Effect: Add Defending, Float, Reraise, Regen, Faith (Separate).
+ Wish: 1 range, 0 AoE. Effect: Heal (CasterMaxHP * 2 / 5); DamageCaster (CasterMaxHP / 5).
+ Scream: 0 range, 0 AoE, 2 CT. Effect: +3 Brave, +1 PA, +1 MA, +1 Speed.
+-Ultima: 5 range, 1 AoE, 5 CT, 10 MP. Element: Holy. Effect: Damage Faith(MA * 25).
++Ultima: 5 range, 1 AoE, 5 CT, 9 MP. Element: Holy. Effect: Damage Faith(MA * 25).
+ Stasis Sword: 1 range, 1 AoE, 2 CT, 18 MP. Effect: Damage (PA * (WP + 1)); Chance to Add Stop.
+ Justice Sword: 2 range, 0 AoE, 2 CT, 20 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Death Sentence.
+ Surging Sword: 1 range, 1 AoE, 3 CT, 22 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Silence.
+@@ -171,19 +171,19 @@ Dragon Pit: 4 range, 1 AoE, 3 CT, 10 MP. Element: Water. Hit: Random(1,9) times.
+ Void Storage: 4 range, 1 AoE, 4 CT, 15 MP. Element: Dark. Hit: Random(1,9) times. Effect: Damage (((100 - CasterFaith) / 100) * ((100 - TargetFaith) / 100) * (MA + 39) * MA / 2); Chance to Add Darkness, Confusion, Silence, Frog, Poison, Slow, Sleep (Random).
+ Nether Demon: 4 range, 1 AoE, 3 CT, 10 MP. Element: Earth. Hit: Random(1,9) times. Effect: Damage (((100 - CasterFaith) / 100) * ((100 - TargetFaith) / 100) * (MA + 66) * MA / 2).
+ Tickle: 1 range, 0 AoE. Hit: (MA + 55)%. Effect: Cancel Charging, Defending, Performing, Confusion, Charm, Sleep.
+-Vengeance: 5 range, 0 AoE. EffecT: Damage (CasterMaxHP - CasterCurrentHP).
+-Manaburn: 5 range, 0 AoE. EffecT: Damage (TargetCurrentMP).
++Vengeance: 5 range, 0 AoE. Effect: Damage (CasterMaxHP - CasterCurrentHP).
++Manaburn: 5 range, 0 AoE. Effect: Damage (TargetCurrentMP).
+ Stabilize Time: 4 range, 1 AoE, 1 CT, 14 MP. Hit: Faith(MA + 190)%. Effect: Cancel Float, Haste, Slow, Stop, Don't Move, Reflect, Death Sentence.
+-Bio Tenebris: 4 range, 1 AoE, 3 CT, 8 MP. Element: Wind. Effect: Damage Faith(MA * 12); Chance to Add Darkness.
+-Bio Venenum: 4 range, 1 AoE, 3 CT, 8 MP. Element: Water. Effect: Damage Faith(MA * 12); Chance to Add Poison.
+-Bio Oleum: 4 range, 1 AoE, 3 CT, 8 MP. Element: Earth. Effect: Damage Faith(MA * 12); Chance to Add Oil.
++Bio Tenebris: 4 range, 1 AoE, 3 CT, 8 MP. Element: Wind. Effect: Damage Faith(MA * 13); Chance to Add Darkness.
++Bio Venenum: 4 range, 1 AoE, 3 CT, 8 MP. Element: Water. Effect: Damage Faith(MA * 13); Chance to Add Poison.
++Bio Oleum: 4 range, 1 AoE, 3 CT, 8 MP. Element: Earth. Effect: Damage Faith(MA * 13); Chance to Add Oil.
+ Bio Ranae: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 110)% Effect: Add Frog.
+ Bio Sanctus: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 110)% Effect: Add Slow.
+ Bio Silentium: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 120)% Effect: Add Silence.
+ Bio Lapis: 4 range, 1 AoE, 5 CT, 16 MP. Hit: Faith(MA + 110)% Effect: Add Petrify.
+-Bio Immortuos: 4 range, 2 AoE, 6 CT, 24 MP. Effect: Damage Faith(MA * 24); Chance to Add Undead.
+-Bio Mortem: 4 range, 2 AoE, 6 CT, 24 MP. Effect: Damage Faith(MA * 24); Chance to Add Death.
+-Bio Insanis: 4 range, 2 AoE, 6 CT, 24 MP. Effect: Damage Faith(MA * 24); Chance to Add Confusion.
++Bio Immortuos: 4 range, 2 AoE, 6 CT, 24 MP. Element: Water. Effect: Damage Faith(MA * 26); Chance to Add Undead.
++Bio Mortem: 4 range, 2 AoE, 6 CT, 24 MP. Element: Earth. Effect: Damage Faith(MA * 26); Chance to Add Death.
++Bio Insanis: 4 range, 2 AoE, 6 CT, 24 MP. Element: Wind. Effect: Damage Faith(MA * 26); Chance to Add Confusion.
+ Magic Barrier: 3 range, 11 CT, 35 MP. Hit: Faith(MA + 200)%. Effect: Add Reraise, Regen, Protect, Shell, Haste (All).
+ Fury: 0 range, 0 AoE. Hit: (PA + 85)%. Effect: Add Berserk, Haste (All); If successful Heal (35)%.
+ Leg Aim: weapon range, 0 AoE. Hit: (Speed + 44)%. Effect: Add Don't Move.
+@@ -205,83 +205,82 @@ Meteorain: 3 range, 2 AoE, 9 CT. Effect: Damage (MA * 26).
+ Finish Touch: 3 range, 1 AoE, 7 CT, 25 MP. Effect: Add Death, Petrify, Stop (Random).
+ Omnislash: 3 range, 2 AoE, 11 CT. Effect: Damage (MA * 40).
+ Cherry Blossom: 2 range, 2 AoE, 15 CT. Effect: Damage (MA * 60).
+-Choco Attack: 1 range, 0 AoE. Effect: Normal Attack.
++Choco Attack: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Choco Ball: 4 range, 0 AoE. Element: Water. Effect: Damage (PA / 2 * PA).
+ Choco Meteor: 5 range, 0 AoE. Effect: Damage (MA * 4).
+ Choco Esuna: 0 range, 1 AoE. Hit: (MA + 65)%. Effect: Cancel Petrify, Darkness, Silence, Poison, Stop, Don't Move, Don't Act.
+ Choco Cure: 0 range, 1 AoE. Effect: Heal (MA * 3).
+-Tackle: 1 range, 0 AoE. Effect: Normal Attack.
++Tackle: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Goblin Punch: 1 range, 0 AoE. Hit: (MA + 43)%. Effect: Damage (CasterMaxHP - CasterCurrentHP).
+ Turn Punch: 0 range, 1 AoE. Effect: Damage ((PA + 4) / 2 * PA).
+ Eye Gouge: 1 range, 0 AoE. Hit: (MA + 55)%. Effect: Add Darkness, Confusion (All).
+ Mutilate: 1 range, 0 AoE. Hit: (MA + 29)%. Effect: AbsorbHP (66)%.
+-Bite: 1 range, 0 AoE. Effect: Normal Attack; Chance to Add Oil.
++Bite: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)); Chance to Add Oil.
+ Small Bomb: 4 range, 0 AoE. Element: Dark. Effect: Damage Faith(MA * 9).
+ Self Destruct: 0 range, 2 AoE. Effect: Adds Death to Caster; Damage (CasterMaxHP - CasterCurrentHP); Adds Oil.
+ Flame Attack: 3 range, 0 AoE. Element: Fire. Effect: Damage (MA * 4).
+ Spark: 0 range, 2 AoE. Element: Fire. Effect: Damage (MA * 3).
+-Scratch: 1 range, 0 AoE. Effect: Normal Attack.
++Scratch: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Cat Kick: 1 range, 0 AoE. Effect: Damage (Random(1,8) * PA); Chance to Knockback.
+ Blaster: 3 range, 0 AoE. Hit: (MA + 35)%. Effect: Add Petrify, Stop, Sleep (Random).
+ Poison Nail: 1 range, 0 AoE. Hit: (MA + 55)%. Effect: Add Poison.
+ Blood Suck: 1 range, 0 AoE. Effect: AbsorbHP (25)%; Chance to Add Blood Suck.
+-Tentacle: 1 range, 0 AoE. Effect: Normal Attack.
++Tentacle: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Black Ink: 2 range, 2 AoE (line). Hit: (MA + 50)%. Effect: Add Darkness, Oil (All).
+ Odd Soundwave: 0 range, 2 AoE. Effect: Cancel Charging, Performing, Float, Reraise, Transparent, Regen, Protect, Shell, Haste, Faith, Reflect.
+ Mind Blast: 3 range, 1 AoE. Hit: (MA + 45)%. Effect: Add Confusion, Berserk (Random).
+ Level Blast: 3 range, 0 AoE. Effect: +1 Brave, +1 PA, +1 MA, +1 Speed.
+-Knife Hand: 1 range, 0 AoE. Effect: Normal Attack; Chance to Add Undead.
++Knife Hand: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)); Chance to Add Undead.
+ Thunder Soul: 3 range, 0 AoE. Element: Lightning. Effect: Damage (MA * 3).
+ Aqua Soul: 3 range, 0 AoE. Element: Water. Effect: Damage (MA * 3).
+ Ice Soul: 3 range, 0 AoE. Element: Ice. Effect: Damage (MA * 3).
+ Wind Soul: 3 range, 0 AoE. Element: Wind. Effect: Damage (MA * 4).
+-Throw Spirit: 4 range, 0 AoE. Effect: Normal Attack; Chance to Add Death Sentence.
++Throw Spirit: 4 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)); Chance to Add Death Sentence.
+ Zombie Touch: 1 range, 0 AoE. Hit: (MA + 45)%. Effect: Add Undead.
+ Sleep Touch: 1 range, 0 AoE. Hit: (MA + 40)%. Effect: Add Sleep.
+ Drain Touch: 1 range, 0 AoE. Hit: (MA + 60)%. Effect: AbsorbHP (34)%
+ Grease Touch: 1 range, 0 AoE. Hit: (MA + 50)%. Effect: Add Oil, Slow (All).
+-Wing Attack: 1 range, 0 AoE. Effect: Normal Attack.
++Wing Attack: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Look of Devil: 3 range, 0 AoE. Hit: (MA + 40)%. Effect: Add Petrify, Darkness, Silence, Don't Move, Don't Act (Random).
+ Look of Fright: 3 range, 0 AoE. Hit: (MA + 50)%. Effect: -25 Brave.
+ Beam: 4 range, 0 AoE. Hit: (MA + 55)%. Effect: -2 MA.
+ Doom: 3 range, 0 AoE. Hit: (MA + 45)%. Effect: Add Death Sentence.
+-Scratch Up: 1 range, 0 AoE. Effect: Normal Attack.
++Scratch Up: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Beak: 1 range, 0 AoE. Hit: (MA + 37)%. Effect: Add Petrify.
+ Shine Lover: 3 range, 0 AoE. Hit: (PA + 65)%. Effect: DamageMP (65)%
+ Feather Bomb: 5 range, 0 AoE. Element: Wind. Effect: Damage (MA * 2).
+ Peck: 3 range, 0 AoE. Hit: (MA + 55)%. Effect: -2 PA.
+-Straight Dash: 1 range, 0 AoE. Effect: Normal Attack.
++Straight Dash: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Snort: 2 range, 0 AoE. Hit: Non-Matching Sex; (MA + 40)%. Effect: Add Charm.
+ Oink: 2 range, 0 AoE. Hit: (PA + 71)%. Effect: Cancel Death; If successful Heal (75)%.
+-Toot: 2 range, 0 AoE. Effect: Add Confusion, Sleep (Random).
++Toot: 2 range, 0 AoE. Hit: (MA + 47)%. Effect: Add Confusion, Sleep (Random).
+ Bequeath Bacon: 2 range, 0 AoE. Effect: Heal (CasterMaxHP * 2 / 5); DamageCaster (CasterMaxHP / 5).
+ Leaf Dance: 0 range, 1 AoE. Effect: Damage (MA * 5).
+ Protect Spirit: 0 range, 2 AoE. Hit: (MA + 60)%. Effect: Add Defending, Protect (All).
+ Calm Spirit: 0 range, 2 AoE. Hit: (MA + 60)%. Effect: Add Defending, Shell (All).
+-Life Spirit: 0 range, 2 AoE. Effect: Heal (MA * 4).
+ Spirit of Life: 0 range, 2 AoE. Effect: Heal (MA * 4).
+ Magic Spirit: 0 range, 2 AoE. Effect: HealMP (MA * 2).
+-Shake Off: 1 range, 0 AoE. Effect: Normal Attack.
++Shake Off: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Storm Around: 0 range, 1 AoE. Element: Lightning. Effect: Damage ((PA + 1) / 2 * PA).
+ Mimic Titan: 0 range, 2 AoE. Element: Earth. Effect: Damage (MA * 3).
+ Gather Power: 0 range, 0 AoE. Effect: +2 PA.
+ Blow Fire: 3 range, 3 AoE (line). Element: Fire. Effect: Damage (MA * 4).
+-Tendrils: 1 range, 0 AoE. Effect: Normal Attack; Chance to Add Slow.
++Tendrils: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)); Chance to Add Slow.
+ Lick: 1 range, 0 AoE. Effect: Add Reflect.
+ Goo: 2 range, 0 AoE. Hit: (MA + 60)%. Effect: Add Stop, Don't Act, Don't Move (All).
+ Bad Breath: 0 range, 2 AoE. Effect: Add Petrify, Darkness, Confusion, Silence, Oil, Frog, Poison, Sleep (Separate).
+ Moldball Virus: 2 range, 2 AoE (line). Hit: (MA + 6)%. Effect: Transform Unit into a Malboro.
+-Stab Up: 1 range, 0 AoE. Effect: Normal Attack.
++Stab Up: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Frozen Cry: 1 range, 0 AoE. Element: Ice. Effect: Damage ((PA + 2) / 2 * PA); Chance to Add Death.
+ Hurricane: 4 range, 2 AoE. Element: Wind. Hit: (MA + 50)%. Effect: Damage (35)%.
+ Ulmaguest: 4 range, 2 AoE. Effect: Damage (CasterMaxHP - CasterCurrentHP).
+ Giga Flare: 4 range, 2 AoE. Effect: Damage (MA * 7).
+-Dash: 1 range, 0 AoE. Effect: Normal Attack.
++Dash: 1 range, 0 AoE. Effect: Damage (PA * (PA * Brave / 100)).
+ Tail Swing: 1 range, 0 AoE. Effect: Damage (Random(1,15) * PA); Chance to Knockback.
+ Ice Breath: 2 range, 2 AoE (line). Element: Ice. Effect: Damage (MA * 5).
+ Fire Breath: 2 range, 2 AoE (line). Element: Fire. Effect: Damage (MA * 5).
+ Thunder Breath: 2 range, 2 AoE (line). Element: Lightning. Effect: Damage (MA * 5).
+-Triple Attack: 1 range, 1 AoE (x3 line). Effect: Normal Attack.
++Triple Attack: 1 range, 1 AoE (x3 line). Effect: Damage (PA * (PA * Brave / 100)).
+ Triple Breath: 2 range, 2 AoE (x3 line). Hit: (MA + 90)%. Effect: Damage (45)%.
+ Triple Thunder: 4 range, 1 AoE, 3 CT, 10 MP. Element: Lightning. Hit: 3 times. Effect: Damage ((MA + 12) / 2 * MA).
+ Triple Flame: 4 range, 1 AoE, 3 CT, 10 MP. Element: Fire. Hit: 3 times. Effect: Damage ((MA + 20) / 2 * MA).
+@@ -394,8 +393,8 @@ Equip Bow: Support. Allows unit to equip Bows and Crossbows. Or sometimes, extre
+ Equip Polearm: Support. Allows unit to equip Spears, Poles, and Fabrics.
+ Equip Axe: Support. Allows unit to equip Axes, Flails, and Staves.
+ Equip Gun: Support. Allows unit to equip Guns, Books, and Harps.
+-Halve MP: Support. Halves MP required for abilities.
+-No MP: Support. Removes the requirement of MP for abilities.
++Halve MP: Support. Halves the MP cost for all abilities.
++No MP: Support. Removes the MP cost for all abilities.
+ Attack UP: Support. Increases physical damage by a third.
+ Defense UP: Support. Decreases damage taken by physical attacks by a third.
+ Magic Attack UP: Support. Increases magical damage by a third.
