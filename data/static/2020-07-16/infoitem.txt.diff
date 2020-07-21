@@ -1,0 +1,62 @@
+diff --git a/../2020-06-22/infoitem.txt b/infoitem.txt
+index 82ae5f0..dfa5f73 100644
+--- a/../2020-06-22/infoitem.txt
++++ b/infoitem.txt
+@@ -22,7 +22,7 @@ Orichalcum: 6 WP, 1 range, 7% evade, Knife. Effect: Initial Haste.
+ Assassin Dagger: 8 WP, 1 range, 5% evade, Knife. Effect: Chance to Add Death Sentence.
+ Air Knife: 10 WP, 1 range, 3% evade, Knife. Element: Wind. Effect: +1 Jump.
+ Zorlin Shape: 12 WP, 1 range, 10% evade, Knife. Effect: Chance to Add Sleep.
+-Hidden Knife: 7 WP, 1 range, 10% evade, Ninja Blade. Effect: +1 Speed.
++Hidden Knife: 7 WP, 1 range, 11% evade, Ninja Blade. Effect: +1 Speed.
+ Kunai: 5 WP, 1 range, 6% evade, Ninja Blade. Effect: +1 Move.
+ Short Edge: 9 WP, 1 range, 8% evade, Ninja Blade. Effect: +1 Jump.
+ Ninja Edge: 10 WP, 1 range, 20% evade, Ninja Blade.
+@@ -71,8 +71,8 @@ Wizard Rod: 4 WP, 1 range, 20% evade, Rod. Effect: +2 MA.
+ Dragon Rod: 7 WP, 1 range, 22% evade, Rod. Effect: +1 PA; Immune Silence, Frog, Innocent; Initial Reraise.
+ Faith Rod: 6 WP, 1 range, 20% evade, Rod. Effect: Chance to Add Faith; +1 Speed, +1 Move; Immune Innocent; Initial Faith.
+ Oak Staff: 3 WP, 1 range, 18% evade, Staff. Effect: Absorb Water.
+-White Staff: 4 WP, 1 range, 15% evade, Staff. Element: Holy. Effect: Chance to Cancel Undead, Petrify, Darkness, Confusion, Silence, Blood Suck, Float, Reraise, Berserk, Frog, Poison, Regen, Protect, Shell, Haste, Slow, Stop, Innocent, Charm, Sleep, Don't Move, Don't Act, Reflect, Death Sentence.
+-Healing Staff: 5 WP (heal), 1 range, 17% evade, Staff. Effect: Initial Regen.
++White Staff: 4 WP, 1 range, 16% evade, Staff. Element: Holy. Effect: Chance to Cancel Undead, Petrify, Darkness, Confusion, Silence, Blood Suck, Float, Reraise, Berserk, Frog, Poison, Regen, Protect, Shell, Haste, Slow, Stop, Innocent, Charm, Sleep, Don't Move, Don't Act, Reflect, Death Sentence.
++Healing Staff: 6 WP (heal), 1 range, 17% evade, Staff. Effect: Initial Regen.
+ Rainbow Staff: 5 WP, 1 range, 15% evade, Staff. Element: Earth. Effect: +1 Speed.
+ Wizard Staff: 4 WP, 1 range, 15% evade, Staff. Effect: +1 MA.
+ Gold Staff: 6 WP, 1 range, 24% evade, Staff. Effect: Chance to cast Spell Absorb.
+@@ -83,20 +83,20 @@ Flame Whip: 14 WP, 1 range, 1% evade, Flail. Element: Fire. Effect: Chance to ca
+ Morning Star: 16 WP, 1 range, 4% evade, Flail.
+ Scorpion Tail: 23 WP, 1 range, 1% evade, Flail. Element: Earth. Effect: Chance to Add Oil.
+ Romanda Gun: 7 WP, 8 range, 6% evade, Gun.
+-Mythril Gun: 9 WP 7 range, 5% evade, Gun. Effect: +1 Speed.
++Mythril Gun: 9 WP, 7 range, 5% evade, Gun. Effect: +1 Speed.
+ Stone Gun: 12 WP, 6 range, 9% evade, Gun. Effect: Immune Petrify, Float; Initial Slow.
+ Blaze Gun: 13 WP, 7 range, 4% evade, Gun. Element: Fire.
+ Glacier Gun: 13 WP, 7 range, 4% evade, Gun. Element: Ice.
+ Blast Gun: 13 WP, 7 range, 4% evade, Gun. Element: Lightning.
+ Bow Gun: 4 WP, 4 range, 5% evade, Crossbow. Element: Fire. Effect: +2 PA.
+-Night Killer: 6 WP, 4 range, 5% evade, Crossbow. Effect: +1 MA; Chance to Add Darkness.
++Night Killer: 6 WP, 4 range, 13% evade, Crossbow. Effect: +1 MA; Chance to Add Darkness.
+ Snipe Bow: 11 WP, 5 range, 11% evade, Crossbow.
+ Poison Bow: 8 WP, 4 range, 5% evade, Crossbow. Effect: Chance to Add Poison.
+ Hunting Bow: 9 WP, 4 range, 5% evade, Crossbow. Effect: Chance to cast Foxbird.
+ Gastrafitis: 14 WP, 4 range, 8% evade, Crossbow. Effect: Chance to cast Noxious Gas.
+-Long Bow: 6 WP, 6 range, 1% evade, Bow.
+-Silver Bow: 7 WP, 5 range, 1% evade, Bow. Effect: +2 MA.
+-Ice Bow: 8 WP, 5 range, 3% evade, Bow. Element: Ice.
++Long Bow: 6 WP, 6 range, 2% evade, Bow.
++Silver Bow: 7 WP, 5 range, 3% evade, Bow. Effect: +2 MA.
++Ice Bow: 8 WP, 5 range, 4% evade, Bow. Element: Ice.
+ Lightning Bow: 9 WP, 5 range, 1% evade, Bow. Element: Lightning. Effect: Chance to cast Bolt 2.
+ Windslash Bow: 10 WP, 5 range, 5% evade, Bow. Element: Wind.
+ Mythril Bow: 8 WP, 5 range, 1% evade, Bow. Effect: +1 Speed.
+@@ -240,9 +240,9 @@ Jade Armlet: Accessory. Effect: Half Wind; Strengthen Earth; Immune Petrify, Sto
+ 108 Gems: Accessory. Effect: Strengthen Fire, Lightning, Ice, Wind, Earth, Water, Holy, Dark; Immune Undead, Blood Suck, Frog, Poison.
+ N-Kai Armlet: Accessory. Effect: Half Dark; Strengthen Holy; Immune Confusion, Charm.
+ Defense Armlet: Accessory. Effect: +1 PA; Half Earth; Immune Don't Move, Don't Act.
+-Small Mantle: 15% phys evade, 15% magic evade, Accessory. Effect: Half Fire.
++Small Mantle: 20% phys evade, 20% magic evade, Accessory. Effect: Half Fire.
+ Leather Mantle: 10% phys evade, 10% magic evade, Accessory. Effect: +1 Speed.
+-Wizard Mantle: 20% phys evade, 20% magic evade, Accessory. Effect: +1 MA.
++Wizard Mantle: 15% phys evade, 15% magic evade, Accessory. Effect: +1 MA.
+ Elf Mantle: 30% phys evade, 15% magic evade, Accessory.
+ Dracula Mantle: 15% phys evade, 30% magic evade, Accessory.
+ Feather Mantle: 25% phys evade, 25% magic evade, Accessory.

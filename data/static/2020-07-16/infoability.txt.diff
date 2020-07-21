@@ -1,16 +1,32 @@
-diff --git a/../2020-07-03/infoability.txt b/infoability.txt
-index 0de2d3e..a67bec4 100644
---- a/../2020-07-03/infoability.txt
+diff --git a/../2020-06-22/infoability.txt b/infoability.txt
+index 1520677..a67bec4 100644
+--- a/../2020-06-22/infoability.txt
 +++ b/infoability.txt
-@@ -149,7 +149,7 @@ Yell: 3 range, 0 AoE. Effect: +1 Speed.
+@@ -149,17 +149,17 @@ Yell: 3 range, 0 AoE. Effect: +1 Speed.
  Cheer Up: 3 range, 0 AoE. Hit: (MA + 85)%. Effect: Add Defending, Float, Reraise, Regen, Faith (Separate).
  Wish: 1 range, 0 AoE. Effect: Heal (CasterMaxHP * 2 / 5); DamageCaster (CasterMaxHP / 5).
  Scream: 0 range, 0 AoE, 2 CT. Effect: +3 Brave, +1 PA, +1 MA, +1 Speed.
 -Ultima: 5 range, 1 AoE, 5 CT, 10 MP. Element: Holy. Effect: Damage Faith(MA * 25).
+-Stasis Sword: 1 range, 1 AoE, 2 CT, 16 MP. Effect: Damage (PA * (WP + 1)); Chance to Add Stop.
+-Justice Sword: 2 range, 0 AoE, 2 CT, 18 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Death Sentence.
+-Surging Sword: 1 range, 1 AoE, 3 CT, 20 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Silence.
+-Explosion Sword: 4 range, 4 AoE (line), 2 CT, 22 MP. Effect: Damage (PA * (WP + 3)); Chance to Add Confusion.
 +Ultima: 5 range, 1 AoE, 5 CT, 9 MP. Element: Holy. Effect: Damage Faith(MA * 25).
- Stasis Sword: 1 range, 1 AoE, 2 CT, 18 MP. Effect: Damage (PA * (WP + 1)); Chance to Add Stop.
- Justice Sword: 2 range, 0 AoE, 2 CT, 20 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Death Sentence.
- Surging Sword: 1 range, 1 AoE, 3 CT, 22 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Silence.
++Stasis Sword: 1 range, 1 AoE, 2 CT, 18 MP. Effect: Damage (PA * (WP + 1)); Chance to Add Stop.
++Justice Sword: 2 range, 0 AoE, 2 CT, 20 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Death Sentence.
++Surging Sword: 1 range, 1 AoE, 3 CT, 22 MP. Effect: Damage (PA * (WP + 2)); Chance to Add Silence.
++Explosion Sword: 4 range, 4 AoE (line), 2 CT, 24 MP. Effect: Damage (PA * (WP + 3)); Chance to Add Confusion.
+ Shellburst Stab: 4 range, 0 AoE, 15 MP. Effect: Break target's body equipment; If successful Damage (PA * WP).
+ Blastar Punch: 4 range, 0 AoE, 15 MP. Effect: Break target's head equipment; If successful Damage (PA * WP).
+ Hellcry Punch: 4 range, 0 AoE, 15 MP. Effect: Break target's weapon; If successful Damage (PA * WP).
+ Icewolf Bite: 4 range, 0 AoE, 15 MP. Effect: Break target's accessory; If successful Damage (PA * WP).
+-Dark Sword: 2 range, 0 AoE, 2 CT, 12 MP. Effect: AbsorbMP (PA * WP).
+-Night Sword: 2 range, 0 AoE, 3 CT, 18 MP. Effect: AbsorbHP (PA * WP).
++Dark Sword: 2 range, 0 AoE, 2 CT, 16 MP. Effect: AbsorbMP (PA * WP).
++Night Sword: 2 range, 0 AoE, 3 CT, 20 MP. Effect: AbsorbHP (PA * WP).
+ Dark Holy: 5 range, 0 AoE, 7 CT, 40 MP. Element: Dark. Effect: Damage Faith(MA * 41).
+ Galaxy Stop: 0 range, 255 AoE, 14 CT, 66 MP. Hit: Non-Matching Zodiac; (MA + 47)%. Effect: Add Stop, Don't Act, Don't Move (All).
+ Diamond Blade: 4 range, 1 AoE, 3 CT, 10 MP. Element: Wind. Hit: Random(1,9) times. Effect: Damage ((MA + 10) * MA / 2).
 @@ -171,19 +171,19 @@ Dragon Pit: 4 range, 1 AoE, 3 CT, 10 MP. Element: Water. Hit: Random(1,9) times.
  Void Storage: 4 range, 1 AoE, 4 CT, 15 MP. Element: Dark. Hit: Random(1,9) times. Effect: Damage (((100 - CasterFaith) / 100) * ((100 - TargetFaith) / 100) * (MA + 39) * MA / 2); Chance to Add Darkness, Confusion, Silence, Frog, Poison, Slow, Sleep (Random).
  Nether Demon: 4 range, 1 AoE, 3 CT, 10 MP. Element: Earth. Hit: Random(1,9) times. Effect: Damage (((100 - CasterFaith) / 100) * ((100 - TargetFaith) / 100) * (MA + 66) * MA / 2).
