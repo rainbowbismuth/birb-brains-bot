@@ -97,9 +97,13 @@ class Bird:
 
     async def log_prediction(self, left, right):
         left_wins = None
-        while left_wins is None:
+        for _ in range(30):
             left_wins = get_prediction(self.db, self.current_tournament_id, left, right)
+            if left_wins is not None:
+                break
             await asyncio.sleep(1.0)
+        if left_wins is None:
+            raise Exception(f'never got prediction for {left} vs {right}')
 
         right_wins = 1 - left_wins
         prediction = [right_wins, left_wins]

@@ -16,8 +16,8 @@ from fftbg.event_stream import EventStream
 LOG = logging.getLogger(__name__)
 
 REMINDER_MIN = 90
-MIN_BET = 50_000  # 150_000
-MAX_BET = 25_000  # 200_000
+MIN_BET = 150_000
+MAX_BET = 200_000
 
 
 class Server:
