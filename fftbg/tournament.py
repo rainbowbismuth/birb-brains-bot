@@ -47,11 +47,10 @@ NUMERIC = ['Map-Area', 'Sim-Win-Percent', 'Sim-Win-Percent-Op'] + SURFACE_TYPES 
           + CAN_HEAL_TEAM + CAN_HURT_ENEMY + CAN_LETHAL_ENEMY + ZODIAC_TEAM + ZODIAC_ENEMY \
           + CAUSE_STATUS + CANCEL_STATUS + DISTANCE_ALLY + DISTANCE_ENEMY + HEIGHT_DIFF_ALLY + HEIGHT_DIFF_ENEMY
 
-
 SKIP_ID_RANGES = [
     (1585741145317, 1585787081769)  # April fools, 2020.
 ]
-BAD_TOURNAMENTS = {1594125397508, 1594172557423}
+BAD_TOURNAMENTS = {1594125397508, 1594172557423, 1594741572025, 1594741572025, 1595512178164}
 
 
 def _calculate_hypothetical_match_ups():
@@ -113,7 +112,7 @@ class MatchUp:
         for key in SURFACE_TYPES:
             arena_map[key] = 0.0
         for surface_type in arena.surface_types:
-            arena_map['Map-Surface-'+surface_type] = 1.0
+            arena_map['Map-Surface-' + surface_type] = 1.0
 
         left = {
             'Side': 'Left',
@@ -155,7 +154,7 @@ class MatchUp:
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
 
-                (dist, height) = arena.distance(i, j+4)
+                (dist, height) = arena.distance(i, j + 4)
                 combatant[f'Distance-Enemy-{j}'] = dist
                 combatant[f'Height-Diff-Enemy-{j}'] = height
 
@@ -171,7 +170,7 @@ class MatchUp:
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-Cancel-{status}-Team-{j}'] = can_cancel(combatant, ally, status, patch)
 
-                (dist, height) = arena.distance(i+4, j+4)
+                (dist, height) = arena.distance(i + 4, j + 4)
                 combatant[f'Distance-Ally-{j}'] = dist
                 combatant[f'Height-Diff-Ally-{j}'] = height
 
@@ -182,7 +181,7 @@ class MatchUp:
                 for status in OFFENSIVE_STATUSES:
                     combatant[f'Can-{status}-Enemy-{j}'] = can_cause(combatant, victim, status, patch)
 
-                (dist, height) = arena.distance(i+4, j)
+                (dist, height) = arena.distance(i + 4, j)
                 combatant[f'Distance-Enemy-{j}'] = dist
                 combatant[f'Height-Diff-Enemy-{j}'] = height
 
@@ -282,7 +281,8 @@ def parse_tournament(path: Path) -> Tournament:
     game_map = maps[match_n]
     left = teams[bracket[0]]
     right = teams['champion']
-    assert winner == left.color or winner == right.color
+    if tid not in BAD_TOURNAMENTS:
+        assert winner == left.color or winner == right.color
     left_wins = winner == left.color
     map_num = int(re.match(r'(\d+)', game_map)[0])
     match_up = MatchUp(tid, modified, left, right, left_wins, game_map, map_num)
@@ -310,7 +310,7 @@ def parse_tournaments() -> List[Tournament]:
         for (start, end) in SKIP_ID_RANGES:
             # FIXME: Hack to cut out everthing before April 1st
             if tournament.id <= end:
-            # if start <= tournament.id <= end:
+                # if start <= tournament.id <= end:
                 skip = True
                 break
         if skip:
