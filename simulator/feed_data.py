@@ -16,8 +16,9 @@ def main():
 
     patch_texts = {}
     arena_texts = {}
-
-    for path in tqdm.tqdm(list(Path('data/tournaments').glob('*.json'))):
+    tournaments = list(Path('data/tournaments').glob('*.json'))
+    tournaments.sort()
+    for path in tqdm.tqdm(tournaments):
         tourny = fftbg.tournament.parse_tournament(path)
         patch = fftbg.patch.get_patch(tourny.modified)
         if patch.time not in patch_texts:
