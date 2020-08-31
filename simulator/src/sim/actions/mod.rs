@@ -250,6 +250,8 @@ fn filter_target_level(user: &Combatant, ability: &Ability, target: &Combatant) 
         false
     } else if flags & UNDER_50_PERCENT_HP_ONLY != 0 && target.hp_percent() > 0.50 {
         false
+    } else if ability.flags & MISS_SLEEPING != 0 && target.sleep() {
+        false
     } else {
         true
     }
