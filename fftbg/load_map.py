@@ -171,7 +171,11 @@ def add_tiles_c(out, tiles):
             out.append(f'.no_walk={"true" if tile["no_walk"] else "false"},')
             out.append(f'.depth={tile["depth"]},')
             out.append(f'.height={tile["height"]},')
-            out.append(f'.slope_type={tile["slope_type_numeric"]},')
+            if tile["slope_type"]:
+                slope = tile["slope_type"].replace(' ', '_').upper()
+            else:
+                slope = "SLOPE_UNKNOWN"
+            out.append(f'.slope_type={slope},')
             out.append(f'.surface_type={tile["surface_type_numeric"]},')
             out.append(f'.slope_height={tile["slope_height"]}}},')
 
@@ -246,9 +250,11 @@ def write_all_maps():
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_text(txt)
             generate_c(out)
-        except:
+        except Exception as e:
             print(f'Error reading {path}')
+            print(e)
     generate_c_array(maps)
+
 
 if __name__ == '__main__':
     write_all_maps()
