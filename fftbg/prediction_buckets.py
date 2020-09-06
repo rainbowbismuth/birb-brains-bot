@@ -1,7 +1,6 @@
-from fftbg.betting import expected_payoff
 from fftbg.bird.memory import Memory
 
-LIMIT = 5_000
+LIMIT = 20_000
 mem = Memory()
 log = mem.get_balance_log(limit=LIMIT)
 
@@ -11,12 +10,15 @@ bucket_total = [0] * n_buckets
 bucket_wins = [0] * n_buckets
 
 for entry in log:
-    i = int((entry.left_prediction * 100) / by_n)
+    if entry.left_total_final == 0 or entry.right_total_final == 0:
+        continue
+    pred = entry.left_total_final / (entry.left_total_final + entry.right_total_final)
+    i = int((pred * 100) / by_n)
     bucket_total[i] += 1
     if entry.left_wins:
         bucket_wins[i] += 1
 
-    i = int((entry.right_prediction * 100) / by_n)
+    i = int(((1-pred) * 100) / by_n)
     bucket_total[i] += 1
     if not entry.left_wins:
         bucket_wins[i] += 1
