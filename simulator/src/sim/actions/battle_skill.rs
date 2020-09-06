@@ -299,8 +299,21 @@ impl AbilityImpl for ChanceToAddSwordImpl {
         let user = sim.combatant(user_id);
         let target = sim.combatant(target_id);
 
-        // TODO: This is a weapon elemental attack sooo...
         let mut xa = mod_3_formula_xa(user.pa() as i16, user, target, false, false);
+
+        // TODO: This shouldn't go right here, ugh
+        if let Some(element) = user.main_hand().and_then(|eq| eq.weapon_element) {
+            if target.weak(element) {
+                xa *= 2;
+            }
+            if target.halves(element) {
+                xa /= 2;
+            }
+            if target.absorbs(element) {
+                xa = -xa;
+            }
+        }
+
         if sim.roll_auto_fail() < 0.05 {
             xa += sim.roll_inclusive(1, xa.max(1)) - 1;
         }
