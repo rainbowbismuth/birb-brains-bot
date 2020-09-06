@@ -200,8 +200,8 @@ def model_three(combatant_size,
                 extra_layers=2,
                 momentum=0.99,
                 activation='elu',
-                l1_rate=0.01,
-                l2_rate=0.01,
+                l1_rate=0.005,
+                l2_rate=0.005,
                 learning_rate=0.001):
     def make_dense(output_size):
         dense = keras.layers.Dense(
