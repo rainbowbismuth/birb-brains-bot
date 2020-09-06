@@ -19,6 +19,7 @@ data/sim
 data/MAP
 data/ENTD
 data/arena
+data/arena_c
 simulator/target
 *.rdb
 logs

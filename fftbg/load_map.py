@@ -162,7 +162,71 @@ def terrain_to_dict(terrain_data: Terrain, gns: str) -> dict:
             'surface_types': sorted(surface_types), 'starting_locations': starting_locations}
 
 
+def add_tiles_c(out, tiles):
+    for row in tiles:
+        for tile in row:
+            out.append(f'{{.x={tile["x"]},')
+            out.append(f'.y={tile["y"]},')
+            out.append(f'.no_cursor={"true" if tile["no_cursor"] else "false"},')
+            out.append(f'.no_walk={"true" if tile["no_walk"] else "false"},')
+            out.append(f'.depth={tile["depth"]},')
+            out.append(f'.height={tile["height"]},')
+            out.append(f'.slope_type={tile["slope_type_numeric"]},')
+            out.append(f'.surface_type={tile["surface_type_numeric"]},')
+            out.append(f'.slope_height={tile["slope_height"]}}},')
+
+
+def add_starting_c(out, locations):
+    for location in locations:
+        out.append(f'{{.x={location["x"]},')
+        out.append(f'.y={location["y"]},')
+        out.append(f'.facing={location["facing"].upper()},')
+        out.append(f'.team={"LEFT_TEAM" if location["team"] == "Player 1" else "RIGHT_TEAM"},')
+        out.append(f'.unit={location["unit"]}}},')
+
+
+def generate_c(m):
+    out = []
+    out.append('#include "data.h"')
+    out.append('static const struct tile lower[]={')
+    add_tiles_c(out, m["lower"])
+    out.append('};')
+    out.append('static const struct tile upper[]={')
+    add_tiles_c(out, m["upper"])
+    out.append('};')
+    out.append(f'const struct map map_{m["num"]}={{')
+    out.append(f'.width={m["width"]},')
+    out.append(f'.height={m["height"]},')
+    out.append('.lower=(const struct tile *)&lower,')
+    out.append('.upper=(const struct tile *)&upper,')
+    out.append('.starting_locations={')
+    add_starting_c(out, m["starting_locations"])
+    out.append("}};")
+    out_path = Path(f'data/arena_c/map_{m["num"]}.c')
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text("\n".join(out))
+
+
+def generate_c_array(maps):
+    out = []
+    out.append('#include "data.h"')
+    for m in maps:
+        if not m:
+            continue
+        out.append(f'extern const struct map map_{m["num"]};')
+
+    out.append("const struct map *const nullable maps[MAX_MAPS]={")
+    for m in maps:
+        if not m:
+            out.append("NULL,")
+            continue
+        out.append(f'&map_{m["num"]},')
+    out.append('};')
+    out_path = Path(f'data/arena_c/map.c')
+    out_path.write_text("\n".join(out))
+
 def write_all_maps():
+    maps = [None]*130
     for path in Path('data/MAP').glob('*.GNS'):
         try:
             gns_path = str(path)
@@ -176,13 +240,15 @@ def write_all_maps():
             terrain_data = game_map.get_terrain()
 
             out = terrain_to_dict(terrain_data, gns_name)
+            maps[out["num"]] = out
             txt = json.dumps(out, indent=4)
             out_path = Path(f'data/arena/{path.stem}.json')
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_text(txt)
+            generate_c(out)
         except:
             print(f'Error reading {path}')
-
+    generate_c_array(maps)
 
 if __name__ == '__main__':
     write_all_maps()
