@@ -67,6 +67,8 @@ def run_server():
         for (user_id, user_name) in tuples:
             try:
                 user = bot.get_user(user_id)
+                if not user:
+                    continue
                 await user.send(f'Hiii, {user.display_name}, *{skill}* is the new skill drop on FFTBG! Wark!!')
             except Exception as exc:
                 LOG.error(f'Error sending skill drop notification to {user_name} ({user_id})', exc_info=exc)
@@ -80,6 +82,8 @@ def run_server():
             return
         memory.remove_notify_skill_drop_requests(user_id, [skill])
         user = bot.get_user(user_id)
+        if not user:
+            return
         if verb == 'bought':
             emote = BEHE_CHAMP_EMOTE
         else:
@@ -93,6 +97,8 @@ def run_server():
         if not user_id:
             return
         user = bot.get_user(user_id)
+        if not user:
+            return
         await user.send(f'{EMPOWERED_EMOTE} You remembered {skill}, heck yeah!')
 
     async def notify_new_tournament():
@@ -100,6 +106,8 @@ def run_server():
         LOG.info(f'Sending out {len(notifications)} new tournament notifications')
         for (user_id, minutes_left) in notifications:
             user = bot.get_user(user_id)
+            if not user:
+                continue
             await user.send(f'{CHIP_EMOTE} A new tournament has started!'
                             f' ({int(minutes_left)} minutes left on this alert)')
 
@@ -110,6 +118,8 @@ def run_server():
         for (user_id, minutes_left) in notifications:
             notified.add(user_id)
             user = bot.get_user(user_id)
+            if not user:
+                continue
             await user.send(f'{CHIP_EMOTE} The {left_team} vs {right_team} match is about to begin!'
                             f' ({int(minutes_left)} minutes left on this alert)')
 
@@ -119,6 +129,8 @@ def run_server():
                 if user_id in notified:
                     continue
                 user = bot.get_user(user_id)
+                if not user:
+                    continue
                 await user.send(f'{CHIP_EMOTE} The {left_team} vs {right_team} match is about to begin!'
                                 f' ({int(minutes_left)} minutes left on this alert)')
 
@@ -127,6 +139,8 @@ def run_server():
         LOG.info(f'Sending out {len(notifications)} match ended notifications')
         for (user_id, minutes_left) in notifications:
             user = bot.get_user(user_id)
+            if not user:
+                continue
             await user.send(f'{CHIP_EMOTE} The {victory_team} team is victorious!'
                             f' ({int(minutes_left)} minutes left on this alert)')
 
@@ -135,6 +149,8 @@ def run_server():
         LOG.info(f'Sending out {len(notifications)} bird all-in notifications')
         for (user_id, minutes_left) in notifications:
             user = bot.get_user(user_id)
+            if not user:
+                continue
             await user.send(f'{EMPOWERED_EMOTE} I\'m going all-in right now at {new_balance:,d} G!!!')
 
     async def listen_loop():
