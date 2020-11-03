@@ -121,7 +121,7 @@ Swine
 Porky
 WildBoar
 Dryad
-Trent
+Treant
 Taiju
 BullDemon
 Minotaur
