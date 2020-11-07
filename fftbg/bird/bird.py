@@ -38,7 +38,7 @@ class Bird:
         self.right_total_on_bet = None
         self.right_total_final = None
 
-    def update_balance(self, balance):
+    def update_balance(self, balance, cancelled_bet=False):
         old_balance = self.balance
         if self.balance == 0:
             self.balance = balance
@@ -56,6 +56,8 @@ class Bird:
             LOG.info(f'Lost {abs(difference):,d} G betting on {self.betting_on}, new balance {self.balance:,d} G')
         if self.left_team_bet is None or self.right_team_bet is None:
             return  # skip if we restarted the bot, essentially.
+        if cancelled_bet:
+            return
         self.memory.log_balance(
             tournament_id=self.tournament_id,  # we can't use self.current_tournament_id, it may have changed
             old_balance=old_balance,

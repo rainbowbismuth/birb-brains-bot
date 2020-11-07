@@ -50,7 +50,8 @@ NUMERIC = ['Map-Area', 'Sim-Win-Percent', 'Sim-Win-Percent-Op'] + SURFACE_TYPES 
 SKIP_ID_RANGES = [
     (1585741145317, 1585787081769)  # April fools, 2020.
 ]
-BAD_TOURNAMENTS = {1594125397508, 1594172557423, 1594741572025, 1594741572025, 1595512178164, 1598207792935}
+BAD_TOURNAMENTS = {1594125397508, 1594172557423, 1594741572025, 1594741572025, 1595512178164, 1598207792935,
+                   1604689640677, 1602520442239}
 
 
 def _calculate_hypothetical_match_ups():
@@ -309,7 +310,7 @@ def parse_tournaments() -> List[Tournament]:
             continue
         skip = False
         for (start, end) in SKIP_ID_RANGES:
-            # FIXME: Hack to cut out everthing before April 1st
+            # FIXME: Hack to cut out everything before April 1st
             if tournament.id <= end:
                 # if start <= tournament.id <= end:
                 skip = True

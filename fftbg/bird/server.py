@@ -12,13 +12,14 @@ from fftbg.bird.msg_types import BIRD_GOING_ALL_IN
 from fftbg.bird.bird import Bird
 from fftbg.brains.msg_types import NEW_PREDICTIONS
 from fftbg.event_stream import EventStream
+import random
 
 LOG = logging.getLogger(__name__)
 
 REMINDER_MIN = 90
+CANCEL_CHANCE = 0.10  # 10%
 MIN_BET = 150_000
 MAX_BET = 200_000
-
 
 class Server:
     def __init__(self, db: Database, event_stream: EventStream, bird: Bird, loop: asyncio.AbstractEventLoop):
@@ -28,6 +29,7 @@ class Server:
         self.loop = loop
         self.waiting_for_odds = False
         self.go_all_in = False
+        self.cancelled_bet = False
         self.predictions_ready = asyncio.Event()
         self.predictions_ready.set()
 
@@ -76,19 +78,22 @@ class Server:
                 f'Kweh-kweh!! (I\'m {number:,d} G away from {MAX_BET:,d} G! I can\'t wait to all-in! kwehWink )')
 
     def update_balance(self, new_balance):
-        if new_balance < MIN_BET and self.go_all_in:
-            self.go_all_in = False
-            self.say_message('Kweh... (Oh no... I really messed up didn\'t I?)')
-            self.say_message('kwehQQ')
-            self.say_message('*sniffle* (Going to have to start from scratch now..)')
-            self.say_message('Wark!! (I know I can do it though ;)! You believe in me, right? kwehLove )')
-        elif new_balance >= MAX_BET and self.go_all_in:
-            self.say_message('Kweh?? (Did... did I win? >.<)')
-            self.say_message('kwehWut')
-            self.say_message(f'Wark.. (What am I going to do with {new_balance:,d} G?)')
-            self.say_message('Wark-wark!! (Guess I\'m going to all-in again!! kwehSwag )')
+        if self.cancelled_bet:
+            self.say_message("That cancel cost a pretty penny, but I'm still in it! kwehSwag")
+        else:
+            if new_balance < MIN_BET and self.go_all_in:
+                self.go_all_in = False
+                self.say_message('Kweh... (Oh no... I really messed up didn\'t I?)')
+                self.say_message('kwehQQ')
+                self.say_message('*sniffle* (Going to have to start from scratch now..)')
+                self.say_message('Wark!! (I know I can do it though ;)! You believe in me, right? kwehLove )')
+            elif new_balance >= MAX_BET and self.go_all_in:
+                self.say_message('Kweh?? (Did... did I win? >.<)')
+                self.say_message('kwehWut')
+                self.say_message(f'Wark.. (What am I going to do with {new_balance:,d} G?)')
+                self.say_message('Wark-wark!! (Guess I\'m going to all-in again!! kwehSwag )')
 
-        self.bird.update_balance(new_balance)
+        self.bird.update_balance(new_balance, self.cancelled_bet)
         if not self.go_all_in and new_balance >= MAX_BET:
             self.go_all_in = True
             self.say_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!! kwehSpook )')
@@ -98,12 +103,19 @@ class Server:
             }
             LOG.info(f'{msg}')
             self.event_stream.publish(msg)
+        self.cancelled_bet = False
 
     async def prepare_to_bet(self, betting_delay, left_team, right_team):
         await asyncio.sleep(betting_delay)
         await self.predictions_ready.wait()
         await self.bird.log_prediction(left_team, right_team)
         self.ask_for_odds()
+
+    async def prepare_to_cancel(self, cancel_delay):
+        await asyncio.sleep(cancel_delay)
+        self.say_message('!bet cancel')
+        self.say_message('oops Kappa')
+        self.cancelled_bet = True
 
     async def check_messages(self):
         while True:
@@ -136,6 +148,8 @@ class Server:
                         betting_time = 1.0
 
                     self.loop.create_task(self.prepare_to_bet(betting_time, left_team, right_team))
+                    if self.go_all_in and random.random() < CANCEL_CHANCE:
+                        self.loop.create_task(self.prepare_to_cancel(40))
 
                 elif msg.get('type') == msg_types.RECV_BETTING_POOL:
                     final = int(msg['final']) != 0

@@ -461,7 +461,6 @@ const TeamSummary = {
                 m('h6.text-center', {id: 'surface-type-display'}, 'Mouse over a surface to display the surface\'s type here.'),
                 m(MapViewer, {map_num}),
             ])),
-            m('.row', m('.col-md', m('h4.text-center', 'Simulation Log'))),
             m('.row', m('.col-md', m('h4.text-center', 'Team Summary'))),
             m('.row', [
                 

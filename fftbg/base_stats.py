@@ -48,7 +48,11 @@ class BaseStatsData:
 
     def get_base_stats(self, job: str, gender: str) -> BaseStats:
         job = job.replace(' ', '')
-        return self.by_job_gender[f'{job},{gender}']
+        stats = self.by_job_gender.get(f'{job},{gender}')
+        if not stats and job == 'Treant':
+            return self.by_job_gender['Trent,Monster']
+        else:
+            return stats
 
 
 def parse_base_stats(class_help_path, monster_skills_path) -> BaseStatsData:

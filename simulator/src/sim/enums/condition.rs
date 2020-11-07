@@ -39,6 +39,7 @@ pub enum Condition {
     Performing,
     Evil,
     Transparent,
+    DeathToCaster,
 }
 
 pub type ConditionFlags = u64;
@@ -211,6 +212,7 @@ impl Condition {
             "Performing" => Some(Condition::Performing),
             "Evil" => Some(Condition::Evil),
             "Transparent" => Some(Condition::Transparent),
+            "Death to Caster" => Some(Condition::DeathToCaster),
             _ => None,
         }
     }
