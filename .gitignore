@@ -25,3 +25,4 @@ simulator/target
 logs
 venv
 config/twitch.toml
+watch-stream/
