@@ -1,0 +1,152 @@
+{
+  "text/output_00252.jpg": {
+    "name": "Alee1e",
+    "job": "Monk",
+    "minHP": "346",
+    "maxHP": "346",
+    "minMP": "061",
+    "maxMP": "061",
+    "brave": "59",
+    "faith": "56"
+  },
+  "text/output_00265.jpg": {
+    "name": "Vorap",
+    "job": "Time Mage",
+    "minHP": "307",
+    "maxHP": "307",
+    "minMP": "154",
+    "maxMP": "154",
+    "brave": "73",
+    "faith": "80"
+  },
+  "text/output_00294.jpg": {
+    "name": "Laserman1000",
+    "job": "Calculator",
+    "minHP": "249",
+    "maxHP": "249",
+    "minMP": "072",
+    "maxMP": "072",
+    "brave": "77",
+    "faith": "53"
+  },
+  "text/output_00303.jpg": {
+    "name": "Silentserenade01",
+    "job": "Squire",
+    "minHP": "309",
+    "maxHP": "309",
+    "minMP": "057",
+    "maxMP": "057",
+    "brave": "46",
+    "faith": "65"
+  },
+  "text/output_00391.jpg": {
+    "name": "RunicMagus",
+    "job": "Archer",
+    "minHP": "284",
+    "maxHP": "284",
+    "minMP": "047",
+    "maxMP": "047",
+    "brave": "76",
+    "faith": "67"
+  },
+  "text/output_00391.jpg": {
+    "name": "DLJuggernaut",
+    "job": "Mime",
+    "minHP": "317",
+    "maxHP": "317",
+    "minMP": "066",
+    "maxMP": "066",
+    "brave": "61",
+    "faith": "76"
+  },
+  "text/output_00442.jpg": {
+    "name": "Phallic Archon",
+    "job": "Archer",
+    "minHP": "253",
+    "maxHP": "253",
+    "minMP": "055",
+    "maxMP": "055",
+    "brave": "69",
+    "faith": "54"
+  },
+  "text/output_00483.jpg": {
+    "name": "ALY327",
+    "job": "Geomancer",
+    "minHP": "274",
+    "maxHP": "274",
+    "minMP": "147",
+    "maxMP": "147",
+    "brave": "57",
+    "faith": "55"
+  },
+  "text/output_00518.jpg": {
+    "name": "Alfreo6187",
+    "job": "Ninja",
+    "minHP": "138",
+    "maxHP": "282",
+    "minMP": "075",
+    "maxMP": "075",
+    "brave": "68",
+    "faith": "72"
+  },
+  "text/output_00562.jpg": {
+    "name": "Reinoe",
+    "job": "Calculator",
+    "minHP": "206",
+    "maxHP": "206",
+    "minMP": "092",
+    "maxMP": "092",
+    "brave": "56",
+    "faith": "58"
+  },
+  "text/output_00570.jpg": {
+    "name": "Kronikle",
+    "job": "Knight",
+    "minHP": "366",
+    "maxHP": "382",
+    "minMP": "004",
+    "maxMP": "046",
+    "brave": "50",
+    "faith": "59"
+  },
+  "text/output_00593.jpg": {
+    "name": "Technominari",
+    "job": "Priest",
+    "minHP": "296",
+    "maxHP": "296",
+    "minMP": "048",
+    "maxMP": "140",
+    "brave": "50",
+    "faith": "59"
+  },
+  "text/output_00794.jpg": {
+    "name": "MyFakeLife",
+    "job": "Monk",
+    "minHP": "374",
+    "maxHP": "374",
+    "minMP": "049",
+    "maxMP": "089",
+    "brave": "69",
+    "faith": "45"
+  },
+  "text/output_00803.jpg": {
+    "name": "Grininda",
+    "job": "Lancer",
+    "minHP": "210",
+    "maxHP": "266",
+    "minMP": "037",
+    "maxMP": "037",
+    "brave": "65",
+    "faith": "47"
+  },
+  "text/output_01022.jpg": {
+    "name": "Solomongrundy85",
+    "job": "Samurai",
+    "minHP": "255",
+    "maxHP": "255",
+    "minMP": "069",
+    "maxMP": "069",
+    "brave": "65",
+    "faith": "49"
+  }
+}
