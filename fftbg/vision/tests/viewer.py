@@ -1,8 +1,8 @@
+import cv2
 from flask import Flask, Response, render_template, send_from_directory
 
-import fftbg.vision.tests.runner as runner
 import fftbg.vision as vision
-import cv2
+import fftbg.vision.tests.runner as runner
 
 app = Flask(__name__, static_url_path='')
 app.config['TEMPLATES_AUTO_RELOAD'] = True

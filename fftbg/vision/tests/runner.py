@@ -1,9 +1,11 @@
-import fftbg.vision as vision
+import difflib
 import json
 from pathlib import Path
+
 import cv2
 from termcolor import colored
-import difflib
+
+import fftbg.vision as vision
 
 TEST_RESULTS = []
 READER = vision.default_character_reader()
@@ -16,7 +18,7 @@ WRAP_AT = 100
 def add_result(img, ok, expected, reading):
     TEST_RESULTS.append({"file": img, "ok": ok, "expected": expected, "reading": reading, "idx": len(TEST_RESULTS)})
     newline = ''
-    if len(TEST_RESULTS) % WRAP_AT == (WRAP_AT-1):
+    if len(TEST_RESULTS) % WRAP_AT == (WRAP_AT - 1):
         newline = '\n'
     if ok:
         print(OK_DOT, end=newline)
@@ -60,7 +62,7 @@ def report_results():
     print('\n')
     h = ["file", "finder", "expected", "actual", "diff"]
     print(colored(f'{h[0]:<38} {h[1]:<10} {h[2]:<30} {h[3]:<30} {h[4]}', 'cyan'))
-    print(f'{"-"*37}  {"-"*9}  {"-"*29}  {"-"*29}  {"-"*29}')
+    print(f'{"-" * 37}  {"-" * 9}  {"-" * 29}  {"-" * 29}  {"-" * 29}')
     for result in TEST_RESULTS:
         if not result["ok"]:
             expected = result["expected"]

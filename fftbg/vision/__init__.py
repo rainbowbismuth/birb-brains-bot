@@ -1,13 +1,12 @@
+import threading
 import time
 from pathlib import Path
+from queue import Queue, Full
 
 import cv2
 import numpy as np
-
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.model_selection import train_test_split
-from queue import Queue, Full
-import threading
 
 
 # A command line to store images...
@@ -209,7 +208,7 @@ class CharacterReader:
 
 
 class VitalReading:
-    def __init__(self, finder: RectangleFinder, prob_chars, rects, images, notes = None):
+    def __init__(self, finder: RectangleFinder, prob_chars, rects, images, notes=None):
         self.name = finder.name
         self.finder = finder
         self.prob_chars = prob_chars
@@ -238,7 +237,7 @@ FINDERS_LIST = [
 
 FINDERS = {}
 for finder in FINDERS_LIST:
-    FINDERS[finder.name]=finder
+    FINDERS[finder.name] = finder
 
 
 def read_vital_new(frame: Frame, reader: CharacterReader, finder: RectangleFinder) -> VitalReading:
@@ -412,7 +411,6 @@ def py_gui():
 # py_gui()
 
 
-
 def fun():
     # image = cv2.imread("watch-stream/output_00560.jpg")
     image = cv2.imread("watch-stream/output_00473.jpg")
@@ -420,7 +418,6 @@ def fun():
     # image = cv2.imread("watch-stream/output_00583.jpg")
 
     gray_max = np.max(image, axis=2)
-
 
     img_croppped = crop_rect(image, (610, 545, 320, 40))
     cropped = crop_rect(gray_max, (610, 545, 320, 40))
@@ -435,12 +432,11 @@ def fun():
     # img_croppped[markers == -1] = [255,0,0]
 
     print(markers)
-    markers=np.uint8(markers) * (255//np.max(markers))
+    markers = np.uint8(markers) * (255 // np.max(markers))
 
     print(np.max(markers))
 
     mapped = cv2.applyColorMap(markers, cv2.COLORMAP_JET)
     cv2.imwrite('mapped.jpg', mapped)
-
 
 # fun()
