@@ -1,5 +1,5 @@
 {
-  "text/output_00252.jpg": {
+  "text/2020-11-14/output_00252.jpg": {
     "name": "Alee1e",
     "job": "Monk",
     "minHP": "346",
@@ -9,7 +9,7 @@
     "brave": "59",
     "faith": "56"
   },
-  "text/output_00265.jpg": {
+  "text/2020-11-14/output_00265.jpg": {
     "name": "Vorap",
     "job": "Time Mage",
     "minHP": "307",
@@ -19,7 +19,7 @@
     "brave": "73",
     "faith": "80"
   },
-  "text/output_00294.jpg": {
+  "text/2020-11-14/output_00294.jpg": {
     "name": "Laserman1000",
     "job": "Calculator",
     "minHP": "249",
@@ -29,7 +29,7 @@
     "brave": "77",
     "faith": "53"
   },
-  "text/output_00303.jpg": {
+  "text/2020-11-14/output_00303.jpg": {
     "name": "Silentserenade01",
     "job": "Squire",
     "minHP": "309",
@@ -39,7 +39,7 @@
     "brave": "46",
     "faith": "65"
   },
-  "text/output_00391.jpg": {
+  "text/2020-11-14/output_00391.jpg": {
     "name": "RunicMagus",
     "job": "Archer",
     "minHP": "284",
@@ -49,7 +49,7 @@
     "brave": "76",
     "faith": "67"
   },
-  "text/output_00391.jpg": {
+  "text/2020-11-14/output_00396.jpg": {
     "name": "DLJuggernaut",
     "job": "Mime",
     "minHP": "317",
@@ -59,7 +59,7 @@
     "brave": "61",
     "faith": "76"
   },
-  "text/output_00442.jpg": {
+  "text/2020-11-14/output_00442.jpg": {
     "name": "Phallic Archon",
     "job": "Archer",
     "minHP": "253",
@@ -69,7 +69,7 @@
     "brave": "69",
     "faith": "54"
   },
-  "text/output_00483.jpg": {
+  "text/2020-11-14/output_00483.jpg": {
     "name": "ALY327",
     "job": "Geomancer",
     "minHP": "274",
@@ -79,7 +79,7 @@
     "brave": "57",
     "faith": "55"
   },
-  "text/output_00518.jpg": {
+  "text/2020-11-14/output_00518.jpg": {
     "name": "Alfreo6187",
     "job": "Ninja",
     "minHP": "138",
@@ -89,7 +89,7 @@
     "brave": "68",
     "faith": "72"
   },
-  "text/output_00562.jpg": {
+  "text/2020-11-14/output_00562.jpg": {
     "name": "Reinoe",
     "job": "Calculator",
     "minHP": "206",
@@ -99,7 +99,7 @@
     "brave": "56",
     "faith": "58"
   },
-  "text/output_00570.jpg": {
+  "text/2020-11-14/output_00570.jpg": {
     "name": "Kronikle",
     "job": "Knight",
     "minHP": "366",
@@ -109,7 +109,7 @@
     "brave": "50",
     "faith": "59"
   },
-  "text/output_00593.jpg": {
+  "text/2020-11-14/output_00593.jpg": {
     "name": "Technominari",
     "job": "Priest",
     "minHP": "296",
@@ -119,7 +119,7 @@
     "brave": "50",
     "faith": "59"
   },
-  "text/output_00794.jpg": {
+  "text/2020-11-14/output_00794.jpg": {
     "name": "MyFakeLife",
     "job": "Monk",
     "minHP": "374",
@@ -129,7 +129,7 @@
     "brave": "69",
     "faith": "45"
   },
-  "text/output_00803.jpg": {
+  "text/2020-11-14/output_00803.jpg": {
     "name": "Grininda",
     "job": "Lancer",
     "minHP": "210",
@@ -139,7 +139,7 @@
     "brave": "65",
     "faith": "47"
   },
-  "text/output_01022.jpg": {
+  "text/2020-11-14/output_01022.jpg": {
     "name": "Solomongrundy85",
     "job": "Samurai",
     "minHP": "255",
@@ -148,5 +148,41 @@
     "maxMP": "069",
     "brave": "65",
     "faith": "49"
+  },
+  "text/2020-11-14/output_00162.jpg": {
+    "ability": "Throw Spirit"
+  },
+  "text/2020-11-14/output_00286.jpg": {
+    "ability": "Masamune"
+  },
+  "text/2020-11-14/output_00354.jpg": {
+    "ability": "Invitation"
+  },
+  "text/2020-11-14/output_00370.jpg": {
+    "ability": "Ice 4"
+  },
+  "text/2020-11-14/output_00397.jpg": {
+    "ability": "Nameless Song"
+  },
+  "text/2020-11-14/output_00482.jpg": {
+    "ability": "Fire Breath"
+  },
+  "text/2020-11-14/output_00569.jpg": {
+    "ability": "Confusion Song"
+  },
+  "text/2020-11-14/output_00650.jpg": {
+    "ability": "Solution"
+  },
+  "text/2020-11-14/output_00918.jpg": {
+    "ability": "Petrify"
+  },
+  "text/2020-11-14/output_00959.jpg": {
+    "ability": "Blind Rage"
+  },
+  "text/2020-11-14/output_01062.jpg": {
+    "ability": "Bolt 2"
+  },
+  "text/2020-11-14/output_01162.jpg": {
+    "ability": "Foxbird"
   }
 }
