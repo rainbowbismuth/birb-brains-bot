@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+        <h2>Test Failures</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Image</th>
+                <th>Finder</th>
+                <th>Expected</th>
+                <th>Actual</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for failure in failures %}
+                <tr>
+                    <td>{{ failure.idx }}</td>
+                    <td>{{ failure.file }}</td>
+                    <td>{{ failure.reading.name }}</td>
+                    <td>{{ failure.expected }}</td>
+                    <td>{{ failure.reading.value }}</td>
+                    <td><a href="test/{{ failure.idx }}">view</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+{% endblock %}

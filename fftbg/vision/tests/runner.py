@@ -14,7 +14,7 @@ WRAP_AT = 100
 
 
 def add_result(img, ok, expected, reading):
-    TEST_RESULTS.append({"img": img, "ok": ok, "expected": expected, "reading": reading})
+    TEST_RESULTS.append({"file": img, "ok": ok, "expected": expected, "reading": reading, "idx": len(TEST_RESULTS)})
     newline = ''
     if len(TEST_RESULTS) % WRAP_AT == (WRAP_AT-1):
         newline = '\n'
@@ -67,11 +67,17 @@ def report_results():
             actual = result["reading"].value
             name = result["reading"].name
             diff = diff_string(expected, actual)
-            print(f'{result["img"]:<38} {name:<10} {expected:<30} {actual:<30} {diff}')
+            print(f'{result["file"]:<38} {name:<10} {expected:<30} {actual:<30} {diff}')
 
     ok_count = len([r for r in TEST_RESULTS if r["ok"]])
     print(f'\n{ok_count} OK / {len(TEST_RESULTS)} TOTAL')
 
 
-run_text()
-report_results()
+def run_tests():
+    run_text()
+    print()
+
+
+if __name__ == '__main__':
+    run_tests()
+    report_results()

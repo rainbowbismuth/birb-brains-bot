@@ -158,8 +158,11 @@ class RectangleFinder:
         self.prepare_fn = prepare_fn
         self.found_fn = found_fn
 
-    def find_rects(self, frame: Frame):
+    def find_rects(self, frame: Frame, notes: dict = None):
         prepared_img = self.prepare_fn(frame, self.rect)
+        if notes is not None:
+            notes["prepared"] = prepared_img
+
         rects = find_characters(prepared_img)
         found_imgs = [self.found_fn(prepared_img, rect) for rect in rects]
         abs_rects = [(x + self.rect[0], y + self.rect[1], w, h) for (x, y, w, h) in rects]
@@ -178,6 +181,7 @@ def light_text(frame: Frame, rect):
     cropped = crop_rect(frame.gray_min, rect)
     thresh = cv2.threshold(cropped, 125, 255, cv2.THRESH_BINARY)[1]
     return thresh
+
 
 def dark_text(frame: Frame, rect):
     cropped = crop_rect(frame.gray_max, rect)
@@ -205,7 +209,7 @@ class CharacterReader:
 
 
 class VitalReading:
-    def __init__(self, finder: RectangleFinder, prob_chars, rects, images):
+    def __init__(self, finder: RectangleFinder, prob_chars, rects, images, notes = None):
         self.name = finder.name
         self.finder = finder
         self.prob_chars = prob_chars
@@ -213,6 +217,9 @@ class VitalReading:
         self.certainty = np.product(p for (p, _) in self.prob_chars)
         self.rects = rects
         self.images = images
+        if notes is None:
+            notes = {}
+        self.notes = notes
 
 
 FINDERS_LIST = [
@@ -235,11 +242,12 @@ for finder in FINDERS_LIST:
 
 
 def read_vital_new(frame: Frame, reader: CharacterReader, finder: RectangleFinder) -> VitalReading:
-    img_rects = finder.find_rects(frame)
+    notes = {}
+    img_rects = finder.find_rects(frame, notes)
     rects = [rect for (_, rect) in img_rects]
     imgs = [img for (img, _) in img_rects]
     prob_chars = reader.read_characters(imgs)
-    return VitalReading(finder, prob_chars, rects, imgs)
+    return VitalReading(finder, prob_chars, rects, imgs, notes)
 
 
 def cluster_images():
@@ -295,8 +303,24 @@ def default_character_reader():
     return CharacterReader(tf.keras.models.load_model('data/charset_model.h5'))
 
 
-def py_gui():
+def add_reading_rects(image, reading: VitalReading):
+    finder = reading.finder
+    (x, y, w, h) = finder.rect
+    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 1)
+    for (x, y, w, h) in reading.rects:
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 1)
 
+
+def add_reading_rects_cropped(image, reading: VitalReading):
+    finder = reading.finder
+    (x_offset, y_offset, _, _) = finder.rect
+    for (x, y, w, h) in reading.rects:
+        x -= x_offset
+        y -= y_offset
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 1)
+
+
+def py_gui():
     import pygame
     import sys
 
@@ -352,10 +376,8 @@ def py_gui():
             reading = read_vital_new(frame, reader, finder)
             if not reading.rects:
                 continue
-            (x, y, w, h) = finder.rect
-            cv2.rectangle(color_mapped, (x, y), (x + w, y + h), (0, 255, 0), 1)
-            for (x, y, w, h) in reading.rects:
-                cv2.rectangle(color_mapped, (x, y), (x + w, y + h), (0, 0, 255), 1)
+
+            add_reading_rects(color_mapped, reading)
 
             # for j, (prob, char) in enumerate(reading.prob_chars):
             #     if prob < 0.51:

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col">
+            <h2>{{ result.file }}</h2>
+
+            <img src="/static/{{ result.file }}">
+
+            <h3>Finder &mdash; {{ result.reading.name }}</h3>
+
+            <h3>Prepared</h3>
+            <img src="/test/{{ result.idx }}/prepared">
+
+            <h3>Prepared &mdash; with rects </h3>
+            <img src="/test/{{ result.idx }}/prepared-with-rects">
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Certainty</th>
+                    <th>Character</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for (certainty, char) in result.reading.prob_chars %}
+                    <tr>
+                        <td>{{ "%.2f"|format(certainty) }}</td>
+                        <td>{{ char }}</td>
+                        <td><img src="/test/{{ result.idx }}/char/{{ loop.index0 }}"></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+
+
+        </div></div>
+{% endblock %}
