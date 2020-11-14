@@ -207,12 +207,25 @@ class CharacterReader:
         return self._read_char_model(characters)
 
 
+def add_spaces(chars: list, rects):
+    if not chars:
+        return ''
+    last_end = rects[0][0] + rects[0][2]
+    inserted = 0
+    for i, (x, _, w, _) in enumerate(rects):
+        if x - last_end > 5:
+            chars.insert(i + inserted, ' ')
+            inserted += 1
+        last_end = x + w
+    return ''.join(chars)
+
+
 class VitalReading:
     def __init__(self, finder: RectangleFinder, prob_chars, rects, images, notes=None):
         self.name = finder.name
         self.finder = finder
         self.prob_chars = prob_chars
-        self.value = ''.join(c for (_, c) in self.prob_chars)
+        self.value = add_spaces([c for (_, c) in self.prob_chars], rects)
         self.certainty = np.product(p for (p, _) in self.prob_chars)
         self.rects = rects
         self.images = images
@@ -312,11 +325,13 @@ def add_reading_rects(image, reading: VitalReading):
 
 def add_reading_rects_cropped(image, reading: VitalReading):
     finder = reading.finder
-    (x_offset, y_offset, _, _) = finder.rect
-    for (x, y, w, h) in reading.rects:
+    (x_offset, y_offset, w, _) = finder.rect
+    num_rects = len(reading.rects)
+    move_by = 200 // num_rects
+    for i, (x, y, w, h) in enumerate(reading.rects):
         x -= x_offset
         y -= y_offset
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 1)
+        cv2.rectangle(image, (x, y), (x + w, y + h), (i * move_by, i * move_by, 255 - i * move_by), 1)
 
 
 def py_gui():
