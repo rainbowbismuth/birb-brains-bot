@@ -59,7 +59,7 @@ def find_characters(img):
     filtered_rects = []
     prev_dist = rects_with_distance[0][0]
     for (dist, x, y, w, h) in rects_with_distance:
-        if dist - prev_dist > 55:
+        if dist - prev_dist > 25:
             break
         prev_dist = dist
         filtered_rects.append((x, y, w, h))
@@ -77,6 +77,10 @@ def find_characters(img):
         diff_y = min_y - y
         y = int(min_y)
         h -= int(diff_y)
+
+        # Reject rects too tall after the extension
+        if h > 40:
+            continue
         out.append((max(x - 1, 0), max(y - 1, 0), w + 2, h + 2))
 
     return out
@@ -184,7 +188,7 @@ def light_text(frame: Frame, rect):
 
 def dark_text(frame: Frame, rect):
     cropped = crop_rect(frame.gray_max, rect)
-    thresh = cv2.threshold(cropped, 100, 255, cv2.THRESH_BINARY_INV)[1]
+    thresh = cv2.threshold(cropped, 110, 255, cv2.THRESH_BINARY_INV)[1]
     return thresh
 
 
@@ -213,7 +217,7 @@ def add_spaces(chars: list, rects):
     last_end = rects[0][0] + rects[0][2]
     inserted = 0
     for i, (x, _, w, _) in enumerate(rects):
-        if x - last_end > 5:
+        if x - last_end > 7:
             chars.insert(i + inserted, ' ')
             inserted += 1
         last_end = x + w

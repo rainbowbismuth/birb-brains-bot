@@ -4,15 +4,13 @@
     <div class="row">
         <div class="col">
             {% if result.ok %}
-                <h2>OK &mdash; {{ result.file }}</h2>
+                <h2>OK &mdash; {{ result.reading.name }} &mdash; {{ result.file }}</h2>
             {% else %}
-                <h2>FAIL &mdash; {{ result.file }}</h2>
+                <h2>FAIL &mdash; {{ result.reading.name }} &mdash; {{ result.file }}</h2>
             {% endif %}
 
-            <img src="/static/{{ result.file }}">
-
-            <h3>Finder &mdash; {{ result.reading.name }}</h3>
-
+            <img height="600" src="/static/{{ result.file }}">
+            <br/>
             <img src="/test/{{ result.idx }}/prepared-with-rects">
 
             <table>
