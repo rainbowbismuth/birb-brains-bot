@@ -184,5 +184,35 @@
     "maxMP": "176",
     "brave": "47",
     "faith": "74"
+  },
+  "text/2020-11-14/output_601346.jpg": {
+    "name": "Chipotlegr00ve",
+    "job": "Geomancer",
+    "minHP": "273",
+    "maxHP": "273",
+    "minMP": "105",
+    "maxMP": "105",
+    "brave": "73",
+    "faith": "72"
+  },
+  "text/2020-11-14/output_602285.jpg": {
+    "name": "Quiet Lion",
+    "job": "Porky",
+    "minHP": "288",
+    "maxHP": "288",
+    "minMP": "001",
+    "maxMP": "001",
+    "brave": "61",
+    "faith": "77"
+  },
+  "text/2020-11-14/output_602295.jpg": {
+    "name": "Meta Five",
+    "job": "Mediator",
+    "minHP": "229",
+    "maxHP": "281",
+    "minMP": "065",
+    "maxMP": "065",
+    "brave": "53",
+    "faith": "74"
   }
 }
