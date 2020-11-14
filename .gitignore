@@ -26,5 +26,7 @@ logs
 venv
 config/twitch.toml
 watch-stream/
-*.png
-*.jpg
+test-stream/
+letters/
+./*.png
+./*.jpg
