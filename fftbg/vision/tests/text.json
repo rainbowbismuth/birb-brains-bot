@@ -174,5 +174,15 @@
   },
   "text/2020-11-14/output_01162.jpg": {
     "ability": "Foxbird"
+  },
+  "text/2020-11-14/output_300993.jpg": {
+    "name": "Run With Stone G",
+    "job": "Summoner",
+    "minHP": "259",
+    "maxHP": "259",
+    "minMP": "142",
+    "maxMP": "176",
+    "brave": "47",
+    "faith": "74"
   }
 }

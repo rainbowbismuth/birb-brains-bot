@@ -271,7 +271,7 @@ def cluster_images():
     kmeans = MiniBatchKMeans(n_clusters=100)
 
     images = []
-    for path in tqdm(list(Path('/Volumes/RAM_Disk_512MB/letters').glob('*.png'))):
+    for path in tqdm(list(Path('/Volumes/RAM_Disk_512MB').glob('*.jpg'))):
         image = cv2.imread(path.as_posix())
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         images.append((path.name, gray.flatten()))
@@ -459,3 +459,30 @@ def fun():
     cv2.imwrite('mapped.jpg', mapped)
 
 # fun()
+
+
+
+def cluster_images2():
+    from tqdm import tqdm
+    kmeans = MiniBatchKMeans(n_clusters=20)
+
+    images = []
+    for path in tqdm(list(Path('/Volumes/RAM_Disk_512MB').glob('*.jpg'))):
+        image = cv2.imread(path.as_posix())
+        if image is None or image.size == 0:
+            continue
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        resized = cv2.resize(gray, (32, 32))
+        images.append((path.name, image, resized.flatten()))
+
+    kmeans.partial_fit([img for (path, orig, img) in images])
+
+    predicted = kmeans.predict([img for (path, orig, img) in images])
+
+    for i, (path, orig, image) in enumerate(tqdm(images)):
+        bucket = predicted[i]
+        Path(f'clustered/{bucket}/').mkdir(parents=True, exist_ok=True)
+        cv2.imwrite(f'clustered/{bucket}/{i:04d}_{path}', orig)
+
+
+# cluster_images2()

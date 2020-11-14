@@ -27,6 +27,7 @@ venv
 config/twitch.toml
 watch-stream/
 test-stream/
+slow-stream/
 letters/
 ./*.png
 ./*.jpg
