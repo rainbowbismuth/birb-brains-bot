@@ -5,7 +5,7 @@ This unwieldy nest of code powers [BirbBrainsBot](https://birb-brains-bot.app/),
 Contained in this repository:
 
 * Messy data code that downloads match history and processes into a deep neural network.
-* My own partial implementation of Final Fantasy Tactics battle system, written in Rust, that helps power the same.
+* My own partial implementation of the Final Fantasy Tactics battle system, written in Rust, that helps power the same.
 * The twitch bot that communicates Bird's bets, and reads events that happen in the stream.
 * The discord bot that notifies you when a skill you want is coming up.
 * Bird's website, with the betting log.
