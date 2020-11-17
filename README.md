@@ -1,6 +1,6 @@
-# Bird Brains Bot
+# Birb Brains Bot
 
-This unwieldy nest of code powers BirbBrainsBot, who lives in [FFTBattleground](https://www.twitch.tv/fftbattleground).  
+This unwieldy nest of code powers [BirbBrainsBot](https://birb-brains-bot.app/), who lives in [FFTBattleground](https://www.twitch.tv/fftbattleground).  
 
 Contained in this repository:
 
