@@ -10,5 +10,6 @@ Contained in this repository:
 * The discord bot that notifies you when a skill you want is coming up.
 * Bird's website, with the betting log.
 * Bird's "brain" that determines who to bet on and how much.
-* __Nearly none of the data or instructions you need to run it yourself__ ![](data/icon.png). Because there can only be one.
+* __Nearly none of the data or instructions you need to run it yourself__. Because there can only be one.
 
+![](data/icon.png)
