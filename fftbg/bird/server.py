@@ -17,9 +17,11 @@ import random
 LOG = logging.getLogger(__name__)
 
 REMINDER_MIN = 90
-CANCEL_CHANCE = 0.10  # 10%
+CANCEL_CHANCE = 0.15
+QUIET_ALL_IN = 5_000
 MIN_BET = 150_000
 MAX_BET = 200_000
+
 
 class Server:
     def __init__(self, db: Database, event_stream: EventStream, bird: Bird, loop: asyncio.AbstractEventLoop):
@@ -45,7 +47,7 @@ class Server:
     def publish_bet(self, color, amount):
         if self.go_all_in:
             self.say_message(f'!allin {color}')
-            self.say_message(f'Kweh! (I\'m so nervous! kwehLurk )')
+            self.say_allin_message(f'Kweh! (I\'m so nervous! kwehLurk )')
             return
 
         amount = int(amount)
@@ -65,6 +67,12 @@ class Server:
         self.event_stream.publish(msg)
         LOG.info(f'Sending message: {text}')
 
+    def say_allin_message(self, text):
+        """We don't want to spam our normal all-in messages when we have no money"""
+        if self.bird.balance <= QUIET_ALL_IN:
+            return
+        self.say_message(text)
+
     async def all_in_ready(self):
         while True:
             await asyncio.sleep(60 * REMINDER_MIN)
@@ -82,27 +90,26 @@ class Server:
             self.say_message("That cancel cost a pretty penny, but I'm still in it! kwehSwag")
         else:
             if new_balance < MIN_BET and self.go_all_in:
-                self.go_all_in = False
-                self.say_message('Kweh... (Oh no... I really messed up didn\'t I?)')
-                self.say_message('kwehQQ')
-                self.say_message('*sniffle* (Going to have to start from scratch now..)')
-                self.say_message('Wark!! (I know I can do it though ;)! You believe in me, right? kwehLove )')
+                self.say_allin_message('Kweh... (Oh no... I really messed up didn\'t I?)')
+                self.say_allin_message('kwehQQ')
+                self.say_allin_message('*sniffle* (Going to have to start from scratch now..)')
+                self.say_allin_message('Wark!! (I know I can do it though ;)! You believe in me, right? kwehLove )')
             elif new_balance >= MAX_BET and self.go_all_in:
-                self.say_message('Kweh?? (Did... did I win? >.<)')
-                self.say_message('kwehWut')
-                self.say_message(f'Wark.. (What am I going to do with {new_balance:,d} G?)')
-                self.say_message('Wark-wark!! (Guess I\'m going to all-in again!! kwehSwag )')
+                self.say_allin_message('Kweh?? (Did... did I win? >.<)')
+                self.say_allin_message('kwehWut')
+                self.say_allin_message(f'Wark.. (What am I going to do with {new_balance:,d} G?)')
+                self.say_allin_message('Wark-wark!! (Guess I\'m going to all-in again!! kwehSwag )')
 
         self.bird.update_balance(new_balance, self.cancelled_bet)
         if not self.go_all_in and new_balance >= MAX_BET:
-            self.go_all_in = True
-            self.say_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!! kwehSpook )')
+            self.say_allin_message(f'Wark!!! (I made it to {new_balance:,d} G!! I\'m going all in!!! kwehSpook )')
             msg = {
                 'type': BIRD_GOING_ALL_IN,
                 'balance': new_balance
             }
             LOG.info(f'{msg}')
             self.event_stream.publish(msg)
+        self.go_all_in = new_balance >= MAX_BET or new_balance <= QUIET_ALL_IN
         self.cancelled_bet = False
 
     async def prepare_to_bet(self, betting_delay, left_team, right_team):
@@ -148,7 +155,7 @@ class Server:
                         betting_time = 1.0
 
                     self.loop.create_task(self.prepare_to_bet(betting_time, left_team, right_team))
-                    if self.go_all_in and random.random() < CANCEL_CHANCE:
+                    if self.go_all_in and random.random() < CANCEL_CHANCE and self.bird.balance >= QUIET_ALL_IN:
                         self.loop.create_task(self.prepare_to_cancel(40))
 
                 elif msg.get('type') == msg_types.RECV_BETTING_POOL:
