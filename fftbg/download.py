@@ -10,7 +10,7 @@ LOG = logging.getLogger(__name__)
 
 
 def get_tournament_list():
-    j = requests.get(f'{FFTBG_API_URL}/api/tournaments').json()
+    j = requests.get(f'{FFTBG_API_URL}/api/tournaments?limit=6000').json()
     return [(t['ID'], datetime.fromisoformat(t['LastMod'])) for t in j]
 
 

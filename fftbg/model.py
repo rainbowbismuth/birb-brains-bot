@@ -53,6 +53,12 @@ def main():
 
     skill_columns = get_skill_columns(df)
     all_columns = get_all_columns(df)
+    status_elemental_columns = get_status_elemental_columns(df)
+
+    with config.COLUMN_XFORM_PATH.open(mode='wb') as f:
+        pickle.dump((all_columns, skill_columns, status_elemental_columns), f)
+    LOG.info(f'Wrote column set {config.COLUMN_SET_PATH}')
+
     LOG.info('\n'.join(textwrap.wrap(f"All columns: {', '.join(sorted(all_columns))}", 120)))
     dfs = df[all_columns]
     dfs = dfs.sort_index(axis=1)

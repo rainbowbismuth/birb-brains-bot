@@ -5,8 +5,9 @@ from typing import List
 import fftbg.simulator
 import numpy as np
 import pandas
+import config
+import pickle
 
-import fftbg.data as data
 import fftbg.model as model
 import fftbg.patch as patch
 import fftbg.tournament as tournament
@@ -26,10 +27,12 @@ class BakedModel(Model):
         self.model = model.read_model()
         self.column_transformer = model.read_column_transformer()
         self.feature_scalers = model.read_feature_scalers()
-        all_combatants_df = data.read_combatants()
-        self.all_columns = model.get_all_columns(all_combatants_df)
-        self.skill_columns = model.get_skill_columns(all_combatants_df)
-        self.status_elemental_columns = model.get_status_elemental_columns(all_combatants_df)
+
+        with config.COLUMN_SET_PATH.open() as f:
+            (all_columns, skill_columns, status_elemental_columns) = pickle.load(f)
+            self.all_columns = all_columns
+            self.skill_columns = skill_columns
+            self.status_elemental_columns = status_elemental_columns
 
     def predict_match_up(self, match_up: MatchUp, patch_date: datetime, sim_left_wins: float = 0.5) -> float:
         p = patch.get_patch(patch_date)
