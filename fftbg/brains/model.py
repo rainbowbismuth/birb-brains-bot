@@ -1,3 +1,5 @@
+import logging
+import pickle
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -5,14 +7,12 @@ from typing import List
 import fftbg.simulator
 import numpy as np
 import pandas
-import config
-import pickle
 
+import fftbg.config as config
 import fftbg.model as model
 import fftbg.patch as patch
 import fftbg.tournament as tournament
 from fftbg.tournament import MatchUp
-import logging
 
 LOG = logging.getLogger(__name__)
 
@@ -81,4 +81,3 @@ class SimulatorModel(Model):
         left_wins = fftbg.simulator.run_simulation(patch_obj, arena_obj, match_up_json, self.num_runs)
         LOG.info(f'sim_left_wins = {left_wins:.4f}')
         return self.baked.predict_match_up(match_up, patch_date, left_wins)
-

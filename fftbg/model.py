@@ -55,7 +55,7 @@ def main():
     all_columns = get_all_columns(df)
     status_elemental_columns = get_status_elemental_columns(df)
 
-    with config.COLUMN_XFORM_PATH.open(mode='wb') as f:
+    with config.COLUMN_SET_PATH.open(mode='wb') as f:
         pickle.dump((all_columns, skill_columns, status_elemental_columns), f)
     LOG.info(f'Wrote column set {config.COLUMN_SET_PATH}')
 
