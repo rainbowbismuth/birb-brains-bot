@@ -2,7 +2,7 @@ import numpy as np
 
 from fftbg.bird.memory import Memory
 
-LIMIT = 10000
+LIMIT = 85322
 mem = Memory()
 log = mem.get_balance_log(limit=LIMIT)
 
@@ -27,6 +27,7 @@ for entry in log:
     if left_wins_percent < 0.5 and not entry.left_wins:
         correct += 1
 
+print(f'odds mean: {np.mean(left_wins)}')
 print(f'odds std: {np.std(left_wins)}')
 
 print(f'correct: {correct / LIMIT}')

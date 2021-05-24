@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-tensorflow-cpu = "*"
+tensorflow-cpu = "2.4.1"
 flask = "*"
 scipy = "*"
 scikit-learn = "*"
