@@ -117,16 +117,16 @@ class IRCBot(commands.Bot):
         bet_match = parse.BET_RE.findall(message.content)
         if bet_match:
             team, amount = bet_match[0]
-            self.publish_bet(message.author.name, team, amount)
+            self.publish_bet(message.author.name, team.lower(), amount)
 
         bet2_match = parse.BET2_RE.findall(message.content)
         if bet2_match:
             amount, team = bet2_match[0]
-            self.publish_bet(message.author.name, team, amount)
+            self.publish_bet(message.author.name, team.lower(), amount)
 
         all_in_match = parse.ALL_IN_RE.findall(message.content)
         if all_in_match:
-            team = all_in_match[0]
+            team = all_in_match[0].lower()
             bet = {'type': msg_types.RECV_BET,
                    'user': message.author.name,
                    'team': team,
@@ -234,7 +234,7 @@ class IRCBot(commands.Bot):
 
         team_victory_match = parse.TEAM_VICTORY.findall(message.content)
         if team_victory_match:
-            team = team_victory_match[0]
+            team = team_victory_match[0].lower()
             msg = {'type': msg_types.RECV_TEAM_VICTORY,
                    'team': team}
             LOG.info(f'{msg}')
@@ -244,8 +244,8 @@ class IRCBot(commands.Bot):
         if betting_open:
             (left, right) = betting_open[0]
             msg = {'type': msg_types.RECV_BETTING_OPEN,
-                   'left_team': left,
-                   'right_team': right}
+                   'left_team': left.lower(),
+                   'right_team': right.lower()}
             LOG.info(f'{msg}')
             self.event_stream.publish(msg)
 
@@ -263,10 +263,10 @@ class IRCBot(commands.Bot):
             right_total_n = parse.parse_comma_int(right_total)
             msg = {'type': msg_types.RECV_BETTING_POOL,
                    'final': 1,
-                   'left_team': left,
+                   'left_team': left.lower(),
                    'left_team_bets': left_bets,
                    'left_team_amount': left_total_n,
-                   'right_team': right,
+                   'right_team': right.lower(),
                    'right_team_bets': right_bets,
                    'right_team_amount': right_total_n}
             self.event_stream.publish(msg)
@@ -279,10 +279,10 @@ class IRCBot(commands.Bot):
             right_total_n = parse.parse_comma_int(right_total)
             msg = {'type': msg_types.RECV_BETTING_POOL,
                    'final': 0,
-                   'left_team': left,
+                   'left_team': left.lower(),
                    'left_team_bets': left_bets,
                    'left_team_amount': left_total_n,
-                   'right_team': right,
+                   'right_team': right.lower(),
                    'right_team_bets': right_bets,
                    'right_team_amount': right_total_n}
             self.event_stream.publish(msg)

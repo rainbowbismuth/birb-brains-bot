@@ -28,7 +28,7 @@ class BakedModel(Model):
         self.column_transformer = model.read_column_transformer()
         self.feature_scalers = model.read_feature_scalers()
 
-        with config.COLUMN_SET_PATH.open() as f:
+        with config.COLUMN_SET_PATH.open('rb') as f:
             (all_columns, skill_columns, status_elemental_columns) = pickle.load(f)
             self.all_columns = all_columns
             self.skill_columns = skill_columns
