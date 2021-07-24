@@ -11,7 +11,8 @@ class Texture(object):
             self.data = self.file.read()
             break
         # print 'tex', self.file_path
-        self.file.close()
+        if self.file is not None:
+            self.file.close()
 
     def write(self, data):
         self.file = open(self.file_path, 'wb')

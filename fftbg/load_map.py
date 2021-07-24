@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import traceback
+import sys
 
 from ganesha.fft.map import Map, Tile, Terrain
 from ganesha.fft.map.gns import GNS
@@ -229,6 +231,7 @@ def generate_c_array(maps):
     out_path = Path(f'data/arena_c/map.c')
     out_path.write_text("\n".join(out))
 
+
 def write_all_maps():
     maps = [None]*130
     for path in Path('data/MAP').glob('*.GNS'):
@@ -252,7 +255,7 @@ def write_all_maps():
             generate_c(out)
         except Exception as e:
             print(f'Error reading {path}')
-            print(e)
+            traceback.print_exc(file=sys.stdout)
     generate_c_array(maps)
 
 

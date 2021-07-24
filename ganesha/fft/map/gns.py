@@ -27,6 +27,7 @@ RESOURCE_EOF = 0x3101
 
 gnslines = {
         (0, 0): 'MAP000.5',
+        (0, 1): 'MAP001.34',
         (1, 0): 'MAP001.8',
         (1, 1): 'MAP001.9',
         (1, 2): 'MAP001.11',
@@ -1508,7 +1509,14 @@ class GNS(object):
             weather = (temp1 >> 4) & 0x7
             self.file.seek(2, 1)
             resource_lba = struct.unpack('<I', self.file.read(4))[0]
-            resource_filename = gnslines[(map_number, line_number)]
+
+            if map_number == 118 and resource_type == 0x2e01:
+                resource_filename = "MAP001.22"
+            elif map_number == 119 and resource_type == 0x2e01:
+                resource_filename = "MAP001.26"
+            else:
+                resource_filename = gnslines[(map_number, line_number)]
+
             resource_file_path = os.path.join(map_dir, resource_filename)
             resource_size = struct.unpack('<I', self.file.read(4))[0]
             situations[(index1, arrange, time, weather)] = True
